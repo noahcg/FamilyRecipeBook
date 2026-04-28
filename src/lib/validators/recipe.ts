@@ -20,7 +20,7 @@ export const createRecipeSchema = z.object({
   cook_minutes: z.coerce.number().int().min(0).max(10080).optional(),
   servings: z.coerce.number().int().min(1).max(100).optional(),
   category: z.string().max(50).optional(),
-  tags: z.array(z.string().max(30)).max(10).default([]),
+  tags: z.array(z.string().max(30)).max(10).optional(),
   ingredients: z.array(ingredientSchema).min(1, "Add at least one ingredient"),
   instructions: z
     .array(instructionSchema)

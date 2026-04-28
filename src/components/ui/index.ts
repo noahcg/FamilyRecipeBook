@@ -33,3 +33,8 @@ export type { MemberAvatarStackProps, Member } from "./MemberAvatarStack";
 
 export { EmptyState } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
+
+export { Badge } from "./Badge";
+export type { BadgeVariant } from "./Badge";
+
+export { Dialog } from "./Dialog";

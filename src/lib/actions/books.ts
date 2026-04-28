@@ -103,3 +103,63 @@ export async function redirectToBook() {
     redirect("/onboarding/create-book");
   }
 }
+
+export async function getBookPageData(bookId: string) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const [bookRes, recipesRes, collectionsRes] = await Promise.all([
+    supabase
+      .from("recipe_books")
+      .select("*, members:book_members(*, profile:profiles(*))")
+      .eq("id", bookId)
+      .single(),
+    supabase
+      .from("recipes")
+      .select(
+        "*, reactions:recipe_reactions(type), creator:profiles!created_by(full_name, avatar_url)"
+      )
+      .eq("book_id", bookId)
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("collections")
+      .select("*")
+      .eq("book_id", bookId)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  if (!bookRes.data) return null;
+  const book = bookRes.data as any;
+  const userMember = book.members?.find((m: any) => m.user_id === user.id);
+  if (!userMember) return null;
+
+  const allRecipes = (recipesRes.data ?? []).map((r: any) => ({
+    ...r,
+    loveCount: r.reactions?.filter((rx: any) => rx.type === "love").length ?? 0,
+  }));
+
+  const favorites = [...allRecipes]
+    .filter((r) => r.loveCount > 0)
+    .sort((a, b) => b.loveCount - a.loveCount)
+    .slice(0, 4);
+
+  return {
+    book,
+    userMember,
+    userId: user.id,
+    recent: allRecipes.slice(0, 6),
+    favorites,
+    collections: collectionsRes.data ?? [],
+  };
+}
+
+export async function getBook(bookId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("recipe_books")
+    .select("*, members:book_members(*, profile:profiles(*))")
+    .eq("id", bookId)
+    .single();
+  return data as any ?? null;
+}
