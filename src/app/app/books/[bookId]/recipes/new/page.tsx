@@ -28,7 +28,7 @@ export default async function NewRecipePage({ params }: Props) {
           Add a recipe
         </h1>
         <p className="text-sm text-ink-muted mb-6">
-          Share the ingredients, steps, and story behind this dish.
+          Capture the recipe and the story behind it.
         </p>
 
         <RecipeForm bookId={bookId} />

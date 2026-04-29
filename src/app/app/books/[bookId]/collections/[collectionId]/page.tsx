@@ -60,8 +60,8 @@ export default async function CollectionDetailPage({ params }: Props) {
 
         {recipes.length === 0 ? (
           <EmptyState
-            title="No recipes yet"
-            description="Add recipes from the recipe detail page."
+            title="No recipes in this collection yet."
+            description="Open any recipe and add it to this collection."
           />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

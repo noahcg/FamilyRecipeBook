@@ -21,7 +21,7 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
         Add your first recipe
       </h1>
       <p className="text-ink-muted mb-8">
-        Start with a family favourite. Even a title is enough for now.
+        Start with a dish everyone knows.
       </p>
 
       <RecipeForm

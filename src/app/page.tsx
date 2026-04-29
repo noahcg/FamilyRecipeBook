@@ -1,6 +1,29 @@
 import Link from "next/link";
-import { BookOpen, Heart, Users } from "lucide-react";
+import { BookOpen, Heart, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui";
+
+const FEATURES = [
+  {
+    icon: BookOpen,
+    title: "Save family recipes",
+    body: "Capture every dish with ingredients, instructions, and the story behind it.",
+  },
+  {
+    icon: Heart,
+    title: "Add stories and memories",
+    body: "Each recipe holds a memory. Add notes, photos, and the moments that made it special.",
+  },
+  {
+    icon: Users,
+    title: "Bring family into the book",
+    body: "Invite everyone to view, react, and add their own memories to every recipe.",
+  },
+  {
+    icon: Sparkles,
+    title: "Build collections",
+    body: "Group recipes into collections for holidays, quick meals, Sunday dinners, and more.",
+  },
+];
 
 export default function LandingPage() {
   return (
@@ -23,31 +46,94 @@ export default function LandingPage() {
 
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center max-w-2xl mx-auto w-full">
-        <div
-          className="w-20 h-20 rounded-2xl flex items-center justify-center mb-8 shadow-md"
-          style={{ background: "var(--color-sage-soft)" }}
-        >
-          <BookOpen size={36} strokeWidth={1.5} className="text-green-deep" />
+        {/* Cookbook illustration */}
+        <div className="flex items-end justify-center gap-3 mb-10">
+          {[
+            { style: "sage", rotate: "-rotate-6" },
+            { style: "terracotta", rotate: "rotate-0 scale-110" },
+            { style: "mustard", rotate: "rotate-6" },
+          ].map(({ style, rotate }, i) => (
+            <div
+              key={i}
+              className={`relative rounded-xl border-2 shadow-sm flex flex-col justify-end p-3 ${rotate} transition-transform`}
+              style={{
+                width: 72,
+                height: 92,
+                background:
+                  style === "sage"
+                    ? "var(--color-sage-pale)"
+                    : style === "terracotta"
+                    ? "#FADDD6"
+                    : "#FAE8C0",
+                borderColor:
+                  style === "sage"
+                    ? "var(--color-sage-soft)"
+                    : style === "terracotta"
+                    ? "#E76F51"
+                    : "#F2B348",
+              }}
+            >
+              <BookOpen
+                size={20}
+                strokeWidth={1.25}
+                style={{
+                  color:
+                    style === "sage"
+                      ? "var(--color-sage)"
+                      : style === "terracotta"
+                      ? "#E76F51"
+                      : "#F2B348",
+                  opacity: 0.5,
+                  marginBottom: 4,
+                }}
+              />
+              <div
+                className="h-1.5 rounded-full mb-1"
+                style={{
+                  background:
+                    style === "sage"
+                      ? "var(--color-sage-soft)"
+                      : style === "terracotta"
+                      ? "#F2A48A"
+                      : "#F5CC7A",
+                  width: "70%",
+                }}
+              />
+              <div
+                className="h-1 rounded-full"
+                style={{
+                  background:
+                    style === "sage"
+                      ? "var(--color-sage-soft)"
+                      : style === "terracotta"
+                      ? "#F2A48A"
+                      : "#F5CC7A",
+                  width: "50%",
+                  opacity: 0.6,
+                }}
+              />
+            </div>
+          ))}
         </div>
 
         <h1
           className="text-4xl sm:text-hero font-bold text-green-deep leading-tight mb-4"
           style={{ fontFamily: "var(--font-playfair)" }}
         >
-          Your family&rsquo;s recipes,
+          Made with love.
           <br />
-          <span className="italic text-accent-terracotta">together forever.</span>
+          <span className="italic text-accent-terracotta">Shared for generations.</span>
         </h1>
 
         <p className="text-ink-muted text-lg leading-relaxed mb-10 max-w-md">
-          Create a recipe book, fill it with the dishes your family loves, and
-          bring everyone in to preserve the stories behind each one.
+          Create a family recipe book, save the meals that matter, and bring
+          everyone into the story.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Link href="/sign-up" className="w-full sm:w-auto">
             <Button variant="primary" size="lg" fullWidth>
-              Create your recipe book
+              Start your recipe book
             </Button>
           </Link>
           <Link href="/sign-in" className="w-full sm:w-auto">
@@ -58,7 +144,7 @@ export default function LandingPage() {
         </div>
 
         <p
-          className="mt-6 text-sm"
+          className="mt-8 text-sm"
           style={{
             fontFamily: "var(--font-caveat)",
             color: "var(--color-cinnamon)",
@@ -70,38 +156,18 @@ export default function LandingPage() {
         </p>
       </main>
 
-      {/* Value props */}
-      <section className="max-w-5xl mx-auto w-full px-6 pb-20 grid sm:grid-cols-3 gap-6">
-        {[
-          {
-            icon: BookOpen,
-            title: "One book, every recipe",
-            body: "Add recipes with ingredients, instructions, and the story behind each dish.",
-          },
-          {
-            icon: Users,
-            title: "Bring family in",
-            body: "Invite family members to view, react, and add their own notes and memories.",
-          },
-          {
-            icon: Heart,
-            title: "Keep it alive",
-            body: "React with love, mark favorites, and add notes so every recipe stays warm.",
-          },
-        ].map(({ icon: Icon, title, body }) => (
+      {/* Feature cards — 4 cards */}
+      <section className="max-w-5xl mx-auto w-full px-6 pb-20 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {FEATURES.map(({ icon: Icon, title, body }) => (
           <div key={title} className="recipe-card p-6">
-            <Icon
-              size={24}
-              strokeWidth={1.5}
-              className="text-green-sage mb-3"
-            />
+            <Icon size={22} strokeWidth={1.5} className="text-green-sage mb-3" />
             <h3
-              className="font-bold text-green-deep mb-1"
+              className="font-bold text-green-deep mb-1 text-sm"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
               {title}
             </h3>
-            <p className="text-sm text-ink-muted leading-relaxed">{body}</p>
+            <p className="text-xs text-ink-muted leading-relaxed">{body}</p>
           </div>
         ))}
       </section>

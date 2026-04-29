@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { RecipeDetail } from "@/components/recipe/RecipeDetail";
 import { getRecipe } from "@/lib/actions/recipes";
@@ -37,17 +35,6 @@ export default async function RecipeDetailPage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      {/* Back link */}
-      <div className="px-5 pt-5">
-        <Link
-          href={`/app/books/${bookId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors"
-        >
-          <ArrowLeft size={14} strokeWidth={2} />
-          Back to book
-        </Link>
-      </div>
-
       <RecipeDetail
         recipe={recipe}
         bookId={bookId}
