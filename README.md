@@ -34,8 +34,13 @@ cp .env.local.example .env.local
 | `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → service_role key |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → Workers AI → Use REST API |
+| `CLOUDFLARE_WORKERS_AI_API_TOKEN` | Cloudflare Dashboard → Workers AI → Create Workers AI API Token |
+| `CLOUDFLARE_WORKERS_AI_MODEL` | Optional. Defaults to `@cf/meta/llama-3.1-8b-instruct` |
 
 > **Important:** Never commit `.env.local` or expose `SUPABASE_SERVICE_ROLE_KEY` to the browser. It bypasses all Row Level Security policies and is used only in server actions.
+
+The pantry-based recipe idea feature uses Cloudflare Workers AI by default. Cloudflare provides a free daily Workers AI allocation, and requests will fail closed if the Cloudflare variables are not configured. An optional OpenAI fallback is supported with `OPENAI_API_KEY`, but leaving it unset avoids OpenAI API charges.
 
 ### 4. Run database migrations
 

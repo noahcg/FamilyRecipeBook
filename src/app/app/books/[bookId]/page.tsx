@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { RecipeCard, MemberAvatarStack, Button, CookbookIcon } from "@/components/ui";
+import { AIRecipeIdeaPanel } from "@/components/recipe/AIRecipeIdeaPanel";
 import { requireProfile } from "@/lib/auth";
 import { getBookPageData } from "@/lib/actions/books";
 
@@ -161,6 +162,8 @@ export default async function BookHomePage({ params }: Props) {
           </header>
 
           <div className="space-y-8 py-6">
+            <AIRecipeIdeaPanel bookId={bookId} />
+
             <section>
               <SectionTitle title="Recently Added" />
               <div className="grid grid-cols-2 gap-4 min-[1320px]:grid-cols-4">

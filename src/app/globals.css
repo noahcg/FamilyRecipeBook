@@ -2,7 +2,7 @@
 
 /* ─── Design Tokens ────────────────────────────────────────── */
 :root {
-  --color-cream: #F7F3E9;
+  --color-cream: #f4e7d9;
   --color-paper-deep: #EFE6D5;
   --color-forest-dark: #1F3A2D;
   --color-white-soft: #FFFCF6;
@@ -91,7 +91,7 @@
   --font-hand: var(--font-caveat);
 
   /* Colors — paper */
-  --color-cream: #F7F3E9;
+  --color-cream: #f4e7d9;
   --color-paper: #FBF7ED;
   --color-paper-warm: #EFE6D5;
   --color-paper-soft: #FFFCF6;
@@ -165,11 +165,7 @@ body {
 
 /* ─── Paper Background ──────────────────────────────────────── */
 .app-paper-bg {
-  background:
-    radial-gradient(circle at 18% 8%, rgba(242, 179, 75, 0.10), transparent 32rem),
-    radial-gradient(circle at 80% 90%, rgba(139, 168, 136, 0.14), transparent 30rem),
-    linear-gradient(90deg, rgba(255,255,255,0.34), rgba(255,255,255,0) 42%, rgba(93,65,38,0.035)),
-    var(--color-cream);
+  background: var(--color-cream);
   min-height: 100dvh;
 }
 
@@ -188,14 +184,11 @@ body {
 }
 
 .cookbook-sidebar {
-  background: rgba(255, 252, 246, 0.74);
-  border-right: 1px solid var(--color-border-soft);
-  box-shadow: 8px 0 34px rgba(75, 53, 31, 0.055);
-  backdrop-filter: blur(18px);
+  background: rgba(255, 252, 246, 0.82);
 }
 
 .cookbook-main-panel {
-  background: rgba(251, 247, 237, 0.42);
+  background: rgba(251, 247, 237, 0.85);
 }
 
 .cookbook-detail-panel {

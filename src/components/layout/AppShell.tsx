@@ -139,7 +139,7 @@ export function AppShell({ children, bookId }: AppShellProps) {
         </div>
       </aside>
 
-      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-24 lg:ml-[300px] lg:max-w-none lg:pb-0">
+      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-24 lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0">
         {children}
       </main>
 
