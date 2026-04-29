@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { randomBytes } from "crypto";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
 import { canManageMembers } from "@/lib/permissions";
 import {
@@ -65,9 +66,12 @@ export async function inviteMember(
 
 export async function acceptInvitation(token: string): Promise<ActionResult> {
   const user = await requireUser();
-  const supabase = await createClient();
 
-  const { data: invitation } = await supabase
+  // Use service role to read the invitation — RLS only allows keepers to query
+  // book_invitations, but the accepting user is not yet a member at this point.
+  const admin = createServiceClient();
+
+  const { data: invitation } = await admin
     .from("book_invitations")
     .select("*")
     .eq("token", token)
@@ -79,8 +83,8 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
     return { success: false, error: "This invitation is invalid or has expired." };
   }
 
-  // Add user to book_members
-  const { error: memberError } = await supabase
+  // Add user to book_members via service role (user may not yet be a member)
+  const { error: memberError } = await admin
     .from("book_members")
     .upsert({ book_id: invitation.book_id, user_id: user.id, role: invitation.role });
 
@@ -89,7 +93,7 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
   }
 
   // Mark invitation accepted
-  await supabase
+  await admin
     .from("book_invitations")
     .update({ accepted_by: user.id, accepted_at: new Date().toISOString() })
     .eq("id", invitation.id);

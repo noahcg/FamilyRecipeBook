@@ -41,8 +41,3 @@ export async function requireProfile(): Promise<Profile> {
   return profile;
 }
 
-export async function signOut() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/");
-}
