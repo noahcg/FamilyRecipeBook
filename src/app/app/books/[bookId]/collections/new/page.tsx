@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import { Button, Input, Textarea } from "@/components/ui";
+import { Button, Input, Textarea, CookbookIcon, cookbookIconOptions } from "@/components/ui";
 import {
   createCollectionSchema,
   type CreateCollectionInput,
@@ -19,13 +19,11 @@ interface Props {
   params: Promise<{ bookId: string }>;
 }
 
-const ICONS = ["📖", "🎄", "⚡", "🍽️", "❤️", "🌙", "🥗", "🍰", "🥘", "🍳"];
-
 export default function NewCollectionPage({ params }: Props) {
   const { bookId } = use(params);
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [selectedIcon, setSelectedIcon] = useState("📖");
+  const [selectedIcon, setSelectedIcon] = useState("book");
 
   const {
     register,
@@ -33,7 +31,7 @@ export default function NewCollectionPage({ params }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<CreateCollectionInput>({
     resolver: zodResolver(createCollectionSchema),
-    defaultValues: { title: "", icon: "📖" },
+    defaultValues: { title: "", icon: "book" },
   });
 
   async function onSubmit(data: CreateCollectionInput) {
@@ -72,24 +70,26 @@ export default function NewCollectionPage({ params }: Props) {
           <div>
             <p className="text-sm font-semibold text-ink mb-2">Icon</p>
             <div className="flex flex-wrap gap-2">
-              {ICONS.map((icon) => (
+              {cookbookIconOptions.map((icon) => (
                 <button
-                  key={icon}
+                  key={icon.id}
                   type="button"
-                  onClick={() => setSelectedIcon(icon)}
-                  className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center border-2 transition-colors ${
-                    selectedIcon === icon
+                  onClick={() => setSelectedIcon(icon.id)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg border-2 transition-colors ${
+                    selectedIcon === icon.id
                       ? "border-green-deep"
                       : "border-transparent"
                   }`}
                   style={{
                     background:
-                      selectedIcon === icon
+                      selectedIcon === icon.id
                         ? "var(--color-sage-pale)"
                         : "var(--color-paper-warm)",
                   }}
+                  aria-label={icon.label}
+                  aria-pressed={selectedIcon === icon.id}
                 >
-                  {icon}
+                  <CookbookIcon name={icon.id} size={21} />
                 </button>
               ))}
             </div>
@@ -97,6 +97,7 @@ export default function NewCollectionPage({ params }: Props) {
 
           <Input
             label="Collection name"
+            required
             placeholder="e.g. Sunday Dinners, Holiday Recipes"
             error={errors.title?.message}
             {...register("title")}

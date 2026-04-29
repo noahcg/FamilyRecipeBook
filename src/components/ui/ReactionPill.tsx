@@ -2,17 +2,18 @@
 
 import { clsx } from "clsx";
 import { useState } from "react";
+import { Flame, Heart, Star } from "lucide-react";
 import { toggleReaction } from "@/lib/actions/reactions";
 
 type ReactionType = "love" | "made_it" | "favorite";
 
 const REACTION_META: Record<
   ReactionType,
-  { emoji: string; label: string; activeColor: string }
+  { Icon: typeof Heart; label: string; activeColor: string }
 > = {
-  love: { emoji: "♥", label: "Love", activeColor: "#E76F51" },
-  made_it: { emoji: "🍳", label: "Made it", activeColor: "#D8A053" },
-  favorite: { emoji: "★", label: "Favorite", activeColor: "#F2B348" },
+  love: { Icon: Heart, label: "Love", activeColor: "#E76F51" },
+  made_it: { Icon: Flame, label: "Made it", activeColor: "#D8A053" },
+  favorite: { Icon: Star, label: "Favorite", activeColor: "#F2B348" },
 };
 
 interface ReactionPillProps {
@@ -33,6 +34,7 @@ function ReactionPill({
   const [active, setActive] = useState(initialActive);
   const [localCount, setLocalCount] = useState(count);
   const meta = REACTION_META[type];
+  const Icon = meta.Icon;
 
   function handleClick() {
     const next = !active;
@@ -50,9 +52,7 @@ function ReactionPill({
       className={clsx("reaction-pill", active && "active", className)}
       style={active ? { color: meta.activeColor } : undefined}
     >
-      <span aria-hidden="true" className="text-base leading-none">
-        {meta.emoji}
-      </span>
+      <Icon aria-hidden="true" size={16} fill={active ? "currentColor" : "none"} strokeWidth={1.9} />
       <span className="text-xs font-semibold">{meta.label}</span>
       {localCount > 0 && (
         <span className="text-xs opacity-60 ml-0.5">{localCount}</span>

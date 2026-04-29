@@ -2,33 +2,40 @@
 
 /* ─── Design Tokens ────────────────────────────────────────── */
 :root {
+  --color-cream: #F7F3E9;
+  --color-paper-deep: #EFE6D5;
+  --color-forest-dark: #1F3A2D;
+  --color-white-soft: #FFFCF6;
+  --color-ink: #243128;
+  --color-muted: #756F64;
+
   /* Paper and surfaces */
-  --color-paper: #F4EEE3;
-  --color-paper-warm: #EEE2D0;
-  --color-paper-soft: #FBF6EC;
+  --color-paper: #FBF7ED;
+  --color-paper-warm: #EFE6D5;
+  --color-paper-soft: #FFFCF6;
   --color-card: #FFF9EF;
   --color-card-muted: #F4E8D5;
-  --color-border: #D7C7AF;
-  --color-border-soft: #E8DBC8;
+  --color-border: #DED4C3;
+  --color-border-soft: #E9DEC9;
 
   /* Greens */
   --color-deep-green: #2F4F3F;
-  --color-forest: #234436;
+  --color-forest: #2F4F3F;
   --color-sage: #8BA888;
-  --color-sage-soft: #DDE7D7;
+  --color-sage-soft: #DDE5D7;
   --color-sage-pale: #EEF4EA;
 
   /* Warm accents */
   --color-terracotta: #E76F51;
   --color-terracotta-dark: #B95A40;
-  --color-mustard: #F2B348;
+  --color-mustard: #F2B34B;
   --color-honey: #D8A053;
   --color-cinnamon: #8D5E34;
   --color-clay: #B8754B;
 
   /* Text */
-  --color-text: #26362E;
-  --color-text-muted: #6E6255;
+  --color-text: #243128;
+  --color-text-muted: #756F64;
   --color-text-soft: #8B7F70;
   --color-text-inverse: #FFF9EE;
 
@@ -84,15 +91,19 @@
   --font-hand: var(--font-caveat);
 
   /* Colors — paper */
-  --color-paper: #F4EEE3;
-  --color-paper-warm: #EEE2D0;
-  --color-paper-soft: #FBF6EC;
+  --color-cream: #F7F3E9;
+  --color-paper: #FBF7ED;
+  --color-paper-warm: #EFE6D5;
+  --color-paper-soft: #FFFCF6;
+  --color-paper-deep: #EFE6D5;
   --color-card: #FFF9EF;
   --color-card-muted: #F4E8D5;
+  --color-white-soft: #FFFCF6;
 
   /* Colors — greens */
   --color-green-deep: #2F4F3F;
-  --color-green-forest: #234436;
+  --color-green-forest: #2F4F3F;
+  --color-green-forest-dark: #1F3A2D;
   --color-green-sage: #8BA888;
   --color-green-soft: #DDE7D7;
   --color-green-pale: #EEF4EA;
@@ -100,19 +111,19 @@
   /* Colors — accents */
   --color-accent-terracotta: #E76F51;
   --color-accent-terracotta-dark: #B95A40;
-  --color-accent-mustard: #F2B348;
+  --color-accent-mustard: #F2B34B;
   --color-accent-honey: #D8A053;
   --color-accent-cinnamon: #8D5E34;
   --color-accent-clay: #B8754B;
 
   /* Colors — ink */
-  --color-ink: #26362E;
-  --color-ink-muted: #6E6255;
+  --color-ink: #243128;
+  --color-ink-muted: #756F64;
   --color-ink-soft: #8B7F70;
   --color-ink-inverse: #FFF9EE;
 
   /* Colors — line */
-  --color-line: #D7C7AF;
+  --color-line: #DED4C3;
   --color-line-soft: #E8DBC8;
 
   /* Colors — feedback */
@@ -149,16 +160,16 @@ html {
 }
 
 body {
-  background: var(--color-paper);
+  background: var(--color-cream);
 }
 
 /* ─── Paper Background ──────────────────────────────────────── */
 .app-paper-bg {
   background:
-    radial-gradient(circle at top left, rgba(216, 160, 83, 0.12), transparent 34rem),
-    radial-gradient(circle at bottom right, rgba(139, 168, 136, 0.14), transparent 30rem),
-    linear-gradient(90deg, rgba(255,255,255,0.34), rgba(255,255,255,0) 38%, rgba(93,65,38,0.04)),
-    var(--color-paper);
+    radial-gradient(circle at 18% 8%, rgba(242, 179, 75, 0.10), transparent 32rem),
+    radial-gradient(circle at 80% 90%, rgba(139, 168, 136, 0.14), transparent 30rem),
+    linear-gradient(90deg, rgba(255,255,255,0.34), rgba(255,255,255,0) 42%, rgba(93,65,38,0.035)),
+    var(--color-cream);
   min-height: 100dvh;
 }
 
@@ -168,22 +179,23 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.22;
+  opacity: 0.28;
   background-image:
-    radial-gradient(rgba(75, 53, 31, 0.16) 0.55px, transparent 0.55px),
-    linear-gradient(rgba(47, 79, 63, 0.025) 1px, transparent 1px);
-  background-size: 18px 18px, 36px 36px;
+    radial-gradient(rgba(117, 111, 100, 0.15) 0.55px, transparent 0.55px),
+    radial-gradient(rgba(255, 255, 255, 0.5) 0.55px, transparent 0.55px);
+  background-position: 0 0, 9px 8px;
+  background-size: 18px 18px, 22px 22px;
 }
 
 .cookbook-sidebar {
-  background: rgba(251, 246, 236, 0.78);
+  background: rgba(255, 252, 246, 0.74);
   border-right: 1px solid var(--color-border-soft);
-  box-shadow: 8px 0 32px rgba(75, 53, 31, 0.05);
+  box-shadow: 8px 0 34px rgba(75, 53, 31, 0.055);
   backdrop-filter: blur(18px);
 }
 
 .cookbook-main-panel {
-  background: rgba(251, 246, 236, 0.48);
+  background: rgba(251, 247, 237, 0.42);
 }
 
 .cookbook-detail-panel {

@@ -47,38 +47,48 @@ export default function RecipesPage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="px-5 pt-5 pb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1
-            className="text-xl font-bold text-green-deep"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            All Recipes
-          </h1>
+      <div className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8">
+        <div className="mb-7 flex flex-col gap-4 border-b border-line-soft pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-2 text-sm font-semibold text-ink-muted">The Family Table</p>
+            <h1
+              className="text-3xl font-bold leading-tight text-green-deep"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              All Recipes
+            </h1>
+          </div>
           <Link href={`/app/books/${bookId}/recipes/new`}>
-            <Button variant="primary" size="sm">
-              <Plus size={14} /> Add
+            <Button variant="primary" size="md" className="rounded-md">
+              <Plus size={16} /> Add Recipe
             </Button>
           </Link>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
-            strokeWidth={1.75}
-          />
-          <input
-            className="input-cookbook pl-9"
-            placeholder="Search recipes…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <h1
+            className="text-xl font-semibold text-green-deep"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Browse the book
+          </h1>
+          <div className="relative w-full max-w-sm">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
+              strokeWidth={1.75}
+            />
+            <input
+              className="input-cookbook h-11 w-full pl-9 text-sm"
+              placeholder="Search recipes..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
@@ -106,7 +116,7 @@ export default function RecipesPage({ params }: Props) {
             }
           />
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
             {filtered.map((recipe) => (
               <Link
                 key={recipe.id}

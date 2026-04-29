@@ -21,6 +21,7 @@ export type { ReactionPillProps, ReactionType } from "./ReactionPill";
 
 export { BookCover } from "./BookCover";
 export type { BookCoverProps, CoverStyle } from "./BookCover";
+export { CookbookIcon, cookbookIconOptions, normalizeCookbookIcon } from "./CookbookIcon";
 
 export { BottomNav } from "./BottomNav";
 export type { BottomNavProps, NavTab } from "./BottomNav";

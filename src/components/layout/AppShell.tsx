@@ -6,6 +6,7 @@ import { clsx } from "clsx";
 import {
   CalendarDays,
   Heart,
+  History,
   Home,
   ListChecks,
   Plus,
@@ -14,6 +15,8 @@ import {
   UtensilsCrossed,
   Users,
 } from "lucide-react";
+import { CookbookIcon } from "@/components/ui/CookbookIcon";
+import { APP_VERSION } from "@/lib/version";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -29,13 +32,13 @@ const NAV = (bookId: string) => [
 ];
 
 const DESKTOP_NAV = (bookId: string) => [
-  { href: `/app/books/${bookId}`, icon: Home, label: "Home" },
-  { href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
-  { href: `/app/books/${bookId}/collections`, icon: ListChecks, label: "Collections" },
-  { href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
-  { href: `/app/books/${bookId}/recipes`, icon: CalendarDays, label: "Meal Plan" },
-  { href: `/app/books/${bookId}/recipes`, icon: ShoppingCart, label: "Groceries" },
-  { href: `/app/books/${bookId}/recipes`, icon: Heart, label: "Favorites" },
+  { id: "home", href: `/app/books/${bookId}`, icon: Home, label: "Home" },
+  { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
+  { id: "collections", href: `/app/books/${bookId}/collections`, icon: ListChecks, label: "Collections" },
+  { id: "meal-plan", href: `/app/books/${bookId}/recipes`, icon: CalendarDays, label: "Meal Plan" },
+  { id: "groceries", href: `/app/books/${bookId}/recipes`, icon: ShoppingCart, label: "Groceries" },
+  { id: "favorites", href: `/app/books/${bookId}/recipes`, icon: Heart, label: "Favorites" },
+  { id: "activity", href: `/app/books/${bookId}/members`, icon: History, label: "Activity" },
 ];
 
 export function AppShell({ children, bookId }: AppShellProps) {
@@ -44,10 +47,11 @@ export function AppShell({ children, bookId }: AppShellProps) {
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
-      <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[240px] rounded-l-xl lg:flex lg:flex-col">
-        <Link href={`/app/books/${bookId}`} className="flex items-center gap-3 px-6 py-8">
-          <span className="flex h-12 w-12 items-center justify-center rounded-md border border-line-soft bg-card text-2xl shadow-xs">
-            🥣
+      <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[280px] overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
+        <Link href={`/app/books/${bookId}`} className="flex shrink-0 items-center gap-3 px-7 pb-7 pt-9">
+          <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-line-soft bg-card shadow-xs">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.svg" alt="" className="h-full w-full" aria-hidden="true" />
           </span>
           <span className="min-w-0">
             <span
@@ -60,10 +64,14 @@ export function AppShell({ children, bookId }: AppShellProps) {
           </span>
         </Link>
 
-        <nav aria-label="Primary navigation" className="px-5">
-          <div className="space-y-1">
-            {DESKTOP_NAV(bookId).map(({ href, icon: Icon, label }) => {
-              const isActive = pathname === href || pathname.startsWith(href + "/");
+        <nav aria-label="Primary navigation" className="shrink-0 px-6">
+          <div className="space-y-2.5">
+            {DESKTOP_NAV(bookId).map(({ id, href, icon: Icon, label }) => {
+              const isActive =
+                (id === "home" && pathname === href) ||
+                (id === "recipes" && (pathname === href || pathname.startsWith(href + "/"))) ||
+                (id === "collections" && pathname.startsWith(href)) ||
+                (id === "activity" && pathname.startsWith(href));
               return (
                 <Link
                   key={label}
@@ -72,7 +80,7 @@ export function AppShell({ children, bookId }: AppShellProps) {
                   className={clsx(
                     "flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
                     isActive
-                      ? "bg-card-muted text-green-deep shadow-xs"
+                      ? "bg-green-soft/70 text-green-deep shadow-xs"
                       : "text-ink hover:bg-card/70"
                   )}
                 >
@@ -84,7 +92,7 @@ export function AppShell({ children, bookId }: AppShellProps) {
           </div>
         </nav>
 
-        <div className="mt-8 px-5">
+        <div className="mt-8 shrink-0 px-6">
           <div className="mb-3 flex items-center justify-between border-t border-line-soft pt-5">
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">My Cookbooks</p>
             <Link href="/onboarding/create-book" aria-label="Create cookbook" className="text-green-deep">
@@ -92,17 +100,24 @@ export function AppShell({ children, bookId }: AppShellProps) {
             </Link>
           </div>
           <div className="space-y-2">
-            {["The Family Table", "Holiday Favorites", "Grandma's Recipes", "Quick & Easy"].map((title, index) => (
+            {[
+              { title: "The Family Table", icon: "bowl" },
+              { title: "Holiday Favorites", icon: "holiday" },
+              { title: "Grandma's Recipes", icon: "grandma" },
+              { title: "Quick & Easy", icon: "quick" },
+            ].map(({ title, icon }, index) => (
               <Link
                 key={title}
                 href={`/app/books/${bookId}`}
                 className={clsx(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
-                  index === 0 ? "bg-card-muted text-green-deep" : "text-ink hover:bg-card/70"
+                  "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                  index === 0
+                    ? "bg-card-muted text-green-deep before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent-terracotta"
+                    : "text-ink hover:bg-card/70"
                 )}
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-soft bg-card text-base">
-                  {index === 0 ? "🥣" : index === 1 ? "🌿" : index === 2 ? "🍅" : "🥘"}
+                <span className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-soft bg-card">
+                  <CookbookIcon name={icon} size={18} />
                 </span>
                 <span className="truncate">{title}</span>
               </Link>
@@ -110,16 +125,21 @@ export function AppShell({ children, bookId }: AppShellProps) {
           </div>
         </div>
 
-        <Link
-          href="/app/settings"
-          className="mt-auto flex h-12 items-center gap-3 border-t border-line-soft px-8 text-sm font-semibold text-ink hover:bg-card/70"
-        >
-          <Settings size={18} />
-          <span>Settings</span>
-        </Link>
+        <div className="mt-auto shrink-0 border-t border-line-soft p-5">
+          <Link
+            href="/app/settings"
+            className="flex min-h-12 items-center gap-3 rounded-md px-3 text-sm font-semibold text-ink transition-colors hover:bg-card/70"
+          >
+            <Settings size={18} className="shrink-0" />
+            <span>Settings</span>
+          </Link>
+          <p className="mt-2 px-3 text-[11px] font-semibold text-ink-soft/80">
+            v{APP_VERSION}
+          </p>
+        </div>
       </aside>
 
-      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-24 lg:ml-[260px] lg:max-w-none lg:pb-0">
+      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-24 lg:ml-[300px] lg:max-w-none lg:pb-0">
         {children}
       </main>
 

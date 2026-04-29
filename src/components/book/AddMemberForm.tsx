@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
@@ -48,8 +48,8 @@ export function AddMemberForm({
 
   const {
     register,
+    control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<InviteMemberInput>({
@@ -57,7 +57,7 @@ export function AddMemberForm({
     defaultValues: { role: "family" },
   });
 
-  const selectedRole = watch("role");
+  const selectedRole = useWatch({ control, name: "role" });
 
   async function onSubmit(data: InviteMemberInput) {
     setServerError(null);
@@ -106,6 +106,7 @@ export function AddMemberForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Input
         label="Email address"
+        required
         type="email"
         autoComplete="email"
         placeholder="family@example.com"
@@ -115,7 +116,12 @@ export function AddMemberForm({
 
       {/* Role cards */}
       <div>
-        <p className="text-sm font-semibold text-ink mb-3">Their role</p>
+        <p className="text-sm font-semibold text-ink mb-3">
+          Their role
+          <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+            Required
+          </span>
+        </p>
         <div className="space-y-2">
           {ROLE_OPTIONS.map(({ id, label, description, icon: Icon }) => (
             <label

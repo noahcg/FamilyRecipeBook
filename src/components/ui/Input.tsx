@@ -8,7 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, className, id, ...props }, ref) => {
+  ({ label, error, hint, className, id, required, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
@@ -19,12 +19,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className="text-sm font-semibold text-ink"
             style={{ fontFamily: "var(--font-nunito)" }}
           >
-            {label}
+            <span>{label}</span>
+            {required && (
+              <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+                Required
+              </span>
+            )}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
+          required={required}
           className={clsx(
             "input-cookbook",
             error && "border-danger focus:border-danger",

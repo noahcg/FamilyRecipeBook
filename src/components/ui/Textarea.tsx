@@ -9,7 +9,7 @@ interface TextareaProps
 }
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, hint, className, id, ...props }, ref) => {
+  ({ label, error, hint, className, id, required, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
@@ -20,12 +20,18 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             className="text-sm font-semibold text-ink"
             style={{ fontFamily: "var(--font-nunito)" }}
           >
-            {label}
+            <span>{label}</span>
+            {required && (
+              <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+                Required
+              </span>
+            )}
           </label>
         )}
         <textarea
           ref={ref}
           id={inputId}
+          required={required}
           className={clsx(
             "input-cookbook resize-y min-h-28",
             error && "border-danger focus:border-danger",

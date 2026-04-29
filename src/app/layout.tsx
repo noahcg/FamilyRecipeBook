@@ -24,6 +24,10 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   title: "Family Recipe Book",
   description: "A warm, shared cookbook for your family.",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

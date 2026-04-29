@@ -51,6 +51,7 @@ export default function SignInPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Email address"
+              required
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
@@ -59,6 +60,7 @@ export default function SignInPage() {
             />
             <Input
               label="Password"
+              required
               type="password"
               autoComplete="current-password"
               placeholder="••••••••"

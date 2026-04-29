@@ -34,23 +34,28 @@ export default async function EditRecipePage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="px-5 pt-5">
+      <div className="mx-auto max-w-[920px] px-5 py-8 lg:px-8">
         <Link
           href={`/app/books/${bookId}/recipes/${recipeId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors mb-5 block"
+          className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft transition-colors hover:text-ink"
         >
           <ArrowLeft size={14} strokeWidth={2} />
           Back to recipe
         </Link>
 
-        <h1
-          className="text-2xl font-bold text-green-deep mb-6"
-          style={{ fontFamily: "var(--font-playfair)" }}
-        >
-          Edit recipe
-        </h1>
+        <div className="mb-6 border-b border-line-soft pb-6">
+          <p className="mb-2 text-sm font-semibold text-ink-muted">The Family Table</p>
+          <h1
+            className="text-3xl font-bold leading-tight text-green-deep"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Edit recipe
+          </h1>
+        </div>
 
-        <RecipeForm bookId={bookId} recipe={recipe} />
+        <div className="rounded-xl border border-line-soft bg-card px-5 pt-5 shadow-card sm:px-6">
+          <RecipeForm bookId={bookId} recipe={recipe} />
+        </div>
       </div>
     </AppShell>
   );

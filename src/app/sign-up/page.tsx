@@ -86,6 +86,7 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
               label="Your name"
+              required
               type="text"
               autoComplete="name"
               placeholder="e.g. Katherine"
@@ -94,6 +95,7 @@ export default function SignUpPage() {
             />
             <Input
               label="Email address"
+              required
               type="email"
               autoComplete="email"
               placeholder="you@example.com"
@@ -102,6 +104,7 @@ export default function SignUpPage() {
             />
             <Input
               label="Password"
+              required
               type="password"
               autoComplete="new-password"
               placeholder="At least 8 characters"

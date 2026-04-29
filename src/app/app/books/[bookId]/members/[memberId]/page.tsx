@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { RecipeCard, EmptyState, Badge } from "@/components/ui";
+import { RecipeCard, EmptyState, CookbookIcon } from "@/components/ui";
 import { MemberProfileCard } from "@/components/members/MemberProfileCard";
 import { createClient } from "@/lib/supabase/server";
+import type { MemberWithProfile } from "@/lib/types";
 
 interface Props {
   params: Promise<{ bookId: string; memberId: string }>;
@@ -12,10 +13,10 @@ interface Props {
 }
 
 const ACTIVITY_ICONS: Record<string, string> = {
-  recipe_created: "📖",
-  love: "♥",
-  made_it: "🍳",
-  favorite: "★",
+  recipe_created: "book",
+  love: "grandma",
+  made_it: "cooking",
+  favorite: "favorite",
 };
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -24,6 +25,27 @@ const ACTIVITY_LABELS: Record<string, string> = {
   made_it: "Made",
   favorite: "Favorited",
 };
+
+interface MemberRecipe {
+  id: string;
+  title: string;
+  description: string | null;
+  photo_url: string | null;
+  source_name: string | null;
+  category: string | null;
+  reactions?: { type: string }[] | null;
+  loveCount: number;
+}
+
+interface MemberActivity {
+  id: string;
+  type: string;
+  created_at: string;
+  recipe?: {
+    id: string;
+    title: string;
+  } | null;
+}
 
 export default async function MemberProfilePage({ params, searchParams }: Props) {
   const { bookId, memberId } = await params;
@@ -54,12 +76,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
 
   if (!memberRes.data) notFound();
 
-  const member = memberRes.data as any;
-  const recipes = (recipesRes.data ?? []).map((r: any) => ({
+  const member = memberRes.data as MemberWithProfile;
+  const recipes = ((recipesRes.data ?? []) as Omit<MemberRecipe, "loveCount">[]).map((r) => ({
     ...r,
-    loveCount: r.reactions?.filter((rx: any) => rx.type === "love").length ?? 0,
+    loveCount: r.reactions?.filter((rx) => rx.type === "love").length ?? 0,
   }));
-  const activity = activityRes.data ?? [];
+  const activity = (activityRes.data ?? []) as MemberActivity[];
 
   return (
     <AppShell bookId={bookId}>
@@ -111,14 +133,14 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
             />
           ) : (
             <div className="space-y-3">
-              {activity.map((event: any) => (
+              {activity.map((event) => (
                 <div
                   key={event.id}
                   className="flex items-start gap-3 py-3 border-b"
                   style={{ borderColor: "var(--color-border-soft)" }}
                 >
-                  <span className="text-lg leading-none pt-0.5" aria-hidden="true">
-                    {ACTIVITY_ICONS[event.type] ?? "📝"}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-card-muted">
+                    <CookbookIcon name={ACTIVITY_ICONS[event.type] ?? "note"} size={18} />
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm text-ink">
@@ -153,16 +175,16 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {recipes.map((recipe: any) => (
+            {recipes.map((recipe) => (
               <Link
                 key={recipe.id}
                 href={`/app/books/${bookId}/recipes/${recipe.id}`}
               >
                 <RecipeCard
                   title={recipe.title}
-                  description={recipe.description}
+                  description={recipe.description ?? undefined}
                   imageUrl={recipe.photo_url ?? undefined}
-                  fromPerson={recipe.source_name}
+                  fromPerson={recipe.source_name ?? undefined}
                   loveCount={recipe.loveCount}
                   category={recipe.category ?? undefined}
                 />

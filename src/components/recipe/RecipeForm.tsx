@@ -198,6 +198,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       <div className="space-y-4">
         <Input
           label="Recipe title"
+          required
           placeholder="e.g. Grandma's Apple Pie"
           error={errors.title?.message}
           {...register("title")}
@@ -304,6 +305,9 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       <div>
         <p className="text-sm font-semibold text-ink mb-3">
           Ingredients{" "}
+          <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+            At least one required
+          </span>
           {errors.ingredients && (
             <span className="text-danger font-normal ml-1">
               {getArrayErrorMessage(errors.ingredients) ?? "Fix errors below"}
@@ -335,7 +339,9 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                 <div className="col-span-6">
                   <input
                     className="input-cookbook text-sm"
-                    placeholder="Ingredient *"
+                    placeholder="Ingredient"
+                    required
+                    aria-label={`Ingredient ${index + 1} name, required`}
                     {...register(`ingredients.${index}.item`)}
                   />
                   {errors.ingredients?.[index]?.item && (
@@ -373,6 +379,9 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       <div>
         <p className="text-sm font-semibold text-ink mb-3">
           Steps{" "}
+          <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+            At least one required
+          </span>
           {errors.instructions && (
             <span className="text-danger font-normal ml-1">
               {getArrayErrorMessage(errors.instructions) ?? "Fix errors below"}
@@ -391,7 +400,9 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
               <div className="flex-1">
                 <textarea
                   className="input-cookbook text-sm min-h-16 resize-none"
-                  placeholder={`Step ${index + 1}…`}
+                  placeholder={`Step ${index + 1}`}
+                  required
+                  aria-label={`Step ${index + 1}, required`}
                   rows={2}
                   {...register(`instructions.${index}.body`)}
                 />

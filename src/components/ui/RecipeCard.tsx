@@ -11,6 +11,7 @@ interface RecipeCardProps {
   servings?: number;
   loveCount?: number;
   category?: string;
+  attributionPrefix?: string;
   onClick?: () => void;
   className?: string;
 }
@@ -25,6 +26,7 @@ function RecipeCard({
   servings,
   loveCount,
   category,
+  attributionPrefix = "Added by",
   onClick,
   className,
 }: RecipeCardProps) {
@@ -88,7 +90,7 @@ function RecipeCard({
 
         {fromPerson && (
           <p className="mb-2 text-xs text-ink-muted">
-            Added by {fromPerson}
+            {attributionPrefix} {fromPerson}
           </p>
         )}
 

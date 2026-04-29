@@ -12,26 +12,31 @@ export default async function NewRecipePage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="px-5 pt-5">
+      <div className="mx-auto max-w-[920px] px-5 py-8 lg:px-8">
         <Link
           href={`/app/books/${bookId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors mb-5 block"
+          className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft transition-colors hover:text-ink"
         >
           <ArrowLeft size={14} strokeWidth={2} />
           Back to book
         </Link>
 
-        <h1
-          className="text-2xl font-bold text-green-deep mb-1"
-          style={{ fontFamily: "var(--font-playfair)" }}
-        >
-          Add a recipe
-        </h1>
-        <p className="text-sm text-ink-muted mb-6">
-          Capture the recipe and the story behind it.
-        </p>
+        <div className="mb-6 border-b border-line-soft pb-6">
+          <p className="mb-2 text-sm font-semibold text-ink-muted">The Family Table</p>
+          <h1
+            className="text-3xl font-bold leading-tight text-green-deep"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Add a recipe
+          </h1>
+          <p className="mt-2 text-sm text-ink-muted">
+            Capture the recipe and the story behind it.
+          </p>
+        </div>
 
-        <RecipeForm bookId={bookId} />
+        <div className="rounded-xl border border-line-soft bg-card px-5 pt-5 shadow-card sm:px-6">
+          <RecipeForm bookId={bookId} />
+        </div>
       </div>
     </AppShell>
   );

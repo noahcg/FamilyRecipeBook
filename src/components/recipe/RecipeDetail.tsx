@@ -3,10 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock, Users, MoreVertical, BookOpen, Heart, Edit2, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Bookmark,
+  BookOpen,
+  Camera,
+  ChevronDown,
+  Edit2,
+  Flame,
+  Heart,
+  Leaf,
+  MoreHorizontal,
+  Smile,
+  Trash2,
+} from "lucide-react";
 import { clsx } from "clsx";
-import { RecipeStoryNote, Button, Dialog } from "@/components/ui";
-import { ReactionBar } from "@/components/ui/ReactionPill";
+import { Button, Dialog } from "@/components/ui";
 import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { addRecipeStory, deleteRecipe } from "@/lib/actions/recipes";
@@ -47,7 +59,31 @@ export function RecipeDetail({
     userRole === "keeper" ||
     (userRole === "contributor" && recipe.created_by === userId);
 
-  const totalTime = (recipe.prep_minutes ?? 0) + (recipe.cook_minutes ?? 0);
+  const sourceName = recipe.source_name ?? recipe.creator?.full_name ?? "Family";
+  const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
+  const noteCount = (recipe.stories?.length ?? 0) + (recipe.story ? 1 : 0);
+  const activityItems = [
+    {
+      id: "created",
+      label: `${sourceName} added this recipe`,
+      date: new Date(recipe.created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      initials: sourceName.slice(0, 1).toUpperCase(),
+    },
+    ...(recipe.stories ?? []).slice(0, 2).map((storyItem) => ({
+      id: storyItem.id,
+      label: `${storyItem.author?.full_name ?? "Family"} shared a memory`,
+      date: new Date(storyItem.created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      initials: (storyItem.author?.full_name ?? "F").slice(0, 1).toUpperCase(),
+    })),
+  ];
 
   async function handleAddStory() {
     if (!storyText.trim()) return;
@@ -79,9 +115,9 @@ export function RecipeDetail({
   }
 
   return (
-    <article className="mx-auto max-w-[1120px] lg:px-8 lg:py-4">
+    <article className="mx-auto max-w-[1040px] px-4 py-4 lg:px-8">
       {/* Hero image */}
-      <div className="relative h-72 w-full overflow-hidden sm:h-80 lg:h-[340px] lg:rounded-t-xl">
+      <div className="relative h-[250px] overflow-hidden rounded-t-xl sm:h-[320px] lg:h-[360px]">
         {recipe.photo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -99,16 +135,15 @@ export function RecipeDetail({
         )}
 
         {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10" />
 
         {/* Back button */}
         <Link
           href={`/app/books/${bookId}`}
-          className="absolute top-4 left-4 w-9 h-9 rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm"
-          style={{ background: "rgba(247,243,233,0.92)" }}
+          className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-md bg-card/90 text-green-deep shadow-sm backdrop-blur-sm"
           aria-label="Back to book"
         >
-          <ArrowLeft size={16} strokeWidth={2} className="text-green-deep" />
+          <ArrowLeft size={18} strokeWidth={2} />
         </Link>
 
         {/* Top-right actions */}
@@ -117,8 +152,7 @@ export function RecipeDetail({
             type="button"
             onClick={handleFavorite}
             aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
-            className="flex h-10 w-10 items-center justify-center rounded-md shadow-sm backdrop-blur-sm transition-transform active:scale-95"
-            style={{ background: "rgba(247,243,233,0.92)" }}
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-card/90 text-green-deep shadow-sm backdrop-blur-sm transition-transform active:scale-95"
           >
             <Heart
               size={18}
@@ -132,10 +166,9 @@ export function RecipeDetail({
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="More options"
-            className="flex h-10 w-10 items-center justify-center rounded-md shadow-sm backdrop-blur-sm transition-transform active:scale-95"
-            style={{ background: "rgba(247,243,233,0.92)" }}
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-card/90 text-green-deep shadow-sm backdrop-blur-sm transition-transform active:scale-95"
           >
-            <MoreVertical size={17} strokeWidth={2} className="text-green-deep" />
+            <MoreHorizontal size={19} strokeWidth={2} />
           </button>
           {menuOpen && (
             <>
@@ -180,131 +213,72 @@ export function RecipeDetail({
           )}
         </div>
 
-        {/* Category chip */}
-        {recipe.category && (
-          <span
-            className="absolute bottom-8 left-5 text-xs font-semibold px-3 py-1 rounded-pill"
-            style={{
-              background: "rgba(247,243,233,0.92)",
-              color: "var(--color-cinnamon)",
-            }}
-          >
-            {recipe.category}
-          </span>
-        )}
       </div>
 
       {/* Content panel — overlaps hero */}
       <div
-        className="cookbook-detail-panel relative z-10 mx-4 -mt-8 max-w-[960px] space-y-6 rounded-xl px-5 pb-10 pt-6 lg:mx-auto lg:-mt-10 lg:px-8"
+        className="relative z-10 mx-4 -mt-8 mb-8 rounded-xl border border-line-soft bg-card px-5 pb-6 pt-6 shadow-card sm:px-6 lg:mx-8 lg:px-8"
       >
         {/* Title + meta */}
         <div>
           <h1
-            className="text-2xl sm:text-3xl font-bold text-green-deep leading-tight mb-1"
+            className="text-3xl font-bold leading-tight text-green-deep sm:text-4xl"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
             {recipe.title}
           </h1>
 
           {/* "Added by" + serves • category */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-ink-muted">
-            {(recipe.source_name ?? recipe.creator?.full_name) && (
-              <span>
-                Added by{" "}
-                <span className="font-semibold text-ink">
-                  {recipe.source_name ?? recipe.creator?.full_name}
-                </span>
-              </span>
-            )}
-            {recipe.servings != null && (
-              <>
-                {(recipe.source_name ?? recipe.creator?.full_name) && <span className="opacity-40">·</span>}
-                <span className="flex items-center gap-1">
-                  <Users size={12} strokeWidth={1.75} />
-                  Serves {recipe.servings}
-                </span>
-              </>
-            )}
-            {recipe.category && (
-              <>
-                <span className="opacity-40">·</span>
-                <span>{recipe.category}</span>
-              </>
-            )}
-          </div>
-
-          {/* Timing row */}
-          {(recipe.prep_minutes != null || recipe.cook_minutes != null) && (
-            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-ink-muted">
-              {recipe.prep_minutes != null && (
-                <span className="flex items-center gap-1.5">
-                  <Clock size={13} strokeWidth={1.75} />
-                  Prep {recipe.prep_minutes} min
-                </span>
-              )}
-              {recipe.cook_minutes != null && (
-                <span className="flex items-center gap-1.5">
-                  <Clock size={13} strokeWidth={1.75} />
-                  Cook {recipe.cook_minutes} min
-                </span>
-              )}
-              {totalTime > 0 && recipe.prep_minutes != null && recipe.cook_minutes != null && (
-                <span className="flex items-center gap-1.5 font-medium text-ink">
-                  Total {totalTime} min
-                </span>
-              )}
+          <div className="mt-4 flex items-center gap-3 text-sm text-ink">
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-card bg-green-soft font-bold text-green-deep">
+              {sourceName.slice(0, 1).toUpperCase()}
             </div>
-          )}
+            <div>
+              <p>Added by {sourceName}</p>
+              <p className="text-ink-muted">
+                {recipe.servings != null ? `Serves ${recipe.servings}` : "Family recipe"}
+                {recipe.category && <span className="px-1.5">·</span>}
+                {recipe.category}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Story notes — appear before ingredients */}
-        {(recipe.story || (recipe.stories && recipe.stories.length > 0)) && (
-          <div className="space-y-3">
-            {recipe.story && (
-              <RecipeStoryNote
-                story={recipe.story}
-                author={recipe.source_name ?? recipe.creator?.full_name ?? undefined}
-              />
-            )}
-            {recipe.stories?.map((s) => (
-              <RecipeStoryNote
-                key={s.id}
-                story={s.body}
-                author={s.author?.full_name ?? undefined}
-              />
-            ))}
+        {story && (
+          <div className="story-note relative mt-5 pr-12">
+            <p>“{story}”</p>
+            <Leaf className="absolute bottom-4 right-4 text-green-sage" size={36} strokeWidth={1.4} />
           </div>
         )}
 
-        <div className="border-b border-line-soft">
+        <div className="mt-5 border-b border-line-soft">
           <div className="flex items-end justify-between gap-4">
-            <div className="flex gap-6 overflow-x-auto text-sm font-semibold text-ink">
+            <div className="flex gap-7 overflow-x-auto text-sm font-semibold text-ink">
               <span className="border-b-2 border-green-deep pb-3 text-green-deep">Ingredients</span>
               {recipe.instructions && recipe.instructions.length > 0 && (
                 <a href="#instructions" className="pb-3 hover:text-green-deep">Instructions</a>
               )}
-              <span className="pb-3 text-ink-muted">Notes ({recipe.stories?.length ?? 0})</span>
+              <span className="pb-3">Notes ({noteCount})</span>
             </div>
             <button
               type="button"
-              className="mb-2 rounded-md border border-line-soft bg-card px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-green-pale"
+              className="mb-2 rounded-md border border-line-soft bg-white-soft px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-green-pale"
             >
-              Scale 1x
+              1x <ChevronDown size={12} className="inline" />
             </button>
           </div>
         </div>
 
         {/* Ingredients */}
         {recipe.ingredients && recipe.ingredients.length > 0 && (
-          <section>
+          <section className="mt-4">
             <IngredientChecklist ingredients={recipe.ingredients} />
           </section>
         )}
 
         {/* Instructions */}
         {recipe.instructions && recipe.instructions.length > 0 && (
-          <section id="instructions">
+          <section id="instructions" className="mt-6 border-t border-line-soft pt-5">
             <h2
               className="mb-3 text-lg font-bold text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
@@ -315,33 +289,65 @@ export function RecipeDetail({
           </section>
         )}
 
-        <div className="border-t border-line-soft pt-4">
-          <ReactionBar
-            bookId={bookId}
-            recipeId={recipe.id}
-            counts={reactionCounts}
-            userReactions={userReactions}
-          />
+        <div className="mt-5 flex items-center border-t border-line-soft pt-4 text-sm font-bold text-ink">
+          <button type="button" className="flex items-center gap-2 pr-5 text-accent-terracotta">
+            <Heart size={17} fill="currentColor" />
+            {reactionCounts.love}
+          </button>
+          <button type="button" className="flex items-center gap-2 border-l border-line-soft px-5 text-accent-terracotta">
+            <Flame size={17} fill="currentColor" />
+            {reactionCounts.made_it}
+          </button>
+          <span className="flex items-center gap-2 border-l border-line-soft px-5 text-accent-honey">
+            <Smile size={18} />
+            {reactionCounts.favorite}
+          </span>
+          <button type="button" onClick={handleFavorite} aria-label={favorited ? "Remove bookmark" : "Bookmark recipe"} className="ml-auto text-green-deep">
+            <Bookmark size={19} className={clsx(favorited && "fill-green-deep")} />
+          </button>
         </div>
 
         {/* Add a memory */}
-        <section className="flex gap-3">
-          <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-soft text-xs font-bold text-green-deep">
-            {(recipe.creator?.full_name ?? recipe.source_name ?? "F").slice(0, 1)}
+        <section className="mt-4 flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-soft text-xs font-bold text-green-deep">
+            {(recipe.creator?.full_name ?? recipe.source_name ?? "F").slice(0, 1).toUpperCase()}
           </div>
-          <textarea
-            className="input-cookbook min-h-10 w-full resize-none"
-            placeholder="Share a memory or note about this recipe…"
+          <input
+            className="input-cookbook h-11 min-w-0 flex-1 text-sm"
+            placeholder="Add a note or memory..."
             value={storyText}
             onChange={(e) => setStoryText(e.target.value)}
-            style={{ fontFamily: "var(--font-caveat)", fontSize: "1.1rem" }}
           />
-          {storyError && (
-            <p className="text-xs text-danger mt-1">{storyError}</p>
-          )}
+          <button type="button" className="flex h-11 w-11 items-center justify-center rounded-md border border-line-soft bg-white-soft text-green-deep" aria-label="Add photo">
+            <Camera size={18} />
+          </button>
           <Button variant="secondary" size="sm" onClick={handleAddStory} disabled={!storyText.trim()} loading={addingStory}>
             Add
           </Button>
+          {storyError && (
+            <p className="text-xs text-danger mt-1">{storyError}</p>
+          )}
+        </section>
+
+        <section className="mt-6">
+          <h2
+            className="mb-3 text-lg font-semibold text-green-deep"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Made by our family
+          </h2>
+          <div className="divide-y divide-line-soft">
+            {activityItems.map((item) => (
+              <div key={item.id} className="flex items-center gap-3 py-2.5 text-sm">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-soft text-xs font-bold text-green-deep">
+                  {item.initials}
+                </div>
+                <span className="text-ink">{item.label}</span>
+                <span className="ml-auto text-xs text-ink-muted">{item.date}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-center text-sm font-semibold text-green-deep">View all activity</p>
         </section>
       </div>
 

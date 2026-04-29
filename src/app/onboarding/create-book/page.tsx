@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Button, Input, Textarea, BookCover } from "@/components/ui";
@@ -24,8 +24,8 @@ export default function CreateBookPage() {
 
   const {
     register,
+    control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateBookInput>({
@@ -33,8 +33,8 @@ export default function CreateBookPage() {
     defaultValues: { title: "", cover_style: "sage" },
   });
 
-  const watchedTitle = watch("title");
-  const selectedStyle = watch("cover_style");
+  const watchedTitle = useWatch({ control, name: "title" });
+  const selectedStyle = useWatch({ control, name: "cover_style" });
 
   async function onSubmit(data: CreateBookInput) {
     setServerError(null);
@@ -66,6 +66,7 @@ export default function CreateBookPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 w-full space-y-6">
           <Input
             label="Book title"
+            required
             placeholder="e.g. The Family Table, Mom's Recipe Box"
             error={errors.title?.message}
             {...register("title")}

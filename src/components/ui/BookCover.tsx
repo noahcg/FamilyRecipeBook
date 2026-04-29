@@ -1,4 +1,5 @@
 import { clsx } from "clsx";
+import { CookbookIcon } from "./CookbookIcon";
 
 type CoverStyle = "sage" | "terracotta" | "mustard" | "forest" | "clay";
 
@@ -27,11 +28,11 @@ const coverTextColor: Record<CoverStyle, string> = {
 };
 
 const coverIllustration: Record<CoverStyle, string> = {
-  sage:      "🌿",
-  terracotta:"🫙",
-  mustard:   "🌻",
-  forest:    "🫕",
-  clay:      "🍂",
+  sage:      "leaf",
+  terracotta:"cooking",
+  mustard:   "wheat",
+  forest:    "bowl",
+  clay:      "home",
 };
 
 interface BookCoverProps {
@@ -100,13 +101,12 @@ function BookCover({
       ) : (
         /* Decorative illustration mark */
         <div className="flex-1 flex items-center justify-center">
-          <span
-            className="select-none"
-            style={{ fontSize: size === "sm" ? "1.75rem" : size === "md" ? "2.5rem" : "3.5rem", opacity: 0.55 }}
-            aria-hidden="true"
-          >
-            {illustration}
-          </span>
+          <CookbookIcon
+            name={illustration}
+            size={size === "sm" ? 30 : size === "md" ? 44 : 58}
+            strokeWidth={1.25}
+            className="opacity-55"
+          />
         </div>
       )}
 

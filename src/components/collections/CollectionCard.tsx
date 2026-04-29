@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import type { Collection } from "@/lib/types";
+import { CookbookIcon, normalizeCookbookIcon } from "@/components/ui/CookbookIcon";
 
 interface CollectionCardProps {
   collection: Collection;
@@ -9,11 +10,11 @@ interface CollectionCardProps {
 }
 
 const DEFAULT_ICONS: Record<string, string> = {
-  Holidays: "🎄",
-  "Quick Meals": "⚡",
-  "Sunday Dinners": "🍽️",
-  "Grandma's Recipes": "❤️",
-  "Weeknight Favorites": "🌙",
+  Holidays: "holiday",
+  "Quick Meals": "quick",
+  "Sunday Dinners": "dinner",
+  "Grandma's Recipes": "grandma",
+  "Weeknight Favorites": "weeknight",
 };
 
 export function CollectionCard({
@@ -23,7 +24,7 @@ export function CollectionCard({
   className,
 }: CollectionCardProps) {
   const icon =
-    collection.icon ?? DEFAULT_ICONS[collection.title] ?? "📖";
+    normalizeCookbookIcon(collection.icon ?? DEFAULT_ICONS[collection.title], "book");
 
   return (
     <div
@@ -33,7 +34,9 @@ export function CollectionCard({
       tabIndex={onClick ? 0 : undefined}
     >
       <div className="min-w-0">
-        <span className="mb-3 block text-3xl" aria-hidden="true">{icon}</span>
+        <span className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-card-muted">
+          <CookbookIcon name={icon} size={25} />
+        </span>
         <div>
           <h3
             className="truncate font-semibold text-green-deep"
