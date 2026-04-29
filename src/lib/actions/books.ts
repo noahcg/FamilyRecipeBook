@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
 import { canManageBook } from "@/lib/permissions";
 import {
@@ -22,8 +23,11 @@ export async function createBook(
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const supabase = await createClient();
-  const { data: book, error } = await supabase
+  // Use service client so the DB trigger (handle_new_recipe_book) can insert
+  // into book_members without being blocked by RLS. Auth is enforced above
+  // via requireUser() and owner_id is explicitly set to user.id.
+  const admin = createServiceClient();
+  const { data: book, error } = await admin
     .from("recipe_books")
     .insert({ ...parsed.data, owner_id: user.id })
     .select()
@@ -33,7 +37,6 @@ export async function createBook(
     return { success: false, error: error?.message ?? "Could not create book" };
   }
 
-  // Owner is automatically added as keeper via DB trigger (see migration)
   revalidatePath("/app");
   return { success: true, data: book };
 }

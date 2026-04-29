@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Mail } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { signUpSchema, type SignUpInput } from "@/lib/validators/auth";
 import { signUp } from "@/lib/actions/auth";
 
 export default function SignUpPage() {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [checkEmail, setCheckEmail] = useState(false);
 
   const {
     register,
@@ -21,7 +22,43 @@ export default function SignUpPage() {
   async function onSubmit(data: SignUpInput) {
     setServerError(null);
     const result = await signUp(data.full_name, data.email, data.password);
-    if (result && !result.success) setServerError(result.error);
+    if (!result) return; // redirect happened
+    if (!result.success) {
+      setServerError(result.error);
+    } else if (result.data.needsConfirmation) {
+      setCheckEmail(true);
+    }
+  }
+
+  if (checkEmail) {
+    return (
+      <div className="app-paper-bg paper-texture min-h-screen flex flex-col items-center justify-center px-5 py-12">
+        <div className="w-full max-w-sm text-center relative z-10">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm"
+            style={{ background: "var(--color-sage-soft)" }}
+          >
+            <Mail size={28} strokeWidth={1.5} className="text-green-deep" />
+          </div>
+          <h1
+            className="text-2xl font-bold text-green-deep mb-2"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Check your email
+          </h1>
+          <p className="text-ink-muted text-sm leading-relaxed">
+            We sent a confirmation link to your email address. Click it to
+            finish setting up your account.
+          </p>
+          <p className="text-xs text-ink-soft mt-6">
+            Already confirmed?{" "}
+            <Link href="/sign-in" className="text-green-deep font-semibold hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

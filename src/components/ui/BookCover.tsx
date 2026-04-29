@@ -1,30 +1,37 @@
 import { clsx } from "clsx";
-import { BookOpen } from "lucide-react";
 
 type CoverStyle = "sage" | "terracotta" | "mustard" | "forest" | "clay";
 
-const coverGradients: Record<CoverStyle, string> = {
-  sage: "from-green-soft to-green-pale",
-  terracotta: "from-accent-terracotta/20 to-accent-terracotta/5",
-  mustard: "from-accent-mustard/30 to-accent-honey/10",
-  forest: "from-green-soft to-green-pale",
-  clay: "from-accent-clay/20 to-paper-warm",
+const coverBg: Record<CoverStyle, string> = {
+  sage:      "#DDE7D7",
+  terracotta:"#F2DDD6",
+  mustard:   "#F5E6C4",
+  forest:    "#234436",
+  clay:      "#EDD8C4",
 };
 
-const coverBorders: Record<CoverStyle, string> = {
-  sage: "border-green-soft",
-  terracotta: "border-accent-terracotta/30",
-  mustard: "border-accent-mustard/40",
-  forest: "border-green-soft",
-  clay: "border-accent-clay/30",
+const coverBorder: Record<CoverStyle, string> = {
+  sage:      "#C4D9BD",
+  terracotta:"#E0B9AE",
+  mustard:   "#E8CFA0",
+  forest:    "#1A3329",
+  clay:      "#D9B898",
 };
 
-const coverIconColors: Record<CoverStyle, string> = {
-  sage: "text-green-sage",
-  terracotta: "text-accent-terracotta",
-  mustard: "text-accent-honey",
-  forest: "text-green-deep",
-  clay: "text-accent-clay",
+const coverTextColor: Record<CoverStyle, string> = {
+  sage:      "#2F4F3F",
+  terracotta:"#7A2F1E",
+  mustard:   "#6B4A10",
+  forest:    "#EEF4EA",
+  clay:      "#5C3218",
+};
+
+const coverIllustration: Record<CoverStyle, string> = {
+  sage:      "🌿",
+  terracotta:"🫙",
+  mustard:   "🌻",
+  forest:    "🫕",
+  clay:      "🍂",
 };
 
 interface BookCoverProps {
@@ -56,68 +63,75 @@ function BookCover({
   onClick,
   className,
 }: BookCoverProps) {
+  const bg = coverBg[style];
+  const border = coverBorder[style];
+  const textColor = coverTextColor[style];
+  const illustration = coverIllustration[style];
+
   return (
     <div
       className={clsx(
-        "relative overflow-hidden border-2 shadow-card flex flex-col justify-between p-4",
+        "relative overflow-hidden flex flex-col justify-between",
         "transition-transform duration-200 hover:-translate-y-1",
-        !imageUrl && `bg-gradient-to-br ${coverGradients[style]}`,
-        coverBorders[style],
         sizeClasses[size],
         onClick && "cursor-pointer",
         className
       )}
+      style={{
+        background: imageUrl ? undefined : bg,
+        border: `2px solid ${border}`,
+        boxShadow: "0 4px 20px rgba(35,68,54,0.18), 0 1px 3px rgba(35,68,54,0.12)",
+        padding: size === "sm" ? "0.75rem" : "1rem",
+      }}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
       {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imageUrl}
-          alt={title}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageUrl}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+        </>
       ) : (
-        <BookOpen
-          size={size === "sm" ? 28 : size === "md" ? 36 : 48}
-          strokeWidth={1.5}
-          className={clsx("opacity-30", coverIconColors[style])}
-        />
-      )}
-
-      {/* Overlay for image covers */}
-      {imageUrl && (
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+        /* Decorative illustration mark */
+        <div className="flex-1 flex items-center justify-center">
+          <span
+            className="select-none"
+            style={{ fontSize: size === "sm" ? "1.75rem" : size === "md" ? "2.5rem" : "3.5rem", opacity: 0.55 }}
+            aria-hidden="true"
+          >
+            {illustration}
+          </span>
+        </div>
       )}
 
       <div className="relative mt-auto">
         <h3
           className={clsx(
             "font-bold leading-tight",
-            imageUrl ? "text-ink-inverse" : "text-green-deep",
             size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base"
           )}
-          style={{ fontFamily: "var(--font-playfair)" }}
+          style={{ fontFamily: "var(--font-playfair)", color: imageUrl ? "#FFF9EE" : textColor }}
         >
           {title}
         </h3>
         {subtitle && (
           <p
-            className={clsx(
-              "text-xs mt-0.5",
-              imageUrl ? "text-ink-inverse/70" : "text-ink-muted"
-            )}
+            className="text-xs mt-0.5"
+            style={{ color: imageUrl ? "rgba(255,249,238,0.7)" : textColor, opacity: imageUrl ? 1 : 0.7 }}
           >
             {subtitle}
           </p>
         )}
         {(memberCount != null || recipeCount != null) && (
           <p
-            className={clsx(
-              "text-xs mt-1 opacity-60",
-              imageUrl ? "text-ink-inverse" : "text-ink-muted"
-            )}
+            className="text-xs mt-1"
+            style={{ color: textColor, opacity: 0.6 }}
           >
             {[
               recipeCount != null && `${recipeCount} recipes`,

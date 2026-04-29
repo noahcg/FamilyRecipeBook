@@ -22,7 +22,7 @@ export function IngredientChecklist({ ingredients, className }: IngredientCheckl
   }
 
   return (
-    <ul className={clsx("space-y-2", className)}>
+    <ul className={clsx("grid gap-x-8 gap-y-2 sm:grid-cols-2", className)}>
       {ingredients.map((ing) => {
         const isChecked = checked.has(ing.id);
         const label = [ing.quantity, ing.unit, ing.item].filter(Boolean).join(" ");
@@ -32,12 +32,12 @@ export function IngredientChecklist({ ingredients, className }: IngredientCheckl
             <button
               type="button"
               onClick={() => toggle(ing.id)}
-              className="flex items-start gap-3 w-full text-left group"
+              className="group flex w-full items-start gap-3 text-left"
               aria-pressed={isChecked}
             >
               <span
                 className={clsx(
-                  "mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                  "mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-xs border transition-colors",
                   isChecked
                     ? "bg-green-deep border-green-deep"
                     : "border-line group-hover:border-green-sage"
@@ -49,7 +49,7 @@ export function IngredientChecklist({ ingredients, className }: IngredientCheckl
                   </svg>
                 )}
               </span>
-              <span className={clsx("text-sm leading-relaxed transition-opacity", isChecked && "line-through opacity-40")}>
+              <span className={clsx("text-sm leading-normal text-ink transition-opacity", isChecked && "line-through opacity-40")}>
                 {label}
                 {ing.note && (
                   <span className="text-ink-soft ml-1">({ing.note})</span>

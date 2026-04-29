@@ -3,13 +3,13 @@
 /* ─── Design Tokens ────────────────────────────────────────── */
 :root {
   /* Paper and surfaces */
-  --color-paper: #F7F3E9;
-  --color-paper-warm: #F2E8D8;
-  --color-paper-soft: #FBF8F1;
-  --color-card: #FFF9EE;
-  --color-card-muted: #F7EEDC;
-  --color-border: #D8CBB7;
-  --color-border-soft: #E8DDCA;
+  --color-paper: #F4EEE3;
+  --color-paper-warm: #EEE2D0;
+  --color-paper-soft: #FBF6EC;
+  --color-card: #FFF9EF;
+  --color-card-muted: #F4E8D5;
+  --color-border: #D7C7AF;
+  --color-border-soft: #E8DBC8;
 
   /* Greens */
   --color-deep-green: #2F4F3F;
@@ -38,13 +38,13 @@
   --color-danger: #B95A40;
 
   /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(47, 79, 63, 0.06);
-  --shadow-sm: 0 4px 12px rgba(47, 79, 63, 0.08);
-  --shadow-md: 0 10px 30px rgba(47, 79, 63, 0.10);
-  --shadow-lg: 0 20px 50px rgba(47, 79, 63, 0.12);
-  --shadow-paper: 0 1px 2px rgba(47, 79, 63, 0.06), 0 10px 30px rgba(47, 79, 63, 0.08);
-  --shadow-card: 0 2px 8px rgba(47, 79, 63, 0.08), 0 18px 40px rgba(47, 79, 63, 0.08);
-  --shadow-soft: 0 8px 24px rgba(47, 79, 63, 0.10);
+  --shadow-xs: 0 1px 2px rgba(75, 53, 31, 0.06);
+  --shadow-sm: 0 2px 8px rgba(75, 53, 31, 0.08);
+  --shadow-md: 0 8px 22px rgba(75, 53, 31, 0.11);
+  --shadow-lg: 0 18px 48px rgba(75, 53, 31, 0.14);
+  --shadow-paper: 0 1px 2px rgba(75, 53, 31, 0.06), 0 12px 32px rgba(75, 53, 31, 0.08);
+  --shadow-card: 0 1px 2px rgba(75, 53, 31, 0.06), 0 12px 24px rgba(75, 53, 31, 0.08);
+  --shadow-soft: 0 8px 24px rgba(75, 53, 31, 0.10);
 
   /* Focus */
   --focus-ring: 0 0 0 3px rgba(231, 111, 81, 0.24);
@@ -68,10 +68,10 @@
 
   /* Radius */
   --radius-xs: 0.375rem;
-  --radius-sm: 0.625rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
   --radius-2xl: 2rem;
   --radius-pill: 999px;
 }
@@ -84,11 +84,11 @@
   --font-hand: var(--font-caveat);
 
   /* Colors — paper */
-  --color-paper: #F7F3E9;
-  --color-paper-warm: #F2E8D8;
-  --color-paper-soft: #FBF8F1;
-  --color-card: #FFF9EE;
-  --color-card-muted: #F7EEDC;
+  --color-paper: #F4EEE3;
+  --color-paper-warm: #EEE2D0;
+  --color-paper-soft: #FBF6EC;
+  --color-card: #FFF9EF;
+  --color-card-muted: #F4E8D5;
 
   /* Colors — greens */
   --color-green-deep: #2F4F3F;
@@ -112,8 +112,8 @@
   --color-ink-inverse: #FFF9EE;
 
   /* Colors — line */
-  --color-line: #D8CBB7;
-  --color-line-soft: #E8DDCA;
+  --color-line: #D7C7AF;
+  --color-line-soft: #E8DBC8;
 
   /* Colors — feedback */
   --color-success: #557A55;
@@ -122,19 +122,19 @@
 
   /* Radius */
   --radius-xs: 0.375rem;
-  --radius-sm: 0.625rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
   --radius-2xl: 2rem;
   --radius-pill: 999px;
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(47,79,63,0.06);
-  --shadow-sm: 0 4px 12px rgba(47,79,63,0.08);
-  --shadow-md: 0 10px 30px rgba(47,79,63,0.10);
-  --shadow-lg: 0 20px 50px rgba(47,79,63,0.12);
-  --shadow-card: 0 2px 8px rgba(47,79,63,0.08), 0 18px 40px rgba(47,79,63,0.08);
+  --shadow-sm: 0 2px 8px rgba(75,53,31,0.08);
+  --shadow-md: 0 8px 22px rgba(75,53,31,0.11);
+  --shadow-lg: 0 18px 48px rgba(75,53,31,0.14);
+  --shadow-card: 0 1px 2px rgba(75,53,31,0.06), 0 12px 24px rgba(75,53,31,0.08);
 }
 
 /* ─── Base ───────────────────────────────────────────────────── */
@@ -148,11 +148,16 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+body {
+  background: var(--color-paper);
+}
+
 /* ─── Paper Background ──────────────────────────────────────── */
 .app-paper-bg {
   background:
-    radial-gradient(circle at top left, rgba(242, 179, 72, 0.08), transparent 32rem),
-    radial-gradient(circle at bottom right, rgba(139, 168, 136, 0.12), transparent 28rem),
+    radial-gradient(circle at top left, rgba(216, 160, 83, 0.12), transparent 34rem),
+    radial-gradient(circle at bottom right, rgba(139, 168, 136, 0.14), transparent 30rem),
+    linear-gradient(90deg, rgba(255,255,255,0.34), rgba(255,255,255,0) 38%, rgba(93,65,38,0.04)),
     var(--color-paper);
   min-height: 100dvh;
 }
@@ -165,9 +170,26 @@ html {
   z-index: 0;
   opacity: 0.22;
   background-image:
-    linear-gradient(rgba(47, 79, 63, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(47, 79, 63, 0.025) 1px, transparent 1px);
-  background-size: 28px 28px;
+    radial-gradient(rgba(75, 53, 31, 0.16) 0.55px, transparent 0.55px),
+    linear-gradient(rgba(47, 79, 63, 0.025) 1px, transparent 1px);
+  background-size: 18px 18px, 36px 36px;
+}
+
+.cookbook-sidebar {
+  background: rgba(251, 246, 236, 0.78);
+  border-right: 1px solid var(--color-border-soft);
+  box-shadow: 8px 0 32px rgba(75, 53, 31, 0.05);
+  backdrop-filter: blur(18px);
+}
+
+.cookbook-main-panel {
+  background: rgba(251, 246, 236, 0.48);
+}
+
+.cookbook-detail-panel {
+  background: rgba(255, 249, 239, 0.92);
+  border: 1px solid rgba(232, 219, 200, 0.9);
+  box-shadow: var(--shadow-card);
 }
 
 /* ─── Recipe Card ────────────────────────────────────────────── */
@@ -185,7 +207,7 @@ html {
 
 /* ─── Story Note ─────────────────────────────────────────────── */
 .story-note {
-  background: #F7EEDC;
+  background: #F6E8D4;
   border: 1px solid #E8DDCA;
   border-radius: var(--radius-lg);
   color: var(--color-cinnamon);
@@ -197,9 +219,8 @@ html {
 
 /* ─── Reaction Pill ──────────────────────────────────────────── */
 .reaction-pill {
-  background: var(--color-card);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-pill);
+  background: transparent;
+  border-radius: 0;
   color: var(--color-text);
   min-height: 38px;
   padding: 0 0.875rem;
@@ -211,11 +232,35 @@ html {
   cursor: pointer;
   transition: background 150ms ease, transform 100ms ease;
   border: none;
+  border-right: 1px solid var(--color-border-soft);
 }
 .reaction-pill:hover {
-  background: var(--color-sage-pale);
+  background: rgba(221, 231, 215, 0.42);
 }
 .reaction-pill.active {
-  background: var(--color-sage-soft);
-  outline: 1px solid var(--color-sage);
+  background: transparent;
+  outline: none;
+}
+
+.input-cookbook {
+  background: rgba(255, 249, 239, 0.78);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  padding: 0.75rem 0.875rem;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.input-cookbook:focus {
+  background: var(--color-card);
+  border-color: var(--color-sage);
+  box-shadow: var(--focus-ring);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }

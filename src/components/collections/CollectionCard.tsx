@@ -27,19 +27,16 @@ export function CollectionCard({
 
   return (
     <div
-      className={clsx(
-        "recipe-card p-4 cursor-pointer",
-        className
-      )}
+      className={clsx("recipe-card flex min-h-28 cursor-pointer flex-col items-center justify-center p-4 text-center", className)}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <div className="flex items-center gap-3">
-        <span className="text-2xl" aria-hidden="true">{icon}</span>
-        <div className="min-w-0">
+      <div className="min-w-0">
+        <span className="mb-3 block text-3xl" aria-hidden="true">{icon}</span>
+        <div>
           <h3
-            className="font-bold text-green-deep truncate"
+            className="truncate font-semibold text-green-deep"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
             {collection.title}

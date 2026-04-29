@@ -30,7 +30,7 @@ export default async function EditRecipePage({ params }: Props) {
   if (!recipe || recipe.book_id !== bookId) notFound();
 
   const userRole = memberRes.data?.role ?? null;
-  if (!canEditRecipe(userRole as any, recipe.created_by === user.id)) notFound();
+  if (!canEditRecipe(userRole as import("@/lib/types").BookRole | null, recipe.created_by === user.id)) notFound();
 
   return (
     <AppShell bookId={bookId}>

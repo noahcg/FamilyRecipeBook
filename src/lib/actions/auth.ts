@@ -19,14 +19,18 @@ export async function signUp(
   fullName: string,
   email: string,
   password: string
-): Promise<ActionResult> {
+): Promise<ActionResult<{ needsConfirmation: boolean }>> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: { data: { full_name: fullName } },
   });
   if (error) return { success: false, error: error.message };
+  // When email confirmation is required, session is null
+  if (!data.session) {
+    return { success: true, data: { needsConfirmation: true } };
+  }
   redirect("/onboarding/create-book");
 }
 

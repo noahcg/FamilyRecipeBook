@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { Clock, Heart, Users } from "lucide-react";
+import { BookOpen, Clock, Heart, Users } from "lucide-react";
 
 interface RecipeCardProps {
   title: string;
@@ -49,41 +49,46 @@ function RecipeCard({
       }
     >
       {/* Image */}
-      {imageUrl && (
-        <div className="relative w-full aspect-[4/3] overflow-hidden">
+      <div className="relative w-full aspect-[4/3] overflow-hidden">
+        {imageUrl ? (
+          <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt={imageAlt ?? title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          {category && (
-            <span
-              className="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-pill"
-              style={{
-                background: "var(--color-card)",
-                color: "var(--color-cinnamon)",
-                border: "1px solid var(--color-border-soft)",
-              }}
-            >
-              {category}
-            </span>
-          )}
-        </div>
-      )}
+          </>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-card-muted">
+            <BookOpen size={34} strokeWidth={1.25} className="text-green-sage opacity-50" />
+          </div>
+        )}
+        {category && (
+          <span className="absolute bottom-2.5 left-2.5 rounded-sm bg-card/90 px-2 py-0.5 text-[11px] font-semibold text-accent-cinnamon shadow-xs backdrop-blur-sm">
+            {category}
+          </span>
+        )}
+        <span
+          aria-hidden="true"
+          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-card/80 text-white shadow-xs backdrop-blur-sm transition-colors group-hover:bg-card"
+        >
+          <Heart size={17} strokeWidth={1.8} className="text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-green-deep" />
+        </span>
+      </div>
 
       {/* Body */}
-      <div className="p-4">
+      <div className="p-3">
         <h3
-          className="font-bold text-ink text-base leading-snug mb-1"
+          className="mb-1 text-base font-semibold leading-snug text-green-deep"
           style={{ fontFamily: "var(--font-playfair)" }}
         >
           {title}
         </h3>
 
         {fromPerson && (
-          <p className="text-xs text-ink-soft font-medium mb-2">
-            from {fromPerson}
+          <p className="mb-2 text-xs text-ink-muted">
+            Added by {fromPerson}
           </p>
         )}
 

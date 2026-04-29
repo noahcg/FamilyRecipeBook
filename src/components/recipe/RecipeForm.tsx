@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useForm, useFieldArray, type Resolver } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, GripVertical, ImagePlus } from "lucide-react";
@@ -17,6 +17,14 @@ const CATEGORIES = [
   "Breakfast", "Lunch", "Dinner", "Dessert", "Snack",
   "Soup", "Salad", "Bread", "Drink", "Other",
 ];
+
+function getArrayErrorMessage(error: unknown) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" ? message : null;
+  }
+  return null;
+}
 
 interface RecipeFormProps {
   bookId: string;
@@ -85,6 +93,8 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
     append: addInstruction,
     remove: removeInstruction,
   } = useFieldArray({ control, name: "instructions" });
+
+  const selectedCategory = useWatch({ control, name: "category" });
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -250,32 +260,42 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
             Category
           </label>
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <label
-                key={cat}
-                className="flex items-center gap-1.5 cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  value={cat}
-                  className="sr-only"
-                  {...register("category")}
-                />
-                <span
-                  className={clsx(
-                    "px-3 py-1 rounded-pill text-sm font-medium border transition-colors cursor-pointer",
-                    "hover:border-green-sage"
-                  )}
-                  style={{
-                    background: "var(--color-paper-soft)",
-                    borderColor: "var(--color-border)",
-                    color: "var(--color-ink-muted)",
-                  }}
+            {CATEGORIES.map((cat) => {
+              const selected = selectedCategory === cat;
+              return (
+                <label
+                  key={cat}
+                  className="flex items-center gap-1.5 cursor-pointer"
                 >
-                  {cat}
-                </span>
-              </label>
-            ))}
+                  <input
+                    type="radio"
+                    value={cat}
+                    className="sr-only"
+                    {...register("category")}
+                  />
+                  <span
+                    className={clsx(
+                      "px-3 py-1 rounded-pill text-sm font-semibold border transition-colors cursor-pointer"
+                    )}
+                    style={
+                      selected
+                        ? {
+                            background: "var(--color-sage-pale)",
+                            borderColor: "var(--color-deep-green)",
+                            color: "var(--color-deep-green)",
+                          }
+                        : {
+                            background: "var(--color-paper-soft)",
+                            borderColor: "var(--color-border)",
+                            color: "var(--color-ink-muted)",
+                          }
+                    }
+                  >
+                    {cat}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -286,9 +306,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
           Ingredients{" "}
           {errors.ingredients && (
             <span className="text-danger font-normal ml-1">
-              {typeof errors.ingredients === "object" && "message" in errors.ingredients
-                ? (errors.ingredients as any).message
-                : "Fix errors below"}
+              {getArrayErrorMessage(errors.ingredients) ?? "Fix errors below"}
             </span>
           )}
         </p>
@@ -357,9 +375,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
           Steps{" "}
           {errors.instructions && (
             <span className="text-danger font-normal ml-1">
-              {typeof errors.instructions === "object" && "message" in errors.instructions
-                ? (errors.instructions as any).message
-                : "Fix errors below"}
+              {getArrayErrorMessage(errors.instructions) ?? "Fix errors below"}
             </span>
           )}
         </p>

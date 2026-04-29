@@ -38,7 +38,7 @@ export default async function RecipeDetailPage({ params }: Props) {
       <RecipeDetail
         recipe={recipe}
         bookId={bookId}
-        userRole={userRole as any}
+        userRole={userRole as import("@/lib/types").BookRole | null}
         userId={user.id}
         reactionCounts={counts}
         userReactions={userReactions}

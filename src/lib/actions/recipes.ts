@@ -51,16 +51,21 @@ export async function createRecipe(
     return { success: false, error: error?.message ?? "Could not create recipe" };
   }
 
-  // Insert ingredients and instructions
   if (ingredients.length) {
-    await supabase.from("recipe_ingredients").insert(
+    const { error: ingredientsError } = await supabase.from("recipe_ingredients").insert(
       ingredients.map((ing, i) => ({ ...ing, recipe_id: recipe.id, position: i + 1 }))
     );
+    if (ingredientsError) {
+      return { success: false, error: ingredientsError.message };
+    }
   }
   if (instructions.length) {
-    await supabase.from("recipe_instructions").insert(
+    const { error: instructionsError } = await supabase.from("recipe_instructions").insert(
       instructions.map((ins, i) => ({ body: ins.body, recipe_id: recipe.id, position: i + 1 }))
     );
+    if (instructionsError) {
+      return { success: false, error: instructionsError.message };
+    }
   }
 
   // Log activity
@@ -73,6 +78,7 @@ export async function createRecipe(
   });
 
   revalidatePath(`/app/books/${bookId}`);
+  revalidatePath(`/app/books/${bookId}/recipes/${recipe.id}`);
   return { success: true, data: recipe };
 }
 
@@ -116,15 +122,25 @@ export async function updateRecipe(
   // Replace ingredients/instructions if provided
   if (ingredients) {
     await supabase.from("recipe_ingredients").delete().eq("recipe_id", recipeId);
-    await supabase.from("recipe_ingredients").insert(
-      ingredients.map((ing, i) => ({ ...ing, recipe_id: recipeId, position: i + 1 }))
-    );
+    if (ingredients.length) {
+      const { error: ingredientsError } = await supabase.from("recipe_ingredients").insert(
+        ingredients.map((ing, i) => ({ ...ing, recipe_id: recipeId, position: i + 1 }))
+      );
+      if (ingredientsError) {
+        return { success: false, error: ingredientsError.message };
+      }
+    }
   }
   if (instructions) {
     await supabase.from("recipe_instructions").delete().eq("recipe_id", recipeId);
-    await supabase.from("recipe_instructions").insert(
-      instructions.map((ins, i) => ({ body: ins.body, recipe_id: recipeId, position: i + 1 }))
-    );
+    if (instructions.length) {
+      const { error: instructionsError } = await supabase.from("recipe_instructions").insert(
+        instructions.map((ins, i) => ({ body: ins.body, recipe_id: recipeId, position: i + 1 }))
+      );
+      if (instructionsError) {
+        return { success: false, error: instructionsError.message };
+      }
+    }
   }
 
   revalidatePath(`/app/books/${bookId}/recipes/${recipeId}`);
@@ -158,20 +174,53 @@ export async function deleteRecipe(
 
 export async function getRecipe(recipeId: string): Promise<RecipeWithRelations | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+
+  const { data: recipe, error: recipeError } = await supabase
     .from("recipes")
-    .select(`
-      *,
-      ingredients:recipe_ingredients(* order by position asc),
-      instructions:recipe_instructions(* order by position asc),
-      stories:recipe_stories(*, author:profiles(*)),
-      reactions:recipe_reactions(*),
-      creator:profiles!created_by(*)
-    `)
+    .select("*, creator:profiles!created_by(*)")
     .eq("id", recipeId)
     .single();
 
-  return data as RecipeWithRelations | null;
+  if (recipeError || !recipe) return null;
+
+  const [
+    { data: ingredients, error: ingredientsError },
+    { data: instructions, error: instructionsError },
+    { data: stories, error: storiesError },
+    { data: reactions, error: reactionsError },
+  ] = await Promise.all([
+    supabase
+      .from("recipe_ingredients")
+      .select("*")
+      .eq("recipe_id", recipeId)
+      .order("position", { ascending: true }),
+    supabase
+      .from("recipe_instructions")
+      .select("*")
+      .eq("recipe_id", recipeId)
+      .order("position", { ascending: true }),
+    supabase
+      .from("recipe_stories")
+      .select("*, author:profiles(*)")
+      .eq("recipe_id", recipeId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("recipe_reactions")
+      .select("*")
+      .eq("recipe_id", recipeId),
+  ]);
+
+  if (ingredientsError || instructionsError || storiesError || reactionsError) {
+    return null;
+  }
+
+  return {
+    ...recipe,
+    ingredients: ingredients ?? [],
+    instructions: instructions ?? [],
+    stories: stories ?? [],
+    reactions: reactions ?? [],
+  } as RecipeWithRelations;
 }
 
 export async function addRecipeStory(
