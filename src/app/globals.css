@@ -185,7 +185,13 @@ body {
 
 /* ─── Paper Background ──────────────────────────────────────── */
 .app-paper-bg {
-  background: var(--color-cream);
+  background-color: var(--color-cream);
+  background-image:
+    url("/textures/paper.png"),
+    url("/textures/noise.png");
+  background-repeat: repeat, repeat;
+  background-size: auto, 128px 128px;
+  background-blend-mode: multiply, soft-light;
   min-height: 100dvh;
 }
 
@@ -194,13 +200,10 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
-  opacity: 0.28;
-  background-image:
-    radial-gradient(rgba(117, 111, 100, 0.15) 0.55px, transparent 0.55px),
-    radial-gradient(rgba(255, 255, 255, 0.5) 0.55px, transparent 0.55px);
-  background-position: 0 0, 9px 8px;
-  background-size: 18px 18px, 22px 22px;
+  z-index: 50;
+  background-image: url("/textures/noise.png");
+  background-size: 128px 128px;
+  opacity: 0.04;
 }
 
 .cookbook-sidebar {

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 
 interface Props {
@@ -28,6 +29,12 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
         bookId={bookId}
         onSuccessRedirect={`/onboarding/add-member?bookId=${bookId}`}
       />
+
+      <p className="mt-6 text-center text-sm text-ink-soft">
+        <Link href={`/app/books/${bookId}`} className="hover:text-ink underline underline-offset-2">
+          Skip for now
+        </Link>
+      </p>
     </div>
   );
 }

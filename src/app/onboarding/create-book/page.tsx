@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { Button, Input, Textarea, BookCover } from "@/components/ui";
 import type { CoverStyle } from "@/components/ui";
 import { createBookSchema, type CreateBookInput } from "@/lib/validators/book";
@@ -48,6 +50,13 @@ export default function CreateBookPage() {
 
   return (
     <div>
+      <Link
+        href="/app"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink mb-6"
+      >
+        <ArrowLeft size={14} strokeWidth={2} />
+        Back to app
+      </Link>
       <p className="text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">
         Step 1 of 3
       </p>

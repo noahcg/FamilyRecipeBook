@@ -9,14 +9,15 @@ import {
   History,
   Home,
   ListChecks,
+  LogOut,
   Plus,
   Settings,
   ShoppingCart,
   UtensilsCrossed,
-  Users,
 } from "lucide-react";
 import { CookbookIcon } from "@/components/ui/CookbookIcon";
 import { APP_VERSION } from "@/lib/version";
+import { signOut } from "@/lib/actions/auth";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -27,7 +28,7 @@ const NAV = (bookId: string) => [
   { id: "home", href: `/app/books/${bookId}`, icon: Home, label: "Home" },
   { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
   { id: "collections", href: `/app/books/${bookId}/collections`, icon: ListChecks, label: "Collections" },
-  { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
+  { id: "settings", href: `/app/settings`, icon: Settings, label: "Settings" },
   { id: "add", href: `/app/books/${bookId}/recipes/new`, icon: Plus, label: "Add", isAdd: true },
 ];
 
@@ -133,6 +134,15 @@ export function AppShell({ children, bookId }: AppShellProps) {
             <Settings size={18} className="shrink-0" />
             <span>Settings</span>
           </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="flex w-full min-h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold text-ink-soft transition-colors hover:bg-card/70 hover:text-ink"
+            >
+              <LogOut size={16} className="shrink-0" />
+              <span>Sign out</span>
+            </button>
+          </form>
           <p className="mt-2 px-3 text-[11px] font-semibold text-ink-soft/80">
             v{APP_VERSION}
           </p>
