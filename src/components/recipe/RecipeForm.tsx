@@ -10,6 +10,7 @@ import { Button, Input, Textarea } from "@/components/ui";
 import { createRecipeSchema, type CreateRecipeInput } from "@/lib/validators/recipe";
 import { createRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { uploadRecipeImage } from "@/lib/upload";
+import { selectRecipeImage } from "@/lib/actions/unsplash";
 import { useUser } from "@/lib/hooks/useUser";
 import type { RecipeWithRelations } from "@/lib/types";
 
@@ -117,6 +118,13 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       photoUrl = uploaded.url;
     }
 
+    // Auto-select from Unsplash when creating a new recipe without a photo
+    if (!photoUrl && !isEdit) {
+      const ingredientNames = data.ingredients.map((i) => i.item).filter(Boolean);
+      const auto = await selectRecipeImage(data.title, ingredientNames);
+      if (auto) photoUrl = auto;
+    }
+
     const payload = { ...data, photo_url: photoUrl };
 
     if (isEdit && recipe) {
@@ -162,7 +170,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
             <img
               src={photoPreview}
               alt="Recipe photo preview"
-              className="w-full h-full object-cover"
+              className="recipe-image w-full h-full"
             />
           ) : (
             <>

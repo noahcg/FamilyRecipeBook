@@ -220,6 +220,13 @@ body {
   box-shadow: var(--shadow-card);
 }
 
+/* ─── Recipe Image ───────────────────────────────────────────── */
+.recipe-image {
+  object-fit: cover;
+  border-radius: var(--radius-xl);
+  filter: saturate(0.95) contrast(0.95) brightness(0.98);
+}
+
 /* ─── Recipe Card ────────────────────────────────────────────── */
 .recipe-card {
   background: var(--color-card);
