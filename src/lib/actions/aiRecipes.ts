@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createRecipe } from "@/lib/actions/recipes";
+import { selectRecipeImage } from "@/lib/actions/unsplash";
 import type { ActionResult, Recipe } from "@/lib/types";
 
 const aiIngredientSchema = z.object({
@@ -355,8 +356,12 @@ export async function saveRecipeIdea(
     return { success: false, error: "This recipe idea is not ready to save." };
   }
 
+  const ingredientNames = parsed.data.ingredients.map((i) => i.item);
+  const photo_url = await selectRecipeImage(parsed.data.title, ingredientNames) ?? undefined;
+
   return createRecipe(bookId, {
     ...parsed.data,
+    photo_url,
     source_name: parsed.data.source_name || "AI Recipe Idea",
     ingredients: parsed.data.ingredients.map((ingredient) => ({
       quantity: ingredient.quantity.slice(0, 20),

@@ -223,6 +223,20 @@ export async function getRecipe(recipeId: string): Promise<RecipeWithRelations |
   } as RecipeWithRelations;
 }
 
+export async function getBookRecipes(
+  bookId: string
+): Promise<{ id: string; title: string; photo_url: string | null; category: string | null }[]> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("recipes")
+    .select("id, title, photo_url, category")
+    .eq("book_id", bookId)
+    .order("title", { ascending: true });
+
+  return (data ?? []) as { id: string; title: string; photo_url: string | null; category: string | null }[];
+}
+
 export async function addRecipeStory(
   bookId: string,
   recipeId: string,

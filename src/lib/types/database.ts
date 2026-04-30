@@ -1,4 +1,6 @@
 export type BookRole = "keeper" | "contributor" | "family";
+export type HouseholdRole = "owner" | "member";
+export type MealSlot = "breakfast" | "lunch" | "dinner";
 export type ReactionType = "love" | "made_it" | "favorite";
 
 export interface Profile {
@@ -120,6 +122,52 @@ export interface ActivityEvent {
   actor_id: string | null;
   type: string;
   metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface Household {
+  id: string;
+  name: string;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface HouseholdMember {
+  id: string;
+  household_id: string;
+  user_id: string;
+  role: HouseholdRole;
+  created_at: string;
+}
+
+export interface MealPlan {
+  id: string;
+  household_id: string;
+  recipe_id: string | null;
+  planned_date: string;
+  meal_slot: MealSlot;
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GroceryItem {
+  id: string;
+  household_id: string;
+  name: string;
+  quantity: string | null;
+  unit: string | null;
+  category: string;
+  aisle: string | null;
+  sort_order: number | null;
+  notes: string | null;
+  recipe_id: string | null;
+  checked: boolean;
+  checked_by: string | null;
+  checked_at: string | null;
+  created_by: string;
   created_at: string;
 }
 

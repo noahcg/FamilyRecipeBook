@@ -36,9 +36,9 @@ const DESKTOP_NAV = (bookId: string) => [
   { id: "home", href: `/app/books/${bookId}`, icon: Home, label: "Home" },
   { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
   { id: "collections", href: `/app/books/${bookId}/collections`, icon: ListChecks, label: "Collections" },
-  { id: "meal-plan", href: `/app/books/${bookId}/recipes`, icon: CalendarDays, label: "Meal Plan" },
-  { id: "groceries", href: `/app/books/${bookId}/recipes`, icon: ShoppingCart, label: "Groceries" },
-  { id: "favorites", href: `/app/books/${bookId}/recipes`, icon: Heart, label: "Favorites" },
+  { id: "meal-plan", href: `/app/books/${bookId}/meal-plan`, icon: CalendarDays, label: "Meal Plan" },
+  { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
+  { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
   { id: "activity", href: `/app/books/${bookId}/members`, icon: History, label: "Activity" },
 ];
 

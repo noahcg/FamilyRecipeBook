@@ -79,7 +79,8 @@ export default function RecipesPage({ params }: Props) {
               strokeWidth={1.75}
             />
             <input
-              className="input-cookbook h-11 w-full pl-9 text-sm"
+              className="input-cookbook h-11 w-full text-sm"
+              style={{ paddingLeft: "2.25rem" }}
               placeholder="Search recipes..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
