@@ -2,35 +2,35 @@
 
 /* ─── Design Tokens ────────────────────────────────────────── */
 :root {
-  --color-cream: #f4e7d9;
+  --color-cream: #F7F3E9;
+  --color-paper: #FBF7ED;
   --color-paper-deep: #EFE6D5;
+  --color-forest: #2F4F3F;
   --color-forest-dark: #1F3A2D;
+  --color-sage: #8BA888;
+  --color-sage-soft: #DDE5D7;
+  --color-terracotta: #E76F51;
+  --color-mustard: #F2B34B;
+  --color-cinnamon: #8D5E34;
+  --color-border: #DED4C3;
+  --color-card: #FFF9EF;
   --color-white-soft: #FFFCF6;
   --color-ink: #243128;
   --color-muted: #756F64;
 
   /* Paper and surfaces */
-  --color-paper: #FBF7ED;
   --color-paper-warm: #EFE6D5;
   --color-paper-soft: #FFFCF6;
-  --color-card: #FFF9EF;
   --color-card-muted: #F4E8D5;
-  --color-border: #DED4C3;
   --color-border-soft: #E9DEC9;
 
   /* Greens */
   --color-deep-green: #2F4F3F;
-  --color-forest: #2F4F3F;
-  --color-sage: #8BA888;
-  --color-sage-soft: #DDE5D7;
   --color-sage-pale: #EEF4EA;
 
   /* Warm accents */
-  --color-terracotta: #E76F51;
   --color-terracotta-dark: #B95A40;
-  --color-mustard: #F2B34B;
   --color-honey: #D8A053;
-  --color-cinnamon: #8D5E34;
   --color-clay: #B8754B;
 
   /* Text */
@@ -50,8 +50,9 @@
   --shadow-md: 0 8px 22px rgba(75, 53, 31, 0.11);
   --shadow-lg: 0 18px 48px rgba(75, 53, 31, 0.14);
   --shadow-paper: 0 1px 2px rgba(75, 53, 31, 0.06), 0 12px 32px rgba(75, 53, 31, 0.08);
-  --shadow-card: 0 1px 2px rgba(75, 53, 31, 0.06), 0 12px 24px rgba(75, 53, 31, 0.08);
-  --shadow-soft: 0 8px 24px rgba(75, 53, 31, 0.10);
+  --shadow-card: 0 10px 30px rgba(47, 79, 63, 0.10);
+  --shadow-soft: 0 6px 18px rgba(47, 79, 63, 0.08);
+  --shadow-image: 0 12px 35px rgba(36, 49, 40, 0.18);
 
   /* Focus */
   --focus-ring: 0 0 0 3px rgba(231, 111, 81, 0.24);
@@ -76,9 +77,9 @@
   /* Radius */
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-2xl: 2rem;
   --radius-pill: 999px;
 }
@@ -91,7 +92,7 @@
   --font-hand: var(--font-caveat);
 
   /* Colors — paper */
-  --color-cream: #f4e7d9;
+  --color-cream: #F7F3E9;
   --color-paper: #FBF7ED;
   --color-paper-warm: #EFE6D5;
   --color-paper-soft: #FFFCF6;
@@ -105,7 +106,7 @@
   --color-green-forest: #2F4F3F;
   --color-green-forest-dark: #1F3A2D;
   --color-green-sage: #8BA888;
-  --color-green-soft: #DDE7D7;
+  --color-green-soft: #DDE5D7;
   --color-green-pale: #EEF4EA;
 
   /* Colors — accents */
@@ -134,9 +135,9 @@
   /* Radius */
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-2xl: 2rem;
   --radius-pill: 999px;
 
@@ -145,7 +146,9 @@
   --shadow-sm: 0 2px 8px rgba(75,53,31,0.08);
   --shadow-md: 0 8px 22px rgba(75,53,31,0.11);
   --shadow-lg: 0 18px 48px rgba(75,53,31,0.14);
-  --shadow-card: 0 1px 2px rgba(75,53,31,0.06), 0 12px 24px rgba(75,53,31,0.08);
+  --shadow-card: 0 10px 30px rgba(47,79,63,0.10);
+  --shadow-soft: 0 6px 18px rgba(47,79,63,0.08);
+  --shadow-image: 0 12px 35px rgba(36,49,40,0.18);
 }
 
 /* ─── Base ───────────────────────────────────────────────────── */
