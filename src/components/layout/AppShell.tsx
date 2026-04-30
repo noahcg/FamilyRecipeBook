@@ -42,6 +42,12 @@ const DESKTOP_NAV = (bookId: string) => [
   { id: "activity", href: `/app/books/${bookId}/members`, icon: History, label: "Activity" },
 ];
 
+function isActiveNavItem(pathname: string, href: string, id?: string) {
+  if (id === "home") return pathname === href;
+  if (id === "add") return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function AppShell({ children, bookId }: AppShellProps) {
   const pathname = usePathname();
   const navItems = NAV(bookId);
@@ -68,11 +74,7 @@ export function AppShell({ children, bookId }: AppShellProps) {
         <nav aria-label="Primary navigation" className="shrink-0 px-6">
           <div className="space-y-2.5">
             {DESKTOP_NAV(bookId).map(({ id, href, icon: Icon, label }) => {
-              const isActive =
-                (id === "home" && pathname === href) ||
-                (id === "recipes" && (pathname === href || pathname.startsWith(href + "/"))) ||
-                (id === "collections" && pathname.startsWith(href)) ||
-                (id === "activity" && pathname.startsWith(href));
+              const isActive = isActiveNavItem(pathname, href, id);
               return (
                 <Link
                   key={label}
@@ -129,7 +131,13 @@ export function AppShell({ children, bookId }: AppShellProps) {
         <div className="mt-auto shrink-0 border-t border-line-soft p-5">
           <Link
             href="/app/settings"
-            className="flex min-h-12 items-center gap-3 rounded-md px-3 text-sm font-semibold text-ink transition-colors hover:bg-card/70"
+            aria-current={isActiveNavItem(pathname, "/app/settings", "settings") ? "page" : undefined}
+            className={clsx(
+              "flex min-h-12 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors hover:bg-card/70",
+              isActiveNavItem(pathname, "/app/settings", "settings")
+                ? "bg-green-soft/70 text-green-deep shadow-xs"
+                : "text-ink"
+            )}
           >
             <Settings size={18} className="shrink-0" />
             <span>Settings</span>
@@ -165,9 +173,7 @@ export function AppShell({ children, bookId }: AppShellProps) {
         }}
       >
         {navItems.map(({ id, href, icon: Icon, label, isAdd }) => {
-          const isActive = isAdd
-            ? pathname === href
-            : pathname === href || pathname.startsWith(href + "/");
+          const isActive = isActiveNavItem(pathname, href, id);
 
           if (isAdd) {
             return (

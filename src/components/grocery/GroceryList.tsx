@@ -12,6 +12,7 @@ import {
   importFromMealPlan,
 } from "@/lib/actions/grocery";
 import type { GroceryItem } from "@/lib/types";
+import { NearbyGroceryStores } from "@/components/grocery/NearbyGroceryStores";
 
 // Ordered to match typical store layout — future sort_order will refine within these
 const CATEGORY_ORDER = [
@@ -179,6 +180,8 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
             </button>
           </div>
         </div>
+
+        <NearbyGroceryStores />
 
         {/* Quick add */}
         <form onSubmit={handleAdd} className="flex gap-2">
