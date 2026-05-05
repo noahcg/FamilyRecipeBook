@@ -128,7 +128,7 @@ export async function getBookPageData(bookId: string) {
       .limit(30),
     supabase
       .from("collections")
-      .select("*")
+      .select("*, recipes:collection_recipes(id)")
       .eq("book_id", bookId)
       .order("created_at", { ascending: false }),
   ]);

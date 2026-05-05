@@ -125,6 +125,16 @@ export interface ActivityEvent {
   created_at: string;
 }
 
+export type AIProvider = "openai" | "anthropic";
+
+export interface UserSettings {
+  user_id: string;
+  ai_provider: AIProvider | null;
+  ai_api_key: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Household {
   id: string;
   name: string;

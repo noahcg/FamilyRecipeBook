@@ -107,28 +107,15 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
             </Link>
           </div>
           <div className="space-y-2">
-            {[
-              { title: "The Family Table", icon: "bowl" },
-              { title: "Holiday Favorites", icon: "holiday" },
-              { title: "Grandma's Recipes", icon: "grandma" },
-              { title: "Quick & Easy", icon: "quick" },
-            ].map(({ title, icon }, index) => (
-              <Link
-                key={title}
-                href={`/app/books/${bookId}`}
-                className={clsx(
-                  "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
-                  index === 0
-                    ? "bg-card-muted text-green-deep before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent-terracotta"
-                    : "text-ink hover:bg-card/70"
-                )}
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-soft bg-card">
-                  <CookbookIcon name={icon} size={18} />
-                </span>
-                <span className="truncate">{title}</span>
-              </Link>
-            ))}
+            <Link
+              href={`/app/books/${bookId}`}
+              className="relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors bg-card-muted text-green-deep before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent-terracotta"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-soft bg-card">
+                <CookbookIcon name="bowl" size={18} />
+              </span>
+              <span className="truncate">{bookTitle}</span>
+            </Link>
           </div>
         </div>
 

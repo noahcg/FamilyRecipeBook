@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { createRecipe } from "@/lib/actions/recipes";
 import { selectRecipeImage } from "@/lib/actions/unsplash";
+import { getUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Recipe } from "@/lib/types";
 
 const aiIngredientSchema = z.object({
@@ -259,8 +261,8 @@ async function generateWithCloudflare(prompt: string): Promise<ActionResult<AIRe
   }
 }
 
-async function generateWithOpenAI(prompt: string): Promise<ActionResult<AIRecipeIdea> | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
+async function generateWithOpenAI(prompt: string, overrideKey?: string): Promise<ActionResult<AIRecipeIdea> | null> {
+  const apiKey = overrideKey ?? process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
   const response = await fetch("https://api.openai.com/v1/responses", {
@@ -320,6 +322,74 @@ async function generateWithOpenAI(prompt: string): Promise<ActionResult<AIRecipe
   return { success: true, data: parsed.data };
 }
 
+async function generateWithAnthropic(prompt: string, apiKey: string): Promise<ActionResult<AIRecipeIdea> | null> {
+  const model = process.env.ANTHROPIC_RECIPE_MODEL ?? "claude-haiku-4-5-20251001";
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    cache: "no-store",
+    body: JSON.stringify({
+      model,
+      max_tokens: 2000,
+      system:
+        "You are a warm, practical family cookbook assistant. Use the create_recipe tool to return exactly one realistic, saveable recipe idea. Favor common ingredients, clear steps, and family-friendly wording.",
+      messages: [{ role: "user", content: `Pantry request: ${prompt}` }],
+      tools: [
+        {
+          name: "create_recipe",
+          description: "Return a single recipe idea as structured data.",
+          input_schema: recipeIdeaJsonSchema,
+        },
+      ],
+      tool_choice: { type: "tool", name: "create_recipe" },
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    return {
+      success: false,
+      error: `Anthropic could not generate a recipe idea. ${body.slice(0, 180)}`,
+    };
+  }
+
+  const json = (await response.json()) as {
+    content?: { type: string; name?: string; input?: unknown }[];
+  };
+
+  const toolBlock = json.content?.find((b) => b.type === "tool_use" && b.name === "create_recipe");
+  if (!toolBlock?.input) {
+    return { success: false, error: "Claude did not return a recipe idea." };
+  }
+
+  const parsed = aiRecipeIdeaSchema.safeParse(toolBlock.input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "The generated recipe was incomplete. Try again with a little more detail.",
+    };
+  }
+
+  return { success: true, data: parsed.data };
+}
+
+async function getUserAISettings(): Promise<{ provider: string | null; key: string | null }> {
+  const user = await getUser();
+  if (!user) return { provider: null, key: null };
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("user_settings")
+    .select("ai_provider, ai_api_key")
+    .eq("user_id", user.id)
+    .single();
+  return { provider: data?.ai_provider ?? null, key: data?.ai_api_key ?? null };
+}
+
 export async function generateRecipeIdea(
   pantryPrompt: string
 ): Promise<ActionResult<AIRecipeIdea>> {
@@ -331,20 +401,30 @@ export async function generateRecipeIdea(
     };
   }
 
+  // User's own provider/key takes priority
+  const { provider, key } = await getUserAISettings();
+  if (provider && key) {
+    if (provider === "anthropic") {
+      const result = await generateWithAnthropic(prompt, key);
+      if (result) return result;
+    } else {
+      const result = await generateWithOpenAI(prompt, key);
+      if (result) return result;
+    }
+  }
+
+  // Fall back to server-configured Cloudflare Workers AI
   const cloudflareResult = await generateWithCloudflare(prompt);
   if (cloudflareResult) return cloudflareResult;
 
+  // Fall back to server-configured OpenAI key
   const openAIResult = await generateWithOpenAI(prompt);
   if (openAIResult) return openAIResult;
 
-  if (!process.env.CLOUDFLARE_ACCOUNT_ID || !process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN) {
-    return {
-      success: false,
-      error: "Cloudflare Workers AI is not configured. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_WORKERS_AI_API_TOKEN.",
-    };
-  }
-
-  return { success: false, error: "No recipe AI provider is configured." };
+  return {
+    success: false,
+    error: "No AI provider is configured. Add your API key in Settings to enable recipe ideas.",
+  };
 }
 
 export async function saveRecipeIdea(
