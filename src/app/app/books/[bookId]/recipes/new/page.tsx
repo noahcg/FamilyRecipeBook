@@ -35,9 +35,7 @@ export default async function NewRecipePage({ params }: Props) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-line-soft bg-card px-5 pt-5 shadow-card sm:px-6">
-          <RecipeForm bookId={bookId} />
-        </div>
+        <RecipeForm bookId={bookId} />
       </div>
     </AppShell>
   );

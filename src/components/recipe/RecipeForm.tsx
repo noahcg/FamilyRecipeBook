@@ -149,319 +149,310 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-10">
-      {/* Photo upload */}
-      <div>
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className={clsx(
-            "w-full aspect-video rounded-xl border-2 border-dashed",
-            "flex flex-col items-center justify-center gap-2",
-            "transition-colors hover:border-green-sage",
-            photoPreview
-              ? "border-transparent p-0 overflow-hidden"
-              : "border-line text-ink-soft"
-          )}
-          style={{ background: photoPreview ? undefined : "var(--color-paper-warm)" }}
-        >
-          {photoPreview ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={photoPreview}
-              alt="Recipe photo preview"
-              className="recipe-image w-full h-full"
+    <form onSubmit={handleSubmit(onSubmit)} className="pb-10">
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+
+        {/* ── Left column: photo + about + details ── */}
+        <div className="space-y-6">
+
+          {/* Photo upload */}
+          <div>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className={clsx(
+                "w-full rounded-xl border-2 border-dashed",
+                "flex flex-col items-center justify-center gap-2",
+                "transition-colors hover:border-green-sage",
+                photoPreview
+                  ? "border-transparent p-0 overflow-hidden"
+                  : "border-line text-ink-soft",
+                "aspect-[4/3] lg:aspect-[3/2]"
+              )}
+              style={{ background: photoPreview ? undefined : "var(--color-paper-warm)" }}
+            >
+              {photoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoPreview}
+                  alt="Recipe photo preview"
+                  className="recipe-image w-full h-full"
+                />
+              ) : (
+                <>
+                  <ImagePlus size={28} strokeWidth={1.5} />
+                  <span className="text-sm font-medium">Add a photo</span>
+                  <span className="text-xs opacity-60">JPEG, PNG, or WebP · max 8 MB</span>
+                </>
+              )}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePhotoChange}
+              className="sr-only"
             />
-          ) : (
-            <>
-              <ImagePlus size={28} strokeWidth={1.5} />
-              <span className="text-sm font-medium">Add a photo</span>
-              <span className="text-xs opacity-60">JPEG, PNG, or WebP · max 8 MB</span>
-            </>
-          )}
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handlePhotoChange}
-          className="sr-only"
-        />
-        {photoPreview && (
-          <button
-            type="button"
-            onClick={() => {
-              setPhotoPreview(null);
-              setPhotoFile(null);
-              if (fileRef.current) fileRef.current.value = "";
-            }}
-            className="text-xs text-ink-soft underline mt-1"
-          >
-            Remove photo
-          </button>
-        )}
-      </div>
+            {photoPreview && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPhotoPreview(null);
+                  setPhotoFile(null);
+                  if (fileRef.current) fileRef.current.value = "";
+                }}
+                className="text-xs text-ink-soft underline mt-1"
+              >
+                Remove photo
+              </button>
+            )}
+          </div>
 
-      {/* Core fields */}
-      <div className="space-y-4">
-        <Input
-          label="Recipe title"
-          required
-          placeholder="e.g. Grandma's Apple Pie"
-          error={errors.title?.message}
-          {...register("title")}
-        />
-        <Input
-          label="Who is this from?"
-          placeholder="e.g. Grandma Rose"
-          hint="The person this recipe is known for."
-          error={errors.source_name?.message}
-          {...register("source_name")}
-        />
-        <Textarea
-          label="The story behind this recipe"
-          placeholder="Add a note or memory…"
-          hint="This will appear near the top of the recipe page."
-          error={errors.story?.message}
-          {...register("story")}
-        />
-        <Input
-          label="Short description (optional)"
-          placeholder="A one-line description of the dish"
-          error={errors.description?.message}
-          {...register("description")}
-        />
-      </div>
+          {/* Core fields */}
+          <div className="space-y-4">
+            <Input
+              label="Recipe title"
+              required
+              placeholder="e.g. Grandma's Apple Pie"
+              error={errors.title?.message}
+              {...register("title")}
+            />
+            <Input
+              label="Who is this from?"
+              placeholder="e.g. Grandma Rose"
+              hint="The person this recipe is known for."
+              error={errors.source_name?.message}
+              {...register("source_name")}
+            />
+            <Textarea
+              label="The story behind this recipe"
+              placeholder="Add a note or memory…"
+              hint="This will appear near the top of the recipe page."
+              error={errors.story?.message}
+              {...register("story")}
+            />
+            <Input
+              label="Short description (optional)"
+              placeholder="A one-line description of the dish"
+              error={errors.description?.message}
+              {...register("description")}
+            />
+          </div>
 
-      {/* Timing + servings */}
-      <div>
-        <p className="text-sm font-semibold text-ink mb-3">Details</p>
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            label="Prep (min)"
-            type="number"
-            min={0}
-            placeholder="15"
-            error={errors.prep_minutes?.message}
-            {...register("prep_minutes")}
-          />
-          <Input
-            label="Cook (min)"
-            type="number"
-            min={0}
-            placeholder="45"
-            error={errors.cook_minutes?.message}
-            {...register("cook_minutes")}
-          />
-          <Input
-            label="Servings"
-            type="number"
-            min={1}
-            placeholder="4"
-            error={errors.servings?.message}
-            {...register("servings")}
-          />
-        </div>
-
-        {/* Category */}
-        <div className="mt-3">
-          <label className="text-sm font-semibold text-ink block mb-2">
-            Category
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => {
-              const selected = selectedCategory === cat;
-              return (
-                <label
-                  key={cat}
-                  className="flex items-center gap-1.5 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    value={cat}
-                    className="sr-only"
-                    {...register("category")}
-                  />
-                  <span
-                    className={clsx(
-                      "px-3 py-1 rounded-pill text-sm font-semibold border transition-colors cursor-pointer"
-                    )}
-                    style={
-                      selected
-                        ? {
-                            background: "var(--color-sage-pale)",
-                            borderColor: "var(--color-deep-green)",
-                            color: "var(--color-deep-green)",
-                          }
-                        : {
-                            background: "var(--color-paper-soft)",
-                            borderColor: "var(--color-border)",
-                            color: "var(--color-ink-muted)",
-                          }
-                    }
-                  >
-                    {cat}
-                  </span>
-                </label>
-              );
-            })}
+          {/* Timing + servings + category */}
+          <div>
+            <p className="text-sm font-semibold text-ink mb-3">Details</p>
+            <div className="grid grid-cols-3 gap-3">
+              <Input
+                label="Prep (min)"
+                type="number"
+                min={0}
+                placeholder="15"
+                error={errors.prep_minutes?.message}
+                {...register("prep_minutes")}
+              />
+              <Input
+                label="Cook (min)"
+                type="number"
+                min={0}
+                placeholder="45"
+                error={errors.cook_minutes?.message}
+                {...register("cook_minutes")}
+              />
+              <Input
+                label="Servings"
+                type="number"
+                min={1}
+                placeholder="4"
+                error={errors.servings?.message}
+                {...register("servings")}
+              />
+            </div>
+            <div className="mt-4">
+              <label className="text-sm font-semibold text-ink block mb-2">
+                Category
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => {
+                  const selected = selectedCategory === cat;
+                  return (
+                    <label key={cat} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        value={cat}
+                        className="sr-only"
+                        {...register("category")}
+                      />
+                      <span
+                        className="px-3 py-1 rounded-pill text-sm font-semibold border transition-colors cursor-pointer"
+                        style={
+                          selected
+                            ? {
+                                background: "var(--color-sage-pale)",
+                                borderColor: "var(--color-deep-green)",
+                                color: "var(--color-deep-green)",
+                              }
+                            : {
+                                background: "var(--color-paper-soft)",
+                                borderColor: "var(--color-border)",
+                                color: "var(--color-ink-muted)",
+                              }
+                        }
+                      >
+                        {cat}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Ingredients */}
-      <div>
-        <p className="text-sm font-semibold text-ink mb-3">
-          Ingredients{" "}
-          <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
-            At least one required
-          </span>
-          {errors.ingredients && (
-            <span className="text-danger font-normal ml-1">
-              {getArrayErrorMessage(errors.ingredients) ?? "Fix errors below"}
-            </span>
-          )}
-        </p>
-        <div className="space-y-2">
-          {ingredients.map((field, index) => (
-            <div key={field.id} className="flex gap-2 items-start">
-              <GripVertical
-                size={16}
-                className="text-ink-soft mt-3.5 shrink-0 opacity-40"
-              />
-              <div className="grid grid-cols-12 gap-2 flex-1">
-                <div className="col-span-3">
-                  <input
-                    className="input-cookbook text-sm"
-                    placeholder="Qty"
-                    {...register(`ingredients.${index}.quantity`)}
-                  />
-                </div>
-                <div className="col-span-3">
-                  <input
-                    className="input-cookbook text-sm"
-                    placeholder="Unit"
-                    {...register(`ingredients.${index}.unit`)}
-                  />
-                </div>
-                <div className="col-span-6">
-                  <input
-                    className="input-cookbook text-sm"
-                    placeholder="Ingredient"
-                    required
-                    aria-label={`Ingredient ${index + 1} name, required`}
-                    {...register(`ingredients.${index}.item`)}
-                  />
-                  {errors.ingredients?.[index]?.item && (
-                    <p className="text-xs text-danger mt-0.5">
-                      {errors.ingredients[index]?.item?.message}
-                    </p>
+        {/* ── Right column: ingredients + steps + actions ── */}
+        <div className="space-y-8">
+
+          {/* Ingredients */}
+          <div>
+            <p className="text-sm font-semibold text-ink mb-3">
+              Ingredients{" "}
+              <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+                At least one required
+              </span>
+              {errors.ingredients && (
+                <span className="text-danger font-normal ml-1">
+                  {getArrayErrorMessage(errors.ingredients) ?? "Fix errors below"}
+                </span>
+              )}
+            </p>
+            <div className="space-y-2">
+              {ingredients.map((field, index) => (
+                <div key={field.id} className="flex gap-2 items-start">
+                  <GripVertical size={16} className="text-ink-soft mt-3.5 shrink-0 opacity-40" />
+                  <div className="grid grid-cols-12 gap-2 flex-1">
+                    <div className="col-span-3">
+                      <input
+                        className="input-cookbook text-sm"
+                        placeholder="Qty"
+                        {...register(`ingredients.${index}.quantity`)}
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <input
+                        className="input-cookbook text-sm"
+                        placeholder="Unit"
+                        {...register(`ingredients.${index}.unit`)}
+                      />
+                    </div>
+                    <div className="col-span-6">
+                      <input
+                        className="input-cookbook text-sm"
+                        placeholder="Ingredient"
+                        required
+                        aria-label={`Ingredient ${index + 1} name, required`}
+                        {...register(`ingredients.${index}.item`)}
+                      />
+                      {errors.ingredients?.[index]?.item && (
+                        <p className="text-xs text-danger mt-0.5">
+                          {errors.ingredients[index]?.item?.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {ingredients.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeIngredient(index)}
+                      className="mt-3 text-ink-soft hover:text-danger transition-colors"
+                      aria-label="Remove ingredient"
+                    >
+                      <Trash2 size={14} strokeWidth={1.75} />
+                    </button>
                   )}
                 </div>
-              </div>
-              {ingredients.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeIngredient(index)}
-                  className="mt-3 text-ink-soft hover:text-danger transition-colors"
-                  aria-label="Remove ingredient"
-                >
-                  <Trash2 size={14} strokeWidth={1.75} />
-                </button>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() =>
-            addIngredient({ quantity: "", unit: "", item: "", note: "" })
-          }
-          className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
-        >
-          <Plus size={14} /> Add ingredient
-        </button>
-      </div>
+            <button
+              type="button"
+              onClick={() => addIngredient({ quantity: "", unit: "", item: "", note: "" })}
+              className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
+            >
+              <Plus size={14} /> Add ingredient
+            </button>
+          </div>
 
-      {/* Instructions */}
-      <div>
-        <p className="text-sm font-semibold text-ink mb-3">
-          Steps{" "}
-          <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
-            At least one required
-          </span>
-          {errors.instructions && (
-            <span className="text-danger font-normal ml-1">
-              {getArrayErrorMessage(errors.instructions) ?? "Fix errors below"}
-            </span>
-          )}
-        </p>
-        <div className="space-y-3">
-          {instructions.map((field, index) => (
-            <div key={field.id} className="flex gap-2 items-start">
-              <span
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-ink-inverse shrink-0 mt-2.5"
-                style={{ background: "var(--color-deep-green)" }}
-              >
-                {index + 1}
+          {/* Instructions */}
+          <div>
+            <p className="text-sm font-semibold text-ink mb-3">
+              Steps{" "}
+              <span className="ml-2 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+                At least one required
               </span>
-              <div className="flex-1">
-                <textarea
-                  className="input-cookbook text-sm min-h-16 resize-none"
-                  placeholder={`Step ${index + 1}`}
-                  required
-                  aria-label={`Step ${index + 1}, required`}
-                  rows={2}
-                  {...register(`instructions.${index}.body`)}
-                />
-                {errors.instructions?.[index]?.body && (
-                  <p className="text-xs text-danger mt-0.5">
-                    {errors.instructions[index]?.body?.message}
-                  </p>
-                )}
-              </div>
-              {instructions.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeInstruction(index)}
-                  className="mt-3 text-ink-soft hover:text-danger transition-colors"
-                  aria-label="Remove step"
-                >
-                  <Trash2 size={14} strokeWidth={1.75} />
-                </button>
+              {errors.instructions && (
+                <span className="text-danger font-normal ml-1">
+                  {getArrayErrorMessage(errors.instructions) ?? "Fix errors below"}
+                </span>
               )}
+            </p>
+            <div className="space-y-3">
+              {instructions.map((field, index) => (
+                <div key={field.id} className="flex gap-2 items-start">
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-ink-inverse shrink-0 mt-2.5"
+                    style={{ background: "var(--color-deep-green)" }}
+                  >
+                    {index + 1}
+                  </span>
+                  <div className="flex-1">
+                    <textarea
+                      className="input-cookbook text-sm min-h-16 resize-none"
+                      placeholder={`Step ${index + 1}`}
+                      required
+                      aria-label={`Step ${index + 1}, required`}
+                      rows={2}
+                      {...register(`instructions.${index}.body`)}
+                    />
+                    {errors.instructions?.[index]?.body && (
+                      <p className="text-xs text-danger mt-0.5">
+                        {errors.instructions[index]?.body?.message}
+                      </p>
+                    )}
+                  </div>
+                  {instructions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeInstruction(index)}
+                      className="mt-3 text-ink-soft hover:text-danger transition-colors"
+                      aria-label="Remove step"
+                    >
+                      <Trash2 size={14} strokeWidth={1.75} />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
+            <button
+              type="button"
+              onClick={() => addInstruction({ body: "" })}
+              className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
+            >
+              <Plus size={14} /> Add step
+            </button>
+          </div>
+
+          {serverError && (
+            <p className="text-sm text-danger font-medium">{serverError}</p>
+          )}
+
+          <div className="flex gap-3">
+            <Button type="button" variant="secondary" onClick={() => router.back()}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={isSubmitting} className="flex-1">
+              {isEdit ? "Save changes" : "Add to this book"}
+            </Button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => addInstruction({ body: "" })}
-          className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
-        >
-          <Plus size={14} /> Add step
-        </button>
-      </div>
-
-      {serverError && (
-        <p className="text-sm text-danger font-medium">{serverError}</p>
-      )}
-
-      <div className="flex gap-3">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => router.back()}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          loading={isSubmitting}
-          className="flex-1"
-        >
-          {isEdit ? "Save changes" : "Add to this book"}
-        </Button>
       </div>
     </form>
   );

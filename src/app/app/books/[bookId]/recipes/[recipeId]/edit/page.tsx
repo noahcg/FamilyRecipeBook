@@ -54,9 +54,7 @@ export default async function EditRecipePage({ params }: Props) {
           </h1>
         </div>
 
-        <div className="rounded-xl border border-line-soft bg-card px-5 pt-5 shadow-card sm:px-6">
-          <RecipeForm bookId={bookId} recipe={recipe} />
-        </div>
+        <RecipeForm bookId={bookId} recipe={recipe} />
       </div>
     </AppShell>
   );
