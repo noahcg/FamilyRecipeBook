@@ -1,17 +1,29 @@
 import { AppShell } from "@/components/layout/AppShell";
-import { requireProfile } from "@/lib/auth";
+import { requireProfile, requireUser } from "@/lib/auth";
 import { getFirstBookId } from "@/lib/actions/books";
 import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui";
+import { RenameBookForm } from "@/components/book/RenameBookForm";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export default async function SettingsPage() {
-  const [profile, bookId] = await Promise.all([
+  const [profile, user, bookId, supabase] = await Promise.all([
     requireProfile(),
+    requireUser(),
     getFirstBookId(),
+    createClient(),
   ]);
 
   if (!bookId) redirect("/onboarding/create-book");
+
+  const [bookRes, memberRes] = await Promise.all([
+    supabase.from("recipe_books").select("title").eq("id", bookId).single(),
+    supabase.from("book_members").select("role").eq("book_id", bookId).eq("user_id", user.id).single(),
+  ]);
+
+  const bookTitle = bookRes.data?.title ?? "";
+  const isKeeper = memberRes.data?.role === "keeper";
 
   function getInitials(name: string | null) {
     if (!name) return "?";
@@ -19,7 +31,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <AppShell bookId={bookId}>
+    <AppShell bookId={bookId} bookTitle={bookTitle}>
       <div className="px-5 pt-6 pb-10">
         <h1
           className="text-xl font-bold text-green-deep mb-6"
@@ -64,6 +76,19 @@ export default async function SettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Book settings */}
+        {isKeeper && (
+          <div className="recipe-card p-5 mb-6">
+            <h2
+              className="mb-4 text-base font-bold text-green-deep"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              Recipe Book
+            </h2>
+            <RenameBookForm bookId={bookId} currentTitle={bookTitle} />
+          </div>
+        )}
 
         {/* Sign out */}
         <form action={signOut}>

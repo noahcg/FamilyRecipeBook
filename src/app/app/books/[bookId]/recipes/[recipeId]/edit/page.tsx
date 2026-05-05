@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
+import { BookName } from "@/components/book/BookName";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getRecipe } from "@/lib/actions/recipes";
 import { requireUser } from "@/lib/auth";
@@ -44,7 +45,7 @@ export default async function EditRecipePage({ params }: Props) {
         </Link>
 
         <div className="mb-6 border-b border-line-soft pb-6">
-          <p className="mb-2 text-sm font-semibold text-ink-muted">The Family Table</p>
+          <BookName className="mb-2 block text-sm font-semibold text-ink-muted" />
           <h1
             className="text-3xl font-bold leading-tight text-green-deep"
             style={{ fontFamily: "var(--font-playfair)" }}

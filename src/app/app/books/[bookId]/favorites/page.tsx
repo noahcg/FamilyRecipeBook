@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
+import { BookName } from "@/components/book/BookName";
 import { RecipeCard, EmptyState } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
@@ -26,7 +27,7 @@ export default async function FavoritesPage({ params }: Props) {
       <div className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8">
         <div className="mb-7 flex flex-col gap-4 border-b border-line-soft pb-6">
           <div>
-            <p className="mb-2 text-sm font-semibold text-ink-muted">The Family Table</p>
+            <BookName className="mb-2 block text-sm font-semibold text-ink-muted" />
             <h1
               className="text-3xl font-bold leading-tight text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}

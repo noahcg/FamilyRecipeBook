@@ -18,10 +18,12 @@ import {
 import { CookbookIcon } from "@/components/ui/CookbookIcon";
 import { APP_VERSION } from "@/lib/version";
 import { signOut } from "@/lib/actions/auth";
+import { useBook } from "@/lib/context/BookContext";
 
 interface AppShellProps {
   children: React.ReactNode;
   bookId: string;
+  bookTitle?: string;
 }
 
 const NAV = (bookId: string) => [
@@ -48,9 +50,11 @@ function isActiveNavItem(pathname: string, href: string, id?: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppShell({ children, bookId }: AppShellProps) {
+export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShellProps) {
   const pathname = usePathname();
   const navItems = NAV(bookId);
+  const { bookTitle: bookTitleCtx } = useBook();
+  const bookTitle = bookTitleProp ?? bookTitleCtx;
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
@@ -65,7 +69,7 @@ export function AppShell({ children, bookId }: AppShellProps) {
               className="block truncate text-lg font-bold leading-tight text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
-              The Family Table
+              {bookTitle}
             </span>
             <span className="block text-xs text-ink-muted">Recipe Book</span>
           </span>

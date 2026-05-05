@@ -7,6 +7,7 @@ import {
   Plus,
   Search,
 } from "lucide-react";
+import { BookName } from "@/components/book/BookName";
 import { AppShell } from "@/components/layout/AppShell";
 import { RecipeCard, MemberAvatarStack, Button, CookbookIcon } from "@/components/ui";
 import { AIRecipeIdeaPanel } from "@/components/recipe/AIRecipeIdeaPanel";
@@ -131,7 +132,7 @@ export default async function BookHomePage({ params }: Props) {
                     className="truncate text-3xl font-bold leading-tight text-green-deep lg:text-4xl"
                     style={{ fontFamily: "var(--font-playfair)" }}
                   >
-                    The Family Table
+                    <BookName />
                   </h1>
                   <ChevronDown size={20} strokeWidth={2} className="mt-1 shrink-0 text-green-deep" />
                 </Link>

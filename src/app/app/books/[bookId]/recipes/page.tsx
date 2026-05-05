@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Plus } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { RecipeCard, EmptyState, Button } from "@/components/ui";
+import { BookName } from "@/components/book/BookName";
 import { createClient } from "@/lib/supabase/client";
 import { use } from "react";
 
@@ -61,7 +62,7 @@ export default function RecipesPage({ params }: Props) {
       <div className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8">
         <div className="mb-7 flex flex-col gap-4 border-b border-line-soft pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-2 text-sm font-semibold text-ink-muted">The Family Table</p>
+            <BookName className="mb-2 block text-sm font-semibold text-ink-muted" />
             <h1
               className="text-3xl font-bold leading-tight text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}

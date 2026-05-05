@@ -76,7 +76,8 @@ export async function updateBook(
     return { success: false, error: error?.message ?? "Could not update book" };
   }
 
-  revalidatePath(`/app/books/${bookId}`);
+  revalidatePath("/app/books/[bookId]", "layout");
+  revalidatePath("/app/settings");
   return { success: true, data: book };
 }
 
