@@ -35,7 +35,7 @@ export default async function EditRecipePage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="mx-auto max-w-[920px] px-5 py-8 lg:px-8">
+      <div className="px-5 py-8 lg:px-10">
         <Link
           href={`/app/books/${bookId}/recipes/${recipeId}`}
           className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft transition-colors hover:text-ink"

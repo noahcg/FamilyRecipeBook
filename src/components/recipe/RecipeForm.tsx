@@ -329,24 +329,20 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
               {ingredients.map((field, index) => (
                 <div key={field.id} className="flex gap-2 items-start">
                   <GripVertical size={16} className="text-ink-soft mt-3.5 shrink-0 opacity-40" />
-                  <div className="grid grid-cols-12 gap-2 flex-1">
-                    <div className="col-span-3">
+                  <div className="grid grid-cols-[5rem_7rem_1fr] gap-2 flex-1 min-w-0">
+                    <input
+                      className="input-cookbook text-sm"
+                      placeholder="Qty"
+                      {...register(`ingredients.${index}.quantity`)}
+                    />
+                    <input
+                      className="input-cookbook text-sm"
+                      placeholder="Unit"
+                      {...register(`ingredients.${index}.unit`)}
+                    />
+                    <div className="min-w-0">
                       <input
-                        className="input-cookbook text-sm"
-                        placeholder="Qty"
-                        {...register(`ingredients.${index}.quantity`)}
-                      />
-                    </div>
-                    <div className="col-span-3">
-                      <input
-                        className="input-cookbook text-sm"
-                        placeholder="Unit"
-                        {...register(`ingredients.${index}.unit`)}
-                      />
-                    </div>
-                    <div className="col-span-6">
-                      <input
-                        className="input-cookbook text-sm"
+                        className="input-cookbook text-sm w-full"
                         placeholder="Ingredient"
                         required
                         aria-label={`Ingredient ${index + 1} name, required`}
