@@ -11,6 +11,7 @@ interface RecipeCardProps {
   servings?: number;
   loveCount?: number;
   category?: string;
+  isFavorited?: boolean;
   attributionPrefix?: string;
   onClick?: () => void;
   className?: string;
@@ -26,6 +27,7 @@ function RecipeCard({
   servings,
   loveCount,
   category,
+  isFavorited = false,
   attributionPrefix = "Added by",
   onClick,
   className,
@@ -73,9 +75,18 @@ function RecipeCard({
         )}
         <span
           aria-hidden="true"
-          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-card/80 text-white shadow-xs backdrop-blur-sm transition-colors group-hover:bg-card"
+          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border border-white/70 bg-card/80 shadow-xs backdrop-blur-sm transition-colors group-hover:bg-card"
         >
-          <Heart size={17} strokeWidth={1.8} className="text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.35)] group-hover:text-green-deep" />
+          <Heart
+            size={17}
+            strokeWidth={1.8}
+            className={clsx(
+              "drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] transition-colors",
+              isFavorited
+                ? "fill-accent-terracotta text-accent-terracotta"
+                : "text-white group-hover:text-green-deep"
+            )}
+          />
         </span>
       </div>
 

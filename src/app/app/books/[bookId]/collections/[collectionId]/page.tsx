@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { RecipeCard, EmptyState } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 
 interface Props {
   params: Promise<{ bookId: string; collectionId: string }>;
@@ -11,19 +12,27 @@ interface Props {
 
 export default async function CollectionDetailPage({ params }: Props) {
   const { bookId, collectionId } = await params;
-  const supabase = await createClient();
+  const [user, supabase] = await Promise.all([requireUser(), createClient()]);
 
-  const { data: collection } = await supabase
-    .from("collections")
-    .select(
-      "*, recipes:collection_recipes(recipe:recipes(*, reactions:recipe_reactions(type)))"
-    )
-    .eq("id", collectionId)
-    .eq("book_id", bookId)
-    .single();
+  const [{ data: collection }, { data: favReactions }] = await Promise.all([
+    supabase
+      .from("collections")
+      .select(
+        "*, recipes:collection_recipes(recipe:recipes(*, reactions:recipe_reactions(type)))"
+      )
+      .eq("id", collectionId)
+      .eq("book_id", bookId)
+      .single(),
+    supabase
+      .from("recipe_reactions")
+      .select("recipe_id")
+      .eq("user_id", user.id)
+      .eq("type", "favorite"),
+  ]);
 
   if (!collection) notFound();
 
+  const favoriteIds = new Set((favReactions ?? []).map((r: any) => r.recipe_id));
   const recipes = (collection.recipes ?? []).map((cr: any) => ({
     ...cr.recipe,
     loveCount:
@@ -77,6 +86,7 @@ export default async function CollectionDetailPage({ params }: Props) {
                   fromPerson={recipe.source_name}
                   loveCount={recipe.loveCount}
                   category={recipe.category ?? undefined}
+                  isFavorited={favoriteIds.has(recipe.id)}
                 />
               </Link>
             ))}

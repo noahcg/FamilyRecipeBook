@@ -16,24 +16,35 @@ export default function RecipesPage({ params }: Props) {
   const { bookId } = use(params);
   const [query, setQuery] = useState("");
   const [recipes, setRecipes] = useState<any[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase
-      .from("recipes")
-      .select("*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type)")
-      .eq("book_id", bookId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setRecipes(
-          (data ?? []).map((r: any) => ({
-            ...r,
-            loveCount: r.reactions?.filter((rx: any) => rx.type === "love").length ?? 0,
-          }))
-        );
-        setLoading(false);
-      });
+    Promise.all([
+      supabase
+        .from("recipes")
+        .select("*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type)")
+        .eq("book_id", bookId)
+        .order("created_at", { ascending: false }),
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return { data: [] };
+        return supabase
+          .from("recipe_reactions")
+          .select("recipe_id")
+          .eq("user_id", user.id)
+          .eq("type", "favorite");
+      }),
+    ]).then(([recipesRes, favRes]) => {
+      setRecipes(
+        (recipesRes.data ?? []).map((r: any) => ({
+          ...r,
+          loveCount: r.reactions?.filter((rx: any) => rx.type === "love").length ?? 0,
+        }))
+      );
+      setFavoriteIds(new Set((favRes.data ?? []).map((r: any) => r.recipe_id)));
+      setLoading(false);
+    });
   }, [bookId]);
 
   const filtered = query.trim()
@@ -132,6 +143,7 @@ export default function RecipesPage({ params }: Props) {
                   servings={recipe.servings ?? undefined}
                   loveCount={recipe.loveCount}
                   category={recipe.category ?? undefined}
+                  isFavorited={favoriteIds.has(recipe.id)}
                 />
               </Link>
             ))}

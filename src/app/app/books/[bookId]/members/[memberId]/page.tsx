@@ -52,7 +52,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const { tab = "recipes" } = await searchParams;
   const supabase = await createClient();
 
-  const [memberRes, recipesRes, activityRes] = await Promise.all([
+  const [memberRes, recipesRes, activityRes, favRes] = await Promise.all([
     supabase
       .from("book_members")
       .select("*, profile:profiles(*)")
@@ -72,11 +72,20 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       .eq("actor_id", memberId)
       .order("created_at", { ascending: false })
       .limit(20),
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return { data: [] };
+      return supabase
+        .from("recipe_reactions")
+        .select("recipe_id")
+        .eq("user_id", user.id)
+        .eq("type", "favorite");
+    }),
   ]);
 
   if (!memberRes.data) notFound();
 
   const member = memberRes.data as MemberWithProfile;
+  const favoriteIds = new Set((favRes.data ?? []).map((r: any) => r.recipe_id));
   const recipes = ((recipesRes.data ?? []) as Omit<MemberRecipe, "loveCount">[]).map((r) => ({
     ...r,
     loveCount: r.reactions?.filter((rx) => rx.type === "love").length ?? 0,
@@ -187,6 +196,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                   fromPerson={recipe.source_name ?? undefined}
                   loveCount={recipe.loveCount}
                   category={recipe.category ?? undefined}
+                  isFavorited={favoriteIds.has(recipe.id)}
                 />
               </Link>
             ))}
