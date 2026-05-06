@@ -401,7 +401,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                   </span>
                   <div className="flex-1">
                     <textarea
-                      className="input-cookbook text-sm min-h-16 resize-none"
+                      className="input-cookbook w-full text-sm min-h-16 resize-none"
                       placeholder={`Step ${index + 1}`}
                       required
                       aria-label={`Step ${index + 1}, required`}
