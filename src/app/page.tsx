@@ -43,7 +43,34 @@ const AVATARS = [
 
 export default function LandingPage() {
   return (
-    <div className="app-paper-bg paper-texture min-h-screen overflow-hidden text-ink">
+    <div className="relative app-paper-bg paper-texture min-h-screen overflow-hidden text-ink">
+      <div
+        className="absolute top-0 right-0 z-0 h-[560px] w-full overflow-hidden sm:h-[640px] lg:h-[820px] lg:w-[58vw] lg:min-w-[660px]"
+        style={{
+          maskImage: [
+            'linear-gradient(to right, transparent 0%, black 22%)',
+            'linear-gradient(to top, transparent 0%, black 18%)',
+          ].join(', '),
+          WebkitMaskImage: [
+            'linear-gradient(to right, transparent 0%, black 22%)',
+            'linear-gradient(to top, transparent 0%, black 18%)',
+          ].join(', '),
+          maskComposite: 'intersect',
+          WebkitMaskComposite: 'source-in',
+          maskSize: '100% 100%, 100% 100%',
+          maskRepeat: 'no-repeat',
+        }}
+      >
+        <Image
+          src="/images/landing-cookbook-hero.png"
+          alt="Open handwritten family recipe book on a warm kitchen counter with apples, herbs, flour, spices, and coffee"
+          fill
+          priority
+          sizes="(min-width: 1024px) 58vw, 100vw"
+          className="object-cover object-[70%_48%]"
+        />
+      </div>
+
       <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between px-5 py-5 sm:px-8 lg:px-12 lg:py-8">
         <Link href="/" className="flex items-center gap-3">
           <span className="grid size-12 place-items-center rounded-[18px] border border-line bg-card shadow-soft">
@@ -72,35 +99,6 @@ export default function LandingPage() {
 
       <main>
         <section className="relative min-h-[580px] pb-4 pt-8 lg:min-h-[600px] lg:pb-6 lg:pt-8">
-          <div
-            className="absolute right-0 top-[-88px] z-0 h-[560px] w-full overflow-hidden sm:h-[640px] lg:top-[-104px] lg:h-[820px] lg:w-[58vw] lg:min-w-[660px]"
-            style={{
-              maskImage: [
-                'linear-gradient(to right, transparent 0%, black 22%)',
-                'linear-gradient(to top, transparent 0%, black 18%)',
-                'linear-gradient(to bottom, transparent 0%, black 10%)',
-              ].join(', '),
-              WebkitMaskImage: [
-                'linear-gradient(to right, transparent 0%, black 22%)',
-                'linear-gradient(to top, transparent 0%, black 18%)',
-                'linear-gradient(to bottom, transparent 0%, black 10%)',
-              ].join(', '),
-              maskComposite: 'intersect, intersect',
-              WebkitMaskComposite: 'source-in, source-in',
-              maskSize: '100% 100%, 100% 100%, 100% 100%',
-              maskRepeat: 'no-repeat',
-            }}
-          >
-            <Image
-              src="/images/landing-cookbook-hero.png"
-              alt="Open handwritten family recipe book on a warm kitchen counter with apples, herbs, flour, spices, and coffee"
-              fill
-              priority
-              sizes="(min-width: 1024px) 58vw, 100vw"
-              className="object-cover object-[70%_48%]"
-            />
-          </div>
-
           <div className="relative z-10 mx-auto w-full max-w-[1360px] px-5 pt-[200px] sm:px-8 sm:pt-[240px] lg:px-12 lg:pt-14">
             <div className="max-w-2xl">
               <h1
@@ -170,36 +168,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1180px] px-5 pb-8 sm:px-8 lg:px-12">
-          <div className="grid gap-4 rounded-[var(--radius-xl)] border border-line bg-paper/80 p-4 shadow-soft sm:grid-cols-3 sm:items-center sm:p-5">
-            <p
-              className="text-xl font-semibold text-green-deep sm:text-2xl"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              12,000+ family recipes preserved
-            </p>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-ink-muted">
-              Shared across generations
-            </p>
-            <div className="flex items-center gap-2 sm:justify-end">
-              <span className="flex text-accent-mustard">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Star
-                    key={index}
-                    aria-hidden="true"
-                    className="fill-current"
-                    size={18}
-                  />
-                ))}
-              </span>
-              <span className="font-extrabold text-green-deep">
-                4.9 average rating
-              </span>
-            </div>
-          </div>
-        </section>
-
-        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
+        <section className="relative z-10 mx-auto w-full max-w-[1360px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
           <div className="rounded-[2rem] border border-line bg-paper-deep/70 p-5 shadow-soft sm:p-7 lg:p-8">
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {FEATURES.map(({ icon: Icon, title, body }) => (
