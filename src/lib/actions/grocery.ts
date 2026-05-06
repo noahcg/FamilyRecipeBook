@@ -126,6 +126,18 @@ export async function clearCheckedItems(householdId: string): Promise<ActionResu
   return { success: true, data: undefined };
 }
 
+export async function clearAllItems(householdId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("grocery_items")
+    .delete()
+    .eq("household_id", householdId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: undefined };
+}
+
 // ─── Import from meal plan ────────────────────────────────────
 
 export async function importFromMealPlan(

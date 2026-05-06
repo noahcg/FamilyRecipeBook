@@ -99,7 +99,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
           </div>
         </nav>
 
-        <div className="mt-8 shrink-0 px-6">
+        <div className="mt-8 shrink-0 px-6 pb-4">
           <div className="mb-3 flex items-center justify-between border-t border-line-soft pt-5">
             <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">My Cookbooks</p>
             <Link href="/onboarding/create-book" aria-label="Create cookbook" className="text-green-deep">

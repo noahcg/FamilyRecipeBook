@@ -9,6 +9,7 @@ import {
   toggleGroceryItem,
   deleteGroceryItem,
   clearCheckedItems,
+  clearAllItems,
   importFromMealPlan,
 } from "@/lib/actions/grocery";
 import type { GroceryItem } from "@/lib/types";
@@ -39,6 +40,7 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
   const [addInput, setAddInput] = useState("");
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [showChecked, setShowChecked] = useState(true);
+  const [confirmClear, setConfirmClear] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const unchecked = items.filter((i) => !i.checked);
@@ -104,6 +106,19 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
     });
   }
 
+  function handleClearAll() {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      setTimeout(() => setConfirmClear(false), 3000);
+      return;
+    }
+    setConfirmClear(false);
+    setItems([]);
+    startTransition(async () => {
+      await clearAllItems(householdId);
+    });
+  }
+
   function handleImport() {
     setImportMsg(null);
     startTransition(async () => {
@@ -144,16 +159,33 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
               {unchecked.length} item{unchecked.length !== 1 ? "s" : ""} to grab
             </p>
           </div>
-          {checked.length > 0 && (
-            <button
-              onClick={handleClearChecked}
-              disabled={isPending}
-              className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
-            >
-              <Trash2 size={13} />
-              Clear {checked.length} checked
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {checked.length > 0 && (
+              <button
+                onClick={handleClearChecked}
+                disabled={isPending}
+                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
+              >
+                <Trash2 size={13} />
+                Clear {checked.length} checked
+              </button>
+            )}
+            {hasItems && (
+              <button
+                onClick={handleClearAll}
+                disabled={isPending}
+                className={clsx(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40",
+                  confirmClear
+                    ? "bg-red-50 text-red-600 hover:bg-red-100"
+                    : "text-ink-muted hover:bg-card/70 hover:text-ink"
+                )}
+              >
+                <Trash2 size={13} />
+                {confirmClear ? "Tap again to confirm" : "Clear list"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
