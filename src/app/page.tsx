@@ -72,8 +72,26 @@ export default function LandingPage() {
       </header>
 
       <main>
-        <section className="relative min-h-[680px] pb-12 pt-8 lg:min-h-[700px] lg:pb-20 lg:pt-8">
-          <div className="absolute right-0 top-[-88px] z-0 h-[470px] w-full overflow-hidden opacity-95 [mask-image:linear-gradient(90deg,transparent_0%,black_22%,black_100%)] sm:h-[540px] lg:right-0 lg:top-[-104px] lg:h-[660px] lg:w-[58vw] lg:min-w-[660px]">
+        <section className="relative min-h-[580px] pb-4 pt-8 lg:min-h-[600px] lg:pb-6 lg:pt-8">
+          <div
+            className="absolute right-0 top-[-88px] z-0 h-[560px] w-full overflow-hidden sm:h-[640px] lg:top-[-104px] lg:h-[820px] lg:w-[58vw] lg:min-w-[660px]"
+            style={{
+              maskImage: [
+                'linear-gradient(to right, transparent 0%, black 22%)',
+                'linear-gradient(to top, transparent 0%, black 18%)',
+                'linear-gradient(to bottom, transparent 0%, black 10%)',
+              ].join(', '),
+              WebkitMaskImage: [
+                'linear-gradient(to right, transparent 0%, black 22%)',
+                'linear-gradient(to top, transparent 0%, black 18%)',
+                'linear-gradient(to bottom, transparent 0%, black 10%)',
+              ].join(', '),
+              maskComposite: 'intersect, intersect',
+              WebkitMaskComposite: 'source-in, source-in',
+              maskSize: '100% 100%, 100% 100%, 100% 100%',
+              maskRepeat: 'no-repeat',
+            }}
+          >
             <Image
               src="/images/landing-cookbook-hero.png"
               alt="Open handwritten family recipe book on a warm kitchen counter with apples, herbs, flour, spices, and coffee"
@@ -82,10 +100,6 @@ export default function LandingPage() {
               sizes="(min-width: 1024px) 58vw, 100vw"
               className="object-cover object-[70%_48%]"
             />
-            <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-r from-cream via-cream/90 to-transparent lg:w-3/5" />
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-cream via-cream/80 to-transparent" />
-            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-cream/80 to-transparent" />
-            <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-cream/35 to-transparent" />
           </div>
 
           <div className="relative z-10 mx-auto w-full max-w-[1360px] px-5 pt-[280px] sm:px-8 sm:pt-[340px] lg:px-12 lg:pt-24">
@@ -166,7 +180,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1180px] px-5 pb-8 sm:px-8 lg:px-12">
+        <section className="relative z-10 -mt-16 mx-auto w-full max-w-[1180px] px-5 pb-8 sm:px-8 lg:-mt-36 lg:px-12">
           <div className="grid gap-4 rounded-[var(--radius-xl)] border border-line bg-paper/80 p-4 shadow-soft sm:grid-cols-3 sm:items-center sm:p-5">
             <p
               className="text-xl font-semibold text-green-deep sm:text-2xl"
@@ -195,7 +209,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1220px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
+        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
           <div className="rounded-[2rem] border border-line bg-paper-deep/70 p-5 shadow-soft sm:p-7 lg:p-8">
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {FEATURES.map(({ icon: Icon, title, body }) => (
@@ -227,7 +241,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1220px] px-5 pb-24 pt-6 sm:px-8 lg:px-12">
+        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-5 pb-24 pt-6 sm:px-8 lg:px-12">
           <div className="grid overflow-hidden rounded-[2.3rem] border border-line bg-[linear-gradient(135deg,var(--color-card),var(--color-paper-deep))] shadow-[var(--shadow-card)] lg:grid-cols-[0.95fr_1.05fr]">
             <div className="relative p-8 sm:p-12 lg:p-16">
               <Leaf
