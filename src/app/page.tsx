@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   BookOpen,
   Camera,
-  Heart,
   Leaf,
   LibraryBig,
   NotebookPen,
@@ -102,17 +101,8 @@ export default function LandingPage() {
             />
           </div>
 
-          <div className="relative z-10 mx-auto w-full max-w-[1360px] px-5 pt-[280px] sm:px-8 sm:pt-[340px] lg:px-12 lg:pt-24">
+          <div className="relative z-10 mx-auto w-full max-w-[1360px] px-5 pt-[200px] sm:px-8 sm:pt-[240px] lg:px-12 lg:pt-14">
             <div className="max-w-2xl">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-white-soft/75 px-4 py-2 text-sm font-bold text-accent-cinnamon shadow-soft">
-                <Heart
-                  aria-hidden="true"
-                  className="fill-accent-terracotta text-accent-terracotta"
-                  size={16}
-                />
-                Recipes, memories, and the people who made them
-              </div>
-
               <h1
                 className="text-[3.25rem] font-bold leading-[1.02] tracking-normal text-green-deep sm:text-[4.25rem] lg:text-[5.35rem]"
                 style={{ fontFamily: "var(--font-playfair)" }}
@@ -180,7 +170,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 -mt-16 mx-auto w-full max-w-[1180px] px-5 pb-8 sm:px-8 lg:-mt-36 lg:px-12">
+        <section className="mx-auto w-full max-w-[1180px] px-5 pb-8 sm:px-8 lg:px-12">
           <div className="grid gap-4 rounded-[var(--radius-xl)] border border-line bg-paper/80 p-4 shadow-soft sm:grid-cols-3 sm:items-center sm:p-5">
             <p
               className="text-xl font-semibold text-green-deep sm:text-2xl"
