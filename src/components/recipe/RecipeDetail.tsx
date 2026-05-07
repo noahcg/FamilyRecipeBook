@@ -7,15 +7,14 @@ import {
   ArrowLeft,
   Bookmark,
   BookOpen,
-  Camera,
-  ChevronDown,
+  Clock,
   Edit2,
   Flame,
   Heart,
-  Leaf,
   MoreHorizontal,
   Smile,
   Trash2,
+  Users,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Dialog } from "@/components/ui";
@@ -62,15 +61,16 @@ export function RecipeDetail({
   const sourceName = recipe.source_name ?? recipe.creator?.full_name ?? "Family";
   const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
   const noteCount = (recipe.stories?.length ?? 0) + (recipe.story ? 1 : 0);
+  const addedDate = new Date(recipe.created_at).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
   const activityItems = [
     {
       id: "created",
       label: `${sourceName} added this recipe`,
-      date: new Date(recipe.created_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
+      date: addedDate,
       initials: sourceName.slice(0, 1).toUpperCase(),
     },
     ...(recipe.stories ?? []).slice(0, 2).map((storyItem) => ({
@@ -115,44 +115,23 @@ export function RecipeDetail({
   }
 
   return (
-    <article className="mx-auto max-w-[1040px] px-4 py-4 lg:px-8">
-      {/* Hero image */}
-      <div className="relative h-[250px] overflow-hidden rounded-t-xl sm:h-[320px] lg:h-[360px]">
-        {recipe.photo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={recipe.photo_url}
-            alt={recipe.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ background: "var(--color-sage-soft)" }}
-          >
-            <BookOpen size={56} strokeWidth={1} className="text-green-sage opacity-30" />
-          </div>
-        )}
-
-        {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/10" />
-
-        {/* Back button */}
+    <article>
+      <div className="mx-auto max-w-[1320px] px-5 py-4 lg:px-8">
+        <div className="flex items-center justify-between gap-4">
         <Link
-          href={`/app/books/${bookId}`}
-          className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-md bg-card/90 text-green-deep shadow-sm backdrop-blur-sm"
-          aria-label="Back to book"
+          href={`/app/books/${bookId}/recipes`}
+          className="inline-flex h-10 items-center gap-2 text-sm font-bold text-green-deep hover:underline"
         >
-          <ArrowLeft size={18} strokeWidth={2} />
+          <ArrowLeft size={17} strokeWidth={2} />
+          Recipes
         </Link>
 
-        {/* Top-right actions */}
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="relative flex items-center gap-2">
           <button
             type="button"
             onClick={handleFavorite}
             aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
-            className="flex h-10 w-10 items-center justify-center rounded-md bg-card/90 text-green-deep shadow-sm backdrop-blur-sm transition-transform active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-green-deep transition-colors hover:bg-green-pale"
           >
             <Heart
               size={18}
@@ -166,7 +145,7 @@ export function RecipeDetail({
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="More options"
-            className="flex h-10 w-10 items-center justify-center rounded-md bg-card/90 text-green-deep shadow-sm backdrop-blur-sm transition-transform active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-green-deep transition-colors hover:bg-green-pale"
           >
             <MoreHorizontal size={19} strokeWidth={2} />
           </button>
@@ -177,12 +156,12 @@ export function RecipeDetail({
                 onClick={() => setMenuOpen(false)}
               />
               <div
-                className="absolute right-0 top-11 z-50 w-44 rounded-xl overflow-hidden py-1 shadow-md"
+                className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl py-1 shadow-md"
                 style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
               >
                 <button
                   type="button"
-                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-sage-pale transition-colors"
+                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
                   onClick={() => { handleFavorite(); setMenuOpen(false); }}
                 >
                   <Heart size={15} strokeWidth={1.75} className={clsx(favorited ? "fill-accent-terracotta text-accent-terracotta" : "text-ink-soft")} />
@@ -191,7 +170,7 @@ export function RecipeDetail({
                 {canEdit && (
                   <Link
                     href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-sage-pale transition-colors"
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
                     onClick={() => setMenuOpen(false)}
                   >
                     <Edit2 size={15} strokeWidth={1.75} className="text-ink-soft" />
@@ -201,7 +180,7 @@ export function RecipeDetail({
                 {canDelete && (
                   <button
                     type="button"
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-danger hover:bg-sage-pale transition-colors"
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-danger transition-colors hover:bg-green-pale"
                     onClick={() => { setMenuOpen(false); setDeleteOpen(true); }}
                   >
                     <Trash2 size={15} strokeWidth={1.75} />
@@ -212,152 +191,206 @@ export function RecipeDetail({
             </>
           )}
         </div>
-
+      </div>
       </div>
 
-      {/* Content panel — overlaps hero */}
-      <div
-        className="relative z-10 mx-4 -mt-8 mb-8 rounded-xl border border-line-soft bg-card px-5 pb-6 pt-6 shadow-card sm:px-6 lg:mx-8 lg:px-8"
-      >
-        {/* Title + meta */}
-        <div>
-          <h1
-            className="text-3xl font-bold leading-tight text-green-deep sm:text-4xl"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            {recipe.title}
-          </h1>
+      <header className="relative h-[310px] overflow-hidden bg-green-pale sm:h-[360px] lg:h-[390px]">
+        <div className="absolute inset-0">
+          {recipe.photo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={recipe.photo_url}
+              alt={recipe.title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <BookOpen size={70} strokeWidth={1} className="text-green-sage opacity-50" />
+            </div>
+          )}
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10" />
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent pb-8 pt-24">
+          <div className="mx-auto max-w-[1320px] px-5 lg:px-8">
+            <div className="max-w-4xl text-ink-inverse">
+              {recipe.category && (
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-white/80">
+                  {recipe.category}
+                </p>
+              )}
+              <h1
+                className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                {recipe.title}
+              </h1>
+              <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/86">
+                <span className="font-semibold text-white">Added by {sourceName}</span>
+                <span>{addedDate}</span>
+                {recipe.servings != null && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Users size={15} />
+                    Serves {recipe.servings}
+                  </span>
+                )}
+                {recipe.cook_minutes != null && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock size={15} />
+                    {recipe.cook_minutes} min
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-          {/* "Added by" + serves • category */}
-          <div className="mt-4 flex items-center gap-3 text-sm text-ink">
-            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-card bg-green-soft font-bold text-green-deep">
-              {sourceName.slice(0, 1).toUpperCase()}
+      <div className="mx-auto max-w-[1320px] px-5 lg:px-8">
+        <section className="grid gap-8 border-b border-line-soft py-7 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="max-w-[820px]">
+          {story && (
+            <blockquote className="border-l-2 border-accent-honey pl-5 text-xl leading-relaxed text-accent-cinnamon">
+              <p style={{ fontFamily: "var(--font-caveat)" }}>{story}</p>
+            </blockquote>
+          )}
+
+          {recipe.description && recipe.description !== story && (
+            <p className={clsx("max-w-3xl text-base leading-relaxed text-ink-muted", story && "mt-5")}>
+              {recipe.description}
+            </p>
+          )}
+          </div>
+
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-line-soft text-sm lg:border-l lg:pl-8">
+            <div>
+              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Servings</dt>
+              <dd className="mt-1 font-bold text-green-deep">{recipe.servings ?? "Family"}</dd>
             </div>
             <div>
-              <p>Added by {sourceName}</p>
-              <p className="text-ink-muted">
-                {recipe.servings != null ? `Serves ${recipe.servings}` : "Family recipe"}
-                {recipe.category && <span className="px-1.5">·</span>}
-                {recipe.category}
-              </p>
+              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Cook</dt>
+              <dd className="mt-1 font-bold text-green-deep">{recipe.cook_minutes ? `${recipe.cook_minutes} min` : "Anytime"}</dd>
             </div>
-          </div>
-        </div>
-
-        {story && (
-          <div className="story-note relative mt-5 pr-12">
-            <p>“{story}”</p>
-            <Leaf className="absolute bottom-4 right-4 text-green-sage" size={36} strokeWidth={1.4} />
-          </div>
-        )}
-
-        <div className="mt-5 border-b border-line-soft">
-          <div className="flex items-end justify-between gap-4">
-            <div className="flex gap-7 overflow-x-auto text-sm font-semibold text-ink">
-              <span className="border-b-2 border-green-deep pb-3 text-green-deep">Ingredients</span>
-              {recipe.instructions && recipe.instructions.length > 0 && (
-                <a href="#instructions" className="pb-3 hover:text-green-deep">Instructions</a>
-              )}
-              <span className="pb-3">Notes ({noteCount})</span>
+            <div>
+              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Category</dt>
+              <dd className="mt-1 truncate font-bold text-green-deep">{recipe.category ?? "Family"}</dd>
             </div>
-            <button
-              type="button"
-              className="mb-2 rounded-md border border-line-soft bg-white-soft px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-green-pale"
-            >
-              1x <ChevronDown size={12} className="inline" />
-            </button>
-          </div>
-        </div>
-
-        {/* Ingredients */}
-        {recipe.ingredients && recipe.ingredients.length > 0 && (
-          <section className="mt-4">
-            <IngredientChecklist ingredients={recipe.ingredients} />
-          </section>
-        )}
-
-        {/* Instructions */}
-        {recipe.instructions && recipe.instructions.length > 0 && (
-          <section id="instructions" className="mt-6 border-t border-line-soft pt-5">
-            <h2
-              className="mb-3 text-lg font-bold text-green-deep"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              How to make it
-            </h2>
-            <InstructionList instructions={recipe.instructions} />
-          </section>
-        )}
-
-        <div className="mt-5 flex items-center border-t border-line-soft pt-4 text-sm font-bold text-ink">
-          <button type="button" className="flex items-center gap-2 pr-5 text-accent-terracotta">
-            <Heart size={17} fill="currentColor" />
-            {reactionCounts.love}
-          </button>
-          <button type="button" className="flex items-center gap-2 border-l border-line-soft px-5 text-accent-terracotta">
-            <Flame size={17} fill="currentColor" />
-            {reactionCounts.made_it}
-          </button>
-          <span className="flex items-center gap-2 border-l border-line-soft px-5 text-accent-honey">
-            <Smile size={18} />
-            {reactionCounts.favorite}
-          </span>
-          <button type="button" onClick={handleFavorite} aria-label={favorited ? "Remove bookmark" : "Bookmark recipe"} className="ml-auto text-green-deep">
-            <Bookmark size={19} className={clsx(favorited && "fill-green-deep")} />
-          </button>
-        </div>
-
-        {/* Add a memory */}
-        <section className="mt-4 flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-soft text-xs font-bold text-green-deep">
-            {(recipe.creator?.full_name ?? recipe.source_name ?? "F").slice(0, 1).toUpperCase()}
-          </div>
-          <input
-            className="input-cookbook h-11 min-w-0 flex-1 text-sm"
-            placeholder="Add a note or memory..."
-            value={storyText}
-            onChange={(e) => setStoryText(e.target.value)}
-          />
-          <button type="button" className="flex h-11 w-11 items-center justify-center rounded-md border border-line-soft bg-white-soft text-green-deep" aria-label="Add photo">
-            <Camera size={18} />
-          </button>
-          <Button variant="secondary" size="sm" onClick={handleAddStory} disabled={!storyText.trim()} loading={addingStory}>
-            Add
-          </Button>
-          {storyError && (
-            <p className="text-xs text-danger mt-1">{storyError}</p>
-          )}
+            <div>
+              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Memories</dt>
+              <dd className="mt-1 font-bold text-green-deep">{noteCount}</dd>
+            </div>
+          </dl>
         </section>
 
-        <section className="mt-6">
-          <h2
-            className="mb-3 text-lg font-semibold text-green-deep"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            Made by our family
-          </h2>
-          <div className="divide-y divide-line-soft">
-            {activityItems.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 py-2.5 text-sm">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-soft text-xs font-bold text-green-deep">
-                  {item.initials}
+      <div className="grid gap-10 py-8 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
+        <main className="min-w-0">
+          {recipe.instructions && recipe.instructions.length > 0 && (
+            <section id="instructions" className="max-w-[820px]">
+              <div className="mb-6 flex items-end justify-between gap-4 border-b border-line-soft pb-4">
+                <div>
+                  <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+                    Method
+                  </p>
+                  <h2
+                    className="text-3xl font-bold text-green-deep"
+                    style={{ fontFamily: "var(--font-playfair)" }}
+                  >
+                    How to make it
+                  </h2>
                 </div>
-                <span className="text-ink">{item.label}</span>
-                <span className="ml-auto text-xs text-ink-muted">{item.date}</span>
+                <span className="hidden text-sm font-semibold text-ink-soft sm:block">
+                  {recipe.instructions.length} {recipe.instructions.length === 1 ? "step" : "steps"}
+                </span>
               </div>
-            ))}
+              <InstructionList instructions={recipe.instructions} />
+            </section>
+          )}
+        </main>
+
+        <aside className="space-y-8 border-line-soft lg:sticky lg:top-8 lg:self-start lg:border-l lg:pl-8">
+          {recipe.ingredients && recipe.ingredients.length > 0 && (
+            <section>
+              <div className="mb-4 border-b border-line-soft pb-3">
+                <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+                  Mise en place
+                </p>
+                <h2
+                  className="text-2xl font-bold text-green-deep"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  Ingredients
+                </h2>
+              </div>
+              <IngredientChecklist ingredients={recipe.ingredients} className="sm:grid-cols-1" />
+            </section>
+          )}
+
+          <section className="border-t border-line-soft pt-6">
+            <div className="flex items-center text-sm font-bold text-ink">
+              <button type="button" className="flex items-center gap-2 pr-4 text-accent-terracotta">
+                <Heart size={17} fill="currentColor" />
+                {reactionCounts.love}
+              </button>
+              <button type="button" className="flex items-center gap-2 border-l border-line-soft px-4 text-accent-terracotta">
+                <Flame size={17} fill="currentColor" />
+                {reactionCounts.made_it}
+              </button>
+              <span className="flex items-center gap-2 border-l border-line-soft px-4 text-accent-honey">
+                <Smile size={18} />
+                {reactionCounts.favorite}
+              </span>
+              <button type="button" onClick={handleFavorite} aria-label={favorited ? "Remove bookmark" : "Bookmark recipe"} className="ml-auto text-green-deep">
+                <Bookmark size={19} className={clsx(favorited && "fill-green-deep")} />
+              </button>
+            </div>
+          </section>
+        </aside>
+      </div>
+
+        <section className="border-t border-line-soft py-6">
+          <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">
+                Family notes
+              </p>
+              <p className="mt-1 text-sm text-ink-muted">{noteCount} saved</p>
+            </div>
+            <div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  className="input-cookbook h-10 min-w-0 flex-1 text-sm"
+                  placeholder="Add a note or memory..."
+                  value={storyText}
+                  onChange={(e) => setStoryText(e.target.value)}
+                />
+                <Button variant="secondary" size="sm" onClick={handleAddStory} disabled={!storyText.trim()} loading={addingStory}>
+                  Add
+                </Button>
+              </div>
+              {storyError && (
+                <p className="mt-2 text-xs text-danger">{storyError}</p>
+              )}
+              <div className="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                {activityItems.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 text-sm">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-soft text-xs font-bold text-green-deep">
+                      {item.initials}
+                    </div>
+                    <span className="min-w-0 flex-1 truncate text-ink">{item.label}</span>
+                    <span className="text-xs text-ink-muted">{item.date}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <p className="mt-3 text-center text-sm font-semibold text-green-deep">View all activity</p>
         </section>
       </div>
 
-      {/* Delete confirmation dialog */}
       <Dialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         title="Delete recipe?"
       >
-        <p className="text-sm text-ink-muted mb-5">
+        <p className="mb-5 text-sm text-ink-muted">
           This will permanently remove{" "}
           <span className="font-semibold text-ink">{recipe.title}</span> and all
           its memories. This cannot be undone.
