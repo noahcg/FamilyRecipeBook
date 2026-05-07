@@ -1,9 +1,16 @@
 "use server";
 
-interface UnsplashPhoto {
-  alt_description: string | null;
-  urls: { regular: string; small: string };
-  user: { name: string; links: { html: string } };
+interface PexelsPhoto {
+  alt: string | null;
+  src: {
+    large: string;
+    large2x?: string;
+    landscape?: string;
+    medium?: string;
+  };
+  photographer: string;
+  photographer_url: string;
+  url: string;
 }
 
 // Shared helper — same fetch pattern as aiRecipes.ts
@@ -51,12 +58,12 @@ async function callCloudflareText(
   }
 }
 
-// Step 1 — Turn a recipe into a good Unsplash search phrase
+// Step 1 - Turn a recipe into a good Pexels search phrase
 async function buildSearchQuery(title: string, ingredients: string[]): Promise<string> {
   const sample = ingredients.slice(0, 5).join(", ");
 
   const raw = await callCloudflareText(
-    "You convert recipe names into short Unsplash photo search queries. Return ONLY a 3-5 word phrase. Focus on: homemade, rustic, warm lighting, natural presentation. No quotes, no punctuation, no explanation.",
+    "You convert recipe names into short stock photo search queries. Return ONLY a 3-5 word phrase. Focus on: homemade, rustic, warm lighting, natural presentation. No quotes, no punctuation, no explanation.",
     `Recipe: ${title}${sample ? `\nKey ingredients: ${sample}` : ""}`,
     40
   );
@@ -68,42 +75,43 @@ async function buildSearchQuery(title: string, ingredients: string[]): Promise<s
   return cleaned || `homemade ${title.toLowerCase()} rustic`;
 }
 
-// Step 2 — Fetch candidate images from Unsplash
-async function fetchCandidates(query: string): Promise<UnsplashPhoto[]> {
-  const accessKey = process.env.UNSPLASH_ACCESS_KEY;
-  if (!accessKey) return [];
+// Step 2 - Fetch candidate images from Pexels
+async function fetchCandidates(query: string): Promise<PexelsPhoto[]> {
+  const apiKey = process.env.PEXELS_API_KEY;
+  if (!apiKey) return [];
 
   try {
-    const url = new URL("https://api.unsplash.com/search/photos");
+    const url = new URL("https://api.pexels.com/v1/search");
     url.searchParams.set("query", query);
     url.searchParams.set("per_page", "10");
     url.searchParams.set("orientation", "landscape");
-    url.searchParams.set("content_filter", "high");
+    url.searchParams.set("size", "medium");
+    url.searchParams.set("locale", "en-US");
 
     const response = await fetch(url.toString(), {
-      headers: { Authorization: `Client-ID ${accessKey}` },
+      headers: { Authorization: apiKey },
       cache: "no-store",
     });
 
     if (!response.ok) return [];
 
-    const json = (await response.json()) as { results?: UnsplashPhoto[] };
-    return json.results ?? [];
+    const json = (await response.json()) as { photos?: PexelsPhoto[] };
+    return json.photos ?? [];
   } catch {
     return [];
   }
 }
 
-// Step 3 — Rank candidates with AI; return 0-based index of best pick
+// Step 3 - Rank candidates with AI; return 0-based index of best pick
 async function pickBestImage(
   title: string,
   query: string,
-  candidates: UnsplashPhoto[]
+  candidates: PexelsPhoto[]
 ): Promise<number> {
   if (candidates.length <= 1) return 0;
 
   const list = candidates
-    .map((p, i) => `${i + 1}. ${p.alt_description ?? "(no description)"}`)
+    .map((p, i) => `${i + 1}. ${p.alt ?? "(no description)"}`)
     .join("\n");
 
   const raw = await callCloudflareText(
@@ -119,12 +127,12 @@ async function pickBestImage(
   return 0;
 }
 
-// Append sizing params to an Unsplash URL, preserving existing query string
+// Append sizing params to a Pexels URL, preserving existing query string
 function sizedUrl(base: string, width: number, quality = 80): string {
   try {
     const u = new URL(base);
-    u.searchParams.set("auto", "format");
-    u.searchParams.set("fit", "crop");
+    u.searchParams.set("auto", "compress");
+    u.searchParams.set("cs", "tinysrgb");
     u.searchParams.set("w", String(width));
     u.searchParams.set("q", String(quality));
     return u.toString();
@@ -134,8 +142,8 @@ function sizedUrl(base: string, width: number, quality = 80): string {
 }
 
 /**
- * Automatically selects the most appropriate Unsplash image for a recipe.
- * Returns the image URL, or null if Unsplash is not configured or no
+ * Automatically selects the most appropriate Pexels image for a recipe.
+ * Returns the image URL, or null if Pexels is not configured or no
  * suitable image is found.
  *
  * Called only when the user has not uploaded their own photo.
@@ -159,7 +167,7 @@ export async function selectRecipeImage(
     const bestIdx = await pickBestImage(title, query, candidates);
     const photo = candidates[bestIdx] ?? candidates[0];
 
-    return sizedUrl(photo.urls.regular, 900);
+    return sizedUrl(photo.src.large2x ?? photo.src.large ?? photo.src.landscape ?? photo.src.medium, 900);
   } catch {
     return null;
   }

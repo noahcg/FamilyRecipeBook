@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createRecipe } from "@/lib/actions/recipes";
-import { selectRecipeImage } from "@/lib/actions/unsplash";
+import { selectRecipeImage } from "@/lib/actions/pexels";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Recipe } from "@/lib/types";

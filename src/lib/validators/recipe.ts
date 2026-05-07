@@ -14,7 +14,10 @@ const instructionSchema = z.object({
 export const createRecipeSchema = z.object({
   title: z.string().min(1, "Recipe needs a title").max(200),
   description: z.string().max(500).optional(),
-  photo_url: z.string().url().optional(),
+  photo_url: z.preprocess(
+    (value) => value === "" ? null : value,
+    z.string().url("Enter a valid image URL").nullable().optional()
+  ),
   source_name: z.string().max(100).optional(),
   story: z.string().max(2000).optional(),
   prep_minutes: z.coerce.number().int().min(0).max(10080).optional(),

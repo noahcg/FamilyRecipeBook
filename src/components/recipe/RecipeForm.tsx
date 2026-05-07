@@ -10,7 +10,7 @@ import { Button, Input, Textarea } from "@/components/ui";
 import { createRecipeSchema, type CreateRecipeInput } from "@/lib/validators/recipe";
 import { createRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { uploadRecipeImage } from "@/lib/upload";
-import { selectRecipeImage } from "@/lib/actions/unsplash";
+import { selectRecipeImage } from "@/lib/actions/pexels";
 import { useUser } from "@/lib/hooks/useUser";
 import type { RecipeWithRelations } from "@/lib/types";
 
@@ -45,6 +45,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
   const {
     register,
     control,
+    setValue,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreateRecipeInput>({
@@ -53,6 +54,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       ? {
           title: recipe.title,
           description: recipe.description ?? "",
+          photo_url: recipe.photo_url ?? "",
           source_name: recipe.source_name ?? "",
           story: recipe.story ?? "",
           prep_minutes: recipe.prep_minutes ?? undefined,
@@ -75,6 +77,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       : {
           title: "",
           description: "",
+          photo_url: "",
           source_name: "",
           story: "",
           tags: [],
@@ -101,13 +104,20 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoFile(file);
+    setValue("photo_url", "", { shouldDirty: true });
     setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  function handlePhotoUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value.trim();
+    setPhotoFile(null);
+    setPhotoPreview(value || null);
   }
 
   async function onSubmit(data: CreateRecipeInput) {
     setServerError(null);
 
-    let photoUrl = recipe?.photo_url ?? undefined;
+    let photoUrl = data.photo_url ?? null;
 
     if (photoFile && userId) {
       const uploaded = await uploadRecipeImage(photoFile, userId);
@@ -118,7 +128,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       photoUrl = uploaded.url;
     }
 
-    // Auto-select from Unsplash when creating a new recipe without a photo
+    // Auto-select from Pexels when creating a new recipe without a photo
     if (!photoUrl && !isEdit) {
       const ingredientNames = data.ingredients.map((i) => i.item).filter(Boolean);
       const auto = await selectRecipeImage(data.title, ingredientNames);
@@ -199,6 +209,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                 onClick={() => {
                   setPhotoPreview(null);
                   setPhotoFile(null);
+                  setValue("photo_url", "", { shouldDirty: true });
                   if (fileRef.current) fileRef.current.value = "";
                 }}
                 className="text-xs text-ink-soft underline mt-1"
@@ -206,6 +217,18 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                 Remove photo
               </button>
             )}
+            <div className="mt-3">
+              <Input
+                label="Photo URL"
+                type="url"
+                placeholder="https://images.pexels.com/photos/..."
+                hint="Paste an image URL to replace the current photo."
+                error={errors.photo_url?.message}
+                {...register("photo_url", {
+                  onChange: handlePhotoUrlChange,
+                })}
+              />
+            </div>
           </div>
 
           {/* Core fields */}
