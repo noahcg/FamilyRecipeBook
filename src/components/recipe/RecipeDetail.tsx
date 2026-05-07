@@ -311,7 +311,7 @@ export function RecipeDetail({
             <section>
               <div className="mb-4 border-b border-line-soft pb-3">
                 <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
-                  Mise en place
+                  What you need
                 </p>
                 <h2
                   className="text-2xl font-bold text-green-deep"
