@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +12,7 @@ import {
   Flame,
   Heart,
   MoreHorizontal,
+  ShoppingCart,
   Smile,
   Trash2,
   Users,
@@ -21,6 +22,7 @@ import { Button, Dialog } from "@/components/ui";
 import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { addRecipeStory, deleteRecipe } from "@/lib/actions/recipes";
+import { addRecipeIngredientsToGrocery } from "@/lib/actions/grocery";
 import { toggleReaction } from "@/lib/actions/reactions";
 import type { RecipeWithRelations, ReactionCounts, UserReactions, BookRole } from "@/lib/types";
 
@@ -49,6 +51,9 @@ export function RecipeDetail({
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isAddingGroceries, startAddingGroceries] = useTransition();
+  const [groceryMessage, setGroceryMessage] = useState<string | null>(null);
+  const [confirmGroceryOpen, setConfirmGroceryOpen] = useState(false);
 
   const canEdit =
     userRole === "keeper" ||
@@ -85,6 +90,12 @@ export function RecipeDetail({
     })),
   ];
 
+  useEffect(() => {
+    if (!groceryMessage) return;
+    const timeout = window.setTimeout(() => setGroceryMessage(null), 4200);
+    return () => window.clearTimeout(timeout);
+  }, [groceryMessage]);
+
   async function handleAddStory() {
     if (!storyText.trim()) return;
     setAddingStory(true);
@@ -112,6 +123,39 @@ export function RecipeDetail({
   async function handleFavorite() {
     setFavorited((f) => !f);
     await toggleReaction(bookId, recipe.id, "favorite");
+  }
+
+  function formatGroceryMessage(added: number, updated: number, skipped: number) {
+    if (added === 0 && updated === 0) {
+      return "Those ingredients are already on your grocery list.";
+    }
+
+    const parts = [];
+    if (added) parts.push(`added ${added}`);
+    if (updated) parts.push(`updated ${updated}`);
+    const skippedText = skipped ? ` ${skipped} already covered.` : "";
+    return `Grocery list ${parts.join(" and ")}.${skippedText}`;
+  }
+
+  function handleAddIngredientsToGrocery(force = false) {
+    setGroceryMessage(null);
+    startAddingGroceries(async () => {
+      const result = await addRecipeIngredientsToGrocery(recipe.id, { force });
+      if (!result.success) {
+        setGroceryMessage(result.error);
+        return;
+      }
+
+      if (result.data.needsConfirmation) {
+        setConfirmGroceryOpen(true);
+        return;
+      }
+
+      setConfirmGroceryOpen(false);
+      setGroceryMessage(
+        formatGroceryMessage(result.data.added, result.data.updated, result.data.skipped)
+      );
+    });
   }
 
   return (
@@ -310,15 +354,33 @@ export function RecipeDetail({
           {recipe.ingredients && recipe.ingredients.length > 0 && (
             <section>
               <div className="mb-4 border-b border-line-soft pb-3">
-                <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
-                  What you need
-                </p>
-                <h2
-                  className="text-2xl font-bold text-green-deep"
-                  style={{ fontFamily: "var(--font-playfair)" }}
-                >
-                  Ingredients
-                </h2>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+                      What you need
+                    </p>
+                    <h2
+                      className="text-2xl font-bold text-green-deep"
+                      style={{ fontFamily: "var(--font-playfair)" }}
+                    >
+                      Ingredients
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddIngredientsToGrocery()}
+                    disabled={isAddingGroceries}
+                    className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md bg-green-deep px-3 text-xs font-extrabold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-45"
+                  >
+                    <ShoppingCart size={14} />
+                    {isAddingGroceries ? "Adding" : "Add to list"}
+                  </button>
+                </div>
+                {groceryMessage && (
+                  <p className="mt-2 text-xs font-semibold text-green-deep">
+                    {groceryMessage}
+                  </p>
+                )}
               </div>
               <IngredientChecklist ingredients={recipe.ingredients} className="sm:grid-cols-1" />
             </section>
@@ -385,6 +447,25 @@ export function RecipeDetail({
         </section>
       </div>
 
+      {groceryMessage && (
+        <div className="fixed bottom-5 right-5 z-[90] w-[min(calc(100vw-2.5rem),380px)] rounded-xl border border-green-deep/20 bg-green-forest-dark px-4 py-3 text-sm font-bold text-ink-inverse shadow-[0_18px_44px_rgba(31,58,45,0.28)]">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white-soft/14 text-green-soft">
+              <ShoppingCart size={17} />
+            </span>
+            <p className="min-w-0 flex-1 leading-snug">{groceryMessage}</p>
+            <button
+              type="button"
+              onClick={() => setGroceryMessage(null)}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-ink-inverse/70 transition-colors hover:bg-white-soft/12 hover:text-ink-inverse"
+              aria-label="Dismiss notification"
+            >
+              x
+            </button>
+          </div>
+        </div>
+      )}
+
       <Dialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
@@ -413,6 +494,52 @@ export function RecipeDetail({
             loading={deleting}
           >
             Delete
+          </Button>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={confirmGroceryOpen}
+        onClose={() => setConfirmGroceryOpen(false)}
+        title="Add this recipe again?"
+        className="overflow-hidden border border-line-soft"
+      >
+        <div className="pt-5">
+          <div className="mb-5 rounded-xl bg-paper-warm/65 p-4">
+            <div className="flex gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-soft text-green-deep">
+                <ShoppingCart size={18} />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-ink">This recipe is already on the list.</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-muted">
+                  Adding <span className="font-semibold text-ink">{recipe.title}</span> again may increase count-based quantities like eggs, lemons, cans, or packages.
+                </p>
+              </div>
+            </div>
+          </div>
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.08em] text-accent-cinnamon">
+            Volume and weight amounts still stay grocery-friendly.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1"
+            onClick={() => setConfirmGroceryOpen(false)}
+            disabled={isAddingGroceries}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            className="flex-1"
+            onClick={() => handleAddIngredientsToGrocery(true)}
+            loading={isAddingGroceries}
+          >
+            Add again
           </Button>
         </div>
       </Dialog>

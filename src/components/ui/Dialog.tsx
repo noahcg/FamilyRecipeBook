@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
 
@@ -34,19 +35,19 @@ export function Dialog({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-ink/45 backdrop-blur-md" />
 
       <div
         className={clsx(
@@ -58,7 +59,7 @@ export function Dialog({
         style={{ background: "var(--color-paper-soft)" }}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-line-soft">
+          <div className="flex items-center justify-between border-b border-line-soft px-5 pb-3 pt-5">
             <h2
               className="text-lg font-bold text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
@@ -67,7 +68,7 @@ export function Dialog({
             </h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-ink-soft hover:bg-line-soft transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-line-soft"
               aria-label="Close"
             >
               <X size={18} strokeWidth={1.75} />
@@ -76,6 +77,8 @@ export function Dialog({
         )}
         <div className={clsx("px-5 pb-6", !title && "pt-5")}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
+
 }
