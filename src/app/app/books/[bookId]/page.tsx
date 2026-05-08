@@ -119,7 +119,7 @@ function SectionHeader({
       <div className="shrink-0">
         <SectionEyebrow>{eyebrow}</SectionEyebrow>
         <h2
-          className="mt-1 text-2xl font-bold leading-tight text-green-deep"
+          className="mt-1 text-xl font-bold leading-tight text-green-deep"
           style={{ fontFamily: "var(--font-playfair)" }}
         >
           {title}
@@ -297,7 +297,7 @@ export default async function BookHomePage({ params }: Props) {
                   <div>
                     <SectionEyebrow>What sounds good?</SectionEyebrow>
                     <h2
-                      className="mt-2 text-2xl font-bold text-green-deep"
+                      className="mt-2 text-xl font-bold text-green-deep"
                       style={{ fontFamily: "var(--font-playfair)" }}
                     >
                       Choose a dinner mood
@@ -351,7 +351,7 @@ export default async function BookHomePage({ params }: Props) {
 
               <PageSection>
                 <SectionHeader eyebrow="Weekly snapshot" title="The week ahead" />
-                <p className="mt-2 text-2xl font-bold text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
+                <p className="mt-2 text-xl font-bold leading-snug text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
                   3 meals planned · 2 open days
                 </p>
                 <div className="mt-4 grid grid-cols-7 gap-1.5">
@@ -375,7 +375,7 @@ export default async function BookHomePage({ params }: Props) {
                 <div className="p-5">
                   <SectionEyebrow>Inspiration</SectionEyebrow>
                   <h2
-                    className="mt-2 text-2xl font-bold leading-tight text-green-deep"
+                    className="mt-2 text-xl font-bold leading-tight text-green-deep"
                     style={{ fontFamily: "var(--font-playfair)" }}
                   >
                     Make Sunday feel special
