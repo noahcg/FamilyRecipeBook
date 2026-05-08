@@ -22,7 +22,7 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "Family Recipe Book",
+  title: "Home Cooked",
   description: "A warm, shared cookbook for your family.",
   icons: {
     icon: [{ url: "/logo.png", type: "image/png" }],

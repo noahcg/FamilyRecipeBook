@@ -80,7 +80,7 @@ export default function LandingPage() {
             className="text-xl font-semibold leading-none text-green-deep sm:text-2xl"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
-            Family Recipe Book
+            Home Cooked
           </span>
         </Link>
 
@@ -108,7 +108,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink-muted sm:text-xl">
-                Create a family recipe book, save the meals that matter, and
+                Create a Home Cooked recipe book, save the meals that matter, and
                 bring everyone into the story.
               </p>
 

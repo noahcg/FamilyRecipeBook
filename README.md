@@ -1,4 +1,4 @@
-# Family Recipe Book
+# Home Cooked
 
 A private, collaborative recipe book for families — preserve recipes, share memories, and invite the whole family to contribute.
 

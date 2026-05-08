@@ -66,14 +66,14 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="" className="h-full w-full object-cover" aria-hidden="true" />
           </span>
-          <span className="min-w-0">
+          <span className="flex min-w-0 translate-y-1.5 flex-col justify-center">
             <span
               className="block truncate text-lg font-bold leading-tight text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
-              {bookTitle}
+              Home Cooked
             </span>
-            <span className="block text-xs text-ink-muted">Recipe Book</span>
+            <span className="block text-xs text-ink-muted">Recipe Platform</span>
           </span>
         </Link>
 

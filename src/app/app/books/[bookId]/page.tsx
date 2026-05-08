@@ -10,6 +10,7 @@ import {
   Sparkles,
   UtensilsCrossed,
 } from "lucide-react";
+import { TimeOfDayHeadline } from "@/components/home/TimeOfDayHeadline";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { getBookPageData } from "@/lib/actions/books";
@@ -128,7 +129,7 @@ export default async function BookHomePage({ params }: Props) {
   const data = await getBookPageData(bookId);
   if (!data) notFound();
 
-  const { recent } = data;
+  const { book, recent } = data;
   const latestRecipe = (recent as HomeRecipe[])[0] ?? null;
   const featuredTitle = latestRecipe?.title ?? "Lemon Rice Chicken Skillet";
   const featuredHref = latestRecipe
@@ -155,13 +156,8 @@ export default async function BookHomePage({ params }: Props) {
           <header className="mb-5">
             <div className="relative min-h-[340px] px-5 py-5 sm:px-6 lg:min-h-[360px] lg:px-8 lg:py-7">
               <div className="relative max-w-[980px]">
-                <SectionEyebrow>Your cookbook</SectionEyebrow>
-                <h1
-                  className="mt-2 text-5xl font-bold leading-none text-green-deep sm:text-6xl lg:text-7xl"
-                  style={{ fontFamily: "var(--font-playfair)" }}
-                >
-                  Dinner, sorted.
-                </h1>
+                <SectionEyebrow>{book.title}</SectionEyebrow>
+                <TimeOfDayHeadline />
 
                 <div className="mt-7 flex flex-wrap gap-3">
                   {[
