@@ -122,7 +122,7 @@ export default async function SettingsPage() {
         {/* Recipe AI */}
         <SettingsSection
           title="Recipe AI"
-          description="Controls how recipe ideas are generated on your home page when you describe what's in your pantry."
+          description="Controls how recipe ideas are generated from the Ideas page when you describe what is in your pantry."
         >
           <div className="space-y-4">
             {/* Default provider info */}
@@ -143,7 +143,7 @@ export default async function SettingsPage() {
                 Recipe ideas run on{" "}
                 <span className="font-medium text-ink">Cloudflare Workers AI</span> using{" "}
                 <span className="font-mono text-xs">Llama 3.1 8B</span> — a free, private inference
-                service. Requests are processed on Cloudflare's infrastructure and are not used to
+                service. Requests are processed on Cloudflare&apos;s infrastructure and are not used to
                 train any models. No account required on your end.
               </p>
             </div>

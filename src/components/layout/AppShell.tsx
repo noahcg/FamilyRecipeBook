@@ -13,6 +13,7 @@ import {
   Plus,
   Settings,
   ShoppingCart,
+  Sparkles,
   UtensilsCrossed,
 } from "lucide-react";
 import { CookbookIcon } from "@/components/ui/CookbookIcon";
@@ -29,14 +30,15 @@ interface AppShellProps {
 const NAV = (bookId: string) => [
   { id: "home", href: `/app/books/${bookId}`, icon: Home, label: "Home" },
   { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
+  { id: "ideas", href: `/app/books/${bookId}/ideas`, icon: Sparkles, label: "Ideas" },
   { id: "collections", href: `/app/books/${bookId}/collections`, icon: ListChecks, label: "Collections" },
-  { id: "settings", href: `/app/settings`, icon: Settings, label: "Settings" },
   { id: "add", href: `/app/books/${bookId}/recipes/new`, icon: Plus, label: "Add", isAdd: true },
 ];
 
 const DESKTOP_NAV = (bookId: string) => [
   { id: "home", href: `/app/books/${bookId}`, icon: Home, label: "Home" },
   { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
+  { id: "ideas", href: `/app/books/${bookId}/ideas`, icon: Sparkles, label: "Ideas" },
   { id: "collections", href: `/app/books/${bookId}/collections`, icon: ListChecks, label: "Collections" },
   { id: "meal-plan", href: `/app/books/${bookId}/meal-plan`, icon: CalendarDays, label: "Meal Plan" },
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },

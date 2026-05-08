@@ -12,7 +12,21 @@ import {
   type CreateBookInput,
   type UpdateBookInput,
 } from "@/lib/validators/book";
-import type { ActionResult, RecipeBook } from "@/lib/types";
+import type { ActionResult, BookMember, Profile, Recipe, RecipeBook } from "@/lib/types";
+
+interface BookPageMember extends BookMember {
+  profile: Profile | null;
+}
+
+interface BookPageBook extends RecipeBook {
+  members?: BookPageMember[];
+}
+
+interface BookPageRecipe extends Recipe {
+  reactions?: { type: string }[] | null;
+  creator?: Pick<Profile, "full_name" | "avatar_url"> | null;
+  loveCount: number;
+}
 
 export async function createBook(
   input: CreateBookInput
@@ -134,13 +148,13 @@ export async function getBookPageData(bookId: string) {
   ]);
 
   if (!bookRes.data) return null;
-  const book = bookRes.data as any;
-  const userMember = book.members?.find((m: any) => m.user_id === user.id);
+  const book = bookRes.data as BookPageBook;
+  const userMember = book.members?.find((member) => member.user_id === user.id);
   if (!userMember) return null;
 
-  const allRecipes = (recipesRes.data ?? []).map((r: any) => ({
-    ...r,
-    loveCount: r.reactions?.filter((rx: any) => rx.type === "love").length ?? 0,
+  const allRecipes = ((recipesRes.data ?? []) as BookPageRecipe[]).map((recipe) => ({
+    ...recipe,
+    loveCount: recipe.reactions?.filter((reaction) => reaction.type === "love").length ?? 0,
   }));
 
   const favorites = [...allRecipes]
@@ -165,5 +179,5 @@ export async function getBook(bookId: string) {
     .select("*, members:book_members(*, profile:profiles(*))")
     .eq("id", bookId)
     .single();
-  return data as any ?? null;
+  return (data as BookPageBook | null) ?? null;
 }
