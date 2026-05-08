@@ -52,7 +52,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const { tab = "recipes" } = await searchParams;
   const supabase = await createClient();
 
-  const [memberRes, recipesRes, activityRes, favRes] = await Promise.all([
+  const [memberRes, recipesRes, activityRes] = await Promise.all([
     supabase
       .from("book_members")
       .select("*, profile:profiles(*)")
@@ -72,15 +72,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       .eq("actor_id", memberId)
       .order("created_at", { ascending: false })
       .limit(20),
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return { data: [] };
-      return supabase
-        .from("recipe_reactions")
-        .select("recipe_id")
-        .eq("user_id", user.id)
-        .eq("type", "favorite");
-    }),
   ]);
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const favRes = user
+    ? await supabase.from("recipe_reactions").select("recipe_id").eq("user_id", user.id).eq("type", "favorite")
+    : { data: [] };
 
   if (!memberRes.data) notFound();
 
