@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   CalendarDays,
-  ChefHat,
   ChevronRight,
   Lightbulb,
   Plus,
@@ -13,25 +12,19 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
-import { MemberAvatarStack } from "@/components/ui/MemberAvatarStack";
-import { requireProfile } from "@/lib/auth";
 import { getBookPageData } from "@/lib/actions/books";
-import type { Profile, Recipe } from "@/lib/types";
+import type { Recipe } from "@/lib/types";
 
 interface Props {
   params: Promise<{ bookId: string }>;
 }
 
-interface HomeMember {
-  user_id: string;
-  profile: Pick<Profile, "full_name" | "avatar_url"> | null;
-}
-
 interface HomeRecipe extends Recipe {
-  creator: Pick<Profile, "full_name"> | null;
+  creator: { full_name: string } | null;
   loveCount?: number;
 }
 
+const HEADER_PANTRY_ITEMS = ["Chicken", "Garlic", "Rice", "Spinach"];
 const PANTRY_ITEMS = ["chicken thighs", "spinach", "lemons", "rice", "yogurt"];
 const WEEK_DAYS = [
   { day: "M", planned: true },
@@ -132,20 +125,11 @@ function SectionHeader({
 
 export default async function BookHomePage({ params }: Props) {
   const { bookId } = await params;
-  const [data, profile] = await Promise.all([
-    getBookPageData(bookId),
-    requireProfile(),
-  ]);
+  const data = await getBookPageData(bookId);
   if (!data) notFound();
 
-  const { book, recent } = data;
+  const { recent } = data;
   const latestRecipe = (recent as HomeRecipe[])[0] ?? null;
-  const members = ((book.members ?? []) as HomeMember[]).map((member) => ({
-    id: member.user_id,
-    name: member.profile?.full_name ?? "Family",
-    avatarUrl: member.profile?.avatar_url ?? undefined,
-  }));
-  const firstName = profile.full_name?.trim().split(/\s+/)[0] ?? "there";
   const featuredTitle = latestRecipe?.title ?? "Lemon Rice Chicken Skillet";
   const featuredHref = latestRecipe
     ? `/app/books/${bookId}/recipes/${latestRecipe.id}`
@@ -154,36 +138,103 @@ export default async function BookHomePage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="min-h-dvh px-5 py-6 lg:px-8 lg:py-8">
-        <div className="mx-auto max-w-[1240px]">
-          <header className="mb-7 grid gap-5 border-b border-line-soft pb-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
-            <div>
-              <SectionEyebrow>Your family cookbook</SectionEyebrow>
-              <h1
-                className="mt-2 text-4xl font-bold leading-tight text-green-deep lg:text-5xl"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                What should we cook today?
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-muted">
-                Welcome back, {firstName}. Here is a calm place to choose dinner, plan the week, and cook from what you already have.
-              </p>
-            </div>
+      <div className="relative min-h-dvh overflow-hidden px-5 py-6 lg:rounded-tr-xl lg:px-8 lg:py-8">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-[-8rem] top-[-9rem] hidden h-[470px] w-[55vw] min-w-[660px] bg-[url('/images/landing-cookbook-hero.png')] bg-cover bg-[center_42%] opacity-80 lg:block"
+          style={{
+            maskImage:
+              "linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+            maskComposite: "intersect",
+            WebkitMaskComposite: "source-in",
+          }}
+        />
+        <div className="relative mx-auto max-w-[1240px]">
+          <header className="mb-5">
+            <div className="relative min-h-[340px] px-5 py-5 sm:px-6 lg:min-h-[360px] lg:px-8 lg:py-7">
+              <div className="relative max-w-[980px]">
+                <SectionEyebrow>Your cookbook</SectionEyebrow>
+                <h1
+                  className="mt-2 text-5xl font-bold leading-none text-green-deep sm:text-6xl lg:text-7xl"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  Dinner, sorted.
+                </h1>
 
-            <DashboardCard className="p-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-green-soft text-green-deep">
-                  <ChefHat size={22} strokeWidth={1.7} />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-ink">{firstName}&apos;s Kitchen</p>
-                  <p className="text-xs text-ink-muted">{members.length || 1} cookbook member{members.length === 1 ? "" : "s"}</p>
+                <div className="mt-7 flex flex-wrap gap-3">
+                  {[
+                    ["Cook with what I have", `/app/books/${bookId}/ideas`],
+                    ["Quick meals", `/app/books/${bookId}/ideas`],
+                    ["Plan the week", `/app/books/${bookId}/meal-plan`],
+                    ["Surprise me", `/app/books/${bookId}/ideas`],
+                  ].map(([label, href], index) => (
+                    <Link
+                      key={label}
+                      href={href}
+                      className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-extrabold shadow-xs transition-colors ${
+                        index === 0
+                          ? "border-green-deep bg-green-deep text-ink-inverse hover:bg-green-forest-dark"
+                          : "border-line bg-white-soft/80 text-green-deep hover:bg-card"
+                      }`}
+                    >
+                      {label} <span className="ml-2" aria-hidden="true">→</span>
+                    </Link>
+                  ))}
+                </div>
+
+                <div className="mt-7 border-t border-line-soft pt-5 lg:mt-8">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="mr-1 text-sm font-extrabold text-accent-cinnamon">You have:</span>
+                      {HEADER_PANTRY_ITEMS.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full border border-line-soft bg-card/80 px-3 py-1.5 text-sm font-bold text-green-deep"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                      <Link
+                        href={`/app/books/${bookId}/ideas`}
+                        className="rounded-full border border-dashed border-accent-cinnamon/50 bg-white-soft/60 px-3 py-1.5 text-sm font-extrabold text-accent-cinnamon transition-colors hover:bg-card"
+                      >
+                        + Add more
+                      </Link>
+                    </div>
+                    <Link
+                      href={`/app/books/${bookId}/meal-plan`}
+                      className="inline-flex items-center text-sm font-extrabold text-green-deep hover:underline"
+                    >
+                      Tonight: <span className="ml-1 text-ink-muted">No plan yet</span>
+                      <span className="mx-2 text-accent-cinnamon" aria-hidden="true">→</span>
+                      Plan dinner
+                    </Link>
+                  </div>
                 </div>
               </div>
-              {members.length > 0 && (
-                <MemberAvatarStack members={members} maxVisible={4} size="sm" className="mt-4" />
-              )}
-            </DashboardCard>
+            </div>
+            <div className="px-5 sm:px-6 lg:px-8">
+              <div className="flex flex-col gap-3 rounded-md bg-paper-warm/45 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <p
+                  className="text-xl leading-none text-accent-cinnamon"
+                  style={{ fontFamily: "var(--font-caveat)" }}
+                >
+                  Tonight starts with what is already in the kitchen.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Fresh", "Fast", "Family-style"].map((note) => (
+                    <span
+                      key={note}
+                      className="rounded-full bg-white-soft/70 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.08em] text-green-deep"
+                    >
+                      {note}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </header>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
