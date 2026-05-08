@@ -2,6 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import {
+  canMergeQuantities,
+  formatQuantity,
+  normalizeGroceryName,
+  normalizeRecipeIngredientForGrocery,
+  parseQuantity,
+} from "@/lib/grocery/packaging";
 import type { ActionResult, GroceryItem } from "@/lib/types";
 
 // ─── Category inference ───────────────────────────────────────
@@ -26,181 +33,6 @@ function inferCategory(itemName: string): string {
     if (keywords.some((k) => name.includes(k))) return category;
   }
   return "Other";
-}
-
-const GROCERY_QUANTITY_UNITS = new Set([
-  "",
-  "count",
-  "ct",
-  "piece",
-  "pieces",
-  "whole",
-  "clove",
-  "cloves",
-  "can",
-  "cans",
-  "jar",
-  "jars",
-  "package",
-  "packages",
-  "pkg",
-  "bag",
-  "bags",
-  "bunch",
-  "bunches",
-  "dozen",
-]);
-
-const BULK_RECIPE_UNITS = new Set([
-  "tsp",
-  "teaspoon",
-  "teaspoons",
-  "tbsp",
-  "tablespoon",
-  "tablespoons",
-  "cup",
-  "cups",
-  "pint",
-  "pints",
-  "quart",
-  "quarts",
-  "gallon",
-  "gallons",
-  "oz",
-  "ounce",
-  "ounces",
-  "lb",
-  "lbs",
-  "pound",
-  "pounds",
-  "g",
-  "gram",
-  "grams",
-  "kg",
-  "kilogram",
-  "kilograms",
-  "ml",
-  "milliliter",
-  "milliliters",
-  "l",
-  "liter",
-  "liters",
-]);
-
-const COMMON_INGREDIENT_PREFIXES = [
-  "fresh",
-  "large",
-  "small",
-  "medium",
-  "ripe",
-  "minced",
-  "chopped",
-  "diced",
-  "sliced",
-  "grated",
-  "shredded",
-  "crushed",
-  "ground",
-  "boneless",
-  "skinless",
-  "whole",
-];
-
-function normalizeGroceryName(name: string): string {
-  let normalized = name
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/[^a-z0-9\s&-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  for (const prefix of COMMON_INGREDIENT_PREFIXES) {
-    normalized = normalized.replace(new RegExp(`^${prefix}\\s+`), "");
-  }
-
-  return normalized
-    .replace(/\bcloves?\s+of\s+/g, "")
-    .replace(/\bcans?\s+of\s+/g, "")
-    .replace(/\bjars?\s+of\s+/g, "")
-    .replace(/\bpackages?\s+of\s+/g, "")
-    .replace(/\bbags?\s+of\s+/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/ies$/, "y")
-    .replace(/([^s])s$/, "$1");
-}
-
-function formatGroceryName(name: string): string {
-  const normalized = normalizeGroceryName(name);
-  if (!normalized) return name.trim();
-
-  if (normalized === "egg") return "eggs";
-  if (normalized === "tomato") return "tomatoes";
-  if (normalized === "berry") return "berries";
-
-  return normalized;
-}
-
-function parseQuantity(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  if (/^\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
-  if (/^\d+\/\d+$/.test(trimmed)) {
-    const [numerator, denominator] = trimmed.split("/").map(Number);
-    return denominator ? numerator / denominator : null;
-  }
-
-  const mixed = trimmed.match(/^(\d+)\s+(\d+)\/(\d+)$/);
-  if (mixed) {
-    const whole = Number(mixed[1]);
-    const numerator = Number(mixed[2]);
-    const denominator = Number(mixed[3]);
-    return denominator ? whole + numerator / denominator : null;
-  }
-
-  return null;
-}
-
-function formatQuantity(value: number): string {
-  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
-}
-
-function normalizeRecipeIngredientForGrocery(ingredient: {
-  item: string;
-  quantity: string | null;
-  unit: string | null;
-}) {
-  const unit = ingredient.unit?.toLowerCase().trim() ?? "";
-  const quantity = parseQuantity(ingredient.quantity);
-
-  if (unit === "dozen" && quantity != null) {
-    return { name: formatGroceryName(ingredient.item), quantity: formatQuantity(quantity * 12), unit: null };
-  }
-
-  if (quantity != null && GROCERY_QUANTITY_UNITS.has(unit)) {
-    return {
-      name: formatGroceryName(ingredient.item),
-      quantity: formatQuantity(quantity),
-      unit: unit && unit !== "count" && unit !== "ct" && unit !== "whole" ? unit : null,
-    };
-  }
-
-  // Recipe-specific volume/weight measurements are intentionally dropped here.
-  // A shopper buys "flour", not "2 cups flour"; count-like items above keep counts.
-  if (BULK_RECIPE_UNITS.has(unit)) {
-    return { name: formatGroceryName(ingredient.item), quantity: null, unit: null };
-  }
-
-  return { name: formatGroceryName(ingredient.item), quantity: null, unit: null };
-}
-
-function canMergeQuantities(existing: GroceryItem, next: { quantity: string | null; unit: string | null }) {
-  if (!next.quantity) return false;
-  const existingQuantity = parseQuantity(existing.quantity);
-  if (existing.quantity && existingQuantity == null) return false;
-  return (existing.unit ?? "") === (next.unit ?? "");
 }
 
 // ─── Queries ─────────────────────────────────────────────────

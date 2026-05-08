@@ -12,6 +12,7 @@ import {
   clearAllItems,
   importFromMealPlan,
 } from "@/lib/actions/grocery";
+import { formatStoreQuantity } from "@/lib/grocery/packaging";
 import type { GroceryItem } from "@/lib/types";
 import { NearbyGroceryStores } from "@/components/grocery/NearbyGroceryStores";
 
@@ -308,6 +309,8 @@ interface ItemRowProps {
 }
 
 function ItemRow({ item, onToggle, onDelete, isPending }: ItemRowProps) {
+  const displayItem = formatStoreQuantity(item);
+
   return (
     <div
       className={clsx(
@@ -338,12 +341,12 @@ function ItemRow({ item, onToggle, onDelete, isPending }: ItemRowProps) {
             item.checked ? "text-ink-muted line-through" : "text-ink"
           )}
         >
-          {item.quantity && (
+          {displayItem.quantity && (
             <span className="mr-1.5 text-ink-muted">
-              {item.quantity}{item.unit ? ` ${item.unit}` : ""}
+              {displayItem.quantity}{displayItem.unit ? ` ${displayItem.unit}` : ""}
             </span>
           )}
-          {item.name}
+          {displayItem.name}
         </span>
         {item.notes && (
           <p className="text-xs text-ink-muted">{item.notes}</p>
