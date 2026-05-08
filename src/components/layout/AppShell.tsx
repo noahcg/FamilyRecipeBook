@@ -55,8 +55,9 @@ function isActiveNavItem(pathname: string, href: string, id?: string) {
 export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShellProps) {
   const pathname = usePathname();
   const navItems = NAV(bookId);
-  const { bookTitle: bookTitleCtx } = useBook();
+  const { bookTitle: bookTitleCtx, books } = useBook();
   const bookTitle = bookTitleProp ?? bookTitleCtx;
+  const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle }];
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
@@ -108,26 +109,38 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
               <Plus size={16} />
             </Link>
           </div>
-          <div className="space-y-2">
-            <Link
-              href={`/app/books/${bookId}`}
-              className="relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors bg-card-muted text-green-deep before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent-terracotta"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-soft bg-card">
-                <CookbookIcon name="bowl" size={18} />
-              </span>
-              <span className="truncate">{bookTitle}</span>
-            </Link>
+          <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+            {visibleBooks.map((userBook) => {
+              const isCurrent = userBook.id === bookId;
+              return (
+                <Link
+                  key={userBook.id}
+                  href={`/app/books/${userBook.id}`}
+                  aria-current={isCurrent ? "page" : undefined}
+                  className={clsx(
+                    "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                    isCurrent
+                      ? "bg-card-muted text-green-deep before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent-terracotta"
+                      : "text-ink hover:bg-card/70"
+                  )}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-line-soft bg-card">
+                    <CookbookIcon name="bowl" size={18} />
+                  </span>
+                  <span className="truncate">{userBook.title}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
         <div className="mt-auto shrink-0 border-t border-line-soft p-5">
           <Link
-            href="/app/settings"
-            aria-current={isActiveNavItem(pathname, "/app/settings", "settings") ? "page" : undefined}
+            href={`/app/books/${bookId}/settings`}
+            aria-current={isActiveNavItem(pathname, `/app/books/${bookId}/settings`, "settings") ? "page" : undefined}
             className={clsx(
               "flex min-h-12 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors hover:bg-card/70",
-              isActiveNavItem(pathname, "/app/settings", "settings")
+              isActiveNavItem(pathname, `/app/books/${bookId}/settings`, "settings")
                 ? "bg-green-soft/70 text-green-deep shadow-xs"
                 : "text-ink"
             )}

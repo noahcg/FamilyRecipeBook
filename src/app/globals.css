@@ -186,6 +186,44 @@ body {
   background: var(--color-cream);
 }
 
+a[href],
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+select,
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]),
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+input[type="file"]:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"],
+select:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(231, 111, 81, 0.34);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  box-shadow:
+    0 0 0 3px rgba(231, 111, 81, 0.26),
+    inset 0 0 0 1px rgba(231, 111, 81, 0.55);
+}
+
 /* ─── Paper Background ──────────────────────────────────────── */
 .app-paper-bg {
   background-color: var(--color-cream);
