@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   title: "Family Recipe Book",
   description: "A warm, shared cookbook for your family.",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    shortcut: "/icon.svg",
+    icon: [{ url: "/logo.png", type: "image/png" }],
+    shortcut: "/logo.png",
   },
 };
 

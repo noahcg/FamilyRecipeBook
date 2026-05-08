@@ -6,7 +6,6 @@ import {
   Leaf,
   LibraryBig,
   NotebookPen,
-  Soup,
   Star,
   Users,
 } from "lucide-react";
@@ -73,13 +72,9 @@ export default function LandingPage() {
 
       <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between px-5 py-5 sm:px-8 lg:px-12 lg:py-8">
         <Link href="/" className="flex items-center gap-3">
-          <span className="grid size-12 place-items-center rounded-[18px] border border-line bg-card shadow-soft">
-            <Soup
-              aria-hidden="true"
-              className="text-green-deep"
-              size={25}
-              strokeWidth={1.8}
-            />
+          <span className="grid size-12 place-items-center overflow-hidden rounded-[18px] border border-line bg-card shadow-soft">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" aria-hidden="true" className="h-full w-full" />
           </span>
           <span
             className="text-xl font-semibold leading-none text-green-deep sm:text-2xl"

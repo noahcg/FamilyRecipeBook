@@ -62,9 +62,9 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
     <div className="app-paper-bg paper-texture min-h-dvh">
       <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[280px] overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
         <Link href={`/app/books/${bookId}`} className="flex shrink-0 items-center gap-3 px-7 pb-7 pt-9">
-          <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-line-soft bg-card shadow-xs">
+          <span className="block h-14 w-14 shrink-0 overflow-hidden rounded-lg">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icon.svg" alt="" className="h-full w-full" aria-hidden="true" />
+            <img src="/logo.png" alt="" className="h-full w-full object-cover" aria-hidden="true" />
           </span>
           <span className="min-w-0">
             <span

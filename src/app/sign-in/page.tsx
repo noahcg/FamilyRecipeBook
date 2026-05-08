@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookOpen } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { signInSchema, type SignInInput } from "@/lib/validators/auth";
 import { signIn } from "@/lib/actions/auth";
@@ -29,11 +28,9 @@ export default function SignInPage() {
       <div className="w-full max-w-sm relative z-10">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 shadow-sm"
-            style={{ background: "var(--color-sage-soft)" }}
-          >
-            <BookOpen size={26} strokeWidth={1.5} className="text-green-deep" />
+          <div className="w-14 h-14 rounded-2xl overflow-hidden mb-3 shadow-sm">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" aria-hidden="true" className="h-full w-full" />
           </div>
           <h1
             className="text-2xl font-bold text-green-deep"
