@@ -175,11 +175,11 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
       {/* Bottom nav */}
       <nav
         aria-label="Main navigation"
-        className="fixed bottom-0 inset-x-0 z-40 overflow-x-auto overscroll-x-contain px-3 pb-safe lg:hidden"
+        className="fixed bottom-0 inset-x-0 z-40 overflow-x-auto overscroll-x-contain px-3 pt-2 lg:hidden"
         style={{
-          background: "rgba(247,243,233,0.97)",
-          backdropFilter: "blur(12px)",
-          minHeight: 64,
+          background: "var(--color-cream)",
+          minHeight: "calc(64px + env(safe-area-inset-bottom, 0px))",
+          paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0px))",
           boxShadow: "0 -1px 0 rgba(47,79,63,0.07), 0 -4px 16px rgba(47,79,63,0.06)",
         }}
       >
