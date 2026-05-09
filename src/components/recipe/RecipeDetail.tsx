@@ -160,85 +160,7 @@ export function RecipeDetail({
 
   return (
     <article>
-      <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-5 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
-        <Link
-          href={`/app/books/${bookId}/recipes`}
-          className="inline-flex h-10 items-center gap-2 text-sm font-bold text-green-deep hover:underline"
-        >
-          <ArrowLeft size={17} strokeWidth={2} />
-          Recipes
-        </Link>
-
-        <div className="relative flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleFavorite}
-            aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
-            className="flex h-10 w-10 items-center justify-center rounded-md text-green-deep transition-colors hover:bg-green-pale"
-          >
-            <Heart
-              size={18}
-              strokeWidth={1.9}
-              className={clsx(
-                favorited ? "fill-accent-terracotta text-accent-terracotta" : "text-green-deep"
-              )}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="More options"
-            className="flex h-10 w-10 items-center justify-center rounded-md text-green-deep transition-colors hover:bg-green-pale"
-          >
-            <MoreHorizontal size={19} strokeWidth={2} />
-          </button>
-          {menuOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setMenuOpen(false)}
-              />
-              <div
-                className="absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-xl py-1 shadow-md"
-                style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
-              >
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
-                  onClick={() => { handleFavorite(); setMenuOpen(false); }}
-                >
-                  <Heart size={15} strokeWidth={1.75} className={clsx(favorited ? "fill-accent-terracotta text-accent-terracotta" : "text-ink-soft")} />
-                  {favorited ? "Unfavorite" : "Add to favorites"}
-                </button>
-                {canEdit && (
-                  <Link
-                    href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <Edit2 size={15} strokeWidth={1.75} className="text-ink-soft" />
-                    Edit recipe
-                  </Link>
-                )}
-                {canDelete && (
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-danger transition-colors hover:bg-green-pale"
-                    onClick={() => { setMenuOpen(false); setDeleteOpen(true); }}
-                  >
-                    <Trash2 size={15} strokeWidth={1.75} />
-                    Delete recipe
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-      </div>
-
-      <header className="relative h-[310px] overflow-hidden bg-green-pale sm:h-[360px] lg:h-[390px]">
+      <header className="relative h-[310px] overflow-hidden bg-green-pale sm:h-[360px] lg:h-[390px] lg:rounded-tr-xl">
         <div className="absolute inset-0">
           {recipe.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -254,6 +176,83 @@ export function RecipeDetail({
           )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10" />
+        <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-14 pt-4 sm:pt-5">
+          <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-8">
+            <Link
+              href={`/app/books/${bookId}/recipes`}
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/35 bg-white-soft/88 px-3 text-sm font-extrabold text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
+            >
+              <ArrowLeft size={17} strokeWidth={2} />
+              Recipes
+            </Link>
+
+            <div className="relative flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleFavorite}
+                aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/35 bg-white-soft/88 text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
+              >
+                <Heart
+                  size={18}
+                  strokeWidth={1.9}
+                  className={clsx(
+                    favorited ? "fill-accent-terracotta text-accent-terracotta" : "text-green-deep"
+                  )}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label="More options"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/35 bg-white-soft/88 text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
+              >
+                <MoreHorizontal size={19} strokeWidth={2} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setMenuOpen(false)}
+                  />
+                  <div
+                    className="absolute right-0 top-12 z-50 w-44 overflow-hidden rounded-xl py-1 shadow-md"
+                    style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
+                  >
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                      onClick={() => { handleFavorite(); setMenuOpen(false); }}
+                    >
+                      <Heart size={15} strokeWidth={1.75} className={clsx(favorited ? "fill-accent-terracotta text-accent-terracotta" : "text-ink-soft")} />
+                      {favorited ? "Unfavorite" : "Add to favorites"}
+                    </button>
+                    {canEdit && (
+                      <Link
+                        href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Edit2 size={15} strokeWidth={1.75} className="text-ink-soft" />
+                        Edit recipe
+                      </Link>
+                    )}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-danger transition-colors hover:bg-green-pale"
+                        onClick={() => { setMenuOpen(false); setDeleteOpen(true); }}
+                      >
+                        <Trash2 size={15} strokeWidth={1.75} />
+                        Delete recipe
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent pb-8 pt-24">
           <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
             <div className="max-w-4xl text-ink-inverse">
