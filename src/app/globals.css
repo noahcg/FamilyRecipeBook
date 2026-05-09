@@ -188,6 +188,21 @@ body {
   overflow-x: clip;
 }
 
+.mobile-bottom-nav {
+  isolation: isolate;
+}
+
+.mobile-bottom-nav::after {
+  content: "";
+  position: fixed;
+  inset-inline: 0;
+  bottom: -140px;
+  height: 140px;
+  background: var(--color-cream);
+  pointer-events: none;
+  z-index: -1;
+}
+
 img,
 svg,
 video,
