@@ -172,10 +172,15 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         {children}
       </main>
 
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 bottom-[-180px] z-30 hidden h-[260px] bg-cream lg:hidden supports-[-webkit-touch-callout:none]:block"
+      />
+
       {/* Bottom nav */}
       <nav
         aria-label="Main navigation"
-        className="mobile-bottom-nav fixed bottom-0 inset-x-0 z-40 overflow-x-auto overscroll-x-contain px-3 pt-2 lg:hidden"
+        className="fixed bottom-0 inset-x-0 z-40 overflow-x-auto overscroll-x-contain px-3 pt-2 lg:hidden"
         style={{
           background: "var(--color-cream)",
           minHeight: "calc(64px + env(safe-area-inset-bottom, 0px))",

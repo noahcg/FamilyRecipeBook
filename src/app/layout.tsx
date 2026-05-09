@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Nunito, Caveat } from "next/font/google";
 import "./globals.css";
 
@@ -28,6 +28,13 @@ export const metadata: Metadata = {
     icon: [{ url: "/logo.png", type: "image/png" }],
     shortcut: "/logo.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#F7F3E9",
 };
 
 export default function RootLayout({
