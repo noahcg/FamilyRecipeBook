@@ -55,7 +55,7 @@ export function AIRecipeIdeaPanel({ bookId }: AIRecipeIdeaPanelProps) {
   }
 
   return (
-    <div className="min-h-dvh px-5 py-8 lg:px-8">
+    <div className="min-h-dvh px-4 py-8 sm:px-5 lg:px-8">
       <div className="mx-auto max-w-[1240px]">
         <header className="mb-8 border-b border-line-soft pb-7">
           <p className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">

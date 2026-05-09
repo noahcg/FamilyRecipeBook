@@ -54,7 +54,7 @@ export default async function MembersPage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="mx-auto max-w-[980px] px-5 py-8 lg:px-8">
+      <div className="mx-auto max-w-[980px] px-4 py-8 sm:px-5 lg:px-8">
         <div className="mb-7 flex flex-col gap-4 border-b border-line-soft pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <BookName className="mb-2 block text-sm font-semibold text-ink-muted" />

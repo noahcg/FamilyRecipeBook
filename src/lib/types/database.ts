@@ -18,6 +18,7 @@ export interface RecipeBook {
   description: string | null;
   cover_image_url: string | null;
   cover_style: string;
+  icon: string;
   owner_id: string;
   created_at: string;
   updated_at: string;
@@ -131,6 +132,7 @@ export interface UserSettings {
   user_id: string;
   ai_provider: AIProvider | null;
   ai_api_key: string | null;
+  default_book_id: string | null;
   created_at: string;
   updated_at: string;
 }

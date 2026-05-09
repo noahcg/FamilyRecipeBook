@@ -28,6 +28,16 @@ interface BookPageRecipe extends Recipe {
   loveCount: number;
 }
 
+function isMissingPreferenceMigration(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? "";
+  return (
+    error?.code === "PGRST204" ||
+    message.includes("recipe_books.icon") ||
+    message.includes("default_book_id") ||
+    message.includes("schema cache")
+  );
+}
+
 export async function createBook(
   input: CreateBookInput
 ): Promise<ActionResult<RecipeBook>> {
@@ -41,11 +51,22 @@ export async function createBook(
   // into book_members without being blocked by RLS. Auth is enforced above
   // via requireUser() and owner_id is explicitly set to user.id.
   const admin = createServiceClient();
-  const { data: book, error } = await admin
+  let { data: book, error } = await admin
     .from("recipe_books")
     .insert({ ...parsed.data, owner_id: user.id })
     .select()
     .single();
+
+  if (error && isMissingPreferenceMigration(error) && "icon" in parsed.data) {
+    const { icon: _icon, ...withoutIcon } = parsed.data;
+    const retry = await admin
+      .from("recipe_books")
+      .insert({ ...withoutIcon, owner_id: user.id })
+      .select()
+      .single();
+    book = retry.data;
+    error = retry.error;
+  }
 
   if (error || !book) {
     return { success: false, error: error?.message ?? "Could not create book" };
@@ -53,6 +74,44 @@ export async function createBook(
 
   revalidatePath("/app");
   return { success: true, data: book };
+}
+
+export async function setDefaultBook(bookId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data: member } = await supabase
+    .from("book_members")
+    .select("id")
+    .eq("book_id", bookId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!member) {
+    return { success: false, error: "You can only set one of your cookbooks as default." };
+  }
+
+  const { error } = await supabase.from("user_settings").upsert(
+    {
+      user_id: user.id,
+      default_book_id: bookId,
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    return {
+      success: false,
+      error: isMissingPreferenceMigration(error)
+        ? "Apply migration 008_book_preferences.sql before choosing a default cookbook."
+        : error.message,
+    };
+  }
+
+  revalidatePath("/app");
+  revalidatePath("/app/books/[bookId]", "layout");
+  revalidatePath(`/app/books/${bookId}/settings`);
+  return { success: true, data: undefined };
 }
 
 export async function updateBook(
@@ -79,18 +138,44 @@ export async function updateBook(
     return { success: false, error: "Only the keeper can update the book." };
   }
 
-  const { data: book, error } = await supabase
+  const updatePayload = { ...parsed.data, updated_at: new Date().toISOString() };
+  let { data: book, error } = await supabase
     .from("recipe_books")
-    .update({ ...parsed.data, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq("id", bookId)
     .select()
     .single();
 
+  if (error && isMissingPreferenceMigration(error) && "icon" in parsed.data) {
+    const { icon: _icon, ...withoutIcon } = parsed.data;
+    const retry = await supabase
+      .from("recipe_books")
+      .update({ ...withoutIcon, updated_at: new Date().toISOString() })
+      .eq("id", bookId)
+      .select()
+      .single();
+    book = retry.data;
+    error = retry.error;
+
+    if (!Object.keys(withoutIcon).length && !error) {
+      return {
+        success: false,
+        error: "Apply migration 008_book_preferences.sql before saving cookbook icons.",
+      };
+    }
+  }
+
   if (error || !book) {
-    return { success: false, error: error?.message ?? "Could not update book" };
+    return {
+      success: false,
+      error: isMissingPreferenceMigration(error)
+        ? "Apply migration 008_book_preferences.sql before saving cookbook icons."
+        : error?.message ?? "Could not update book",
+    };
   }
 
   revalidatePath("/app/books/[bookId]", "layout");
+  revalidatePath(`/app/books/${bookId}/settings`);
   revalidatePath("/app/settings");
   return { success: true, data: book };
 }
@@ -109,6 +194,26 @@ export async function getUserBooks(): Promise<RecipeBook[]> {
 }
 
 export async function getFirstBookId(): Promise<string | null> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data: settings } = await supabase
+    .from("user_settings")
+    .select("default_book_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (settings?.default_book_id) {
+    const { data: member } = await supabase
+      .from("book_members")
+      .select("id")
+      .eq("book_id", settings.default_book_id)
+      .eq("user_id", user.id)
+      .single();
+
+    if (member) return settings.default_book_id;
+  }
+
   const books = await getUserBooks();
   return books[0]?.id ?? null;
 }

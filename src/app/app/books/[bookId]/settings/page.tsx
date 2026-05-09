@@ -17,14 +17,20 @@ export default async function BookSettingsPage({ params }: Props) {
     getAISettings(),
   ]);
 
-  const [bookRes, memberRes] = await Promise.all([
+  const [bookRes, bookPrefsRes, memberRes, settingsRes] = await Promise.all([
     supabase.from("recipe_books").select("title").eq("id", bookId).single(),
+    supabase.from("recipe_books").select("icon").eq("id", bookId).single(),
     supabase
       .from("book_members")
       .select("role")
       .eq("book_id", bookId)
       .eq("user_id", user.id)
       .single(),
+    supabase
+      .from("user_settings")
+      .select("default_book_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
 
   if (!bookRes.data || !memberRes.data) notFound();
@@ -39,6 +45,9 @@ export default async function BookSettingsPage({ params }: Props) {
       profile={profile}
       bookId={bookId}
       bookTitle={bookRes.data.title}
+      bookIcon={bookPrefsRes.data?.icon ?? null}
+      isDefaultBook={settingsRes.data?.default_book_id === bookId}
+      bookPreferencesReady={!bookPrefsRes.error && !settingsRes.error}
       isKeeper={memberRes.data.role === "keeper"}
       aiSettings={aiSettings}
       cloudflareConfigured={cloudflareConfigured}

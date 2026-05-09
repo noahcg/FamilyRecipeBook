@@ -24,7 +24,7 @@ export default async function FavoritesPage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="mx-auto max-w-[1180px] px-5 py-8 lg:px-8">
+      <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-5 lg:px-8">
         <div className="mb-7 flex flex-col gap-4 border-b border-line-soft pb-6">
           <div>
             <BookName className="mb-2 block text-sm font-semibold text-ink-muted" />

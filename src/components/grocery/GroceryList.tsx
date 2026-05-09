@@ -147,9 +147,9 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
   return (
     <>
       {/* Sticky header */}
-      <div className="border-b border-line-soft bg-[rgba(251,247,237,0.95)] px-6 py-4 lg:rounded-tr-xl">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="border-b border-line-soft bg-[rgba(251,247,237,0.95)] px-4 py-4 sm:px-6 lg:rounded-tr-xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h1
               className="text-2xl font-bold text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
@@ -160,7 +160,7 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
               {unchecked.length} item{unchecked.length !== 1 ? "s" : ""} to grab
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             {checked.length > 0 && (
               <button
                 onClick={handleClearChecked}
@@ -190,12 +190,12 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
         </div>
       </div>
 
-      <div className="grid gap-6 px-6 py-5 lg:grid-cols-[minmax(0,1fr)_280px] xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_280px] xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           {/* Import from meal plan */}
           <div className="rounded-xl border border-line-soft bg-card p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-ink">From this week&apos;s meal plan</p>
                 <p className="mt-0.5 text-xs text-ink-muted">
                   Pull all ingredients from your planned recipes straight onto the list.
@@ -207,7 +207,7 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
               <button
                 onClick={handleImport}
                 disabled={isPending}
-                className="flex shrink-0 items-center gap-2 rounded-lg bg-green-deep px-4 py-2 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40"
+                className="flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-green-deep px-4 py-2 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40 sm:w-auto"
               >
                 <CalendarDays size={15} />
                 Import
@@ -385,7 +385,7 @@ function ItemRow({ item, onToggle, onDelete, isPending, compact = false }: ItemR
     <div
       className={clsx(
         "group flex items-center gap-3 rounded-xl border transition-colors",
-        compact ? "px-3 py-2.5" : "px-4 py-3",
+        compact ? "px-3 py-2.5" : "px-3 py-3 sm:px-4",
         item.checked
           ? "border-line-soft bg-card/40"
           : "border-line-soft bg-card"

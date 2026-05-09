@@ -180,10 +180,19 @@ html {
   font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 body {
   background: var(--color-cream);
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
 }
 
 a[href],

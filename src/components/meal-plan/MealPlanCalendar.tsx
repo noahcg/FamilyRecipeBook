@@ -156,9 +156,9 @@ export function MealPlanCalendar({
   return (
     <>
       {/* Page header */}
-      <div className="sticky top-0 z-20 border-b border-line-soft bg-[rgba(251,247,237,0.95)] px-6 py-4 backdrop-blur-sm lg:rounded-tr-xl">
-        <div className="flex items-center justify-between">
-          <div>
+      <div className="sticky top-0 z-20 border-b border-line-soft bg-[rgba(251,247,237,0.95)] px-4 py-4 backdrop-blur-sm sm:px-6 lg:rounded-tr-xl">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <h1
               className="text-2xl font-bold text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
@@ -259,7 +259,7 @@ export function MealPlanCalendar({
                     <span className="w-20 shrink-0 pt-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
                       {label}
                     </span>
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <SlotCell
                         meal={meal}
                         isToday={isToday(date)}
@@ -288,8 +288,8 @@ export function MealPlanCalendar({
           {/* Sheet */}
           <div className="relative z-10 flex w-full flex-col sm:max-w-lg sm:rounded-2xl overflow-hidden mt-auto sm:mt-0 max-h-[85dvh]"
             style={{ background: "var(--color-paper-soft)" }}>
-            <div className="flex shrink-0 items-center justify-between border-b border-line-soft px-5 py-4">
-              <div>
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line-soft px-4 py-4 sm:px-5">
+              <div className="min-w-0">
                 <p className="font-semibold text-ink">Choose a recipe</p>
                 <p className="text-xs text-ink-muted capitalize">
                   {DAY_FULL[weekDates.indexOf(picking.date)]} · {picking.slot}

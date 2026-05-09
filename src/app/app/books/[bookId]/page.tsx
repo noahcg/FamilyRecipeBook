@@ -139,7 +139,7 @@ export default async function BookHomePage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="relative min-h-dvh overflow-hidden px-5 py-6 lg:rounded-tr-xl lg:px-8 lg:py-8">
+      <div className="relative min-h-dvh overflow-hidden px-4 py-6 sm:px-5 lg:rounded-tr-xl lg:px-8 lg:py-8">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute right-[-8rem] top-[-9rem] hidden h-[470px] w-[55vw] min-w-[660px] bg-[url('/images/landing-cookbook-hero.png')] bg-cover bg-[center_42%] opacity-80 lg:block"
@@ -233,7 +233,7 @@ export default async function BookHomePage({ params }: Props) {
             </div>
           </header>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
             <div className="space-y-6">
               <DashboardCard className="overflow-hidden">
                 <div className="grid min-h-[360px] lg:grid-cols-[minmax(0,1fr)_42%]">
@@ -350,7 +350,7 @@ export default async function BookHomePage({ params }: Props) {
                       Choose a dinner mood
                     </h2>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[520px]">
+                  <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[520px]">
                     {[
                       ["Comfort", "warm and cozy"],
                       ["Quick", "under 30"],

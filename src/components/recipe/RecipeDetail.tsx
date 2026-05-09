@@ -160,7 +160,7 @@ export function RecipeDetail({
 
   return (
     <article>
-      <div className="mx-auto max-w-[1320px] px-5 py-4 lg:px-8">
+      <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-5 lg:px-8">
         <div className="flex items-center justify-between gap-4">
         <Link
           href={`/app/books/${bookId}/recipes`}
@@ -255,7 +255,7 @@ export function RecipeDetail({
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10" />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent pb-8 pt-24">
-          <div className="mx-auto max-w-[1320px] px-5 lg:px-8">
+          <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
             <div className="max-w-4xl text-ink-inverse">
               {recipe.category && (
                 <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-white/80">
@@ -289,7 +289,7 @@ export function RecipeDetail({
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1320px] px-5 lg:px-8">
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
         <section className="grid gap-8 border-b border-line-soft py-7 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="max-w-[820px]">
           {story && (
@@ -329,8 +329,8 @@ export function RecipeDetail({
         <main className="min-w-0">
           {recipe.instructions && recipe.instructions.length > 0 && (
             <section id="instructions" className="max-w-[820px]">
-              <div className="mb-6 flex items-end justify-between gap-4 border-b border-line-soft pb-4">
-                <div>
+              <div className="mb-6 flex flex-col gap-3 border-b border-line-soft pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+                <div className="min-w-0">
                   <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
                     Method
                   </p>
@@ -354,8 +354,8 @@ export function RecipeDetail({
           {recipe.ingredients && recipe.ingredients.length > 0 && (
             <section>
               <div className="mb-4 border-b border-line-soft pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
                     <p className="mb-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
                       What you need
                     </p>
@@ -370,7 +370,7 @@ export function RecipeDetail({
                     type="button"
                     onClick={() => handleAddIngredientsToGrocery()}
                     disabled={isAddingGroceries}
-                    className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-md bg-green-deep px-3 text-xs font-extrabold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-45"
+                    className="inline-flex min-h-9 w-full shrink-0 items-center justify-center gap-2 rounded-md bg-green-deep px-3 text-xs font-extrabold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-45 sm:w-auto"
                   >
                     <ShoppingCart size={14} />
                     {isAddingGroceries ? "Adding" : "Add to list"}

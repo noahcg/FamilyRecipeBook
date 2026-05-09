@@ -352,7 +352,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
               {ingredients.map((field, index) => (
                 <div key={field.id} className="flex gap-2 items-start">
                   <GripVertical size={16} className="text-ink-soft mt-3.5 shrink-0 opacity-40" />
-                  <div className="grid grid-cols-[5rem_7rem_1fr] gap-2 flex-1 min-w-0">
+                  <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:grid-cols-[5rem_7rem_1fr]">
                     <input
                       className="input-cookbook text-sm"
                       placeholder="Qty"
@@ -363,7 +363,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                       placeholder="Unit"
                       {...register(`ingredients.${index}.unit`)}
                     />
-                    <div className="min-w-0">
+                    <div className="col-span-2 min-w-0 sm:col-span-1">
                       <input
                         className="input-cookbook text-sm w-full"
                         placeholder="Ingredient"

@@ -32,6 +32,11 @@ const NAV = (bookId: string) => [
   { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
   { id: "ideas", href: `/app/books/${bookId}/ideas`, icon: Sparkles, label: "Ideas" },
   { id: "collections", href: `/app/books/${bookId}/collections`, icon: ListChecks, label: "Collections" },
+  { id: "meal-plan", href: `/app/books/${bookId}/meal-plan`, icon: CalendarDays, label: "Meal Plan" },
+  { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
+  { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
+  { id: "activity", href: `/app/books/${bookId}/members`, icon: History, label: "Activity" },
+  { id: "settings", href: `/app/books/${bookId}/settings`, icon: Settings, label: "Settings" },
   { id: "add", href: `/app/books/${bookId}/recipes/new`, icon: Plus, label: "Add", isAdd: true },
 ];
 
@@ -57,7 +62,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
   const navItems = NAV(bookId);
   const { bookTitle: bookTitleCtx, books } = useBook();
   const bookTitle = bookTitleProp ?? bookTitleCtx;
-  const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle }];
+  const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle, icon: "bowl" }];
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
@@ -125,9 +130,9 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                   )}
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-line-soft bg-card">
-                    <CookbookIcon name="bowl" size={18} />
+                    <CookbookIcon name={userBook.icon ?? "bowl"} size={18} />
                   </span>
-                  <span className="truncate">{userBook.title}</span>
+                  <span className="min-w-0 flex-1 truncate">{userBook.title}</span>
                 </Link>
               );
             })}
@@ -170,7 +175,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
       {/* Bottom nav */}
       <nav
         aria-label="Main navigation"
-        className="fixed bottom-0 inset-x-0 z-40 flex items-center justify-around px-4 pb-safe lg:hidden"
+        className="fixed bottom-0 inset-x-0 z-40 overflow-x-auto overscroll-x-contain px-3 pb-safe lg:hidden"
         style={{
           background: "rgba(247,243,233,0.97)",
           backdropFilter: "blur(12px)",
@@ -178,39 +183,41 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
           boxShadow: "0 -1px 0 rgba(47,79,63,0.07), 0 -4px 16px rgba(47,79,63,0.06)",
         }}
       >
-        {navItems.map(({ id, href, icon: Icon, label, isAdd }) => {
-          const isActive = isActiveNavItem(pathname, href, id);
+        <div className="mx-auto flex w-max min-w-full items-center justify-start sm:justify-center">
+          {navItems.map(({ id, href, icon: Icon, label, isAdd }) => {
+            const isActive = isActiveNavItem(pathname, href, id);
 
-          if (isAdd) {
+            if (isAdd) {
+              return (
+                <Link
+                  key={id}
+                  href={href}
+                  aria-label="Add recipe"
+                  className="mx-1 flex h-9 min-w-[68px] shrink-0 items-center justify-center rounded-full bg-green-deep px-5 text-ink-inverse shadow-sm transition-transform active:scale-95 focus-visible:outline-none"
+                  style={{ boxShadow: "0 2px 8px rgba(35,68,54,0.35)" }}
+                >
+                  <Icon size={18} strokeWidth={2.5} />
+                </Link>
+              );
+            }
+
             return (
               <Link
                 key={id}
                 href={href}
-                aria-label="Add recipe"
-                className="flex items-center justify-center h-9 px-5 rounded-full bg-green-deep text-ink-inverse shadow-sm transition-transform active:scale-95 focus-visible:outline-none"
-                style={{ boxShadow: "0 2px 8px rgba(35,68,54,0.35)" }}
+                aria-label={label}
+                aria-current={isActive ? "page" : undefined}
+                className={clsx(
+                  "flex min-w-[74px] shrink-0 flex-col items-center gap-1 px-3 py-2 transition-colors duration-150 focus-visible:outline-none",
+                  isActive ? "text-green-deep" : "text-ink-soft"
+                )}
               >
-                <Icon size={18} strokeWidth={2.5} />
+                <Icon size={22} strokeWidth={isActive ? 2 : 1.5} />
+                <span className="text-[10px] font-semibold leading-none tracking-wide">{label}</span>
               </Link>
             );
-          }
-
-          return (
-            <Link
-              key={id}
-              href={href}
-              aria-label={label}
-              aria-current={isActive ? "page" : undefined}
-              className={clsx(
-                "flex flex-col items-center gap-1 px-3 py-2 min-w-[44px] transition-colors duration-150 focus-visible:outline-none",
-                isActive ? "text-green-deep" : "text-ink-soft"
-              )}
-            >
-              <Icon size={22} strokeWidth={isActive ? 2 : 1.5} />
-              <span className="text-[10px] font-semibold leading-none tracking-wide">{label}</span>
-            </Link>
-          );
-        })}
+          })}
+        </div>
       </nav>
     </div>
   );

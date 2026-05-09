@@ -34,9 +34,10 @@ export function RenameBookForm({ bookId, currentTitle }: RenameBookFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-3">
-      <div className="flex-1">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="min-w-0 flex-1">
         <Input
+          className="w-full"
           label="Book name"
           value={title}
           onChange={(e) => { setTitle(e.target.value); setSaved(false); }}
@@ -51,7 +52,7 @@ export function RenameBookForm({ bookId, currentTitle }: RenameBookFormProps) {
         size="md"
         disabled={!isDirty || saving}
         loading={saving}
-        className="shrink-0 mb-0.5"
+        className="mb-0.5 w-full shrink-0 sm:w-auto"
       >
         {saved ? "Saved!" : "Save"}
       </Button>

@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
+import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { signOut } from "@/lib/actions/auth";
 import type { Profile } from "@/lib/types";
@@ -10,6 +11,9 @@ interface SettingsPageContentProps {
   profile: Profile;
   bookId: string;
   bookTitle: string;
+  bookIcon: string | null;
+  isDefaultBook: boolean;
+  bookPreferencesReady: boolean;
   isKeeper: boolean;
   aiSettings: {
     ai_provider: AIProvider | null;
@@ -52,13 +56,16 @@ export function SettingsPageContent({
   profile,
   bookId,
   bookTitle,
+  bookIcon,
+  isDefaultBook,
+  bookPreferencesReady,
   isKeeper,
   aiSettings,
   cloudflareConfigured,
 }: SettingsPageContentProps) {
   return (
     <AppShell bookId={bookId} bookTitle={bookTitle}>
-      <div className="mx-auto max-w-[960px] px-5 pt-8 pb-16 lg:px-10">
+      <div className="mx-auto max-w-[960px] px-4 pt-8 pb-16 sm:px-5 lg:px-10">
         <h1
           className="mb-2 text-2xl font-bold text-green-deep"
           style={{ fontFamily: "var(--font-playfair)" }}
@@ -108,7 +115,25 @@ export function SettingsPageContent({
             description="Shared settings for this book. Only the keeper can change these."
           >
             <div className="recipe-card p-5">
-              <RenameBookForm bookId={bookId} currentTitle={bookTitle} />
+              <div className="space-y-6">
+                <RenameBookForm bookId={bookId} currentTitle={bookTitle} />
+                {bookPreferencesReady ? (
+                  <BookPreferencesForm
+                    bookId={bookId}
+                    currentIcon={bookIcon}
+                    isDefault={isDefaultBook}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-accent-honey/45 bg-paper-warm/60 p-4">
+                    <p className="text-sm font-bold text-green-deep">
+                      Cookbook preferences need the latest database migration.
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-muted">
+                      Apply migration 008_book_preferences.sql to enable custom cookbook icons and default cookbook selection.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </SettingsSection>
         )}

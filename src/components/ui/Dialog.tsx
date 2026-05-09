@@ -59,7 +59,7 @@ export function Dialog({
         style={{ background: "var(--color-paper-soft)" }}
       >
         {title && (
-          <div className="flex items-center justify-between border-b border-line-soft px-5 pb-3 pt-5">
+          <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 pb-3 pt-5 sm:px-5">
             <h2
               className="text-lg font-bold text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}

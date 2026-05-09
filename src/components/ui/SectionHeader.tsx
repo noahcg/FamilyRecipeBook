@@ -16,8 +16,8 @@ function SectionHeader({
   className,
 }: SectionHeaderProps) {
   return (
-    <div className={clsx("flex items-start justify-between gap-4", className)}>
-      <div>
+    <div className={clsx("flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4", className)}>
+      <div className="min-w-0">
         <h2
           className={clsx(
             "text-green-deep font-bold leading-tight",

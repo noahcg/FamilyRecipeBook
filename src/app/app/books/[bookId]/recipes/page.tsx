@@ -158,7 +158,7 @@ export default function RecipesPage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="mx-auto max-w-[1240px] px-5 py-8 lg:px-8">
+      <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-5 lg:px-8">
         <header className="mb-7 border-b border-line-soft pb-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">

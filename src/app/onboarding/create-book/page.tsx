@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button, Input, Textarea, BookCover } from "@/components/ui";
 import type { CoverStyle } from "@/components/ui";
+import { CookbookIcon, cookbookIconOptions } from "@/components/ui/CookbookIcon";
 import { createBookSchema, type CreateBookInput } from "@/lib/validators/book";
 import { createBook } from "@/lib/actions/books";
 import { clsx } from "clsx";
@@ -32,11 +33,12 @@ export default function CreateBookPage() {
     formState: { errors, isSubmitting },
   } = useForm<CreateBookInput>({
     resolver: zodResolver(createBookSchema),
-    defaultValues: { title: "", cover_style: "sage" },
+    defaultValues: { title: "", cover_style: "sage", icon: "bowl" },
   });
 
   const watchedTitle = useWatch({ control, name: "title" });
   const selectedStyle = useWatch({ control, name: "cover_style" });
+  const selectedIcon = useWatch({ control, name: "icon" });
 
   async function onSubmit(data: CreateBookInput) {
     setServerError(null);
@@ -110,6 +112,29 @@ export default function CreateBookPage() {
                   aria-label={s.label}
                   aria-pressed={selectedStyle === s.id}
                 />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-ink mb-3">Cookbook icon</p>
+            <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
+              {cookbookIconOptions.map((icon) => (
+                <button
+                  key={icon.id}
+                  type="button"
+                  onClick={() => setValue("icon", icon.id)}
+                  aria-label={icon.label}
+                  aria-pressed={selectedIcon === icon.id}
+                  className={clsx(
+                    "flex h-10 w-10 items-center justify-center rounded-lg border transition-colors",
+                    selectedIcon === icon.id
+                      ? "border-green-deep bg-green-soft text-green-deep"
+                      : "border-line-soft bg-card text-ink-muted hover:bg-green-pale"
+                  )}
+                >
+                  <CookbookIcon name={icon.id} size={19} />
+                </button>
               ))}
             </div>
           </div>
