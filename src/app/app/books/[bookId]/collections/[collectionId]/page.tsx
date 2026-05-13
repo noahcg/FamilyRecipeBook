@@ -10,6 +10,22 @@ interface Props {
   params: Promise<{ bookId: string; collectionId: string }>;
 }
 
+interface FavoriteReactionRow {
+  recipe_id: string;
+}
+
+interface CollectionRecipeRow {
+  recipe: {
+    id: string;
+    title: string;
+    description: string | null;
+    photo_url: string | null;
+    source_name: string | null;
+    category: string | null;
+    reactions?: { type: string }[] | null;
+  } | null;
+}
+
 export default async function CollectionDetailPage({ params }: Props) {
   const { bookId, collectionId } = await params;
   const [user, supabase] = await Promise.all([requireUser(), createClient()]);
@@ -32,12 +48,12 @@ export default async function CollectionDetailPage({ params }: Props) {
 
   if (!collection) notFound();
 
-  const favoriteIds = new Set((favReactions ?? []).map((r: any) => r.recipe_id));
-  const recipes = (collection.recipes ?? []).map((cr: any) => ({
+  const favoriteIds = new Set(((favReactions ?? []) as FavoriteReactionRow[]).map((r) => r.recipe_id));
+  const recipes = ((collection.recipes ?? []) as CollectionRecipeRow[]).map((cr) => ({
     ...cr.recipe,
     loveCount:
-      cr.recipe?.reactions?.filter((rx: any) => rx.type === "love").length ?? 0,
-  }));
+      cr.recipe?.reactions?.filter((rx) => rx.type === "love").length ?? 0,
+  })).filter((recipe): recipe is NonNullable<CollectionRecipeRow["recipe"]> & { loveCount: number } => Boolean(recipe.id));
 
   return (
     <AppShell bookId={bookId}>
@@ -74,16 +90,16 @@ export default async function CollectionDetailPage({ params }: Props) {
           />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {recipes.map((recipe: any) => (
+            {recipes.map((recipe) => (
               <Link
                 key={recipe.id}
                 href={`/app/books/${bookId}/recipes/${recipe.id}`}
               >
                 <RecipeCard
                   title={recipe.title}
-                  description={recipe.description}
+                  description={recipe.description ?? undefined}
                   imageUrl={recipe.photo_url ?? undefined}
-                  fromPerson={recipe.source_name}
+                  fromPerson={recipe.source_name ?? undefined}
                   loveCount={recipe.loveCount}
                   category={recipe.category ?? undefined}
                   isFavorited={favoriteIds.has(recipe.id)}

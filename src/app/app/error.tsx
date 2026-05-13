@@ -4,16 +4,13 @@ import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui";
 
-export default function AppError({
-  error,
-  reset,
-}: {
+export default function AppError({ reset }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
     <div className="app-paper-bg paper-texture min-h-screen flex items-center justify-center px-5">
-      <div className="text-center max-w-sm">
+      <div className="recipe-card max-w-sm px-6 py-8 text-center">
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
           style={{ background: "var(--color-paper-warm)" }}
@@ -27,7 +24,7 @@ export default function AppError({
           Something went wrong
         </h1>
         <p className="text-sm text-ink-muted mb-6">
-          Something didn&rsquo;t load quite right. Try again or head back to your book.
+          The page did not load cleanly. Try again, or return to your cookbooks.
         </p>
         <div className="flex gap-3 justify-center">
           <Button variant="secondary" onClick={reset}>Try again</Button>

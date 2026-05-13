@@ -58,8 +58,8 @@ export default async function CollectionsPage({ params }: Props) {
 
         {collections.length === 0 ? (
           <EmptyState
-            title="Start a little shelf."
-            description="Group recipes for holidays, quick meals, Sunday dinners, or anything your family loves."
+            title="Create your first collection"
+            description="Group recipes by occasion, season, person, or the way you naturally look for them."
             action={
               canContribute ? (
                 <Link href={`/app/books/${bookId}/collections/new`}>

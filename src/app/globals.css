@@ -90,6 +90,8 @@
   --font-display: var(--font-playfair);
   --font-body: var(--font-nunito);
   --font-hand: var(--font-caveat);
+  --font-brand: var(--font-fraunces);
+  --font-label: var(--font-inter);
 
   /* Colors — paper */
   --color-cream: #F7F3E9;
@@ -270,6 +272,45 @@ select:focus-visible {
   box-shadow: var(--shadow-card);
 }
 
+/* ─── Brand Lockup ──────────────────────────────────────────── */
+.brand-lockup {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  position: relative;
+  width: clamp(12rem, 31vw, 21rem);
+  isolation: isolate;
+}
+
+.brand-lockup::before {
+  content: "";
+  position: absolute;
+  inset: 4% 2% 5%;
+  z-index: -1;
+  border-radius: 38% 42% 34% 36%;
+  background:
+    radial-gradient(ellipse at center, rgba(251, 247, 237, 0.9) 0%, rgba(251, 247, 237, 0.64) 48%, rgba(251, 247, 237, 0) 74%);
+  filter: blur(6px);
+}
+
+.brand-lockup__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  mix-blend-mode: multiply;
+  filter: saturate(0.98) contrast(1.02);
+}
+
+.brand-lockup--compact {
+  width: 11.25rem;
+}
+
+@media (max-width: 420px) {
+  .brand-lockup {
+    width: 11.5rem;
+  }
+}
+
 /* ─── Recipe Image ───────────────────────────────────────────── */
 .recipe-image {
   object-fit: cover;
@@ -279,15 +320,58 @@ select:focus-visible {
 
 /* ─── Recipe Card ────────────────────────────────────────────── */
 .recipe-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border-soft);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.74), rgba(255, 249, 239, 0.92)),
+    var(--color-card);
+  border: 1px solid rgba(232, 219, 200, 0.88);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  box-shadow:
+    0 1px 0 rgba(255, 252, 246, 0.72) inset,
+    0 8px 24px rgba(75, 53, 31, 0.075);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
 }
 .recipe-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: rgba(139, 168, 136, 0.44);
+  box-shadow:
+    0 1px 0 rgba(255, 252, 246, 0.8) inset,
+    0 14px 32px rgba(75, 53, 31, 0.105);
+}
+
+.empty-state {
+  border: 1px solid rgba(232, 219, 200, 0.78);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top, rgba(221, 229, 215, 0.34), transparent 18rem),
+    rgba(255, 249, 239, 0.62);
+}
+
+.empty-state__icon {
+  background:
+    linear-gradient(135deg, rgba(255, 252, 246, 0.85), rgba(221, 229, 215, 0.72));
+  border: 1px solid rgba(139, 168, 136, 0.3);
+  box-shadow: 0 8px 22px rgba(47, 79, 63, 0.08);
+}
+
+.skeleton-surface {
+  position: relative;
+  overflow: hidden;
+  background: rgba(238, 244, 234, 0.84);
+}
+
+.skeleton-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 252, 246, 0.62), transparent);
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* ─── Story Note ─────────────────────────────────────────────── */

@@ -18,6 +18,7 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 import { CookbookIcon } from "@/components/ui/CookbookIcon";
 import { APP_VERSION } from "@/lib/version";
 import { signOut } from "@/lib/actions/auth";
@@ -70,20 +71,8 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
       <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[280px] overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
-        <Link href={`/app/books/${bookId}`} className="flex shrink-0 items-center gap-3 px-7 pb-7 pt-9">
-          <span className="block h-14 w-14 shrink-0 overflow-hidden rounded-lg">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" className="h-full w-full object-cover" aria-hidden="true" />
-          </span>
-          <span className="flex min-w-0 translate-y-1.5 flex-col justify-center">
-            <span
-              className="block truncate text-lg font-bold leading-tight text-green-deep"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              Home Cooked
-            </span>
-            <span className="block text-xs text-ink-muted">Recipe Platform</span>
-          </span>
+        <Link href={`/app/books/${bookId}`} className="shrink-0 px-7 pb-7 pt-9">
+          <BrandLockup compact />
         </Link>
 
         <nav aria-label="Primary navigation" className="shrink-0 px-6">
@@ -180,7 +169,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         aria-label="Open cookbooks"
         aria-expanded={isBookShelfOpen}
         onClick={() => setIsBookShelfOpen(true)}
-        className="fixed right-0 top-[42dvh] z-40 flex h-[96px] w-9 flex-col items-center justify-center gap-1 rounded-l-[18px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md lg:hidden"
+        className="fixed right-0 top-[42dvh] z-40 flex h-[96px] w-9 flex-col items-center justify-center gap-1 rounded-l-[18px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-card active:translate-x-0.5 lg:hidden"
       >
         <CookbookIcon name={visibleBooks.find((userBook) => userBook.id === bookId)?.icon ?? "bowl"} size={18} />
         <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-extrabold leading-none">
@@ -193,10 +182,10 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
           <button
             type="button"
             aria-label="Close cookbooks"
-            className="absolute inset-0 bg-ink/18"
+            className="absolute inset-0 animate-in fade-in duration-150 bg-ink/18"
             onClick={() => setIsBookShelfOpen(false)}
           />
-          <section className="relative ml-auto flex h-full w-[min(86vw,360px)] flex-col border-l border-line-soft bg-card px-4 py-5">
+          <section className="relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
@@ -230,7 +219,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                     aria-current={isCurrent ? "page" : undefined}
                     onClick={() => setIsBookShelfOpen(false)}
                     className={clsx(
-                      "flex items-center gap-3 rounded-md border px-3 py-3 text-sm transition-colors",
+                      "flex items-center gap-3 rounded-md border px-3 py-3 text-sm transition-[background-color,border-color,transform] active:translate-y-px",
                       isCurrent
                         ? "border-green-sage bg-green-soft/75 text-green-deep"
                         : "border-line-soft bg-white-soft/75 text-ink hover:bg-green-pale"
@@ -278,7 +267,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                 aria-label={isAdd ? "Add recipe" : label}
                 aria-current={isActive ? "page" : undefined}
                 className={clsx(
-                  "flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-colors duration-150 focus-visible:outline-none",
+                  "flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-[background-color,color,transform] duration-150 active:translate-y-px focus-visible:outline-none",
                   isAdd
                     ? "min-w-[64px] bg-accent-terracotta text-ink-inverse hover:bg-accent-terracotta-dark"
                     : isActive

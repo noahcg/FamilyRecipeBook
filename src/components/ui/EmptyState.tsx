@@ -19,13 +19,12 @@ function EmptyState({
   return (
     <div
       className={clsx(
-        "flex flex-col items-center justify-center text-center px-6 py-16 gap-4",
+        "empty-state flex flex-col items-center justify-center text-center px-6 py-14 gap-4",
         className
       )}
     >
       <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center"
-        style={{ background: "var(--color-sage-pale)" }}
+        className="empty-state__icon flex h-16 w-16 items-center justify-center rounded-md"
       >
         {icon ?? (
           <BookOpen
@@ -38,7 +37,7 @@ function EmptyState({
 
       <div className="max-w-xs">
         <h3
-          className="font-bold text-green-deep text-lg leading-snug mb-1"
+          className="mb-1 text-xl font-bold leading-snug text-green-deep"
           style={{ fontFamily: "var(--font-playfair)" }}
         >
           {title}

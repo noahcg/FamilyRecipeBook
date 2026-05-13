@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getFirstBookId } from "@/lib/actions/books";
 import type { ActionResult } from "@/lib/types";
 
 export async function signIn(

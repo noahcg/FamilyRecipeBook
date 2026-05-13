@@ -124,7 +124,7 @@ export function AISettingsForm({ currentProvider, currentKey }: AISettingsFormPr
           </div>
           {error && <p className="mt-1.5 text-xs text-danger">{error}</p>}
           <p className="mt-1.5 text-xs text-ink-soft">
-            Stored privately — only you can see it, and it's only used for recipe generation.
+            Stored privately — only you can see it, and it&apos;s only used for recipe generation.
             {hasActiveKey && " Clear the field and save to remove it."}
           </p>
         </div>

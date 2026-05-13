@@ -76,8 +76,8 @@ export default async function MembersPage({ params }: Props) {
 
         {members.length === 0 ? (
           <EmptyState
-            title="Bring someone into the book."
-            description="Family recipes are better when everyone can add their memories."
+            title="Invite someone you cook with"
+            description="Share the book with family or friends so recipes, notes, and memories stay in one place."
             action={
               userRole === "keeper" ? (
                 <Link href={`/app/books/${bookId}/members/add`}>

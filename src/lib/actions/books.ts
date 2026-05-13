@@ -58,7 +58,8 @@ export async function createBook(
     .single();
 
   if (error && isMissingPreferenceMigration(error) && "icon" in parsed.data) {
-    const { icon: _icon, ...withoutIcon } = parsed.data;
+    const withoutIcon = { ...parsed.data };
+    delete withoutIcon.icon;
     const retry = await admin
       .from("recipe_books")
       .insert({ ...withoutIcon, owner_id: user.id })
@@ -147,7 +148,8 @@ export async function updateBook(
     .single();
 
   if (error && isMissingPreferenceMigration(error) && "icon" in parsed.data) {
-    const { icon: _icon, ...withoutIcon } = parsed.data;
+    const withoutIcon = { ...parsed.data };
+    delete withoutIcon.icon;
     const retry = await supabase
       .from("recipe_books")
       .update({ ...withoutIcon, updated_at: new Date().toISOString() })

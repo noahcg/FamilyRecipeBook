@@ -21,7 +21,7 @@ function Card({ padded = true, muted = false, className, children, ...props }: C
   );
 }
 
-interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+type CardHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 function CardHeader({ className, children, ...props }: CardHeaderProps) {
   return (
     <div className={clsx("mb-3", className)} {...props}>
@@ -30,7 +30,7 @@ function CardHeader({ className, children, ...props }: CardHeaderProps) {
   );
 }
 
-interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
+type CardBodyProps = React.HTMLAttributes<HTMLDivElement>;
 function CardBody({ className, children, ...props }: CardBodyProps) {
   return (
     <div className={clsx("text-ink-muted text-sm leading-relaxed", className)} {...props}>

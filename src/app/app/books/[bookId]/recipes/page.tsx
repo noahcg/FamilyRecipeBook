@@ -203,18 +203,18 @@ export default function RecipesPage({ params }: Props) {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
               {[...Array(4)].map((_, index) => (
-                <div key={index} className="h-28 animate-pulse rounded-lg bg-green-pale" />
+                <div key={index} className="skeleton-surface h-28 rounded-lg" />
               ))}
             </div>
-            <div className="hidden h-[520px] animate-pulse rounded-xl bg-card-muted lg:block" />
+            <div className="skeleton-surface hidden h-[520px] rounded-xl lg:block" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            title={query ? "No recipes found" : "No recipes yet"}
+            title={query ? "No matching recipes" : "Your first recipe belongs here"}
             description={
               query
-                ? "Try a different search."
-                : "Add your first recipe to this book."
+                ? "Try another search term or browse the full recipe list."
+                : "Start with one recipe you already know you will want to find again."
             }
             action={
               !query ? (

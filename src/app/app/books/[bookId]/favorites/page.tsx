@@ -9,6 +9,18 @@ interface Props {
   params: Promise<{ bookId: string }>;
 }
 
+interface FavoriteRecipe {
+  id: string;
+  title: string;
+  description: string | null;
+  photo_url: string | null;
+  source_name: string | null;
+  cook_minutes: number | null;
+  servings: number | null;
+  category: string | null;
+  creator?: { full_name: string | null }[] | null;
+}
+
 export default async function FavoritesPage({ params }: Props) {
   const { bookId } = await params;
   const user = await requireUser();
@@ -44,16 +56,16 @@ export default async function FavoritesPage({ params }: Props) {
           />
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-            {(favorites ?? []).map((recipe: any) => (
+            {((favorites ?? []) as FavoriteRecipe[]).map((recipe) => (
               <Link
                 key={recipe.id}
                 href={`/app/books/${bookId}/recipes/${recipe.id}`}
               >
                 <RecipeCard
                   title={recipe.title}
-                  description={recipe.description}
+                  description={recipe.description ?? undefined}
                   imageUrl={recipe.photo_url ?? undefined}
-                  fromPerson={recipe.source_name ?? recipe.creator?.full_name}
+                  fromPerson={recipe.source_name ?? recipe.creator?.[0]?.full_name ?? undefined}
                   cookTime={recipe.cook_minutes ? `${recipe.cook_minutes} min` : undefined}
                   servings={recipe.servings ?? undefined}
                   category={recipe.category ?? undefined}

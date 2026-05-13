@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { getFirstBookId } from "@/lib/actions/books";
 
 export default async function AppLayout({
   children,

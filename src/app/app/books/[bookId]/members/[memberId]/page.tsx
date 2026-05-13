@@ -47,6 +47,10 @@ interface MemberActivity {
   } | null;
 }
 
+interface FavoriteReactionRow {
+  recipe_id: string;
+}
+
 export default async function MemberProfilePage({ params, searchParams }: Props) {
   const { bookId, memberId } = await params;
   const { tab = "recipes" } = await searchParams;
@@ -82,7 +86,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   if (!memberRes.data) notFound();
 
   const member = memberRes.data as MemberWithProfile;
-  const favoriteIds = new Set((favRes.data ?? []).map((r: any) => r.recipe_id));
+  const favoriteIds = new Set(((favRes.data ?? []) as FavoriteReactionRow[]).map((r) => r.recipe_id));
   const recipes = ((recipesRes.data ?? []) as Omit<MemberRecipe, "loveCount">[]).map((r) => ({
     ...r,
     loveCount: r.reactions?.filter((rx) => rx.type === "love").length ?? 0,

@@ -26,7 +26,7 @@ interface HomeRecipe extends Recipe {
   loveCount?: number;
 }
 
-const PANTRY_ITEMS = ["chicken thighs", "spinach", "lemons", "rice", "yogurt"];
+const RECIPE_THEMES = ["quick weeknights", "family favorites", "make-ahead", "something new", "comfort meals"];
 const WEEK_DAYS = [
   { day: "M", planned: true },
   { day: "T", planned: true },
@@ -45,7 +45,7 @@ function DashboardCard({
   className?: string;
 }) {
   return (
-    <section className={`rounded-md border border-line-soft bg-card/76 shadow-sm ${className}`}>
+    <section className={`recipe-card ${className}`}>
       {children}
     </section>
   );
@@ -93,7 +93,7 @@ function QuickAction({
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-bold text-ink">{label}</span>
+        <span className="block text-sm font-extrabold text-ink">{label}</span>
         <span className="block truncate text-xs text-ink-muted">{detail}</span>
       </span>
       <ChevronRight size={16} className="shrink-0 text-ink-soft transition-transform group-hover:translate-x-0.5" />
@@ -226,7 +226,7 @@ export default async function BookHomePage({ params }: Props) {
                 <div className="grid min-h-[360px] lg:grid-cols-[minmax(0,1fr)_42%]">
                   <div className="flex flex-col justify-between p-5 sm:p-7">
                     <div>
-                      <SectionEyebrow>Tonight made easy</SectionEyebrow>
+                      <SectionEyebrow>Recipe pick</SectionEyebrow>
                       <h2
                         className="mt-3 max-w-2xl text-3xl font-bold leading-tight text-green-deep lg:text-4xl"
                         style={{ fontFamily: "var(--font-playfair)" }}
@@ -234,7 +234,7 @@ export default async function BookHomePage({ params }: Props) {
                         {featuredTitle}
                       </h2>
                       <p className="mt-4 max-w-xl text-sm leading-relaxed text-ink-muted">
-                        Suggested because your pantry snapshot already has rice, greens, citrus, and a quick protein path. It keeps dinner warm, simple, and weeknight-friendly.
+                        A practical choice to get you cooking without digging through the whole book. Open it, adjust what you need, and keep moving.
                       </p>
                     </div>
 
@@ -264,7 +264,7 @@ export default async function BookHomePage({ params }: Props) {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                     <span className="absolute bottom-4 left-4 rounded-sm bg-card/90 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon backdrop-blur-sm">
-                      Dinner idea
+                      Featured recipe
                     </span>
                   </div>
                 </div>
@@ -272,15 +272,15 @@ export default async function BookHomePage({ params }: Props) {
 
               <div className="grid gap-9 border-y border-line-soft py-9 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10">
                 <section className="border-line-soft lg:border-r lg:pr-10">
-                  <SectionHeader eyebrow="Smart kitchen notes" title="Small nudges" />
+                  <SectionHeader eyebrow="Smart kitchen notes" title="Helpful cues" />
                   <div className="mt-5 space-y-5">
                     <div className="flex gap-4">
                       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-accent-honey/20 text-accent-cinnamon">
                         <CalendarDays size={17} />
                       </span>
                       <div>
-                        <p className="text-sm font-bold text-ink">Thursday dinner is still open.</p>
-                        <p className="mt-0.5 text-sm text-ink-muted">Plan one easy meal before the week gets away.</p>
+                        <p className="text-sm font-bold text-ink">A planning gap is coming up.</p>
+                        <p className="mt-0.5 text-sm text-ink-muted">Choose one reliable recipe before the week fills in.</p>
                       </div>
                     </div>
                     <div className="flex gap-4">
@@ -288,8 +288,8 @@ export default async function BookHomePage({ params }: Props) {
                         <ShoppingCart size={17} />
                       </span>
                       <div>
-                        <p className="text-sm font-bold text-ink">You are missing 2 items for taco night.</p>
-                        <p className="mt-0.5 text-sm text-ink-muted">Add tortillas and limes before shopping.</p>
+                        <p className="text-sm font-bold text-ink">One saved favorite is ready to shop.</p>
+                        <p className="mt-0.5 text-sm text-ink-muted">Review the list before your next grocery run.</p>
                       </div>
                     </div>
                   </div>
@@ -329,12 +329,12 @@ export default async function BookHomePage({ params }: Props) {
               <PageSection>
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <SectionEyebrow>What sounds good?</SectionEyebrow>
+                    <SectionEyebrow>Browse by feel</SectionEyebrow>
                     <h2
                       className="mt-2 text-xl font-bold text-green-deep"
                       style={{ fontFamily: "var(--font-playfair)" }}
                     >
-                      Choose a dinner mood
+                      Find the right kind of recipe
                     </h2>
                   </div>
                   <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[520px]">
@@ -347,7 +347,7 @@ export default async function BookHomePage({ params }: Props) {
                       <Link
                         key={label}
                         href={`/app/books/${bookId}/ideas`}
-                        className="rounded-sm border border-line-soft bg-white-soft/70 px-3 py-3 text-sm font-bold text-green-deep transition-colors hover:bg-green-pale"
+                        className="rounded-sm border border-line-soft bg-white-soft/70 px-3 py-3 text-sm font-bold text-green-deep transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-green-sage/40 hover:bg-green-pale"
                       >
                         {label}
                         <span className="mt-0.5 block text-xs font-semibold text-ink-soft">{hint}</span>
@@ -362,24 +362,24 @@ export default async function BookHomePage({ params }: Props) {
               <PageSection>
                 <SectionHeader eyebrow="Quick actions" title="Next move" />
                 <div className="mt-4 space-y-1">
-                  <QuickAction href={`/app/books/${bookId}/recipes/new`} icon={<Plus size={19} />} label="Add Recipe" detail="Save a family favorite" />
-                  <QuickAction href={`/app/books/${bookId}/ideas`} icon={<Sparkles size={19} />} label="Ask AI" detail="Generate from your pantry" />
-                  <QuickAction href={`/app/books/${bookId}/meal-plan`} icon={<CalendarDays size={19} />} label="Plan Week" detail="Fill the next few dinners" />
-                  <QuickAction href={`/app/books/${bookId}/groceries`} icon={<ShoppingCart size={19} />} label="Groceries" detail="Review the shopping list" />
+                  <QuickAction href={`/app/books/${bookId}/recipes/new`} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />
+                  <QuickAction href={`/app/books/${bookId}/ideas`} icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />
+                  <QuickAction href={`/app/books/${bookId}/meal-plan`} icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
+                  <QuickAction href={`/app/books/${bookId}/groceries`} icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
                 </div>
               </PageSection>
 
               <PageSection>
-                <SectionHeader eyebrow="Pantry snapshot" title="Cook from these" />
+                <SectionHeader eyebrow="Recipe paths" title="Start somewhere useful" />
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {PANTRY_ITEMS.map((item) => (
+                  {RECIPE_THEMES.map((item) => (
                     <span key={item} className="rounded-sm bg-green-pale px-3 py-1 text-sm font-semibold text-green-deep">
                       {item}
                     </span>
                   ))}
                 </div>
                 <Link href={`/app/books/${bookId}/ideas`} className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
-                  Cook from what you have <ChevronRight size={15} />
+                  Browse recipe ideas <ChevronRight size={15} />
                 </Link>
               </PageSection>
 

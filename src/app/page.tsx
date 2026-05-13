@@ -9,6 +9,7 @@ import {
   Star,
   Users,
 } from "lucide-react";
+import { BrandLockup } from "@/components/ui/BrandLockup";
 
 const FEATURES = [
   {
@@ -79,17 +80,8 @@ export default function LandingPage() {
       </div>
 
       <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5 lg:px-12 lg:py-8">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-          <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-[16px] border border-line bg-card shadow-soft sm:size-12 sm:rounded-[18px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" aria-hidden="true" className="h-full w-full" />
-          </span>
-          <span
-            className="min-w-0 text-lg font-bold leading-none text-green-forest-dark drop-shadow-[0_1px_0_rgba(255,252,246,0.9)] sm:text-2xl"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            Home Cooked
-          </span>
+        <Link href="/" className="shrink-0">
+          <BrandLockup />
         </Link>
 
         <Link

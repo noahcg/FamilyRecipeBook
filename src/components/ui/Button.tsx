@@ -63,7 +63,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={clsx(
-          "inline-flex items-center justify-center gap-2 transition-colors duration-150 cursor-pointer",
+          "inline-flex items-center justify-center gap-2 cursor-pointer transition-[background-color,border-color,color,box-shadow,transform] duration-150 active:translate-y-px",
           variantClasses[variant],
           sizeClasses[size],
           fullWidth && "w-full",
