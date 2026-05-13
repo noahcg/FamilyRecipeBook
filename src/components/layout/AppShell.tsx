@@ -172,11 +172,6 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         {children}
       </main>
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 bottom-[-180px] z-30 hidden h-[260px] bg-cream lg:hidden supports-[-webkit-touch-callout:none]:block"
-      />
-
       {/* Bottom nav */}
       <nav
         aria-label="Main navigation"
