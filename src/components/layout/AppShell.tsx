@@ -168,7 +168,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         </div>
       </aside>
 
-      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-24 lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0">
+      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0">
         {children}
       </main>
 
@@ -180,45 +180,30 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
       {/* Bottom nav */}
       <nav
         aria-label="Main navigation"
-        className="fixed bottom-0 inset-x-0 z-40 overflow-x-auto overscroll-x-contain px-3 pt-2 lg:hidden"
-        style={{
-          background: "var(--color-cream)",
-          minHeight: "calc(64px + env(safe-area-inset-bottom, 0px))",
-          paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom, 0px))",
-          boxShadow: "0 -1px 0 rgba(47,79,63,0.07), 0 -4px 16px rgba(47,79,63,0.06)",
-        }}
+        className="fixed inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] z-40 px-2 sm:px-4 lg:hidden"
       >
-        <div className="mx-auto flex w-max min-w-full items-center justify-start sm:justify-center">
+        <div
+          className="mx-auto flex h-[62px] max-w-[760px] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-[30px] border border-line-soft/90 bg-card/95 p-1.5 shadow-[0_12px_30px_rgba(75,53,31,0.16),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           {navItems.map(({ id, href, icon: Icon, label, isAdd }) => {
             const isActive = isActiveNavItem(pathname, href, id);
-
-            if (isAdd) {
-              return (
-                <Link
-                  key={id}
-                  href={href}
-                  aria-label="Add recipe"
-                  className="mx-1 flex h-9 min-w-[68px] shrink-0 items-center justify-center rounded-full bg-green-deep px-5 text-ink-inverse shadow-sm transition-transform active:scale-95 focus-visible:outline-none"
-                  style={{ boxShadow: "0 2px 8px rgba(35,68,54,0.35)" }}
-                >
-                  <Icon size={18} strokeWidth={2.5} />
-                </Link>
-              );
-            }
 
             return (
               <Link
                 key={id}
                 href={href}
-                aria-label={label}
+                aria-label={isAdd ? "Add recipe" : label}
                 aria-current={isActive ? "page" : undefined}
                 className={clsx(
-                  "flex min-w-[74px] shrink-0 flex-col items-center gap-1 px-3 py-2 transition-colors duration-150 focus-visible:outline-none",
-                  isActive ? "text-green-deep" : "text-ink-soft"
+                  "flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-colors duration-150 focus-visible:outline-none",
+                  isActive
+                    ? "min-w-[98px] bg-green-soft/80 text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]"
+                    : "min-w-[64px] text-ink-soft hover:bg-green-pale/70 hover:text-green-deep"
                 )}
               >
-                <Icon size={22} strokeWidth={isActive ? 2 : 1.5} />
-                <span className="text-[10px] font-semibold leading-none tracking-wide">{label}</span>
+                <Icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
+                <span className="max-w-[84px] truncate text-[10px] font-bold leading-none">{label}</span>
               </Link>
             );
           })}

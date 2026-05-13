@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -141,20 +142,47 @@ export default async function BookHomePage({ params }: Props) {
     <AppShell bookId={bookId}>
       <div className="relative min-h-dvh overflow-hidden px-4 py-6 sm:px-5 lg:rounded-tr-xl lg:px-8 lg:py-8">
         <div
-          aria-hidden="true"
-          className="pointer-events-none absolute right-[-8rem] top-[-9rem] hidden h-[470px] w-[55vw] min-w-[660px] bg-[url('/images/landing-cookbook-hero.png')] bg-cover bg-[center_42%] opacity-80 lg:block"
+          className="pointer-events-none absolute right-0 top-0 z-0 h-[430px] w-full overflow-hidden sm:h-[500px] lg:right-[-8rem] lg:top-[-9rem] lg:h-[470px] lg:w-[55vw] lg:min-w-[660px]"
           style={{
-            maskImage:
-              "linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
-            WebkitMaskImage:
-              "linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to bottom, black 0%, black 58%, transparent 100%)",
+            maskImage: [
+              "linear-gradient(to right, transparent 0%, black 22%)",
+              "linear-gradient(to top, transparent 0%, black 18%)",
+            ].join(", "),
+            WebkitMaskImage: [
+              "linear-gradient(to right, transparent 0%, black 22%)",
+              "linear-gradient(to top, transparent 0%, black 18%)",
+            ].join(", "),
             maskComposite: "intersect",
             WebkitMaskComposite: "source-in",
+            maskSize: "100% 100%, 100% 100%",
+            maskRepeat: "no-repeat",
           }}
-        />
-        <div className="relative mx-auto max-w-[1240px]">
+        >
+          <Image
+            src="/images/landing-cookbook-hero.png"
+            alt=""
+            fill
+            priority
+            sizes="(min-width: 1024px) 55vw, 100vw"
+            className="object-cover object-[74%_34%] opacity-[0.42] sm:object-[70%_48%] min-[993px]:opacity-80"
+            aria-hidden="true"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,233,0.08)_0%,rgba(247,243,233,0.38)_24%,rgba(247,243,233,0.82)_48%,var(--color-cream)_76%)] min-[993px]:bg-[linear-gradient(to_bottom,rgba(247,243,233,0)_0%,rgba(247,243,233,0.16)_58%,var(--color-cream)_100%)] lg:hidden"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 hidden bg-[linear-gradient(to_right,var(--color-cream)_0%,rgba(247,243,233,0.58)_24%,rgba(247,243,233,0)_56%),linear-gradient(to_bottom,rgba(247,243,233,0)_0%,rgba(247,243,233,0)_48%,rgba(247,243,233,0.72)_78%,var(--color-cream)_100%)] lg:block"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-cream)_0%,rgba(247,243,233,0.92)_20%,rgba(247,243,233,0.42)_58%,rgba(247,243,233,0.04)_100%)] sm:hidden"
+          />
+        </div>
+        <div className="relative z-10 mx-auto max-w-[1240px]">
           <header className="mb-5">
-            <div className="relative min-h-[340px] px-5 py-5 sm:px-6 lg:min-h-[360px] lg:px-8 lg:py-7">
+            <div className="relative min-h-[340px] py-5 sm:px-6 lg:min-h-[360px] lg:px-8 lg:py-7">
               <div className="relative max-w-[980px]">
                 <SectionEyebrow>{book.title}</SectionEyebrow>
                 <TimeOfDayHeadline />
@@ -211,7 +239,7 @@ export default async function BookHomePage({ params }: Props) {
                 </div>
               </div>
             </div>
-            <div className="px-5 sm:px-6 lg:px-8">
+            <div className="sm:px-6 lg:px-8">
               <div className="flex flex-col gap-3 rounded-md bg-paper-warm/45 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <p
                   className="text-xl leading-none text-accent-cinnamon"
