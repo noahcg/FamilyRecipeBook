@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -15,6 +16,7 @@ import {
   ShoppingCart,
   Sparkles,
   UtensilsCrossed,
+  X,
 } from "lucide-react";
 import { CookbookIcon } from "@/components/ui/CookbookIcon";
 import { APP_VERSION } from "@/lib/version";
@@ -59,6 +61,7 @@ function isActiveNavItem(pathname: string, href: string, id?: string) {
 
 export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShellProps) {
   const pathname = usePathname();
+  const [isBookShelfOpen, setIsBookShelfOpen] = useState(false);
   const navItems = NAV(bookId);
   const { bookTitle: bookTitleCtx, books } = useBook();
   const bookTitle = bookTitleProp ?? bookTitleCtx;
@@ -172,13 +175,97 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         {children}
       </main>
 
+      <button
+        type="button"
+        aria-label="Open cookbooks"
+        aria-expanded={isBookShelfOpen}
+        onClick={() => setIsBookShelfOpen(true)}
+        className="fixed right-0 top-[42dvh] z-40 flex h-[96px] w-9 flex-col items-center justify-center gap-1 rounded-l-[18px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md lg:hidden"
+      >
+        <CookbookIcon name={visibleBooks.find((userBook) => userBook.id === bookId)?.icon ?? "bowl"} size={18} />
+        <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-extrabold leading-none">
+          Books
+        </span>
+      </button>
+
+      {isBookShelfOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close cookbooks"
+            className="absolute inset-0 bg-ink/18"
+            onClick={() => setIsBookShelfOpen(false)}
+          />
+          <section className="relative ml-auto flex h-full w-[min(86vw,360px)] flex-col border-l border-line-soft bg-card px-4 py-5">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+                  Cookbooks
+                </p>
+                <h2
+                  className="mt-1 truncate text-2xl font-bold leading-tight text-green-deep"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  Choose a book
+                </h2>
+              </div>
+              <button
+                type="button"
+                aria-label="Close cookbooks"
+                onClick={() => setIsBookShelfOpen(false)}
+                className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line-soft bg-white-soft text-green-deep"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+              {visibleBooks.map((userBook) => {
+                const isCurrent = userBook.id === bookId;
+
+                return (
+                  <Link
+                    key={userBook.id}
+                    href={`/app/books/${userBook.id}`}
+                    aria-current={isCurrent ? "page" : undefined}
+                    onClick={() => setIsBookShelfOpen(false)}
+                    className={clsx(
+                      "flex items-center gap-3 rounded-md border px-3 py-3 text-sm transition-colors",
+                      isCurrent
+                        ? "border-green-sage bg-green-soft/75 text-green-deep"
+                        : "border-line-soft bg-white-soft/75 text-ink hover:bg-green-pale"
+                    )}
+                  >
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-sm border border-line-soft bg-card">
+                      <CookbookIcon name={userBook.icon ?? "bowl"} size={20} />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-extrabold">
+                      {userBook.title}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <Link
+              href="/onboarding/create-book"
+              onClick={() => setIsBookShelfOpen(false)}
+              className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-md border border-dashed border-accent-cinnamon/55 bg-white-soft text-sm font-extrabold text-accent-cinnamon"
+            >
+              <Plus size={17} />
+              New cookbook
+            </Link>
+          </section>
+        </div>
+      )}
+
       {/* Bottom nav */}
       <nav
         aria-label="Main navigation"
         className="fixed inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] z-40 px-2 sm:px-4 lg:hidden"
       >
         <div
-          className="mx-auto flex h-[62px] max-w-[760px] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-[30px] border border-line-soft/90 bg-card/95 p-1.5 shadow-[0_12px_30px_rgba(75,53,31,0.16),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mx-auto flex h-[62px] max-w-[760px] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-[30px] border border-line-soft/90 bg-card/95 p-1.5 backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {navItems.map(({ id, href, icon: Icon, label, isAdd }) => {
@@ -192,9 +279,11 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                 aria-current={isActive ? "page" : undefined}
                 className={clsx(
                   "flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-colors duration-150 focus-visible:outline-none",
-                  isActive
-                    ? "min-w-[98px] bg-green-soft/80 text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]"
-                    : "min-w-[64px] text-ink-soft hover:bg-green-pale/70 hover:text-green-deep"
+                  isAdd
+                    ? "min-w-[64px] bg-accent-terracotta text-ink-inverse hover:bg-accent-terracotta-dark"
+                    : isActive
+                      ? "min-w-[98px] bg-green-soft/80 text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]"
+                      : "min-w-[64px] text-ink-soft hover:bg-green-pale/70 hover:text-green-deep"
                 )}
               >
                 <Icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
