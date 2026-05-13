@@ -26,7 +26,6 @@ interface HomeRecipe extends Recipe {
   loveCount?: number;
 }
 
-const HEADER_PANTRY_ITEMS = ["Chicken", "Garlic", "Rice", "Spinach"];
 const PANTRY_ITEMS = ["chicken thighs", "spinach", "lemons", "rice", "yogurt"];
 const WEEK_DAYS = [
   { day: "M", planned: true },
@@ -181,8 +180,8 @@ export default async function BookHomePage({ params }: Props) {
           />
         </div>
         <div className="relative z-10 mx-auto max-w-[1240px]">
-          <header className="mb-5">
-            <div className="relative min-h-[340px] py-5 sm:px-6 lg:min-h-[360px] lg:px-8 lg:py-7">
+          <header className="mb-3">
+            <div className="relative min-h-[340px] py-5 sm:px-6 lg:min-h-[300px] lg:px-8 lg:py-7">
               <div className="relative max-w-[980px]">
                 <SectionEyebrow>{book.title}</SectionEyebrow>
                 <TimeOfDayHeadline />
@@ -207,56 +206,16 @@ export default async function BookHomePage({ params }: Props) {
                     </Link>
                   ))}
                 </div>
-
-                <div className="mt-7 border-t border-line-soft pt-5 lg:mt-8">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="mr-1 text-sm font-extrabold text-accent-cinnamon">You have:</span>
-                      {HEADER_PANTRY_ITEMS.map((item) => (
-                        <span
-                          key={item}
-                          className="rounded-full border border-line-soft bg-card/80 px-3 py-1.5 text-sm font-bold text-green-deep"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                      <Link
-                        href={`/app/books/${bookId}/ideas`}
-                        className="rounded-full border border-dashed border-accent-cinnamon/50 bg-white-soft/60 px-3 py-1.5 text-sm font-extrabold text-accent-cinnamon transition-colors hover:bg-card"
-                      >
-                        + Add more
-                      </Link>
-                    </div>
-                    <Link
-                      href={`/app/books/${bookId}/meal-plan`}
-                      className="inline-flex items-center text-sm font-extrabold text-green-deep hover:underline"
-                    >
-                      Tonight: <span className="ml-1 text-ink-muted">No plan yet</span>
-                      <span className="mx-2 text-accent-cinnamon" aria-hidden="true">→</span>
-                      Plan dinner
-                    </Link>
-                  </div>
-                </div>
               </div>
             </div>
             <div className="sm:px-6 lg:px-8">
-              <div className="flex flex-col gap-3 rounded-md bg-paper-warm/45 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="rounded-md bg-paper-warm/45 px-4 py-3">
                 <p
                   className="text-xl leading-none text-accent-cinnamon"
                   style={{ fontFamily: "var(--font-caveat)" }}
                 >
-                  Tonight starts with what is already in the kitchen.
+                  The right recipe makes the next step easy.
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {["Fresh", "Fast", "Family-style"].map((note) => (
-                    <span
-                      key={note}
-                      className="rounded-full bg-white-soft/70 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.08em] text-green-deep"
-                    >
-                      {note}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
           </header>
@@ -311,11 +270,11 @@ export default async function BookHomePage({ params }: Props) {
                 </div>
               </DashboardCard>
 
-              <div className="grid gap-6 border-y border-line-soft py-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-                <section className="border-line-soft lg:border-r lg:pr-6">
+              <div className="grid gap-9 border-y border-line-soft py-9 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10">
+                <section className="border-line-soft lg:border-r lg:pr-10">
                   <SectionHeader eyebrow="Smart kitchen notes" title="Small nudges" />
-                  <div className="mt-4 space-y-4">
-                    <div className="flex gap-3">
+                  <div className="mt-5 space-y-5">
+                    <div className="flex gap-4">
                       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-accent-honey/20 text-accent-cinnamon">
                         <CalendarDays size={17} />
                       </span>
@@ -324,7 +283,7 @@ export default async function BookHomePage({ params }: Props) {
                         <p className="mt-0.5 text-sm text-ink-muted">Plan one easy meal before the week gets away.</p>
                       </div>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-4">
                       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-green-soft text-green-deep">
                         <ShoppingCart size={17} />
                       </span>
@@ -336,9 +295,9 @@ export default async function BookHomePage({ params }: Props) {
                   </div>
                 </section>
 
-                <section>
+                <section className="lg:pl-1">
                   <SectionHeader eyebrow="Pick up where you left off" title="Continue cooking" />
-                  <div className="mt-4 flex gap-4">
+                  <div className="mt-5 flex gap-5">
                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale">
                       {latestRecipe?.photo_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
