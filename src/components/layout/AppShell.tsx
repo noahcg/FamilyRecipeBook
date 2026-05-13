@@ -88,7 +88,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                     "flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
                     isActive
                       ? "bg-green-soft/70 text-green-deep shadow-xs"
-                      : "text-ink hover:bg-card/70"
+                      : "text-ink hover:bg-green-soft/55 hover:text-green-deep"
                   )}
                 >
                   <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
@@ -272,7 +272,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                     ? "min-w-[64px] bg-accent-terracotta text-ink-inverse hover:bg-accent-terracotta-dark"
                     : isActive
                       ? "min-w-[98px] bg-green-soft/80 text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]"
-                      : "min-w-[64px] text-ink-soft hover:bg-green-pale/70 hover:text-green-deep"
+                      : "min-w-[64px] text-ink-soft hover:bg-green-soft/65 hover:text-green-deep"
                 )}
               >
                 <Icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
