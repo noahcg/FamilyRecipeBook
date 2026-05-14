@@ -2,6 +2,8 @@
 
 Home Cooked should be treated as a real production product, not a proof of concept. The next work should reduce risk, make behavior predictable, and give the app enough operational discipline to support real families using real data.
 
+For the step-by-step implementation checklist, see [PRODUCTION_EXECUTION_PLAN.md](./PRODUCTION_EXECUTION_PLAN.md).
+
 ## 1. Stabilize Core Product Flows
 
 These are the flows that must feel boringly reliable before anything else gets expanded.
