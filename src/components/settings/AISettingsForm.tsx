@@ -17,7 +17,7 @@ const PROVIDERS: { id: AIProvider; label: string; placeholder: string; hint: str
     id: "openai",
     label: "OpenAI",
     placeholder: "sk-...",
-    hint: "Works with GPT-4o mini and other OpenAI models.",
+    hint: "Enables smarter recipe ideas and optional photo import cleanup.",
   },
   {
     id: "anthropic",
@@ -124,7 +124,7 @@ export function AISettingsForm({ currentProvider, currentKey }: AISettingsFormPr
           </div>
           {error && <p className="mt-1.5 text-xs text-danger">{error}</p>}
           <p className="mt-1.5 text-xs text-ink-soft">
-            Stored privately — only you can see it, and it&apos;s only used for recipe generation.
+            Stored privately — only you can see it, and it&apos;s only used when you choose AI-powered recipe features.
             {hasActiveKey && " Clear the field and save to remove it."}
           </p>
         </div>

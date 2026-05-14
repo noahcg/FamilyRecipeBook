@@ -1,29 +1,10 @@
+import { type ImportedRecipe } from "@/lib/recipeImportSchema";
+
 const MAX_IMPORT_BYTES = 700 * 1024;
 const MAX_IMPORT_DIMENSION = 1800;
 const MIN_IMPORT_DIMENSION = 1100;
 
-export type ImportedRecipe = {
-  title: string;
-  description: string;
-  source_name: string;
-  story: string;
-  prep_minutes: number;
-  cook_minutes: number;
-  servings: number;
-  category: string;
-  tags: string[];
-  ingredients: {
-    quantity: string;
-    unit: string;
-    item: string;
-    note: string;
-  }[];
-  instructions: {
-    body: string;
-  }[];
-  confidence: "high" | "medium" | "low";
-  warnings: string[];
-};
+export type { ImportedRecipe } from "@/lib/recipeImportSchema";
 
 type OcrProgress = {
   status: string;

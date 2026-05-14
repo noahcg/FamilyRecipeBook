@@ -140,7 +140,7 @@ export function SettingsPageContent({
 
         <SettingsSection
           title="Recipe AI"
-          description="Controls how recipe ideas are generated from the Ideas page when you describe what is in your pantry."
+          description="Controls optional AI features like recipe ideas and smarter cookbook photo imports."
         >
           <div className="space-y-4">
             <div className="recipe-card p-5">
@@ -168,8 +168,9 @@ export function SettingsPageContent({
             <div className="recipe-card p-5">
               <p className="mb-1 text-sm font-semibold text-ink">Use your own API key</p>
               <p className="mb-4 text-sm leading-relaxed text-ink-muted">
-                If you have your own key, it will be used instead of the default. Your key is
-                stored privately and is only visible to you.
+                If you have your own key, it will be used instead of the default for recipe ideas,
+                and it can power optional OpenAI cleanup after free photo OCR. Photo imports never
+                use the app owner&apos;s OpenAI key.
               </p>
               <AISettingsForm
                 currentProvider={aiSettings.ai_provider}

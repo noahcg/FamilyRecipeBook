@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Camera, CheckCircle2, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
+import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
 import { createRecipeSchema, type CreateRecipeInput } from "@/lib/validators/recipe";
 import { createRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { uploadRecipeImage } from "@/lib/upload";
@@ -36,9 +37,10 @@ interface RecipeFormProps {
   bookId: string;
   recipe?: RecipeWithRelations;
   onSuccessRedirect?: string;
+  hasOpenAIKey?: boolean;
 }
 
-export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProps) {
+export function RecipeForm({ bookId, recipe, onSuccessRedirect, hasOpenAIKey = false }: RecipeFormProps) {
   const router = useRouter();
   const { userId } = useUser();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -48,10 +50,13 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
   const [importFileName, setImportFileName] = useState<string | null>(null);
   const [importedRecipe, setImportedRecipe] = useState<ImportedRecipe | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [preparedImportImage, setPreparedImportImage] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState(0);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [isImprovingImport, setIsImprovingImport] = useState(false);
   const [isImportDragging, setIsImportDragging] = useState(false);
+  const [importSource, setImportSource] = useState<"local" | "openai" | null>(null);
   const [recipeImportedViaUpload, setRecipeImportedViaUpload] = useState(
     recipe?.import_method === "image_upload"
   );
@@ -141,17 +146,21 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
     setImportFileName(file.name);
     setImportedRecipe(null);
     setImportError(null);
+    setPreparedImportImage(null);
+    setImportSource(null);
     setImportProgress(0);
     setImportStatus("Preparing photo");
     setIsImporting(true);
 
     try {
       const imageDataUrl = await prepareRecipeImportImage(file);
+      setPreparedImportImage(imageDataUrl);
       const result = await importRecipeWithLocalOcr(imageDataUrl, (progress) => {
         setImportStatus(progress.status);
         setImportProgress(progress.progress);
       });
       setImportedRecipe(result);
+      setImportSource("local");
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "Could not import that recipe photo.");
     } finally {
@@ -180,6 +189,24 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
     }
 
     await importRecipePhoto(file);
+  }
+
+  async function handleImproveImport() {
+    if (!preparedImportImage || isImprovingImport) return;
+
+    setIsImprovingImport(true);
+    setImportError(null);
+
+    const result = await improveRecipeImportWithOpenAI(bookId, preparedImportImage);
+    setIsImprovingImport(false);
+
+    if (!result.success) {
+      setImportError(result.error);
+      return;
+    }
+
+    setImportedRecipe(result.data);
+    setImportSource("openai");
   }
 
   function formHasContent() {
@@ -298,8 +325,8 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-ink">Import from cookbook photo</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Take or upload a clear photo of a printed recipe. OCR runs in your browser,
-                    and the image is used only to fill this form for review.
+                    Free OCR runs in your browser first. For better extraction, you can improve
+                    the result with your own OpenAI API key.
                   </p>
                 </div>
               </div>
@@ -411,6 +438,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                         Found {importedRecipe.ingredients.length} ingredients and{" "}
                         {importedRecipe.instructions.length} steps. Confidence:{" "}
                         {importedRecipe.confidence}.
+                        {importSource === "openai" && " Improved with OpenAI."}
                       </p>
                     </div>
                   </div>
@@ -430,6 +458,36 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                   >
                     Apply to recipe form
                   </Button>
+                  {preparedImportImage && importSource !== "openai" && (
+                    hasOpenAIKey ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleImproveImport}
+                        loading={isImprovingImport}
+                        className="mt-2 w-full"
+                      >
+                        Improve with OpenAI
+                      </Button>
+                    ) : (
+                      <div className="mt-3 rounded-md border border-accent-honey/35 bg-paper-warm/70 p-3">
+                        <p className="text-xs font-bold text-green-deep">
+                          Want better extraction?
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                          Add your OpenAI API key in{" "}
+                          <a
+                            href={`/app/books/${bookId}/settings`}
+                            className="font-bold text-green-deep underline underline-offset-2"
+                          >
+                            Settings
+                          </a>
+                          . Your key is only used when you choose to improve an import.
+                        </p>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
             </section>
