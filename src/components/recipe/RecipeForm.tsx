@@ -384,7 +384,6 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
                 ref={importFileRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                capture="environment"
                 onChange={handleImportImageChange}
                 className="sr-only"
               />
