@@ -37,6 +37,7 @@ cp .env.local.example .env.local
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → Workers AI → Use REST API |
 | `CLOUDFLARE_WORKERS_AI_API_TOKEN` | Cloudflare Dashboard → Workers AI → Create Workers AI API Token |
 | `CLOUDFLARE_WORKERS_AI_MODEL` | Optional. Defaults to `@cf/meta/llama-3.1-8b-instruct` |
+| `ADMIN_EMAILS` | Optional. Comma-separated user emails allowed to access `/app/admin` |
 
 > **Important:** Never commit `.env.local` or expose `SUPABASE_SERVICE_ROLE_KEY` to the browser. It bypasses all Row Level Security policies and is used only in server actions.
 

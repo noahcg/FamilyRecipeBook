@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { BookProvider } from "@/lib/context/BookContext";
 import { getUserBooks } from "@/lib/actions/books";
 import { requireUser } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
 
 interface Props {
   children: React.ReactNode;
@@ -42,6 +43,7 @@ export default async function BookLayout({ children, params }: Props) {
         icon: userBook.icon,
       }))}
       defaultBookId={defaultBookId}
+      isAdmin={isAdminEmail(user.email)}
     >
       {children}
     </BookProvider>

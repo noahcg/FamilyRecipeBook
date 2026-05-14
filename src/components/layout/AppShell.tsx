@@ -11,6 +11,7 @@ import {
   Home,
   ListChecks,
   LogOut,
+  ShieldCheck,
   Plus,
   Settings,
   ShoppingCart,
@@ -64,7 +65,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
   const pathname = usePathname();
   const [isBookShelfOpen, setIsBookShelfOpen] = useState(false);
   const navItems = NAV(bookId);
-  const { bookTitle: bookTitleCtx, books } = useBook();
+  const { bookTitle: bookTitleCtx, books, isAdmin } = useBook();
   const bookTitle = bookTitleProp ?? bookTitleCtx;
   const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle, icon: "bowl" }];
 
@@ -132,6 +133,15 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         </div>
 
         <div className="mt-auto shrink-0 border-t border-line-soft p-5">
+          {isAdmin && (
+            <Link
+              href="/app/admin"
+              className="mb-1 flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold text-accent-cinnamon transition-colors hover:bg-accent-honey/20 hover:text-accent-terracotta-dark"
+            >
+              <ShieldCheck size={17} className="shrink-0" />
+              <span>Admin</span>
+            </Link>
+          )}
           <Link
             href={`/app/books/${bookId}/settings`}
             aria-current={isActiveNavItem(pathname, `/app/books/${bookId}/settings`, "settings") ? "page" : undefined}
