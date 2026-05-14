@@ -4,12 +4,17 @@ import { useState, useRef } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, GripVertical, ImagePlus } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
 import { createRecipeSchema, type CreateRecipeInput } from "@/lib/validators/recipe";
 import { createRecipe, updateRecipe } from "@/lib/actions/recipes";
 import { uploadRecipeImage } from "@/lib/upload";
+import {
+  importRecipeWithLocalOcr,
+  prepareRecipeImportImage,
+  type ImportedRecipe,
+} from "@/lib/imageImport";
 import { selectRecipeImage } from "@/lib/actions/pexels";
 import { useUser } from "@/lib/hooks/useUser";
 import type { RecipeWithRelations } from "@/lib/types";
@@ -37,8 +42,19 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
   const router = useRouter();
   const { userId } = useUser();
   const fileRef = useRef<HTMLInputElement>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(recipe?.photo_url ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
+  const [importedRecipe, setImportedRecipe] = useState<ImportedRecipe | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isImportDragging, setIsImportDragging] = useState(false);
+  const [recipeImportedViaUpload, setRecipeImportedViaUpload] = useState(
+    recipe?.import_method === "image_upload"
+  );
   const [serverError, setServerError] = useState<string | null>(null);
   const isEdit = !!recipe;
 
@@ -46,6 +62,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
     register,
     control,
     setValue,
+    getValues,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreateRecipeInput>({
@@ -62,6 +79,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
           servings: recipe.servings ?? undefined,
           category: recipe.category ?? "",
           tags: recipe.tags ?? [],
+          import_method: recipe.import_method,
           ingredients: recipe.ingredients?.length
             ? recipe.ingredients.map((i) => ({
                 quantity: i.quantity ?? "",
@@ -81,6 +99,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
           source_name: "",
           story: "",
           tags: [],
+          import_method: undefined,
           ingredients: [{ quantity: "", unit: "", item: "", note: "" }],
           instructions: [{ body: "" }],
         },
@@ -90,12 +109,14 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
     fields: ingredients,
     append: addIngredient,
     remove: removeIngredient,
+    replace: replaceIngredients,
   } = useFieldArray({ control, name: "ingredients" });
 
   const {
     fields: instructions,
     append: addInstruction,
     remove: removeInstruction,
+    replace: replaceInstructions,
   } = useFieldArray({ control, name: "instructions" });
 
   const selectedCategory = useWatch({ control, name: "category" });
@@ -112,6 +133,97 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
     const value = e.target.value.trim();
     setPhotoFile(null);
     setPhotoPreview(value || null);
+  }
+
+  async function importRecipePhoto(file: File) {
+    if (!file) return;
+
+    setImportFileName(file.name);
+    setImportedRecipe(null);
+    setImportError(null);
+    setImportProgress(0);
+    setImportStatus("Preparing photo");
+    setIsImporting(true);
+
+    try {
+      const imageDataUrl = await prepareRecipeImportImage(file);
+      const result = await importRecipeWithLocalOcr(imageDataUrl, (progress) => {
+        setImportStatus(progress.status);
+        setImportProgress(progress.progress);
+      });
+      setImportedRecipe(result);
+    } catch (error) {
+      setImportError(error instanceof Error ? error.message : "Could not import that recipe photo.");
+    } finally {
+      setIsImporting(false);
+      setImportStatus(null);
+      if (importFileRef.current) importFileRef.current.value = "";
+    }
+  }
+
+  async function handleImportImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) await importRecipePhoto(file);
+  }
+
+  async function handleImportDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsImportDragging(false);
+    if (isImporting) return;
+
+    const file = Array.from(e.dataTransfer.files).find((candidate) =>
+      candidate.type.startsWith("image/")
+    );
+    if (!file) {
+      setImportError("Drop a JPEG, PNG, or WebP image of the recipe.");
+      return;
+    }
+
+    await importRecipePhoto(file);
+  }
+
+  function formHasContent() {
+    const values = getValues();
+    return Boolean(
+      values.title?.trim() ||
+        values.description?.trim() ||
+        values.source_name?.trim() ||
+        values.story?.trim() ||
+        values.category?.trim() ||
+        values.prep_minutes ||
+        values.cook_minutes ||
+        values.servings ||
+        values.ingredients?.some((ingredient) =>
+          [ingredient.quantity, ingredient.unit, ingredient.item, ingredient.note].some((value) =>
+            value?.trim()
+          )
+        ) ||
+        values.instructions?.some((instruction) => instruction.body?.trim())
+    );
+  }
+
+  function applyImportedRecipe() {
+    if (!importedRecipe) return;
+
+    if (
+      formHasContent() &&
+      !window.confirm("Replace the current recipe fields with the imported text?")
+    ) {
+      return;
+    }
+
+    setValue("title", importedRecipe.title, { shouldDirty: true, shouldValidate: true });
+    setValue("description", importedRecipe.description, { shouldDirty: true });
+    setValue("source_name", importedRecipe.source_name, { shouldDirty: true });
+    setValue("story", importedRecipe.story, { shouldDirty: true });
+    setValue("prep_minutes", importedRecipe.prep_minutes || undefined, { shouldDirty: true });
+    setValue("cook_minutes", importedRecipe.cook_minutes || undefined, { shouldDirty: true });
+    setValue("servings", importedRecipe.servings || undefined, { shouldDirty: true });
+    setValue("category", importedRecipe.category, { shouldDirty: true });
+    setValue("tags", importedRecipe.tags, { shouldDirty: true });
+    replaceIngredients(importedRecipe.ingredients);
+    replaceInstructions(importedRecipe.instructions);
+    setRecipeImportedViaUpload(true);
   }
 
   async function onSubmit(data: CreateRecipeInput) {
@@ -135,7 +247,11 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
       if (auto) photoUrl = auto;
     }
 
-    const payload = { ...data, photo_url: photoUrl };
+    const payload = {
+      ...data,
+      photo_url: photoUrl,
+      import_method: recipeImportedViaUpload ? "image_upload" : data.import_method,
+    } satisfies CreateRecipeInput;
 
     if (isEdit && recipe) {
       const result = await updateRecipe(bookId, recipe.id, payload);
@@ -164,6 +280,161 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect }: RecipeFormProp
 
         {/* ── Left column: photo + about + details ── */}
         <div className="space-y-6">
+          {!isEdit && (
+            <section
+              className="rounded-xl border border-line p-4"
+              style={{ background: "var(--color-card)" }}
+            >
+              <div className="flex items-start gap-3">
+                <span
+                  className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    background: "var(--color-sage-pale)",
+                    color: "var(--color-deep-green)",
+                  }}
+                >
+                  <WandSparkles size={18} strokeWidth={1.8} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-ink">Import from cookbook photo</p>
+                  <p className="mt-1 text-sm leading-5 text-ink-soft">
+                    Take or upload a clear photo of a printed recipe. OCR runs in your browser,
+                    and the image is used only to fill this form for review.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (!isImporting) importFileRef.current?.click();
+                }}
+                onKeyDown={(e) => {
+                  if ((e.key === "Enter" || e.key === " ") && !isImporting) {
+                    e.preventDefault();
+                    importFileRef.current?.click();
+                  }
+                }}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  if (!isImporting) setIsImportDragging(true);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (!isImporting) setIsImportDragging(true);
+                }}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                    setIsImportDragging(false);
+                  }
+                }}
+                onDrop={handleImportDrop}
+                className={clsx(
+                  "mt-4 rounded-lg border-2 border-dashed p-4 text-center transition-colors",
+                  "focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]",
+                  isImportDragging
+                    ? "border-green-deep bg-green-pale"
+                    : "border-line bg-paper-soft hover:border-green-sage hover:bg-green-pale/60",
+                  isImporting && "cursor-wait opacity-80"
+                )}
+              >
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Camera size={20} className="text-green-deep" strokeWidth={1.8} />
+                  <p className="text-sm font-bold text-ink">
+                    {isImporting ? "Reading photo" : "Drop a recipe photo here"}
+                  </p>
+                  <p className="text-xs text-ink-soft">
+                    or choose a JPEG, PNG, or WebP from your device
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    importFileRef.current?.click();
+                  }}
+                  loading={isImporting}
+                  className="mt-3 justify-center"
+                >
+                  Choose photo
+                </Button>
+                {importFileName && (
+                  <p className="mx-auto mt-2 max-w-full truncate text-xs font-medium text-ink-soft">
+                    {importFileName}
+                  </p>
+                )}
+              </div>
+              {isImporting && (
+                <div className="mt-3">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-card-muted">
+                    <div
+                      className="h-full rounded-full bg-green-deep transition-[width]"
+                      style={{ width: `${Math.max(8, importProgress)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-ink-soft">
+                    {importStatus ?? "Reading recipe text"}
+                  </p>
+                </div>
+              )}
+              <input
+                ref={importFileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                onChange={handleImportImageChange}
+                className="sr-only"
+              />
+
+              {importError && (
+                <div className="mt-3 flex gap-2 rounded-md border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+                  <AlertTriangle size={16} className="mt-0.5 shrink-0" strokeWidth={1.8} />
+                  <p>{importError}</p>
+                </div>
+              )}
+
+              {importedRecipe && (
+                <div className="mt-4 rounded-lg border border-line bg-paper-soft p-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2
+                      size={16}
+                      className="mt-0.5 shrink-0 text-green-deep"
+                      strokeWidth={1.8}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-ink">
+                        {importedRecipe.title}
+                      </p>
+                      <p className="mt-1 text-xs text-ink-soft">
+                        Found {importedRecipe.ingredients.length} ingredients and{" "}
+                        {importedRecipe.instructions.length} steps. Confidence:{" "}
+                        {importedRecipe.confidence}.
+                      </p>
+                    </div>
+                  </div>
+                  {importedRecipe.warnings.length > 0 && (
+                    <ul className="mt-3 space-y-1 text-xs text-ink-soft">
+                      {importedRecipe.warnings.map((warning) => (
+                        <li key={warning}>- {warning}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={applyImportedRecipe}
+                    className="mt-3 w-full"
+                  >
+                    Apply to recipe form
+                  </Button>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Photo upload */}
           <div>

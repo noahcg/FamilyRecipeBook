@@ -64,6 +64,9 @@ export function RecipeDetail({
     (userRole === "contributor" && recipe.created_by === userId);
 
   const sourceName = recipe.source_name ?? recipe.creator?.full_name ?? "Family";
+  const wasAddedViaUpload = recipe.import_method === "image_upload";
+  const addedByName = wasAddedViaUpload ? recipe.creator?.full_name ?? "Family" : sourceName;
+  const addedByLabel = `${addedByName}${wasAddedViaUpload ? " (via upload)" : ""}`;
   const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
   const noteCount = (recipe.stories?.length ?? 0) + (recipe.story ? 1 : 0);
   const addedDate = new Date(recipe.created_at).toLocaleDateString("en-US", {
@@ -74,9 +77,9 @@ export function RecipeDetail({
   const activityItems = [
     {
       id: "created",
-      label: `${sourceName} added this recipe`,
+      label: `${addedByLabel} added this recipe`,
       date: addedDate,
-      initials: sourceName.slice(0, 1).toUpperCase(),
+      initials: addedByName.slice(0, 1).toUpperCase(),
     },
     ...(recipe.stories ?? []).slice(0, 2).map((storyItem) => ({
       id: storyItem.id,
@@ -268,7 +271,7 @@ export function RecipeDetail({
                 {recipe.title}
               </h1>
               <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/86">
-                <span className="font-semibold text-white">Added by {sourceName}</span>
+                <span className="font-semibold text-white">Added by {addedByLabel}</span>
                 <span>{addedDate}</span>
                 {recipe.servings != null && (
                   <span className="inline-flex items-center gap-1.5">

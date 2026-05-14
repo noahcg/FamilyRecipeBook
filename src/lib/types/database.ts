@@ -58,6 +58,7 @@ export interface Recipe {
   servings: number | null;
   category: string | null;
   tags: string[];
+  import_method: "image_upload" | null;
   created_by: string;
   created_at: string;
   updated_at: string;
