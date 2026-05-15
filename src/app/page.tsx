@@ -1,38 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  BookHeart,
+  BookMarked,
   BookOpen,
-  Camera,
+  Check,
+  FolderHeart,
+  HeartHandshake,
   Leaf,
-  LibraryBig,
-  NotebookPen,
+  Paperclip,
   Star,
-  Users,
+  Utensils,
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
-
-const FEATURES = [
-  {
-    icon: BookOpen,
-    title: "Save family recipes",
-    body: "Capture recipes with ingredients, instructions, and photos so they’re never lost.",
-  },
-  {
-    icon: NotebookPen,
-    title: "Add stories and memories",
-    body: "Every recipe has a story. Add notes, memories, and moments that make it special.",
-  },
-  {
-    icon: Users,
-    title: "Bring family into the book",
-    body: "Invite family to view, add, and share their favorite recipes and memories.",
-  },
-  {
-    icon: LibraryBig,
-    title: "Build collections",
-    body: "Organize recipes into collections for holidays, quick meals, Sunday dinners, and more.",
-  },
-];
 
 const AVATARS = [
   { name: "M", color: "#EAC6B8" },
@@ -40,6 +20,112 @@ const AVATARS = [
   { name: "L", color: "#F5D48D" },
   { name: "A", color: "#E8D5B8" },
 ];
+
+const COLLECTIONS = [
+  "Sunday Dinners",
+  "Holiday Favorites",
+  "Quick & Easy",
+  "Desserts",
+];
+
+function LeafLine({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 130 58"
+      className={className}
+      fill="none"
+    >
+      <path
+        d="M18 48C42 28 68 15 113 11"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path d="M39 31c-13-2-22 3-27 14 13 2 22-3 27-14Z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M57 22c-8-10-18-12-29-6 8 10 18 12 29 6Z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M78 16c-9-8-19-8-28 0 9 8 19 8 28 0Z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M101 12c-6-10-15-14-27-10 6 11 16 14 27 10Z" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
+function HeartSwoosh({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 95 54"
+      className={className}
+      fill="none"
+    >
+      <path
+        d="M16 22c8-9 18 0 14 9-3 7-12 12-12 12S7 35 6 27c-1-9 9-12 16-5Z"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M39 36c16 4 33-1 48-14"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function BotanicalSprig({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 92 128"
+      className={className}
+      fill="none"
+    >
+      <path d="M18 116C31 75 45 42 75 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M30 88C15 84 7 72 5 54c16 4 25 15 25 34Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M42 63C27 56 21 43 24 27c14 7 21 20 18 36Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M55 43c-1-16 7-27 23-34 1 17-7 29-23 34Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M24 102c15-1 27 6 36 21-17 0-29-7-36-21Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function FeatureCopy({
+  icon: Icon,
+  tone,
+  title,
+  body,
+}: {
+  icon: typeof BookHeart;
+  tone: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="max-w-[25rem]">
+      <span className={`mb-5 grid size-14 place-items-center rounded-full ${tone}`}>
+        <Icon aria-hidden="true" size={24} strokeWidth={1.75} />
+      </span>
+      <h3
+        className="text-[1.55rem] font-bold leading-[1.08] text-green-deep sm:text-[1.8rem]"
+        style={{ fontFamily: "var(--font-playfair)" }}
+      >
+        {title}
+      </h3>
+      <p className="mt-3 text-[1rem] leading-relaxed text-ink-muted sm:text-[1.08rem]">
+        {body}
+      </p>
+      <Link
+        href="/sign-up"
+        className="mt-5 inline-flex text-[1rem] font-extrabold text-accent-terracotta transition hover:text-green-deep"
+      >
+        Learn more →
+      </Link>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   return (
@@ -158,96 +244,217 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto w-full max-w-[1360px] px-4 py-12 sm:px-8 lg:px-12 lg:py-16">
-          <div className="rounded-[1.35rem] border border-line bg-paper-deep/70 p-4 shadow-soft sm:rounded-[2rem] sm:p-7 lg:p-8">
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {FEATURES.map(({ icon: Icon, title, body }) => (
-                <article
-                  key={title}
-                  className="rounded-[var(--radius-lg)] border border-line bg-card p-5 shadow-[var(--shadow-card)] sm:p-6"
-                >
-                  <span className="mb-6 grid size-12 place-items-center rounded-[18px] bg-green-soft text-green-deep">
-                    <Icon aria-hidden="true" size={22} strokeWidth={1.8} />
-                  </span>
-                  <h2
-                    className="text-xl font-bold leading-tight text-green-deep"
-                    style={{ fontFamily: "var(--font-playfair)" }}
-                  >
-                    {title}
-                  </h2>
-                  <p className="mt-3 min-h-24 text-sm leading-relaxed text-ink-muted">
-                    {body}
-                  </p>
-                  <Link
-                    href="/sign-up"
-                    className="mt-6 inline-flex font-extrabold text-accent-terracotta transition hover:text-green-deep"
-                  >
-                    Learn more →
-                  </Link>
-                </article>
-              ))}
-            </div>
+        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-10 pt-14 sm:px-8 sm:pt-18 lg:px-12">
+          <div className="text-center">
+            <LeafLine className="mx-auto mb-4 h-10 w-24 text-green-sage" />
+            <h2
+              className="text-[clamp(2.75rem,7vw,5.5rem)] font-semibold italic leading-[0.98] tracking-normal text-green-deep"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              More than recipes.
+              <span className="relative mt-1 block text-accent-terracotta">
+                It&rsquo;s your story.
+                <HeartSwoosh className="absolute left-[calc(50%+8.5rem)] top-2 hidden h-12 w-20 text-accent-terracotta sm:block lg:left-[calc(50%+13rem)] lg:top-5" />
+              </span>
+            </h2>
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-16 pt-2 sm:px-8 lg:px-12">
-          <div className="grid overflow-hidden rounded-[1.35rem] border border-line bg-[linear-gradient(135deg,var(--color-card),var(--color-paper-deep))] shadow-[var(--shadow-card)] sm:rounded-[2.3rem] lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="relative p-5 sm:p-8 lg:p-10">
-              <Leaf
-                aria-hidden="true"
-                className="mb-3 text-green-sage sm:mb-5"
-                size={40}
-                strokeWidth={1.25}
+        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-12 sm:px-8 lg:px-12">
+          <div className="grid overflow-hidden rounded-[2rem] border border-[rgba(36,79,59,0.12)] bg-[rgba(255,250,240,0.46)] shadow-[0_18px_45px_rgba(57,45,25,0.10)] lg:grid-cols-2">
+            <article className="relative grid gap-8 p-6 sm:p-9 md:grid-cols-[0.92fr_1fr] md:items-center lg:min-h-[370px] lg:border-r lg:border-b lg:border-[rgba(36,79,59,0.18)] lg:p-10">
+              <div className="relative mx-auto w-full max-w-[250px] rotate-[-3deg] rounded-[12px] border border-[rgba(36,79,59,0.12)] bg-paper p-3 pb-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]">
+                <span className="absolute -left-5 -top-4 z-10 h-10 w-24 rotate-[-13deg] rounded-[3px] bg-[#eadbc6]/85 shadow-sm" />
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[8px] bg-paper-deep">
+                  <Image
+                    src="/images/recipes/apple-pie.png"
+                    alt="Apple pie recipe page"
+                    fill
+                    sizes="250px"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+
+              <FeatureCopy
+                icon={BookHeart}
+                tone="bg-green-soft/80 text-green-deep"
+                title="Save family recipes"
+                body="Capture recipes with ingredients, instructions, and photos so they’re never lost."
               />
-              <blockquote
-                className="max-w-xl text-xl font-semibold leading-tight text-green-deep sm:text-3xl"
+            </article>
+
+            <article className="relative grid gap-8 border-t border-dotted border-[rgba(36,79,59,0.22)] p-6 sm:p-9 md:grid-cols-[1fr_0.94fr] md:items-center lg:min-h-[370px] lg:border-t-0 lg:border-b lg:p-10">
+              <FeatureCopy
+                icon={BookMarked}
+                tone="bg-[#f3d7cc] text-accent-terracotta"
+                title="Add stories and memories"
+                body="Every recipe has a story. Add notes, memories, and moments that make it special."
+              />
+
+              <div
+                className="relative mx-auto max-w-[285px] rotate-[3deg] border border-[rgba(36,79,59,0.12)] bg-[#fff4dc] px-6 py-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]"
+                style={{
+                  clipPath:
+                    "polygon(0 4%, 9% 2%, 18% 5%, 29% 1%, 41% 4%, 53% 1%, 64% 4%, 76% 1%, 88% 5%, 100% 3%, 98% 100%, 3% 98%)",
+                }}
+              >
+                <Paperclip
+                  aria-hidden="true"
+                  className="absolute -top-4 left-5 rotate-[-20deg] text-green-sage"
+                  size={34}
+                  strokeWidth={1.6}
+                />
+                <p
+                  className="text-[1.65rem] leading-[1.18] text-accent-cinnamon"
+                  style={{ fontFamily: "var(--font-caveat)" }}
+                >
+                  This was the first dessert I learned to make with Grandma. Now I
+                  make it for my kids.
+                </p>
+                <HeartSwoosh className="ml-auto mt-2 h-9 w-14 text-accent-terracotta" />
+              </div>
+            </article>
+
+            <article className="relative grid gap-8 border-t border-dotted border-[rgba(36,79,59,0.22)] p-6 sm:p-9 md:grid-cols-[0.92fr_1fr] md:items-center lg:min-h-[370px] lg:border-r lg:border-t-0 lg:p-10">
+              <div className="relative mx-auto w-full max-w-[270px] rotate-[2deg] rounded-[12px] border border-[rgba(36,79,59,0.12)] bg-paper p-3 pb-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-[8px] bg-paper-deep">
+                  <Image
+                    src="/images/landing-cookbook-hero.png"
+                    alt="Family cooking together"
+                    fill
+                    sizes="270px"
+                    className="object-cover object-[44%_56%]"
+                  />
+                </div>
+                <div
+                  className="absolute -bottom-5 -left-4 rotate-[-5deg] rounded-[8px] border border-[rgba(36,79,59,0.12)] bg-green-soft px-4 py-3 text-center text-[1.35rem] leading-none text-green-deep shadow-[0_10px_22px_rgba(57,45,25,0.10)]"
+                  style={{ fontFamily: "var(--font-caveat)" }}
+                >
+                  Grandma, Mom &amp; Ava ♡
+                </div>
+              </div>
+
+              <FeatureCopy
+                icon={HeartHandshake}
+                tone="bg-[#f5df9e]/70 text-accent-cinnamon"
+                title="Bring family into the book"
+                body="Invite family to view, add, and share their favorite recipes and memories."
+              />
+            </article>
+
+            <article className="relative grid gap-8 border-t border-dotted border-[rgba(36,79,59,0.22)] p-6 sm:p-9 md:grid-cols-[1fr_0.95fr] md:items-center lg:min-h-[370px] lg:p-10">
+              <FeatureCopy
+                icon={FolderHeart}
+                tone="bg-green-soft/80 text-green-deep"
+                title="Build collections"
+                body="Organize recipes into collections for holidays, quick meals, Sunday dinners, and more."
+              />
+
+              <div className="relative mx-auto w-full max-w-[295px]">
+                <BotanicalSprig className="absolute -right-8 -top-10 h-24 w-20 rotate-12 text-green-sage/75" />
+                <div className="relative space-y-3">
+                  {COLLECTIONS.map((collection, index) => (
+                    <div
+                      key={collection}
+                      className={`flex min-h-13 items-center gap-3 rounded-full border border-[rgba(36,79,59,0.12)] px-5 text-[1rem] font-extrabold text-green-deep shadow-[0_10px_22px_rgba(57,45,25,0.07)] ${
+                        index === 1 ? "bg-green-soft" : "bg-paper"
+                      }`}
+                    >
+                      {index === 1 ? (
+                        <Check aria-hidden="true" size={18} strokeWidth={2.2} />
+                      ) : (
+                        <Utensils aria-hidden="true" size={18} strokeWidth={1.8} />
+                      )}
+                      {collection}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-20 sm:px-8 lg:px-12">
+          <div className="grid overflow-hidden rounded-[2rem] border border-[rgba(36,79,59,0.12)] bg-[rgba(255,250,240,0.68)] shadow-[0_18px_45px_rgba(57,45,25,0.10)] lg:grid-cols-[0.94fr_auto_1.06fr]">
+            <div className="relative min-h-[360px] p-7 sm:p-10 lg:p-12">
+              <BotanicalSprig className="absolute bottom-5 left-3 h-40 w-28 text-green-sage/65" />
+              <span
+                aria-hidden="true"
+                className="absolute left-28 top-10 text-[8rem] leading-none text-green-soft/75 sm:left-36"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
-                “A recipe has no soul. You, as the cook, must bring soul to the
-                recipe.”
+                “
+              </span>
+              <blockquote
+                className="relative ml-12 mt-16 max-w-[420px] text-[2rem] font-semibold italic leading-[1.18] text-ink sm:ml-28 sm:text-[2.55rem]"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                A recipe has no soul.
+                <br />
+                You, as the cook, must
+                <br />
+                bring soul to the recipe.
               </blockquote>
-              <p className="mt-4 text-sm font-bold text-accent-cinnamon sm:text-base">
-                – Thomas Keller
+              <p className="relative ml-12 mt-5 text-[1.12rem] font-extrabold text-accent-terracotta sm:ml-28">
+                — Thomas Keller
               </p>
             </div>
 
-            <div className="relative h-[250px] p-5 sm:h-[300px] sm:p-8 lg:h-auto lg:min-h-[300px]">
-              <div className="absolute left-5 right-5 top-5 h-32 overflow-hidden rounded-[18px] bg-green-soft shadow-[var(--shadow-image)] sm:left-auto sm:right-8 sm:top-8 sm:h-48 sm:w-[72%] sm:rounded-[26px] lg:h-56">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,252,246,0.9),transparent_27%),linear-gradient(135deg,#8BA888,#2F4F3F)]" />
-                <Camera
-                  aria-hidden="true"
-                  className="absolute left-4 top-4 text-white-soft/85 sm:left-7 sm:top-7"
-                  size={24}
-                  strokeWidth={1.4}
-                />
-                <p
-                  className="absolute bottom-4 left-4 right-4 text-base font-bold leading-tight text-white-soft sm:bottom-6 sm:left-7 sm:right-7 sm:text-xl"
-                  style={{ fontFamily: "var(--font-playfair)" }}
-                >
-                  Sunday dinner, three generations at the counter
-                </p>
-              </div>
+            <div className="hidden w-px bg-[rgba(36,79,59,0.18)] lg:block" />
 
-              <div className="absolute bottom-5 left-5 right-10 rounded-[18px] border border-line bg-white-soft p-3 shadow-[var(--shadow-card)] sm:bottom-7 sm:left-8 sm:right-auto sm:w-[62%] sm:rotate-[-4deg] sm:rounded-[20px] sm:p-4">
+            <div className="relative min-h-[460px] px-6 pb-10 pt-2 sm:px-10 lg:min-h-[360px] lg:p-12">
+              <div className="absolute left-12 top-8 h-56 w-[270px] rotate-[3deg] rounded-[26px] bg-green-deep p-8 text-white-soft shadow-[0_18px_45px_rgba(57,45,25,0.10)] sm:left-auto sm:right-16 sm:top-14 sm:h-64 sm:w-[285px] lg:right-12">
                 <p
-                  className="text-xl leading-snug text-accent-cinnamon sm:text-2xl"
+                  className="text-[2.15rem] leading-[0.98] sm:text-[2.55rem]"
                   style={{ fontFamily: "var(--font-caveat)" }}
                 >
-                  Apple Pie
+                  made today,
+                  <br />
+                  loved for
+                  <br />
+                  generations
                 </p>
-                <div className="mt-2 space-y-1 text-xs text-ink-muted sm:text-sm">
-                  <p>6 cups sliced apples</p>
-                  <p>1 tsp ground cinnamon</p>
-                  <p>Serve warm after supper.</p>
+                <HeartSwoosh className="absolute bottom-6 right-7 h-10 w-16 text-white-soft/80" />
+              </div>
+
+              <div className="absolute left-6 right-6 top-44 max-w-[390px] rotate-[-3deg] rounded-[18px] border border-[rgba(36,79,59,0.12)] bg-paper p-5 shadow-[0_18px_45px_rgba(57,45,25,0.10)] sm:left-12 sm:right-auto sm:top-28 sm:w-[365px] lg:left-10">
+                <Paperclip
+                  aria-hidden="true"
+                  className="absolute -top-5 left-10 rotate-[-10deg] text-green-sage"
+                  size={34}
+                  strokeWidth={1.6}
+                />
+                <div className="grid grid-cols-[1fr_100px] gap-4">
+                  <div>
+                    <h3
+                      className="text-[2.35rem] leading-none text-accent-terracotta"
+                      style={{ fontFamily: "var(--font-caveat)" }}
+                    >
+                      Apple Pie
+                    </h3>
+                    <div className="mt-4 space-y-2 text-[0.98rem] leading-snug text-ink-muted">
+                      <p>6 cups sliced apples</p>
+                      <p>1 tsp ground cinnamon</p>
+                      <p>Serve warm after supper.</p>
+                    </div>
+                  </div>
+                  <div className="relative mt-3 aspect-square overflow-hidden rounded-[10px] border border-[rgba(36,79,59,0.12)] bg-paper-deep">
+                    <Image
+                      src="/images/recipes/apple-pie.png"
+                      alt="Apple pie"
+                      fill
+                      sizes="100px"
+                      className="object-cover"
+                    />
+                  </div>
                 </div>
-                <div className="mt-2 flex justify-end sm:mt-3">
-                  <Leaf
-                    aria-hidden="true"
-                    className="text-green-sage"
-                    size={30}
-                    strokeWidth={1.2}
-                  />
-                </div>
+                <Leaf
+                  aria-hidden="true"
+                  className="ml-auto mt-5 text-green-sage"
+                  size={34}
+                  strokeWidth={1.25}
+                />
               </div>
             </div>
           </div>
