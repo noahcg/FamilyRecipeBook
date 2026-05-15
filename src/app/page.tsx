@@ -92,7 +92,7 @@ export default function LandingPage() {
           <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 sm:px-8 lg:px-12">
             <div className="max-w-2xl">
               <h1
-                className="text-[2.85rem] font-bold leading-[1.02] tracking-normal text-green-deep sm:text-[4.25rem] lg:text-[5.35rem]"
+                className="text-[clamp(2.25rem,11vw,2.85rem)] font-bold leading-[1.02] tracking-normal text-green-deep sm:text-[4.25rem] lg:text-[5.35rem]"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
                 Made with love.
