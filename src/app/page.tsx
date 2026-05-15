@@ -244,7 +244,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-10 pt-14 sm:px-8 sm:pt-18 lg:px-12">
+        <section className="relative z-10 -mt-[50px] mx-auto w-full max-w-[1360px] px-4 pb-10 pt-14 sm:px-8 sm:pt-18 lg:px-12">
           <div className="text-center">
             <LeafLine className="mx-auto mb-4 h-10 w-24 text-green-sage" />
             <h2
@@ -260,7 +260,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-12 sm:px-8 lg:px-12">
+        <section className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pb-12 sm:px-8 lg:px-12">
           <div className="grid overflow-hidden rounded-[2rem] border border-[rgba(36,79,59,0.12)] bg-[rgba(255,250,240,0.46)] shadow-[0_18px_45px_rgba(57,45,25,0.10)] lg:grid-cols-2">
             <article className="relative grid gap-8 p-6 sm:p-9 md:grid-cols-[0.92fr_1fr] md:items-center lg:min-h-[370px] lg:border-r lg:border-b lg:border-[rgba(36,79,59,0.18)] lg:p-10">
               <div className="relative mx-auto w-full max-w-[250px] rotate-[-3deg] rounded-[12px] border border-[rgba(36,79,59,0.12)] bg-paper p-3 pb-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]">
@@ -292,27 +292,29 @@ export default function LandingPage() {
                 body="Every recipe has a story. Add notes, memories, and moments that make it special."
               />
 
-              <div
-                className="relative mx-auto max-w-[285px] rotate-[3deg] border border-[rgba(36,79,59,0.12)] bg-[#fff4dc] px-6 py-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]"
-                style={{
-                  clipPath:
-                    "polygon(0 4%, 9% 2%, 18% 5%, 29% 1%, 41% 4%, 53% 1%, 64% 4%, 76% 1%, 88% 5%, 100% 3%, 98% 100%, 3% 98%)",
-                }}
-              >
+              <div className="relative mx-auto max-w-[285px] rotate-[3deg]">
                 <Paperclip
                   aria-hidden="true"
-                  className="absolute -top-4 left-5 rotate-[-20deg] text-green-sage"
-                  size={34}
+                  className="absolute -left-1 -top-6 z-20 rotate-[-18deg] text-green-sage drop-shadow-sm"
+                  size={38}
                   strokeWidth={1.6}
                 />
-                <p
-                  className="text-[1.65rem] leading-[1.18] text-accent-cinnamon"
-                  style={{ fontFamily: "var(--font-caveat)" }}
+                <div
+                  className="relative border border-[rgba(36,79,59,0.12)] bg-[#fff4dc] px-6 py-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]"
+                  style={{
+                    clipPath:
+                      "polygon(0 4%, 9% 2%, 18% 5%, 29% 1%, 41% 4%, 53% 1%, 64% 4%, 76% 1%, 88% 5%, 100% 3%, 98% 100%, 3% 98%)",
+                  }}
                 >
-                  This was the first dessert I learned to make with Grandma. Now I
-                  make it for my kids.
-                </p>
-                <HeartSwoosh className="ml-auto mt-2 h-9 w-14 text-accent-terracotta" />
+                  <p
+                    className="text-[1.65rem] leading-[1.18] text-accent-cinnamon"
+                    style={{ fontFamily: "var(--font-caveat)" }}
+                  >
+                    This was the first dessert I learned to make with Grandma. Now I
+                    make it for my kids.
+                  </p>
+                  <HeartSwoosh className="ml-auto mt-2 h-9 w-14 text-accent-terracotta" />
+                </div>
               </div>
             </article>
 
@@ -372,91 +374,6 @@ export default function LandingPage() {
                 </div>
               </div>
             </article>
-          </div>
-        </section>
-
-        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-20 sm:px-8 lg:px-12">
-          <div className="grid overflow-hidden rounded-[2rem] border border-[rgba(36,79,59,0.12)] bg-[rgba(255,250,240,0.68)] shadow-[0_18px_45px_rgba(57,45,25,0.10)] lg:grid-cols-[0.94fr_auto_1.06fr]">
-            <div className="relative min-h-[360px] p-7 sm:p-10 lg:p-12">
-              <BotanicalSprig className="absolute bottom-5 left-3 h-40 w-28 text-green-sage/65" />
-              <span
-                aria-hidden="true"
-                className="absolute left-28 top-10 text-[8rem] leading-none text-green-soft/75 sm:left-36"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                “
-              </span>
-              <blockquote
-                className="relative ml-12 mt-16 max-w-[420px] text-[2rem] font-semibold italic leading-[1.18] text-ink sm:ml-28 sm:text-[2.55rem]"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                A recipe has no soul.
-                <br />
-                You, as the cook, must
-                <br />
-                bring soul to the recipe.
-              </blockquote>
-              <p className="relative ml-12 mt-5 text-[1.12rem] font-extrabold text-accent-terracotta sm:ml-28">
-                — Thomas Keller
-              </p>
-            </div>
-
-            <div className="hidden w-px bg-[rgba(36,79,59,0.18)] lg:block" />
-
-            <div className="relative min-h-[460px] px-6 pb-10 pt-2 sm:px-10 lg:min-h-[360px] lg:p-12">
-              <div className="absolute left-12 top-8 h-56 w-[270px] rotate-[3deg] rounded-[26px] bg-green-deep p-8 text-white-soft shadow-[0_18px_45px_rgba(57,45,25,0.10)] sm:left-auto sm:right-16 sm:top-14 sm:h-64 sm:w-[285px] lg:right-12">
-                <p
-                  className="text-[2.15rem] leading-[0.98] sm:text-[2.55rem]"
-                  style={{ fontFamily: "var(--font-caveat)" }}
-                >
-                  made today,
-                  <br />
-                  loved for
-                  <br />
-                  generations
-                </p>
-                <HeartSwoosh className="absolute bottom-6 right-7 h-10 w-16 text-white-soft/80" />
-              </div>
-
-              <div className="absolute left-6 right-6 top-44 max-w-[390px] rotate-[-3deg] rounded-[18px] border border-[rgba(36,79,59,0.12)] bg-paper p-5 shadow-[0_18px_45px_rgba(57,45,25,0.10)] sm:left-12 sm:right-auto sm:top-28 sm:w-[365px] lg:left-10">
-                <Paperclip
-                  aria-hidden="true"
-                  className="absolute -top-5 left-10 rotate-[-10deg] text-green-sage"
-                  size={34}
-                  strokeWidth={1.6}
-                />
-                <div className="grid grid-cols-[1fr_100px] gap-4">
-                  <div>
-                    <h3
-                      className="text-[2.35rem] leading-none text-accent-terracotta"
-                      style={{ fontFamily: "var(--font-caveat)" }}
-                    >
-                      Apple Pie
-                    </h3>
-                    <div className="mt-4 space-y-2 text-[0.98rem] leading-snug text-ink-muted">
-                      <p>6 cups sliced apples</p>
-                      <p>1 tsp ground cinnamon</p>
-                      <p>Serve warm after supper.</p>
-                    </div>
-                  </div>
-                  <div className="relative mt-3 aspect-square overflow-hidden rounded-[10px] border border-[rgba(36,79,59,0.12)] bg-paper-deep">
-                    <Image
-                      src="/images/recipes/apple-pie.png"
-                      alt="Apple pie"
-                      fill
-                      sizes="100px"
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-                <Leaf
-                  aria-hidden="true"
-                  className="ml-auto mt-5 text-green-sage"
-                  size={34}
-                  strokeWidth={1.25}
-                />
-              </div>
-            </div>
           </div>
         </section>
       </main>
