@@ -395,7 +395,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp, mobileSid
         className="fixed inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] z-40 px-2 sm:px-4 lg:hidden"
       >
         <div
-          className="mx-auto flex h-[62px] max-w-[760px] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-[30px] border border-line-soft/90 bg-card/95 p-1.5 backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mx-auto flex h-[62px] max-w-[760px] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-[30px] border border-green-deep bg-green-forest-dark p-1.5 shadow-[0_10px_28px_rgba(31,58,45,0.24),inset_0_1px_0_rgba(255,252,246,0.10)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {navItems.map(({ id, href, icon: Icon, label, isAdd }) => {
@@ -412,8 +412,8 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp, mobileSid
                   isAdd
                     ? "min-w-[64px] bg-accent-terracotta text-ink-inverse hover:bg-accent-terracotta-dark"
                     : isActive
-                      ? "min-w-[98px] bg-green-soft/80 text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]"
-                      : "min-w-[64px] text-ink-soft hover:bg-green-soft/65 hover:text-green-deep"
+                      ? "min-w-[98px] bg-white-soft text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_4px_12px_rgba(14,35,25,0.20)]"
+                      : "min-w-[64px] text-ink-inverse hover:bg-green-deep hover:text-ink-inverse"
                 )}
               >
                 <Icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
