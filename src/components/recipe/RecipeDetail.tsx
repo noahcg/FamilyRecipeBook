@@ -5,15 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Bookmark,
   BookOpen,
   Clock,
   Edit2,
-  Flame,
   Heart,
   MoreHorizontal,
   ShoppingCart,
-  Smile,
+  Star,
   Trash2,
   Users,
 } from "lucide-react";
@@ -47,7 +45,9 @@ export function RecipeDetail({
   const [storyText, setStoryText] = useState("");
   const [addingStory, setAddingStory] = useState(false);
   const [storyError, setStoryError] = useState<string | null>(null);
+  const [loved, setLoved] = useState(userReactions.love);
   const [favorited, setFavorited] = useState(userReactions.favorite);
+  const [localReactionCounts, setLocalReactionCounts] = useState(reactionCounts);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -124,8 +124,39 @@ export function RecipeDetail({
   }
 
   async function handleFavorite() {
-    setFavorited((f) => !f);
-    await toggleReaction(bookId, recipe.id, "favorite");
+    const next = !favorited;
+    setFavorited(next);
+    setLocalReactionCounts((counts) => ({
+      ...counts,
+      favorite: Math.max(0, counts.favorite + (next ? 1 : -1)),
+    }));
+    const result = await toggleReaction(bookId, recipe.id, "favorite");
+    if (!result.success) {
+      setFavorited(!next);
+      setLocalReactionCounts((counts) => ({
+        ...counts,
+        favorite: Math.max(0, counts.favorite + (next ? -1 : 1)),
+      }));
+    }
+  }
+
+  async function handleLike() {
+    const next = !loved;
+    setLoved(next);
+
+    setLocalReactionCounts((counts) => ({
+      ...counts,
+      love: Math.max(0, counts.love + (next ? 1 : -1)),
+    }));
+
+    const result = await toggleReaction(bookId, recipe.id, "love");
+    if (!result.success) {
+      setLoved(!next);
+      setLocalReactionCounts((counts) => ({
+        ...counts,
+        love: Math.max(0, counts.love + (next ? -1 : 1)),
+      }));
+    }
   }
 
   function formatGroceryMessage(added: number, updated: number, skipped: number) {
@@ -219,17 +250,9 @@ export function RecipeDetail({
                     onClick={() => setMenuOpen(false)}
                   />
                   <div
-                    className="absolute right-0 top-12 z-50 w-44 overflow-hidden rounded-xl py-1 shadow-md"
+                    className="absolute right-0 top-12 z-50 w-44 overflow-hidden rounded-md py-1 shadow-md"
                     style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
                   >
-                    <button
-                      type="button"
-                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
-                      onClick={() => { handleFavorite(); setMenuOpen(false); }}
-                    >
-                      <Heart size={15} strokeWidth={1.75} className={clsx(favorited ? "fill-accent-terracotta text-accent-terracotta" : "text-ink-soft")} />
-                      {favorited ? "Unfavorite" : "Add to favorites"}
-                    </button>
                     {canEdit && (
                       <Link
                         href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}
@@ -390,20 +413,18 @@ export function RecipeDetail({
 
           <section className="border-t border-line-soft pt-6">
             <div className="flex items-center text-sm font-bold text-ink">
-              <button type="button" className="flex items-center gap-2 pr-4 text-accent-terracotta">
-                <Heart size={17} fill="currentColor" />
-                {reactionCounts.love}
-              </button>
-              <button type="button" className="flex items-center gap-2 border-l border-line-soft px-4 text-accent-terracotta">
-                <Flame size={17} fill="currentColor" />
-                {reactionCounts.made_it}
-              </button>
-              <span className="flex items-center gap-2 border-l border-line-soft px-4 text-accent-honey">
-                <Smile size={18} />
-                {reactionCounts.favorite}
-              </span>
-              <button type="button" onClick={handleFavorite} aria-label={favorited ? "Remove bookmark" : "Bookmark recipe"} className="ml-auto text-green-deep">
-                <Bookmark size={19} className={clsx(favorited && "fill-green-deep")} />
+              <button
+                type="button"
+                onClick={handleLike}
+                aria-pressed={loved}
+                aria-label={loved ? "Remove rating" : "Rate recipe"}
+                className={clsx(
+                  "flex items-center gap-2 pr-4 transition-colors hover:text-accent-honey",
+                  loved ? "text-accent-honey" : "text-ink-soft"
+                )}
+              >
+                <Star size={17} fill={loved ? "currentColor" : "none"} />
+                {localReactionCounts.love}
               </button>
             </div>
           </section>
