@@ -21,16 +21,81 @@ import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { addRecipeStory, deleteRecipe } from "@/lib/actions/recipes";
 import { addRecipeIngredientsToGrocery } from "@/lib/actions/grocery";
-import { toggleReaction } from "@/lib/actions/reactions";
-import type { RecipeWithRelations, ReactionCounts, UserReactions, BookRole } from "@/lib/types";
+import { setRecipeRating, toggleReaction } from "@/lib/actions/reactions";
+import type { RecipeWithRelations, UserReactions, BookRole, RecipeRatingSummary } from "@/lib/types";
 
 interface RecipeDetailProps {
   recipe: RecipeWithRelations;
   bookId: string;
   userRole: BookRole | null;
   userId: string;
-  reactionCounts: ReactionCounts;
   userReactions: UserReactions;
+  ratingSummary: RecipeRatingSummary;
+}
+
+function StarRatingControl({
+  value,
+  average,
+  count,
+  onChange,
+}: {
+  value: number;
+  average: number;
+  count: number;
+  onChange: (rating: number) => void;
+}) {
+  const displayValue = value || average;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-0.5" aria-label={`Your rating: ${value} out of 5 stars`}>
+          {Array.from({ length: 5 }, (_, index) => {
+            const starNumber = index + 1;
+            const fillPercent = Math.max(0, Math.min(1, displayValue - index)) * 100;
+
+            return (
+              <span key={starNumber} className="relative block h-7 w-7 text-accent-honey">
+                <Star aria-hidden="true" size={26} strokeWidth={1.6} className="absolute inset-0 text-line" />
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-y-0 left-0 overflow-hidden"
+                  style={{ width: `${fillPercent}%` }}
+                >
+                  <Star size={26} strokeWidth={1.6} className="fill-accent-honey text-accent-honey" />
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Rate ${starNumber - 0.5} stars`}
+                  className="absolute inset-y-0 left-0 w-1/2"
+                  onClick={() => onChange(starNumber - 0.5)}
+                />
+                <button
+                  type="button"
+                  aria-label={`Rate ${starNumber} stars`}
+                  className="absolute inset-y-0 right-0 w-1/2"
+                  onClick={() => onChange(starNumber)}
+                />
+              </span>
+            );
+          })}
+        </div>
+        {value > 0 && (
+          <button
+            type="button"
+            onClick={() => onChange(0)}
+            className="text-xs font-bold text-ink-soft transition-colors hover:text-accent-cinnamon"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      <p className="text-xs font-semibold text-ink-muted">
+        {value > 0 ? `Your rating: ${value}/5` : "No rating yet"}
+        {count > 0 ? ` · Average ${average}/5 from ${count}` : ""}
+      </p>
+    </div>
+  );
 }
 
 export function RecipeDetail({
@@ -38,16 +103,15 @@ export function RecipeDetail({
   bookId,
   userRole,
   userId,
-  reactionCounts,
   userReactions,
+  ratingSummary,
 }: RecipeDetailProps) {
   const router = useRouter();
   const [storyText, setStoryText] = useState("");
   const [addingStory, setAddingStory] = useState(false);
   const [storyError, setStoryError] = useState<string | null>(null);
-  const [loved, setLoved] = useState(userReactions.love);
   const [favorited, setFavorited] = useState(userReactions.favorite);
-  const [localReactionCounts, setLocalReactionCounts] = useState(reactionCounts);
+  const [localRatingSummary, setLocalRatingSummary] = useState(ratingSummary);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -126,36 +190,34 @@ export function RecipeDetail({
   async function handleFavorite() {
     const next = !favorited;
     setFavorited(next);
-    setLocalReactionCounts((counts) => ({
-      ...counts,
-      favorite: Math.max(0, counts.favorite + (next ? 1 : -1)),
-    }));
     const result = await toggleReaction(bookId, recipe.id, "favorite");
     if (!result.success) {
       setFavorited(!next);
-      setLocalReactionCounts((counts) => ({
-        ...counts,
-        favorite: Math.max(0, counts.favorite + (next ? -1 : 1)),
-      }));
     }
   }
 
-  async function handleLike() {
-    const next = !loved;
-    setLoved(next);
+  async function handleRatingChange(nextRating: number) {
+    const previous = localRatingSummary;
+    const nextCount =
+      previous.userRating === 0 && nextRating > 0
+        ? previous.count + 1
+        : previous.userRating > 0 && nextRating === 0
+          ? Math.max(0, previous.count - 1)
+          : previous.count;
+    const previousTotal = previous.average * previous.count;
+    const nextTotal = previousTotal - previous.userRating + nextRating;
 
-    setLocalReactionCounts((counts) => ({
-      ...counts,
-      love: Math.max(0, counts.love + (next ? 1 : -1)),
-    }));
+    setLocalRatingSummary({
+      userRating: nextRating,
+      count: nextCount,
+      average: nextCount ? Math.round((nextTotal / nextCount) * 2) / 2 : 0,
+    });
 
-    const result = await toggleReaction(bookId, recipe.id, "love");
-    if (!result.success) {
-      setLoved(!next);
-      setLocalReactionCounts((counts) => ({
-        ...counts,
-        love: Math.max(0, counts.love + (next ? -1 : 1)),
-      }));
+    const result = await setRecipeRating(bookId, recipe.id, nextRating);
+    if (result.success) {
+      setLocalRatingSummary(result.data);
+    } else {
+      setLocalRatingSummary(previous);
     }
   }
 
@@ -412,21 +474,15 @@ export function RecipeDetail({
           )}
 
           <section className="border-t border-line-soft pt-6">
-            <div className="flex items-center text-sm font-bold text-ink">
-              <button
-                type="button"
-                onClick={handleLike}
-                aria-pressed={loved}
-                aria-label={loved ? "Remove rating" : "Rate recipe"}
-                className={clsx(
-                  "flex items-center gap-2 pr-4 transition-colors hover:text-accent-honey",
-                  loved ? "text-accent-honey" : "text-ink-soft"
-                )}
-              >
-                <Star size={17} fill={loved ? "currentColor" : "none"} />
-                {localReactionCounts.love}
-              </button>
-            </div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+              Rating
+            </p>
+            <StarRatingControl
+              value={localRatingSummary.userRating}
+              average={localRatingSummary.average}
+              count={localRatingSummary.count}
+              onChange={handleRatingChange}
+            />
           </section>
         </aside>
       </div>

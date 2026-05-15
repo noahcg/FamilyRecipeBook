@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { canReact } from "@/lib/permissions";
-import type { ActionResult, ReactionType, ReactionCounts, UserReactions } from "@/lib/types";
+import type { ActionResult, ReactionType, ReactionCounts, UserReactions, RecipeRatingSummary } from "@/lib/types";
 
 async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, bookId: string, userId: string) {
   const { data } = await supabase
@@ -72,4 +72,71 @@ export async function getReactionData(
   }
 
   return { counts, userReactions };
+}
+
+function normalizeRating(rating: number) {
+  return Math.round(rating * 2) / 2;
+}
+
+export async function setRecipeRating(
+  bookId: string,
+  recipeId: string,
+  rating: number
+): Promise<ActionResult<RecipeRatingSummary>> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const role = await getBookRole(supabase, bookId, user.id);
+
+  if (!canReact(role)) {
+    return { success: false, error: "Join this book to rate recipes." };
+  }
+
+  const normalized = normalizeRating(rating);
+  if (normalized < 0 || normalized > 5 || normalized !== rating) {
+    return { success: false, error: "Choose a rating from 0 to 5 stars." };
+  }
+
+  if (normalized === 0) {
+    const { error } = await supabase
+      .from("recipe_ratings")
+      .delete()
+      .eq("recipe_id", recipeId)
+      .eq("user_id", user.id);
+    if (error) return { success: false, error: error.message };
+  } else {
+    const { error } = await supabase
+      .from("recipe_ratings")
+      .upsert(
+        {
+          recipe_id: recipeId,
+          user_id: user.id,
+          rating: normalized,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "recipe_id,user_id" }
+      );
+    if (error) return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/app/books/${bookId}/recipes/${recipeId}`);
+  return { success: true, data: await getRecipeRatingSummary(recipeId, user.id) };
+}
+
+export async function getRecipeRatingSummary(
+  recipeId: string,
+  userId: string
+): Promise<RecipeRatingSummary> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("recipe_ratings")
+    .select("rating, user_id")
+    .eq("recipe_id", recipeId);
+
+  const ratings = data ?? [];
+  const count = ratings.length;
+  const total = ratings.reduce((sum, row) => sum + Number(row.rating), 0);
+  const average = count ? normalizeRating(total / count) : 0;
+  const userRating = Number(ratings.find((row) => row.user_id === userId)?.rating ?? 0);
+
+  return { average, count, userRating };
 }

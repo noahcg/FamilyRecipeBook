@@ -99,6 +99,15 @@ export interface RecipeReaction {
   created_at: string;
 }
 
+export interface RecipeRating {
+  id: string;
+  recipe_id: string;
+  user_id: string;
+  rating: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Collection {
   id: string;
   book_id: string;
@@ -213,4 +222,10 @@ export interface UserReactions {
   love: boolean;
   made_it: boolean;
   favorite: boolean;
+}
+
+export interface RecipeRatingSummary {
+  average: number;
+  count: number;
+  userRating: number;
 }

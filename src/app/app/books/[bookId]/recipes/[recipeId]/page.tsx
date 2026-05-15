@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { RecipeDetail } from "@/components/recipe/RecipeDetail";
 import { getRecipe } from "@/lib/actions/recipes";
-import { getReactionData } from "@/lib/actions/reactions";
+import { getReactionData, getRecipeRatingSummary } from "@/lib/actions/reactions";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,8 +21,9 @@ export default async function RecipeDetailPage({ params }: Props) {
 
   if (!recipe || recipe.book_id !== bookId) notFound();
 
-  const [{ counts, userReactions }, memberRes] = await Promise.all([
+  const [{ userReactions }, ratingSummary, memberRes] = await Promise.all([
     getReactionData(recipeId, user.id),
+    getRecipeRatingSummary(recipeId, user.id),
     supabase
       .from("book_members")
       .select("role")
@@ -40,8 +41,8 @@ export default async function RecipeDetailPage({ params }: Props) {
         bookId={bookId}
         userRole={userRole as import("@/lib/types").BookRole | null}
         userId={user.id}
-        reactionCounts={counts}
         userReactions={userReactions}
+        ratingSummary={ratingSummary}
       />
     </AppShell>
   );
