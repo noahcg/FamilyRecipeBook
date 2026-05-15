@@ -223,38 +223,32 @@ export default async function BookHomePage({ params }: Props) {
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
             <div className="space-y-6">
               <DashboardCard className="overflow-hidden">
-                <div className="grid min-h-[360px] lg:grid-cols-[minmax(0,1fr)_42%]">
-                  <div className="flex flex-col justify-between p-5 sm:p-7">
+                <div className="grid lg:min-h-[320px] lg:grid-cols-[minmax(0,1fr)_38%]">
+                  <div className="flex flex-col justify-between p-4 sm:p-6">
                     <div>
                       <SectionEyebrow>Recipe pick</SectionEyebrow>
                       <h2
-                        className="mt-3 max-w-2xl text-3xl font-bold leading-tight text-green-deep lg:text-4xl"
+                        className="mt-2 max-w-2xl text-2xl font-bold leading-tight text-green-deep sm:text-3xl lg:text-4xl"
                         style={{ fontFamily: "var(--font-playfair)" }}
                       >
                         {featuredTitle}
                       </h2>
-                      <p className="mt-4 max-w-xl text-sm leading-relaxed text-ink-muted">
+                      <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-muted">
                         A practical choice to get you cooking without digging through the whole book. Open it, adjust what you need, and keep moving.
                       </p>
                     </div>
 
-                    <div className="mt-6 flex flex-wrap gap-3">
+                    <div className="mt-5 flex flex-wrap gap-3">
                       <Link href={featuredHref}>
-                        <Button variant="primary" size="md" className="rounded-md">
+                        <Button variant="primary" size="sm" className="rounded-md">
                           <UtensilsCrossed size={17} />
                           Start cooking
-                        </Button>
-                      </Link>
-                      <Link href={`/app/books/${bookId}/ideas`}>
-                        <Button variant="secondary" size="md" className="rounded-md">
-                          <Sparkles size={17} />
-                          Swap suggestion
                         </Button>
                       </Link>
                     </div>
                   </div>
 
-                  <div className="relative min-h-[230px] overflow-hidden bg-green-pale lg:min-h-full">
+                  <div className="relative h-48 max-h-[240px] overflow-hidden bg-green-pale sm:h-60 lg:h-auto lg:max-h-none lg:min-h-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={featuredImage}

@@ -195,61 +195,61 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-24 pt-6 sm:px-8 lg:px-12">
+        <section className="relative z-10 mx-auto w-full max-w-[1220px] px-4 pb-16 pt-2 sm:px-8 lg:px-12">
           <div className="grid overflow-hidden rounded-[1.35rem] border border-line bg-[linear-gradient(135deg,var(--color-card),var(--color-paper-deep))] shadow-[var(--shadow-card)] sm:rounded-[2.3rem] lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="relative p-5 sm:p-12 lg:p-16">
+            <div className="relative p-5 sm:p-8 lg:p-10">
               <Leaf
                 aria-hidden="true"
-                className="mb-6 text-green-sage sm:mb-8"
-                size={58}
+                className="mb-3 text-green-sage sm:mb-5"
+                size={40}
                 strokeWidth={1.25}
               />
               <blockquote
-                className="max-w-xl text-2xl font-semibold leading-tight text-green-deep sm:text-4xl"
+                className="max-w-xl text-xl font-semibold leading-tight text-green-deep sm:text-3xl"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
                 “A recipe has no soul. You, as the cook, must bring soul to the
                 recipe.”
               </blockquote>
-              <p className="mt-5 text-base font-bold text-accent-cinnamon sm:mt-7 sm:text-lg">
+              <p className="mt-4 text-sm font-bold text-accent-cinnamon sm:text-base">
                 – Thomas Keller
               </p>
             </div>
 
-            <div className="relative min-h-[390px] p-5 sm:min-h-[420px] sm:p-12">
-              <div className="absolute left-5 right-5 top-6 h-56 overflow-hidden rounded-[20px] bg-green-soft shadow-[var(--shadow-image)] sm:left-auto sm:right-14 sm:top-10 sm:h-72 sm:w-[72%] sm:rounded-[28px]">
+            <div className="relative h-[250px] p-5 sm:h-[300px] sm:p-8 lg:h-auto lg:min-h-[300px]">
+              <div className="absolute left-5 right-5 top-5 h-32 overflow-hidden rounded-[18px] bg-green-soft shadow-[var(--shadow-image)] sm:left-auto sm:right-8 sm:top-8 sm:h-48 sm:w-[72%] sm:rounded-[26px] lg:h-56">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,252,246,0.9),transparent_27%),linear-gradient(135deg,#8BA888,#2F4F3F)]" />
                 <Camera
                   aria-hidden="true"
-                  className="absolute left-5 top-5 text-white-soft/85 sm:left-8 sm:top-8"
-                  size={32}
+                  className="absolute left-4 top-4 text-white-soft/85 sm:left-7 sm:top-7"
+                  size={24}
                   strokeWidth={1.4}
                 />
                 <p
-                  className="absolute bottom-5 left-5 right-5 text-xl font-bold leading-tight text-white-soft sm:bottom-7 sm:left-8 sm:right-8 sm:text-2xl"
+                  className="absolute bottom-4 left-4 right-4 text-base font-bold leading-tight text-white-soft sm:bottom-6 sm:left-7 sm:right-7 sm:text-xl"
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >
                   Sunday dinner, three generations at the counter
                 </p>
               </div>
 
-              <div className="absolute bottom-7 left-5 right-10 rounded-[18px] border border-line bg-white-soft p-4 shadow-[var(--shadow-card)] sm:bottom-9 sm:left-12 sm:right-auto sm:w-[62%] sm:rotate-[-4deg] sm:rounded-[20px] sm:p-6">
+              <div className="absolute bottom-5 left-5 right-10 rounded-[18px] border border-line bg-white-soft p-3 shadow-[var(--shadow-card)] sm:bottom-7 sm:left-8 sm:right-auto sm:w-[62%] sm:rotate-[-4deg] sm:rounded-[20px] sm:p-4">
                 <p
                   className="text-xl leading-snug text-accent-cinnamon sm:text-2xl"
                   style={{ fontFamily: "var(--font-caveat)" }}
                 >
                   Apple Pie
                 </p>
-                <div className="mt-3 space-y-2 text-sm text-ink-muted sm:mt-4 sm:space-y-3">
+                <div className="mt-2 space-y-1 text-xs text-ink-muted sm:text-sm">
                   <p>6 cups sliced apples</p>
                   <p>1 tsp ground cinnamon</p>
-                  <p>Grandma’s note: serve warm after supper.</p>
+                  <p>Serve warm after supper.</p>
                 </div>
-                <div className="mt-4 flex justify-end sm:mt-5">
+                <div className="mt-2 flex justify-end sm:mt-3">
                   <Leaf
                     aria-hidden="true"
                     className="text-green-sage"
-                    size={42}
+                    size={30}
                     strokeWidth={1.2}
                   />
                 </div>
