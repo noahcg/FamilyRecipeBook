@@ -181,7 +181,7 @@ export default async function BookHomePage({ params }: Props) {
         </div>
         <div className="relative z-10 mx-auto max-w-[1240px]">
           <header className="mb-3">
-            <div className="relative min-h-[300px] py-4 min-[425px]:min-h-[340px] min-[425px]:py-5 sm:px-6 lg:min-h-[300px] lg:px-8 lg:py-7">
+            <div className="relative min-h-[300px] py-4 min-[425px]:min-h-[340px] min-[425px]:py-5 sm:px-6 lg:min-h-[300px] lg:px-2 lg:py-7">
               <div className="relative max-w-[980px]">
                 <SectionEyebrow>{book.title}</SectionEyebrow>
                 <TimeOfDayHeadline />
@@ -206,16 +206,6 @@ export default async function BookHomePage({ params }: Props) {
                     </Link>
                   ))}
                 </div>
-              </div>
-            </div>
-            <div className="sm:px-6 lg:px-8">
-              <div className="rounded-md bg-paper-warm/45 px-3 py-2.5 min-[425px]:px-4 min-[425px]:py-3">
-                <p
-                  className="text-lg leading-none text-accent-cinnamon min-[425px]:text-xl"
-                  style={{ fontFamily: "var(--font-caveat)" }}
-                >
-                  The right recipe makes the next step easy.
-                </p>
               </div>
             </div>
           </header>
