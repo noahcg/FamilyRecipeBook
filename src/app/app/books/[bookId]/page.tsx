@@ -281,7 +281,7 @@ export default async function BookHomePage({ params }: Props) {
 
                 <section className="lg:pl-1">
                   <SectionHeader eyebrow="Pick up where you left off" title="Continue cooking" />
-                  <div className="mt-5 flex gap-5">
+                  <div className="mt-5 flex w-full min-w-0 max-w-full flex-nowrap items-start gap-5 overflow-hidden">
                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale">
                       {latestRecipe?.photo_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -292,9 +292,9 @@ export default async function BookHomePage({ params }: Props) {
                         </div>
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
                       <h3
-                        className="truncate text-xl font-bold text-green-deep"
+                        className="block w-full max-w-full text-xl font-bold text-green-deep"
                         style={{ fontFamily: "var(--font-playfair)" }}
                       >
                         {latestRecipe?.title ?? "Start with a saved recipe"}
