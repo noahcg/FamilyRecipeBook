@@ -139,7 +139,7 @@ export default async function BookHomePage({ params }: Props) {
 
   return (
     <AppShell bookId={bookId}>
-      <div className="relative min-h-dvh overflow-hidden px-4 py-6 sm:px-5 lg:rounded-tr-xl lg:px-8 lg:py-8">
+      <div className="relative min-h-dvh overflow-hidden px-2.5 py-5 min-[360px]:px-3 min-[425px]:px-4 sm:px-5 lg:rounded-tr-xl lg:px-8 lg:py-8">
         <div
           className="pointer-events-none absolute right-0 top-0 z-0 h-[430px] w-full overflow-hidden sm:h-[500px] lg:right-[-8rem] lg:top-[-9rem] lg:h-[470px] lg:w-[55vw] lg:min-w-[660px]"
           style={{
@@ -181,12 +181,12 @@ export default async function BookHomePage({ params }: Props) {
         </div>
         <div className="relative z-10 mx-auto max-w-[1240px]">
           <header className="mb-3">
-            <div className="relative min-h-[340px] py-5 sm:px-6 lg:min-h-[300px] lg:px-8 lg:py-7">
+            <div className="relative min-h-[300px] py-4 min-[425px]:min-h-[340px] min-[425px]:py-5 sm:px-6 lg:min-h-[300px] lg:px-8 lg:py-7">
               <div className="relative max-w-[980px]">
                 <SectionEyebrow>{book.title}</SectionEyebrow>
                 <TimeOfDayHeadline />
 
-                <div className="mt-7 flex flex-wrap gap-3">
+                <div className="mt-5 flex flex-wrap gap-2 min-[425px]:mt-7 min-[425px]:gap-3">
                   {[
                     ["Cook with what I have", `/app/books/${bookId}/ideas`],
                     ["Quick meals", `/app/books/${bookId}/ideas`],
@@ -196,7 +196,7 @@ export default async function BookHomePage({ params }: Props) {
                     <Link
                       key={label}
                       href={href}
-                      className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-extrabold shadow-xs transition-colors ${
+                      className={`inline-flex min-h-10 items-center rounded-full border px-3 text-xs font-extrabold shadow-xs transition-colors min-[425px]:min-h-11 min-[425px]:px-4 min-[425px]:text-sm ${
                         index === 0
                           ? "border-green-deep bg-green-deep text-ink-inverse hover:bg-green-forest-dark"
                           : "border-line bg-white-soft/80 text-green-deep hover:bg-card"
@@ -209,9 +209,9 @@ export default async function BookHomePage({ params }: Props) {
               </div>
             </div>
             <div className="sm:px-6 lg:px-8">
-              <div className="rounded-md bg-paper-warm/45 px-4 py-3">
+              <div className="rounded-md bg-paper-warm/45 px-3 py-2.5 min-[425px]:px-4 min-[425px]:py-3">
                 <p
-                  className="text-xl leading-none text-accent-cinnamon"
+                  className="text-lg leading-none text-accent-cinnamon min-[425px]:text-xl"
                   style={{ fontFamily: "var(--font-caveat)" }}
                 >
                   The right recipe makes the next step easy.
@@ -224,21 +224,21 @@ export default async function BookHomePage({ params }: Props) {
             <div className="space-y-6">
               <DashboardCard className="overflow-hidden">
                 <div className="grid lg:min-h-[320px] lg:grid-cols-[minmax(0,1fr)_38%]">
-                  <div className="flex flex-col justify-between p-4 sm:p-6">
+                  <div className="flex flex-col justify-between p-3.5 min-[425px]:p-4 sm:p-6">
                     <div>
                       <SectionEyebrow>Recipe pick</SectionEyebrow>
                       <h2
-                        className="mt-2 max-w-2xl text-2xl font-bold leading-tight text-green-deep sm:text-3xl lg:text-4xl"
+                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-tight text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
                         style={{ fontFamily: "var(--font-playfair)" }}
                       >
                         {featuredTitle}
                       </h2>
-                      <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-muted">
+                      <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-muted min-[425px]:mt-3">
                         A practical choice to get you cooking without digging through the whole book. Open it, adjust what you need, and keep moving.
                       </p>
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-3">
+                    <div className="mt-4 flex flex-wrap gap-3 min-[425px]:mt-5">
                       <Link href={featuredHref}>
                         <Button variant="primary" size="sm" className="rounded-md">
                           <UtensilsCrossed size={17} />
@@ -248,7 +248,7 @@ export default async function BookHomePage({ params }: Props) {
                     </div>
                   </div>
 
-                  <div className="relative h-48 max-h-[240px] overflow-hidden bg-green-pale sm:h-60 lg:h-auto lg:max-h-none lg:min-h-full">
+                  <div className="relative h-44 max-h-[240px] overflow-hidden bg-green-pale min-[425px]:h-48 sm:h-60 lg:h-auto lg:max-h-none lg:min-h-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={featuredImage}
@@ -331,7 +331,7 @@ export default async function BookHomePage({ params }: Props) {
                       Find the right kind of recipe
                     </h2>
                   </div>
-                  <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:min-w-[520px]">
+                  <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[min(520px,100%)]">
                     {[
                       ["Comfort", "warm and cozy"],
                       ["Quick", "under 30"],

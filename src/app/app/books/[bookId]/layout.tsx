@@ -41,6 +41,7 @@ export default async function BookLayout({ children, params }: Props) {
         id: userBook.id,
         title: userBook.title,
         icon: userBook.icon,
+        cover_style: userBook.cover_style,
       }))}
       defaultBookId={defaultBookId}
       isAdmin={isAdminEmail(user.email)}

@@ -19,7 +19,7 @@ export default async function BookSettingsPage({ params }: Props) {
 
   const [bookRes, bookPrefsRes, memberRes, settingsRes] = await Promise.all([
     supabase.from("recipe_books").select("title").eq("id", bookId).single(),
-    supabase.from("recipe_books").select("icon").eq("id", bookId).single(),
+    supabase.from("recipe_books").select("cover_style").eq("id", bookId).single(),
     supabase
       .from("book_members")
       .select("role")
@@ -45,7 +45,7 @@ export default async function BookSettingsPage({ params }: Props) {
       profile={profile}
       bookId={bookId}
       bookTitle={bookRes.data.title}
-      bookIcon={bookPrefsRes.data?.icon ?? null}
+      bookCoverStyle={bookPrefsRes.data?.cover_style ?? "sage"}
       isDefaultBook={settingsRes.data?.default_book_id === bookId}
       bookPreferencesReady={!bookPrefsRes.error && !settingsRes.error}
       isKeeper={memberRes.data.role === "keeper"}

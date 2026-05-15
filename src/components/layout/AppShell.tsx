@@ -60,21 +60,32 @@ function isActiveNavItem(pathname: string, href: string, id?: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-const BOOK_COVER_COLORS = [
-  { bg: "#F4C478", spine: "#C86132" },
-  { bg: "#9CAF88", spine: "#3B5A45" },
-  { bg: "#E7C9B7", spine: "#A85D3B" },
-  { bg: "#D9DED0", spine: "#7B8F67" },
-  { bg: "#CFA46D", spine: "#6F4B2C" },
-];
+const BOOK_COVER_COLORS: Record<string, { bg: string; spine: string }> = {
+  sage: { bg: "#DDE7D7", spine: "#8BA888" },
+  terracotta: { bg: "#FADDD6", spine: "#C86132" },
+  mustard: { bg: "#FAE8C0", spine: "#D4942E" },
+  forest: { bg: "#9CAF88", spine: "#3B5A45" },
+  clay: { bg: "#F0DDD0", spine: "#B8754B" },
+};
 
-function getBookCoverColor(seed: string) {
+const FALLBACK_BOOK_COVER_COLORS = Object.values(BOOK_COVER_COLORS);
+
+function getBookCoverColor(seed: string, coverStyle?: string | null) {
+  if (coverStyle && BOOK_COVER_COLORS[coverStyle]) return BOOK_COVER_COLORS[coverStyle];
   const total = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return BOOK_COVER_COLORS[total % BOOK_COVER_COLORS.length];
+  return FALLBACK_BOOK_COVER_COLORS[total % FALLBACK_BOOK_COVER_COLORS.length];
 }
 
-function CookbookCoverMark({ seed, size = "md" }: { seed: string; size?: "xs" | "sm" | "md" }) {
-  const colors = getBookCoverColor(seed);
+function CookbookCoverMark({
+  seed,
+  coverStyle,
+  size = "md",
+}: {
+  seed: string;
+  coverStyle?: string | null;
+  size?: "xs" | "sm" | "md";
+}) {
+  const colors = getBookCoverColor(seed, coverStyle);
   const dimensions =
     size === "xs" ? "h-7 w-5" : size === "sm" ? "h-10 w-8" : "h-12 w-9";
 
@@ -104,7 +115,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
   const navItems = NAV(bookId);
   const { bookTitle: bookTitleCtx, books, isAdmin } = useBook();
   const bookTitle = bookTitleProp ?? bookTitleCtx;
-  const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle, icon: "bowl" }];
+  const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle, icon: "bowl", cover_style: "sage" }];
   const currentBook = visibleBooks.find((userBook) => userBook.id === bookId) ?? visibleBooks[0];
 
   return (
@@ -167,7 +178,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                       : "border-line-soft bg-white-soft/54 text-ink hover:border-accent-honey/45 hover:bg-card"
                   )}
                 >
-                  <CookbookCoverMark seed={userBook.id} size="sm" />
+                  <CookbookCoverMark seed={userBook.id} coverStyle={userBook.cover_style} size="sm" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-extrabold leading-tight">{userBook.title}</span>
                   </span>
@@ -227,9 +238,9 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         aria-label="Open cookbooks"
         aria-expanded={isBookShelfOpen}
         onClick={() => setIsBookShelfOpen(true)}
-        className="fixed right-0 top-[42dvh] z-40 flex h-[104px] w-10 flex-col items-center justify-center gap-1.5 rounded-l-[18px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-card active:translate-x-0.5 lg:hidden"
+        className="fixed right-0 top-[58dvh] z-40 flex h-[86px] w-8 flex-col items-center justify-center gap-1 rounded-l-[12px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-card active:translate-x-0.5 lg:hidden min-[360px]:top-[52dvh] min-[360px]:h-[96px] min-[360px]:w-9 min-[360px]:rounded-l-[14px] min-[425px]:top-[42dvh] min-[425px]:h-[104px] min-[425px]:w-10 min-[425px]:gap-1.5 min-[425px]:rounded-l-[18px]"
       >
-        <CookbookCoverMark seed={currentBook?.id ?? bookId} size="xs" />
+        <CookbookCoverMark seed={currentBook?.id ?? bookId} coverStyle={currentBook?.cover_style} size="xs" />
         <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-extrabold leading-none">
           Books
         </span>
@@ -283,7 +294,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                         : "border-line-soft bg-white-soft/75 text-ink hover:border-accent-honey/45 hover:bg-green-pale"
                     )}
                   >
-                    <CookbookCoverMark seed={userBook.id} />
+                    <CookbookCoverMark seed={userBook.id} coverStyle={userBook.cover_style} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-extrabold leading-tight">
                         {userBook.title}

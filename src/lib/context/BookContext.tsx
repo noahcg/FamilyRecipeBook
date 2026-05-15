@@ -4,7 +4,7 @@ import { createContext, useContext } from "react";
 
 interface BookContextValue {
   bookTitle: string;
-  books: { id: string; title: string; icon: string | null }[];
+  books: { id: string; title: string; icon: string | null; cover_style: string | null }[];
   defaultBookId: string | null;
   isAdmin: boolean;
 }
@@ -24,7 +24,7 @@ export function BookProvider({
   children,
 }: {
   bookTitle: string;
-  books?: { id: string; title: string; icon: string | null }[];
+  books?: { id: string; title: string; icon: string | null; cover_style: string | null }[];
   defaultBookId?: string | null;
   isAdmin?: boolean;
   children: React.ReactNode;

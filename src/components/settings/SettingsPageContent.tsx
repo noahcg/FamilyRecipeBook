@@ -11,7 +11,7 @@ interface SettingsPageContentProps {
   profile: Profile;
   bookId: string;
   bookTitle: string;
-  bookIcon: string | null;
+  bookCoverStyle: string;
   isDefaultBook: boolean;
   bookPreferencesReady: boolean;
   isKeeper: boolean;
@@ -56,7 +56,7 @@ export function SettingsPageContent({
   profile,
   bookId,
   bookTitle,
-  bookIcon,
+  bookCoverStyle,
   isDefaultBook,
   bookPreferencesReady,
   isKeeper,
@@ -120,7 +120,7 @@ export function SettingsPageContent({
                 {bookPreferencesReady ? (
                   <BookPreferencesForm
                     bookId={bookId}
-                    currentIcon={bookIcon}
+                    currentCoverStyle={bookCoverStyle}
                     isDefault={isDefaultBook}
                   />
                 ) : (
@@ -129,7 +129,7 @@ export function SettingsPageContent({
                       Cookbook preferences need the latest database migration.
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-ink-muted">
-                      Apply migration 008_book_preferences.sql to enable custom cookbook icons and default cookbook selection.
+                      Apply migration 008_book_preferences.sql to enable default cookbook selection.
                     </p>
                   </div>
                 )}
