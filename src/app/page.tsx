@@ -7,7 +7,6 @@ import {
   Check,
   FolderHeart,
   HeartHandshake,
-  Leaf,
   Paperclip,
   Star,
   Utensils,

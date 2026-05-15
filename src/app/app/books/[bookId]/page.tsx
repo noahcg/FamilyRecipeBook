@@ -183,6 +183,19 @@ export default async function BookHomePage({ params }: Props) {
           <header className="mb-3">
             <div className="relative min-h-[300px] py-4 min-[425px]:min-h-[340px] min-[425px]:py-5 sm:px-6 lg:min-h-[300px] lg:px-2 lg:py-7">
               <div className="relative max-w-[980px]">
+                <Link
+                  href={`/app/books/${bookId}`}
+                  className="-mt-2 mb-7 block w-[8.75rem] opacity-90 lg:hidden"
+                  aria-label="Home Cooked home"
+                >
+                  <Image
+                    src="/images/homecooked.svg"
+                    alt=""
+                    width={180}
+                    height={96}
+                    className="h-auto w-full"
+                  />
+                </Link>
                 <SectionEyebrow>{book.title}</SectionEyebrow>
                 <TimeOfDayHeadline />
 
