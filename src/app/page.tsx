@@ -84,17 +84,12 @@ export default function LandingPage() {
           <BrandLockup />
         </Link>
 
-        <Link
-          href="/sign-in"
-          className="shrink-0 rounded-full border border-line bg-white-soft/92 px-3.5 py-2 text-xs font-extrabold text-green-deep shadow-soft backdrop-blur-sm transition hover:bg-card sm:px-6 sm:py-3 sm:text-sm"
-        >
-          Sign in
-        </Link>
+        
       </header>
 
       <main>
         <section className="relative min-h-[560px] pb-4 pt-8 sm:min-h-[580px] lg:min-h-[600px] lg:pb-6 lg:pt-8">
-          <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pt-[145px] sm:px-8 sm:pt-[240px] lg:px-12 lg:pt-14">
+          <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 sm:px-8 lg:px-12">
             <div className="max-w-2xl">
               <h1
                 className="text-[2.85rem] font-bold leading-[1.02] tracking-normal text-green-deep sm:text-[4.25rem] lg:text-[5.35rem]"
