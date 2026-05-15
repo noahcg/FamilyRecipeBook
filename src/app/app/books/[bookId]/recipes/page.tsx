@@ -390,33 +390,6 @@ export default function RecipesPage({ params }: Props) {
                   ))}
                 </nav>
 
-                <div className="border-t border-line-soft px-5 py-5">
-                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">
-                    Book notes
-                  </p>
-                  <dl className="grid grid-cols-2 gap-3">
-                    <div className="rounded-sm bg-paper-warm px-3 py-3">
-                      <dt className="text-xs font-semibold text-ink-soft">Recipes</dt>
-                      <dd className="mt-1 text-2xl font-bold text-green-deep">{recipes.length}</dd>
-                    </div>
-                    <div className="rounded-sm bg-paper-warm px-3 py-3">
-                      <dt className="text-xs font-semibold text-ink-soft">Chapters</dt>
-                      <dd className="mt-1 text-2xl font-bold text-green-deep">{chapters.length}</dd>
-                    </div>
-                    <div className="rounded-sm bg-paper-warm px-3 py-3">
-                      <dt className="text-xs font-semibold text-ink-soft">Favorites</dt>
-                      <dd className="mt-1 flex items-center gap-1.5 text-2xl font-bold text-accent-terracotta">
-                        <Heart size={18} fill="currentColor" />
-                        {favoriteCount}
-                      </dd>
-                    </div>
-                    <div className="rounded-sm bg-paper-warm px-3 py-3">
-                      <dt className="text-xs font-semibold text-ink-soft">Showing</dt>
-                      <dd className="mt-1 text-2xl font-bold text-green-deep">{filtered.length}</dd>
-                    </div>
-                  </dl>
-                </div>
-
                 {newestRecipe && (
                   <Link
                     href={`/app/books/${bookId}/recipes/${newestRecipe.id}`}
