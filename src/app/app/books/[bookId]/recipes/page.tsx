@@ -69,6 +69,7 @@ export default function RecipesPage({ params }: Props) {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [isContentsOpen, setIsContentsOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -155,9 +156,66 @@ export default function RecipesPage({ params }: Props) {
 
   const newestRecipe = recipes[0] ?? null;
   const favoriteCount = favoriteIds.size;
+  const showContents = !loading && filtered.length > 0;
+
+  function closeContents() {
+    setIsContentsOpen(false);
+  }
 
   return (
-    <AppShell bookId={bookId}>
+    <AppShell
+      bookId={bookId}
+      mobileSideDrawer={
+        showContents
+          ? {
+              label: "Index",
+              ariaLabel: "Open recipe contents",
+              eyebrow: "Recipe Index",
+              title: "Chapters",
+              icon: <BookOpen size={17} strokeWidth={1.8} />,
+              isOpen: isContentsOpen,
+              onOpen: () => setIsContentsOpen(true),
+              onClose: closeContents,
+              children: (
+                <>
+                  <nav className="min-h-0 flex-1 overflow-y-auto pr-1">
+                    {chapters.map((chapter) => (
+                      <a
+                        key={chapter.category}
+                        href={`#${chapterId(chapter.category)}`}
+                        onClick={closeContents}
+                        className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line-soft py-3 last:border-b-0"
+                      >
+                        <span className="text-xs font-bold text-accent-cinnamon">{chapter.number}</span>
+                        <span
+                          className="truncate text-base font-semibold text-ink transition-colors group-hover:text-green-deep"
+                          style={{ fontFamily: "var(--font-playfair)" }}
+                        >
+                          {chapter.category}
+                        </span>
+                        <span className="rounded-sm bg-paper-warm px-2 py-0.5 text-xs font-bold text-ink-soft">
+                          {chapter.recipes.length}
+                        </span>
+                      </a>
+                    ))}
+                  </nav>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3 border-t border-line-soft pt-4">
+                    <div className="rounded-sm bg-paper-warm px-3 py-3">
+                      <p className="text-xs font-semibold text-ink-soft">Recipes</p>
+                      <p className="mt-1 text-2xl font-bold text-green-deep">{recipes.length}</p>
+                    </div>
+                    <div className="rounded-sm bg-paper-warm px-3 py-3">
+                      <p className="text-xs font-semibold text-ink-soft">Showing</p>
+                      <p className="mt-1 text-2xl font-bold text-green-deep">{filtered.length}</p>
+                    </div>
+                  </div>
+                </>
+              ),
+            }
+          : undefined
+      }
+    >
       <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-5 lg:px-8">
         <header className="mb-7 border-b border-line-soft pb-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -229,20 +287,6 @@ export default function RecipesPage({ params }: Props) {
         ) : (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
             <main className="min-w-0">
-              {chapters.length > 1 && (
-                <nav className="mb-7 flex gap-2 overflow-x-auto border-b border-line-soft pb-4">
-                  {chapters.map((chapter) => (
-                    <a
-                      key={chapter.category}
-                      href={`#${chapterId(chapter.category)}`}
-                      className="shrink-0 rounded-sm border border-line bg-card px-3 py-2 text-xs font-bold uppercase tracking-[0.06em] text-green-deep shadow-xs hover:bg-green-pale"
-                    >
-                      {chapter.category}
-                    </a>
-                  ))}
-                </nav>
-              )}
-
               <div className="space-y-10">
                 {chapters.map((chapter) => (
                   <section
@@ -311,7 +355,7 @@ export default function RecipesPage({ params }: Props) {
               </div>
             </main>
 
-            <aside className="lg:sticky lg:top-8 lg:self-start">
+            <aside className="hidden lg:sticky lg:top-8 lg:block lg:self-start">
               <div className="overflow-hidden rounded-xl border border-line bg-card shadow-[var(--shadow-paper)]">
                 <div className="border-b border-line-soft bg-paper-warm px-5 py-4">
                   <p className="text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">

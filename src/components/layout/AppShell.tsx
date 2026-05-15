@@ -28,6 +28,17 @@ interface AppShellProps {
   children: React.ReactNode;
   bookId: string;
   bookTitle?: string;
+  mobileSideDrawer?: {
+    label: string;
+    ariaLabel: string;
+    eyebrow: string;
+    title: string;
+    icon: React.ReactNode;
+    isOpen: boolean;
+    onOpen: () => void;
+    onClose: () => void;
+    children: React.ReactNode;
+  };
 }
 
 const NAV = (bookId: string) => [
@@ -109,7 +120,7 @@ function CookbookCoverMark({
   );
 }
 
-export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShellProps) {
+export function AppShell({ children, bookId, bookTitle: bookTitleProp, mobileSideDrawer }: AppShellProps) {
   const pathname = usePathname();
   const [isBookShelfOpen, setIsBookShelfOpen] = useState(false);
   const navItems = NAV(bookId);
@@ -233,12 +244,33 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         {children}
       </main>
 
+      {mobileSideDrawer && (
+        <button
+          type="button"
+          aria-label={mobileSideDrawer.ariaLabel}
+          aria-expanded={mobileSideDrawer.isOpen}
+          onClick={() => {
+            setIsBookShelfOpen(false);
+            mobileSideDrawer.onOpen();
+          }}
+          className="fixed right-0 top-[38dvh] z-30 flex h-[92px] w-8 flex-col items-center justify-center gap-1 rounded-l-[12px] border border-r-0 border-green-sage/35 bg-card/95 text-green-deep shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-green-pale active:translate-x-0.5 lg:hidden min-[360px]:h-[98px] min-[360px]:w-9 min-[425px]:top-[29dvh] min-[425px]:h-[104px] min-[425px]:w-10"
+        >
+          {mobileSideDrawer.icon}
+          <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-extrabold leading-none">
+            {mobileSideDrawer.label}
+          </span>
+        </button>
+      )}
+
       <button
         type="button"
         aria-label="Open cookbooks"
         aria-expanded={isBookShelfOpen}
-        onClick={() => setIsBookShelfOpen(true)}
-        className="fixed right-0 top-[58dvh] z-40 flex h-[86px] w-8 flex-col items-center justify-center gap-1 rounded-l-[12px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-card active:translate-x-0.5 lg:hidden min-[360px]:top-[52dvh] min-[360px]:h-[96px] min-[360px]:w-9 min-[360px]:rounded-l-[14px] min-[425px]:top-[42dvh] min-[425px]:h-[104px] min-[425px]:w-10 min-[425px]:gap-1.5 min-[425px]:rounded-l-[18px]"
+        onClick={() => {
+          mobileSideDrawer?.onClose();
+          setIsBookShelfOpen(true);
+        }}
+        className="fixed right-0 top-[58dvh] z-30 flex h-[86px] w-8 flex-col items-center justify-center gap-1 rounded-l-[12px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-card active:translate-x-0.5 lg:hidden min-[360px]:top-[52dvh] min-[360px]:h-[96px] min-[360px]:w-9 min-[360px]:rounded-l-[14px] min-[425px]:top-[42dvh] min-[425px]:h-[104px] min-[425px]:w-10 min-[425px]:gap-1.5 min-[425px]:rounded-l-[18px]"
       >
         <CookbookCoverMark seed={currentBook?.id ?? bookId} coverStyle={currentBook?.cover_style} size="xs" />
         <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-extrabold leading-none">
@@ -317,6 +349,42 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
               <Plus size={17} />
               New cookbook
             </Link>
+          </section>
+        </div>
+      )}
+
+      {mobileSideDrawer?.isOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label={`Close ${mobileSideDrawer.label.toLowerCase()}`}
+            className="absolute inset-0 animate-in fade-in duration-150 bg-ink/18"
+            onClick={mobileSideDrawer.onClose}
+          />
+          <section className="relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]">
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+                  {mobileSideDrawer.eyebrow}
+                </p>
+                <h2
+                  className="mt-1 truncate text-2xl font-bold leading-tight text-green-deep"
+                  style={{ fontFamily: "var(--font-playfair)" }}
+                >
+                  {mobileSideDrawer.title}
+                </h2>
+              </div>
+              <button
+                type="button"
+                aria-label={`Close ${mobileSideDrawer.label.toLowerCase()}`}
+                onClick={mobileSideDrawer.onClose}
+                className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line-soft bg-white-soft text-green-deep"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {mobileSideDrawer.children}
           </section>
         </div>
       )}
