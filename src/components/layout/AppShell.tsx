@@ -20,7 +20,6 @@ import {
   X,
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
-import { CookbookIcon } from "@/components/ui/CookbookIcon";
 import { APP_VERSION } from "@/lib/version";
 import { signOut } from "@/lib/actions/auth";
 import { useBook } from "@/lib/context/BookContext";
@@ -61,6 +60,44 @@ function isActiveNavItem(pathname: string, href: string, id?: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+const BOOK_COVER_COLORS = [
+  { bg: "#F4C478", spine: "#C86132" },
+  { bg: "#9CAF88", spine: "#3B5A45" },
+  { bg: "#E7C9B7", spine: "#A85D3B" },
+  { bg: "#D9DED0", spine: "#7B8F67" },
+  { bg: "#CFA46D", spine: "#6F4B2C" },
+];
+
+function getBookCoverColor(seed: string) {
+  const total = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return BOOK_COVER_COLORS[total % BOOK_COVER_COLORS.length];
+}
+
+function CookbookCoverMark({ seed, size = "md" }: { seed: string; size?: "xs" | "sm" | "md" }) {
+  const colors = getBookCoverColor(seed);
+  const dimensions =
+    size === "xs" ? "h-7 w-5" : size === "sm" ? "h-10 w-8" : "h-12 w-9";
+
+  return (
+    <span
+      className={clsx(
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-[4px] border border-white-soft/70 shadow-[0_6px_14px_rgba(75,53,31,0.14)]",
+        dimensions
+      )}
+      style={{ background: colors.bg }}
+      aria-hidden="true"
+    >
+      <span
+        className="absolute inset-y-0 left-0 w-2"
+        style={{ background: colors.spine }}
+      />
+      <span className="absolute right-1 top-1 h-2 w-1 rounded-full bg-white-soft/55" />
+      <span className="absolute bottom-1.5 left-3 right-1 h-px bg-white-soft/55" />
+      <span className="absolute bottom-3 left-3 right-1 h-px bg-white-soft/40" />
+    </span>
+  );
+}
+
 export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShellProps) {
   const pathname = usePathname();
   const [isBookShelfOpen, setIsBookShelfOpen] = useState(false);
@@ -68,6 +105,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
   const { bookTitle: bookTitleCtx, books, isAdmin } = useBook();
   const bookTitle = bookTitleProp ?? bookTitleCtx;
   const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle, icon: "bowl" }];
+  const currentBook = visibleBooks.find((userBook) => userBook.id === bookId) ?? visibleBooks[0];
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
@@ -102,12 +140,19 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
 
         <div className="mt-8 shrink-0 px-6 pb-4">
           <div className="mb-3 flex items-center justify-between border-t border-line-soft pt-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">My Cookbooks</p>
-            <Link href="/onboarding/create-book" aria-label="Create cookbook" className="text-green-deep">
-              <Plus size={16} />
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-muted">My Cookbooks</p>
+            </div>
+            <Link
+              href="/onboarding/create-book"
+              aria-label="Create a new cookbook"
+              title="Create a new cookbook"
+              className="flex h-8 w-8 items-center justify-center rounded-sm border border-line-soft bg-card text-green-deep shadow-xs transition-colors hover:bg-green-pale focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]"
+            >
+              <Plus size={15} />
             </Link>
           </div>
-          <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+          <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
             {visibleBooks.map((userBook) => {
               const isCurrent = userBook.id === bookId;
               return (
@@ -116,16 +161,19 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                   href={`/app/books/${userBook.id}`}
                   aria-current={isCurrent ? "page" : undefined}
                   className={clsx(
-                    "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
+                    "group flex items-center gap-3 rounded-md border px-3 py-2.5 text-sm transition-[background-color,border-color,box-shadow,transform] active:translate-y-px",
                     isCurrent
-                      ? "bg-card-muted text-green-deep before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-accent-terracotta"
-                      : "text-ink hover:bg-card/70"
+                      ? "border-accent-honey/60 bg-paper-warm text-green-deep shadow-[0_8px_22px_rgba(75,53,31,0.10)]"
+                      : "border-line-soft bg-white-soft/54 text-ink hover:border-accent-honey/45 hover:bg-card"
                   )}
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-line-soft bg-card">
-                    <CookbookIcon name={userBook.icon ?? "bowl"} size={18} />
+                  <CookbookCoverMark seed={userBook.id} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-extrabold leading-tight">{userBook.title}</span>
                   </span>
-                  <span className="min-w-0 flex-1 truncate">{userBook.title}</span>
+                  {isCurrent && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-accent-terracotta shadow-[0_0_0_4px_rgba(194,97,50,0.12)]" />
+                  )}
                 </Link>
               );
             })}
@@ -179,9 +227,9 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
         aria-label="Open cookbooks"
         aria-expanded={isBookShelfOpen}
         onClick={() => setIsBookShelfOpen(true)}
-        className="fixed right-0 top-[42dvh] z-40 flex h-[96px] w-9 flex-col items-center justify-center gap-1 rounded-l-[18px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-card active:translate-x-0.5 lg:hidden"
+        className="fixed right-0 top-[42dvh] z-40 flex h-[104px] w-10 flex-col items-center justify-center gap-1.5 rounded-l-[18px] border border-r-0 border-accent-cinnamon/30 bg-paper-warm/95 text-accent-cinnamon shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-card active:translate-x-0.5 lg:hidden"
       >
-        <CookbookIcon name={visibleBooks.find((userBook) => userBook.id === bookId)?.icon ?? "bowl"} size={18} />
+        <CookbookCoverMark seed={currentBook?.id ?? bookId} size="xs" />
         <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-extrabold leading-none">
           Books
         </span>
@@ -229,18 +277,21 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
                     aria-current={isCurrent ? "page" : undefined}
                     onClick={() => setIsBookShelfOpen(false)}
                     className={clsx(
-                      "flex items-center gap-3 rounded-md border px-3 py-3 text-sm transition-[background-color,border-color,transform] active:translate-y-px",
+                      "flex items-center gap-3 rounded-md border px-3 py-3 text-sm transition-[background-color,border-color,box-shadow,transform] active:translate-y-px",
                       isCurrent
-                        ? "border-green-sage bg-green-soft/75 text-green-deep"
-                        : "border-line-soft bg-white-soft/75 text-ink hover:bg-green-pale"
+                        ? "border-accent-honey/60 bg-paper-warm text-green-deep shadow-[0_8px_22px_rgba(75,53,31,0.10)]"
+                        : "border-line-soft bg-white-soft/75 text-ink hover:border-accent-honey/45 hover:bg-green-pale"
                     )}
                   >
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-sm border border-line-soft bg-card">
-                      <CookbookIcon name={userBook.icon ?? "bowl"} size={20} />
+                    <CookbookCoverMark seed={userBook.id} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-extrabold leading-tight">
+                        {userBook.title}
+                      </span>
                     </span>
-                    <span className="min-w-0 flex-1 truncate font-extrabold">
-                      {userBook.title}
-                    </span>
+                    {isCurrent && (
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-accent-terracotta shadow-[0_0_0_4px_rgba(194,97,50,0.12)]" />
+                    )}
                   </Link>
                 );
               })}
@@ -249,7 +300,8 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp }: AppShel
             <Link
               href="/onboarding/create-book"
               onClick={() => setIsBookShelfOpen(false)}
-              className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-md border border-dashed border-accent-cinnamon/55 bg-white-soft text-sm font-extrabold text-accent-cinnamon"
+              aria-label="Create a new cookbook"
+              className="mt-5 flex min-h-12 items-center justify-center gap-2 rounded-sm border border-dashed border-accent-cinnamon/55 bg-white-soft text-sm font-extrabold text-accent-cinnamon focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]"
             >
               <Plus size={17} />
               New cookbook
