@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IMPORT_RECIPE_CATEGORIES } from "@/lib/recipeCategories";
 
 export const importedRecipeSchema = z.object({
   title: z.string().min(1).max(200),
@@ -8,7 +9,7 @@ export const importedRecipeSchema = z.object({
   prep_minutes: z.number().int().min(0).max(10080),
   cook_minutes: z.number().int().min(0).max(10080),
   servings: z.number().int().min(0).max(100),
-  category: z.string().max(50),
+  category: z.enum(IMPORT_RECIPE_CATEGORIES),
   tags: z.array(z.string().max(30)).max(10),
   ingredients: z.array(
     z.object({
@@ -55,7 +56,7 @@ export const importedRecipeJsonSchema = {
     prep_minutes: { type: "integer" },
     cook_minutes: { type: "integer" },
     servings: { type: "integer" },
-    category: { type: "string" },
+    category: { type: "string", enum: IMPORT_RECIPE_CATEGORIES },
     tags: {
       type: "array",
       maxItems: 10,
@@ -106,7 +107,7 @@ export function normalizeImportedRecipe(recipe: ImportedRecipe): ImportedRecipe 
     description: recipe.description.trim(),
     source_name: recipe.source_name.trim(),
     story: recipe.story.trim(),
-    category: recipe.category.trim(),
+    category: recipe.category,
     tags: recipe.tags.map((tag) => tag.trim()).filter(Boolean).slice(0, 10),
     ingredients: recipe.ingredients
       .map((ingredient) => ({

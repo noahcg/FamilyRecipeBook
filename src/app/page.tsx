@@ -81,7 +81,7 @@ export default function LandingPage() {
 
       <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5 lg:px-12 lg:py-8">
         <Link href="/" className="shrink-0">
-          <BrandLockup />
+          <BrandLockup className="brand-lockup--homepage" />
         </Link>
 
         

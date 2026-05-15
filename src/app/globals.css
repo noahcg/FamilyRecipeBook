@@ -305,6 +305,16 @@ select:focus-visible {
   width: 11.25rem;
 }
 
+@media (min-width: 1024px) {
+  .brand-lockup {
+    width: 100%;
+  }
+
+  .brand-lockup--homepage {
+    width: clamp(14rem, 18vw, 18rem);
+  }
+}
+
 @media (max-width: 420px) {
   .brand-lockup {
     width: 11.5rem;

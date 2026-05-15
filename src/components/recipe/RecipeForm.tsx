@@ -18,12 +18,8 @@ import {
 } from "@/lib/imageImport";
 import { selectRecipeImage } from "@/lib/actions/pexels";
 import { useUser } from "@/lib/hooks/useUser";
+import { RECIPE_CATEGORIES } from "@/lib/recipeCategories";
 import type { RecipeWithRelations } from "@/lib/types";
-
-const CATEGORIES = [
-  "Breakfast", "Lunch", "Dinner", "Dessert", "Snack",
-  "Soup", "Salad", "Bread", "Drink", "Other",
-];
 
 function getArrayErrorMessage(error: unknown) {
   if (error && typeof error === "object" && "message" in error) {
@@ -624,7 +620,7 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect, hasOpenAIKey = f
                 Category
               </label>
               <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map((cat) => {
+                {RECIPE_CATEGORIES.map((cat) => {
                   const selected = selectedCategory === cat;
                   return (
                     <label key={cat} className="flex items-center gap-1.5 cursor-pointer">

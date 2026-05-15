@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createRecipe } from "@/lib/actions/recipes";
 import { selectRecipeImage } from "@/lib/actions/pexels";
 import { getUser } from "@/lib/auth";
+import { RECIPE_CATEGORIES } from "@/lib/recipeCategories";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Recipe } from "@/lib/types";
 
@@ -26,7 +27,7 @@ const aiRecipeIdeaSchema = z.object({
   prep_minutes: z.number().int().min(0).max(10080),
   cook_minutes: z.number().int().min(0).max(10080),
   servings: z.number().int().min(1).max(100),
-  category: z.string().max(50),
+  category: z.enum(RECIPE_CATEGORIES),
   tags: z.array(z.string().max(30)).max(10),
   ingredients: z.array(aiIngredientSchema).min(1),
   instructions: z.array(aiInstructionSchema).min(1),
@@ -58,7 +59,7 @@ const recipeIdeaJsonSchema = {
     prep_minutes: { type: "integer" },
     cook_minutes: { type: "integer" },
     servings: { type: "integer" },
-    category: { type: "string" },
+    category: { type: "string", enum: RECIPE_CATEGORIES },
     tags: {
       type: "array",
       maxItems: 5,
@@ -142,7 +143,7 @@ async function generateWithCloudflare(prompt: string): Promise<ActionResult<AIRe
     {
       role: "system",
       content:
-        "You are a warm, practical family cookbook assistant. Return only valid compact JSON matching this shape: {\"title\":\"\",\"description\":\"\",\"source_name\":\"AI Recipe Idea\",\"story\":\"\",\"prep_minutes\":0,\"cook_minutes\":0,\"servings\":4,\"category\":\"Dinner\",\"tags\":[\"\"],\"ingredients\":[{\"quantity\":\"\",\"unit\":\"\",\"item\":\"\",\"note\":\"\"}],\"instructions\":[{\"body\":\"\"}]}. Keep descriptions and steps concise. Use 4-8 ingredients and 3-6 steps. Use empty strings for unknown quantity, unit, or note. Do not include markdown.",
+        "You are a warm, practical family cookbook assistant. Return only valid compact JSON matching this shape: {\"title\":\"\",\"description\":\"\",\"source_name\":\"AI Recipe Idea\",\"story\":\"\",\"prep_minutes\":0,\"cook_minutes\":0,\"servings\":4,\"category\":\"Dinner\",\"tags\":[\"\"],\"ingredients\":[{\"quantity\":\"\",\"unit\":\"\",\"item\":\"\",\"note\":\"\"}],\"instructions\":[{\"body\":\"\"}]}. Choose category from Breakfast, Lunch, Dinner, Appetizer, Side Dish, Dessert, Snack, Soup, Salad, Bread, Drink, or Other. Keep descriptions and steps concise. Use 4-8 ingredients and 3-6 steps. Use empty strings for unknown quantity, unit, or note. Do not include markdown.",
     },
     {
       role: "user",

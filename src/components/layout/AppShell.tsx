@@ -7,7 +7,6 @@ import { clsx } from "clsx";
 import {
   CalendarDays,
   Heart,
-  History,
   Home,
   ListChecks,
   LogOut,
@@ -16,6 +15,7 @@ import {
   Settings,
   ShoppingCart,
   Sparkles,
+  Users,
   UtensilsCrossed,
   X,
 } from "lucide-react";
@@ -49,7 +49,7 @@ const NAV = (bookId: string) => [
   { id: "meal-plan", href: `/app/books/${bookId}/meal-plan`, icon: CalendarDays, label: "Meal Plan" },
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
-  { id: "activity", href: `/app/books/${bookId}/members`, icon: History, label: "Activity" },
+  { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
   { id: "settings", href: `/app/books/${bookId}/settings`, icon: Settings, label: "Settings" },
   { id: "add", href: `/app/books/${bookId}/recipes/new`, icon: Plus, label: "Add", isAdd: true },
 ];
@@ -62,7 +62,7 @@ const DESKTOP_NAV = (bookId: string) => [
   { id: "meal-plan", href: `/app/books/${bookId}/meal-plan`, icon: CalendarDays, label: "Meal Plan" },
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
-  { id: "activity", href: `/app/books/${bookId}/members`, icon: History, label: "Activity" },
+  { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
 ];
 
 function isActiveNavItem(pathname: string, href: string, id?: string) {
