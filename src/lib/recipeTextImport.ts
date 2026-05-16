@@ -72,6 +72,10 @@ const COMMON_UNITS = new Set([
 export type PastedRecipeConfidence = "high" | "medium" | "low";
 
 export type PastedRecipeParseResult = {
+  title?: string;
+  prep_minutes?: number;
+  cook_minutes?: number;
+  servings?: number;
   ingredients: IngredientInput[];
   instructions: InstructionInput[];
   warnings: string[];
@@ -173,6 +177,10 @@ function looksLikeMetadata(line: string) {
   return /^(prep|cook|total|active|inactive|serves|servings|yield|makes|ready in)\b/i.test(line);
 }
 
+function looksLikeTimeOrServingMetadata(line: string) {
+  return /^(prep|preparation|cook|bake|baking|total|active|inactive|serves|servings|yield|makes|ready in)\b/i.test(line);
+}
+
 function hasQuantityCue(line: string) {
   return /^[-•*]?\s*(?:(?:\d+\s+)?\d+(?:[./]\d+)?|[¼½¾⅓⅔⅛⅜⅝⅞]+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i.test(line);
 }
@@ -260,6 +268,7 @@ function splitPastedRecipeLines(lines: string[]) {
 
   if (ingredientIndex >= 0 && instructionIndex > ingredientIndex) {
     return {
+      leadingLines: lines.slice(0, ingredientIndex),
       ingredientLines: lines.slice(ingredientIndex + 1, instructionIndex),
       instructionLines: lines.slice(instructionIndex + 1),
       hasIngredientHeading: true,
@@ -272,6 +281,7 @@ function splitPastedRecipeLines(lines: string[]) {
 
   if (ingredientStart >= 0 && instructionStart > ingredientStart) {
     return {
+      leadingLines: lines.slice(0, ingredientStart),
       ingredientLines: lines.slice(ingredientStart, instructionStart),
       instructionLines: lines.slice(instructionStart + (isSectionHeading(lines[instructionStart], [
         "instructions",
@@ -287,11 +297,69 @@ function splitPastedRecipeLines(lines: string[]) {
   }
 
   return {
+    leadingLines: [],
     ingredientLines: [],
     instructionLines: [],
     hasIngredientHeading: false,
     confidence: "low" as const,
   };
+}
+
+function parsePastedTitle(leadingLines: string[]) {
+  for (const line of leadingLines) {
+    const explicitTitle = line.match(/^(?:title|recipe(?:\s+name)?)\s*[:\-]\s*(.+)$/i)?.[1]?.trim();
+    if (explicitTitle) return explicitTitle.slice(0, 200);
+
+    if (
+      looksLikeTimeOrServingMetadata(line) ||
+      isSectionHeading(line, ["ingredients", "ingredient", "instructions", "directions", "method", "preparation", "procedure", "steps"]) ||
+      looksLikeIngredient(line) ||
+      looksLikeInstruction(line)
+    ) {
+      continue;
+    }
+
+    const wordCount = line.split(/\s+/).filter(Boolean).length;
+    if (wordCount >= 1 && wordCount <= 14) return line.slice(0, 200);
+  }
+
+  return "";
+}
+
+function parseMinutes(lines: string[], labels: string[]) {
+  const labelPattern = labels.join("|");
+  const compactText = lines.join(" ");
+  const patterns = [
+    new RegExp(`\\b(?:${labelPattern})\\s*(?:time)?\\s*[:\\-]?\\s*(\\d+)\\s*(min|mins|minute|minutes|hr|hrs|hour|hours)?\\b`, "i"),
+    new RegExp(`\\b(\\d+)\\s*(min|mins|minute|minutes|hr|hrs|hour|hours)\\s*(?:${labelPattern})\\b`, "i"),
+  ];
+
+  const match = patterns.map((pattern) => compactText.match(pattern)).find(Boolean);
+  if (!match) return 0;
+
+  const value = Number(match[1]);
+  if (!Number.isFinite(value) || value < 0 || value > 10080) return 0;
+
+  const unit = match[2]?.toLowerCase() ?? "";
+  return unit.startsWith("h") ? value * 60 : value;
+}
+
+function parseServings(lines: string[]) {
+  const patterns = [
+    /\b(?:makes|make|yields?|serves|servings?)\s*[:\-]?\s*(\d{1,3})\b/i,
+    /\b(\d{1,3})\s*(?:servings?|pieces?|bars?|cookies?|muffins?|slices?)\b/i,
+  ];
+
+  for (const line of lines) {
+    for (const pattern of patterns) {
+      const match = line.match(pattern);
+      if (!match) continue;
+      const value = Number(match[1]);
+      if (value > 0 && value <= 100) return value;
+    }
+  }
+
+  return 0;
 }
 
 export function parsePastedIngredients(text: string): IngredientInput[] {
@@ -359,7 +427,11 @@ export function parsePastedRecipe(text: string): PastedRecipeParseResult {
     warnings.push("Paste a full recipe with ingredients and steps.");
   }
 
-  const { ingredientLines, instructionLines, hasIngredientHeading, confidence } = splitPastedRecipeLines(lines);
+  const { leadingLines, ingredientLines, instructionLines, hasIngredientHeading, confidence } = splitPastedRecipeLines(lines);
+  const title = parsePastedTitle(leadingLines);
+  const prepMinutes = parseMinutes(lines, ["prep", "preparation"]);
+  const cookMinutes = parseMinutes(lines, ["cook", "bake", "baking"]);
+  const servings = parseServings(lines);
   const ingredients = ingredientLines
     .filter((line) => !isSectionHeading(line, ["ingredients", "ingredient"]))
     .filter((line) => !looksLikeMetadata(line))
@@ -385,6 +457,10 @@ export function parsePastedRecipe(text: string): PastedRecipeParseResult {
   if (!instructions.length) warnings.push("No clear steps were found.");
 
   return {
+    title: title || undefined,
+    prep_minutes: prepMinutes || undefined,
+    cook_minutes: cookMinutes || undefined,
+    servings: servings || undefined,
     ingredients,
     instructions,
     warnings,

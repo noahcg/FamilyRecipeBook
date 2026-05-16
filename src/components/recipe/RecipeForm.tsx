@@ -38,6 +38,25 @@ interface RecipeFormProps {
   enablePasteEntry?: boolean;
 }
 
+type PasteDetails = {
+  title?: string;
+  prep_minutes?: number;
+  cook_minutes?: number;
+  servings?: number;
+};
+
+function hasFieldValue(value: unknown) {
+  return value !== undefined && value !== null && String(value).trim() !== "";
+}
+
+function formatMinutes(minutes?: number) {
+  if (!minutes) return "";
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
+}
+
 export function RecipeForm({
   bookId,
   recipe,
@@ -71,6 +90,7 @@ export function RecipeForm({
   const [pastedRecipe, setPastedRecipe] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [pasteSummary, setPasteSummary] = useState<string | null>(null);
+  const [pasteDetails, setPasteDetails] = useState<PasteDetails>({});
 
   const {
     register,
@@ -267,6 +287,7 @@ export function RecipeForm({
 
     setPasteError(null);
     setPasteSummary(null);
+    setPasteDetails({});
 
     if (
       parsedRecipe.confidence === "low" ||
@@ -279,11 +300,35 @@ export function RecipeForm({
       return;
     }
 
+    const currentValues = getValues();
+    if (parsedRecipe.title && !currentValues.title?.trim()) {
+      setValue("title", parsedRecipe.title, { shouldDirty: true, shouldValidate: true });
+    }
+    if (parsedRecipe.prep_minutes && !hasFieldValue(currentValues.prep_minutes)) {
+      setValue("prep_minutes", parsedRecipe.prep_minutes, { shouldDirty: true, shouldValidate: true });
+    }
+    if (parsedRecipe.cook_minutes && !hasFieldValue(currentValues.cook_minutes)) {
+      setValue("cook_minutes", parsedRecipe.cook_minutes, { shouldDirty: true, shouldValidate: true });
+    }
+    if (parsedRecipe.servings && !hasFieldValue(currentValues.servings)) {
+      setValue("servings", parsedRecipe.servings, { shouldDirty: true, shouldValidate: true });
+    }
+
     replaceIngredients(parsedRecipe.ingredients);
     replaceInstructions(parsedRecipe.instructions);
     setRecipeImportedViaUpload(false);
+    const parsedDetails = {
+      title: parsedRecipe.title,
+      prep_minutes: parsedRecipe.prep_minutes,
+      cook_minutes: parsedRecipe.cook_minutes,
+      servings: parsedRecipe.servings,
+    };
+    const hasParsedDetails = Object.values(parsedDetails).some(Boolean);
+    setPasteDetails(parsedDetails);
     setPasteSummary(
-      `Parsed ${parsedRecipe.ingredients.length} ingredient${parsedRecipe.ingredients.length === 1 ? "" : "s"} and ${parsedRecipe.instructions.length} step${parsedRecipe.instructions.length === 1 ? "" : "s"}.`
+      hasParsedDetails
+        ? `Parsed recipe details, ${parsedRecipe.ingredients.length} ingredient${parsedRecipe.ingredients.length === 1 ? "" : "s"}, and ${parsedRecipe.instructions.length} step${parsedRecipe.instructions.length === 1 ? "" : "s"}.`
+        : `Parsed ${parsedRecipe.ingredients.length} ingredient${parsedRecipe.ingredients.length === 1 ? "" : "s"} and ${parsedRecipe.instructions.length} step${parsedRecipe.instructions.length === 1 ? "" : "s"}.`
     );
   }
 
@@ -971,6 +1016,7 @@ export function RecipeForm({
                 setPastedRecipe(event.target.value);
                 setPasteSummary(null);
                 setPasteError(null);
+                setPasteDetails({});
               }}
               className="min-h-[28rem]"
             />
@@ -993,6 +1039,33 @@ export function RecipeForm({
                     </p>
                   </div>
                 </div>
+                {Object.values(pasteDetails).some(Boolean) && (
+                  <div className="mt-3 rounded-md border border-green-sage/25 bg-white-soft/60 p-3">
+                    <p className="mb-2 text-xs font-bold text-ink">Details</p>
+                    <div className="grid gap-2 text-xs text-ink-muted sm:grid-cols-2">
+                      {pasteDetails.title && (
+                        <p className="truncate">
+                          <span className="font-bold text-ink">Title:</span> {pasteDetails.title}
+                        </p>
+                      )}
+                      {pasteDetails.prep_minutes && (
+                        <p>
+                          <span className="font-bold text-ink">Prep:</span> {formatMinutes(pasteDetails.prep_minutes)}
+                        </p>
+                      )}
+                      {pasteDetails.cook_minutes && (
+                        <p>
+                          <span className="font-bold text-ink">Cook:</span> {formatMinutes(pasteDetails.cook_minutes)}
+                        </p>
+                      )}
+                      {pasteDetails.servings && (
+                        <p>
+                          <span className="font-bold text-ink">Servings:</span> {pasteDetails.servings}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="mt-3 grid gap-3 text-xs text-ink-muted sm:grid-cols-2">
                   <div>
                     <p className="mb-1 font-bold text-ink">Ingredients</p>
