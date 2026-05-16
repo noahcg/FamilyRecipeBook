@@ -33,12 +33,42 @@ const inter = Inter({
   weight: ["500", "600", "700", "800"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  title: "Home Cooked",
-  description: "A warm, shared cookbook for your family.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Home Cooked",
+    template: "%s | Home Cooked",
+  },
+  description: "A warm, shared cookbook for family recipes, kitchen notes, and the stories behind them.",
+  applicationName: "Home Cooked",
   icons: {
     icon: [{ url: "/logo.png", type: "image/png" }],
     shortcut: "/logo.png",
+  },
+  openGraph: {
+    title: "Home Cooked",
+    description: "Create a shared family recipe book and preserve the meals, memories, and stories worth passing down.",
+    url: "/",
+    siteName: "Home Cooked",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Home Cooked family recipe book preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Home Cooked",
+    description: "Create a shared family recipe book and preserve the meals, memories, and stories worth passing down.",
+    images: ["/opengraph-image"],
   },
 };
 

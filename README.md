@@ -31,6 +31,7 @@ cp .env.local.example .env.local
 
 | Variable | Where to find it |
 |---|---|
+| `NEXT_PUBLIC_SITE_URL` | Public site URL for social sharing previews, e.g. `https://your-domain.com` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → service_role key |
