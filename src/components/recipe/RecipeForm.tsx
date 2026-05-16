@@ -17,7 +17,7 @@ import {
   type ImportedRecipe,
 } from "@/lib/imageImport";
 import { selectRecipeImage } from "@/lib/actions/pexels";
-import { parsePastedIngredients, parsePastedInstructions } from "@/lib/recipeTextImport";
+import { parsePastedRecipe } from "@/lib/recipeTextImport";
 import { useUser } from "@/lib/hooks/useUser";
 import { RECIPE_CATEGORIES } from "@/lib/recipeCategories";
 import type { RecipeWithRelations } from "@/lib/types";
@@ -68,8 +68,7 @@ export function RecipeForm({
   const isEdit = !!recipe;
   const showPasteEntry = enablePasteEntry && !isEdit;
   const [entryMode, setEntryMode] = useState<"manual" | "paste">("manual");
-  const [pastedIngredients, setPastedIngredients] = useState("");
-  const [pastedInstructions, setPastedInstructions] = useState("");
+  const [pastedRecipe, setPastedRecipe] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [pasteSummary, setPasteSummary] = useState<string | null>(null);
 
@@ -264,28 +263,27 @@ export function RecipeForm({
   }
 
   function handleParsePastedRecipe() {
-    const parsedIngredients = parsePastedIngredients(pastedIngredients);
-    const parsedInstructions = parsePastedInstructions(pastedInstructions);
+    const parsedRecipe = parsePastedRecipe(pastedRecipe);
 
     setPasteError(null);
     setPasteSummary(null);
 
-    if (!parsedIngredients.length || !parsedInstructions.length) {
+    if (
+      parsedRecipe.confidence === "low" ||
+      !parsedRecipe.ingredients.length ||
+      !parsedRecipe.instructions.length
+    ) {
       setPasteError(
-        !parsedIngredients.length && !parsedInstructions.length
-          ? "Paste at least one ingredient and one step before parsing."
-          : !parsedIngredients.length
-            ? "No clear ingredients were found. Try one ingredient per line."
-            : "No clear steps were found. Try one step per line or use numbered steps."
+        "We could not confidently separate ingredients from steps. Add Ingredients and Instructions headings and try again."
       );
       return;
     }
 
-    replaceIngredients(parsedIngredients);
-    replaceInstructions(parsedInstructions);
+    replaceIngredients(parsedRecipe.ingredients);
+    replaceInstructions(parsedRecipe.instructions);
     setRecipeImportedViaUpload(false);
     setPasteSummary(
-      `Parsed ${parsedIngredients.length} ingredient${parsedIngredients.length === 1 ? "" : "s"} and ${parsedInstructions.length} step${parsedInstructions.length === 1 ? "" : "s"}.`
+      `Parsed ${parsedRecipe.ingredients.length} ingredient${parsedRecipe.ingredients.length === 1 ? "" : "s"} and ${parsedRecipe.instructions.length} step${parsedRecipe.instructions.length === 1 ? "" : "s"}.`
     );
   }
 
@@ -876,8 +874,8 @@ export function RecipeForm({
                 <div>
                   <p className="text-sm font-bold text-ink">Copy/paste a recipe</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Paste ingredients and steps separately, parse them into fields,
-                    then review or save. The original manual form stays unchanged.
+                    Paste a full recipe, parse it into structured fields, then
+                    review or save. The original manual form stays unchanged.
                   </p>
                 </div>
               </div>
@@ -965,28 +963,16 @@ export function RecipeForm({
 
           <div className="space-y-5">
             <Textarea
-              label="Ingredients"
-              placeholder={"1 cup sugar\n2 tbsp olive oil\n1/2 tsp salt"}
-              hint="Paste one ingredient per line for the most accurate results."
-              value={pastedIngredients}
+              label="Paste recipe"
+              placeholder={"Grandma's Apple Pie\n\nIngredients\n6 cups sliced apples\n3/4 cup sugar\n1 tsp cinnamon\n\nInstructions\n1. Preheat oven to 375°F.\n2. Toss apples with sugar and cinnamon.\n3. Bake until golden."}
+              hint="Paste the full recipe. For best results, include Ingredients and Instructions headings."
+              value={pastedRecipe}
               onChange={(event) => {
-                setPastedIngredients(event.target.value);
+                setPastedRecipe(event.target.value);
                 setPasteSummary(null);
                 setPasteError(null);
               }}
-              className="min-h-48"
-            />
-            <Textarea
-              label="Steps"
-              placeholder={"1. Preheat oven to 350°F.\n2. Mix ingredients in a large bowl.\n3. Bake until golden."}
-              hint="Numbered or bulleted steps will be preserved."
-              value={pastedInstructions}
-              onChange={(event) => {
-                setPastedInstructions(event.target.value);
-                setPasteSummary(null);
-                setPasteError(null);
-              }}
-              className="min-h-48"
+              className="min-h-[28rem]"
             />
 
             {pasteError && (
