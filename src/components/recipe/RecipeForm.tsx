@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, CheckCircle2, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ClipboardPaste, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
@@ -17,6 +17,7 @@ import {
   type ImportedRecipe,
 } from "@/lib/imageImport";
 import { selectRecipeImage } from "@/lib/actions/pexels";
+import { parsePastedIngredients, parsePastedInstructions } from "@/lib/recipeTextImport";
 import { useUser } from "@/lib/hooks/useUser";
 import { RECIPE_CATEGORIES } from "@/lib/recipeCategories";
 import type { RecipeWithRelations } from "@/lib/types";
@@ -34,9 +35,16 @@ interface RecipeFormProps {
   recipe?: RecipeWithRelations;
   onSuccessRedirect?: string;
   hasOpenAIKey?: boolean;
+  enablePasteEntry?: boolean;
 }
 
-export function RecipeForm({ bookId, recipe, onSuccessRedirect, hasOpenAIKey = false }: RecipeFormProps) {
+export function RecipeForm({
+  bookId,
+  recipe,
+  onSuccessRedirect,
+  hasOpenAIKey = false,
+  enablePasteEntry = false,
+}: RecipeFormProps) {
   const router = useRouter();
   const { userId } = useUser();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -58,6 +66,12 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect, hasOpenAIKey = f
   );
   const [serverError, setServerError] = useState<string | null>(null);
   const isEdit = !!recipe;
+  const showPasteEntry = enablePasteEntry && !isEdit;
+  const [entryMode, setEntryMode] = useState<"manual" | "paste">("manual");
+  const [pastedIngredients, setPastedIngredients] = useState("");
+  const [pastedInstructions, setPastedInstructions] = useState("");
+  const [pasteError, setPasteError] = useState<string | null>(null);
+  const [pasteSummary, setPasteSummary] = useState<string | null>(null);
 
   const {
     register,
@@ -249,6 +263,32 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect, hasOpenAIKey = f
     setRecipeImportedViaUpload(true);
   }
 
+  function handleParsePastedRecipe() {
+    const parsedIngredients = parsePastedIngredients(pastedIngredients);
+    const parsedInstructions = parsePastedInstructions(pastedInstructions);
+
+    setPasteError(null);
+    setPasteSummary(null);
+
+    if (!parsedIngredients.length || !parsedInstructions.length) {
+      setPasteError(
+        !parsedIngredients.length && !parsedInstructions.length
+          ? "Paste at least one ingredient and one step before parsing."
+          : !parsedIngredients.length
+            ? "No clear ingredients were found. Try one ingredient per line."
+            : "No clear steps were found. Try one step per line or use numbered steps."
+      );
+      return;
+    }
+
+    replaceIngredients(parsedIngredients);
+    replaceInstructions(parsedInstructions);
+    setRecipeImportedViaUpload(false);
+    setPasteSummary(
+      `Parsed ${parsedIngredients.length} ingredient${parsedIngredients.length === 1 ? "" : "s"} and ${parsedInstructions.length} step${parsedInstructions.length === 1 ? "" : "s"}.`
+    );
+  }
+
   async function onSubmit(data: CreateRecipeInput) {
     setServerError(null);
 
@@ -299,6 +339,34 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect, hasOpenAIKey = f
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="pb-10">
+      {showPasteEntry && (
+        <div className="mb-6 inline-flex rounded-full border border-line bg-paper-soft p-1 shadow-xs">
+          {[
+            ["manual", "Manual entry"],
+            ["paste", "Copy/paste"],
+          ].map(([mode, label]) => {
+            const selected = entryMode === mode;
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setEntryMode(mode as "manual" | "paste")}
+                className={clsx(
+                  "rounded-full px-4 py-2 text-sm font-extrabold transition-colors",
+                  selected
+                    ? "bg-green-deep text-ink-inverse shadow-xs"
+                    : "text-green-deep hover:bg-green-pale"
+                )}
+                aria-pressed={selected}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {(!showPasteEntry || entryMode === "manual") ? (
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
 
         {/* ── Left column: photo + about + details ── */}
@@ -797,6 +865,212 @@ export function RecipeForm({ bookId, recipe, onSuccessRedirect, hasOpenAIKey = f
           </div>
         </div>
       </div>
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
+          <div className="space-y-6">
+            <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-pale text-green-deep">
+                  <ClipboardPaste size={18} strokeWidth={1.8} />
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-ink">Copy/paste a recipe</p>
+                  <p className="mt-1 text-sm leading-5 text-ink-soft">
+                    Paste ingredients and steps separately, parse them into fields,
+                    then review or save. The original manual form stays unchanged.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-4">
+                <Input
+                  label="Recipe title"
+                  required
+                  placeholder="e.g. Grandma's Apple Pie"
+                  error={errors.title?.message}
+                  {...register("title")}
+                />
+                <div className="grid grid-cols-1 gap-3 min-[520px]:grid-cols-3">
+                  <Input
+                    label="Prep (min)"
+                    type="number"
+                    min={0}
+                    placeholder="15"
+                    error={errors.prep_minutes?.message}
+                    {...register("prep_minutes")}
+                  />
+                  <Input
+                    label="Cook (min)"
+                    type="number"
+                    min={0}
+                    placeholder="45"
+                    error={errors.cook_minutes?.message}
+                    {...register("cook_minutes")}
+                  />
+                  <Input
+                    label="Servings"
+                    type="number"
+                    min={1}
+                    placeholder="4"
+                    error={errors.servings?.message}
+                    {...register("servings")}
+                  />
+                </div>
+                <Input
+                  label="Who is this from?"
+                  placeholder="e.g. Grandma Rose"
+                  error={errors.source_name?.message}
+                  {...register("source_name")}
+                />
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
+              <p className="text-sm font-semibold text-ink mb-3">Category</p>
+              <div className="flex flex-wrap gap-2">
+                {RECIPE_CATEGORIES.map((cat) => {
+                  const selected = selectedCategory === cat;
+                  return (
+                    <label key={cat} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        value={cat}
+                        className="sr-only"
+                        {...register("category")}
+                      />
+                      <span
+                        className="px-3 py-1 rounded-pill text-sm font-semibold border transition-colors cursor-pointer"
+                        style={
+                          selected
+                            ? {
+                                background: "var(--color-sage-pale)",
+                                borderColor: "var(--color-deep-green)",
+                                color: "var(--color-deep-green)",
+                              }
+                            : {
+                                background: "var(--color-paper-soft)",
+                                borderColor: "var(--color-border)",
+                                color: "var(--color-ink-muted)",
+                              }
+                        }
+                      >
+                        {cat}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-5">
+            <Textarea
+              label="Ingredients"
+              placeholder={"1 cup sugar\n2 tbsp olive oil\n1/2 tsp salt"}
+              hint="Paste one ingredient per line for the most accurate results."
+              value={pastedIngredients}
+              onChange={(event) => {
+                setPastedIngredients(event.target.value);
+                setPasteSummary(null);
+                setPasteError(null);
+              }}
+              className="min-h-48"
+            />
+            <Textarea
+              label="Steps"
+              placeholder={"1. Preheat oven to 350°F.\n2. Mix ingredients in a large bowl.\n3. Bake until golden."}
+              hint="Numbered or bulleted steps will be preserved."
+              value={pastedInstructions}
+              onChange={(event) => {
+                setPastedInstructions(event.target.value);
+                setPasteSummary(null);
+                setPasteError(null);
+              }}
+              className="min-h-48"
+            />
+
+            {pasteError && (
+              <div className="flex gap-2 rounded-md border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+                <AlertTriangle size={16} className="mt-0.5 shrink-0" strokeWidth={1.8} />
+                <p>{pasteError}</p>
+              </div>
+            )}
+
+            {pasteSummary && (
+              <div className="rounded-lg border border-green-sage/30 bg-green-pale/70 p-4">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-green-deep" strokeWidth={1.8} />
+                  <div>
+                    <p className="text-sm font-bold text-green-deep">{pasteSummary}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                      You can save now or review the generated fields in Manual entry.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-3 text-xs text-ink-muted sm:grid-cols-2">
+                  <div>
+                    <p className="mb-1 font-bold text-ink">Ingredients</p>
+                    <ul className="space-y-1">
+                      {getValues("ingredients").slice(0, 4).map((ingredient, index) => (
+                        <li key={`${ingredient.item}-${index}`} className="truncate">
+                          {[ingredient.quantity, ingredient.unit, ingredient.item].filter(Boolean).join(" ")}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="mb-1 font-bold text-ink">Steps</p>
+                    <ul className="space-y-1">
+                      {getValues("instructions").slice(0, 3).map((instruction, index) => (
+                        <li key={`${instruction.body}-${index}`} className="line-clamp-1">
+                          {index + 1}. {instruction.body}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {errors.ingredients && (
+              <p className="text-sm text-danger">
+                Ingredients: {getArrayErrorMessage(errors.ingredients) ?? "Fix errors before saving"}
+              </p>
+            )}
+            {errors.instructions && (
+              <p className="text-sm text-danger">
+                Steps: {getArrayErrorMessage(errors.instructions) ?? "Fix errors before saving"}
+              </p>
+            )}
+            {serverError && (
+              <p className="text-sm text-danger font-medium">{serverError}</p>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button type="button" variant="secondary" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button type="button" variant="secondary" onClick={handleParsePastedRecipe}>
+                Parse recipe
+              </Button>
+              {pasteSummary && (
+                <Button type="button" variant="secondary" onClick={() => setEntryMode("manual")}>
+                  Review in manual entry
+                </Button>
+              )}
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isSubmitting}
+                className="flex-1"
+                disabled={!pasteSummary}
+              >
+                Add to this book
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

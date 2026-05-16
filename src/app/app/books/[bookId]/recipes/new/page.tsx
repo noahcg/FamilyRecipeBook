@@ -38,7 +38,7 @@ export default async function NewRecipePage({ params }: Props) {
           </p>
         </div>
 
-        <RecipeForm bookId={bookId} hasOpenAIKey={hasOpenAIKey} />
+        <RecipeForm bookId={bookId} hasOpenAIKey={hasOpenAIKey} enablePasteEntry />
       </div>
     </AppShell>
   );
