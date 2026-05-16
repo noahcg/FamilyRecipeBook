@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -45,6 +45,15 @@ type PasteDetails = {
   servings?: number;
 };
 
+type IngredientKeypadField = "quantity" | "unit";
+
+type IngredientKeypadTarget = {
+  index: number;
+  field: IngredientKeypadField;
+};
+
+const INGREDIENT_KEYPAD_UNITS = ["tsp", "Tbsp", "oz", "lb", "can", "cup"];
+
 function hasFieldValue(value: unknown) {
   return value !== undefined && value !== null && String(value).trim() !== "";
 }
@@ -55,6 +64,117 @@ function formatMinutes(minutes?: number) {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
+}
+
+function ingredientKeypadTargetKey(target: IngredientKeypadTarget | null) {
+  return target ? `${target.index}-${target.field}` : "";
+}
+
+function IngredientKeypad({
+  containerRef,
+  target,
+  onInsert,
+  onInsertUnit,
+  onBackspace,
+  onNext,
+  onManual,
+  onClose,
+}: {
+  containerRef: RefObject<HTMLDivElement | null>;
+  target: IngredientKeypadTarget;
+  onInsert: (text: string) => void;
+  onInsertUnit: (unit: string) => void;
+  onBackspace: () => void;
+  onNext: () => void;
+  onManual: () => void;
+  onClose: () => void;
+}) {
+  const numberRows = [
+    ["7", "8", "9"],
+    ["4", "5", "6"],
+    ["1", "2", "3"],
+    ["0", "space", "/"],
+  ];
+  const unitRows = [
+    INGREDIENT_KEYPAD_UNITS.slice(0, 2),
+    INGREDIENT_KEYPAD_UNITS.slice(2, 4),
+    INGREDIENT_KEYPAD_UNITS.slice(4, 6),
+    ["Backspace", "Next"],
+  ];
+  const activeLabel = target.field === "quantity" ? "quantity" : "unit";
+
+  return (
+    <div ref={containerRef} className="absolute left-0 right-0 top-full z-40 mt-2 max-w-[25rem] rounded-md border border-line bg-card/95 p-2.5 shadow-[0_16px_38px_rgba(57,45,25,0.16)] backdrop-blur-xl sm:left-auto sm:right-7 sm:w-[24rem]">
+      <div>
+        <div className="mb-2.5 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-accent-cinnamon">
+              Ingredient {target.index + 1}
+            </p>
+            <p className="mt-0.5 text-xs font-bold text-ink-muted">
+              Editing {activeLabel}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={onManual}
+              className="rounded-sm border border-line bg-white-soft px-2.5 py-1.5 text-[11px] font-extrabold text-green-deep transition hover:bg-green-pale"
+            >
+              Manual
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close recipe keypad"
+              className="grid size-7 place-items-center rounded-sm text-sm font-black text-ink-soft transition hover:bg-card-muted hover:text-ink"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5">
+            {numberRows.flat().map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onInsert(key === "space" ? " " : key)}
+                className="h-9 rounded-sm border border-line-soft bg-white-soft text-base font-bold text-ink shadow-xs transition hover:border-green-sage hover:bg-green-pale active:translate-y-px"
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {unitRows.flat().map((key) => {
+              const isCommand = key === "Backspace" || key === "Next";
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    if (key === "Backspace") onBackspace();
+                    else if (key === "Next") onNext();
+                    else onInsertUnit(key);
+                  }}
+                  className={clsx(
+                    "h-9 whitespace-nowrap rounded-sm border px-1 text-xs font-extrabold shadow-xs transition active:translate-y-px",
+                    isCommand
+                      ? "border-green-deep bg-green-deep text-[11px] text-ink-inverse hover:bg-green-forest-dark"
+                      : "border-line-soft bg-paper-warm text-green-deep hover:border-green-sage hover:bg-green-pale"
+                  )}
+                >
+                  {key}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function RecipeForm({
@@ -68,6 +188,7 @@ export function RecipeForm({
   const { userId } = useUser();
   const fileRef = useRef<HTMLInputElement>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
+  const ingredientKeypadRef = useRef<HTMLDivElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(recipe?.photo_url ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
@@ -91,6 +212,8 @@ export function RecipeForm({
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [pasteSummary, setPasteSummary] = useState<string | null>(null);
   const [pasteDetails, setPasteDetails] = useState<PasteDetails>({});
+  const [activeIngredientKeypad, setActiveIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
+  const [manualIngredientKeypad, setManualIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
 
   const {
     register,
@@ -154,6 +277,114 @@ export function RecipeForm({
   } = useFieldArray({ control, name: "instructions" });
 
   const selectedCategory = useWatch({ control, name: "category" });
+
+  useEffect(() => {
+    if (!activeIngredientKeypad) return;
+    const keypadTarget = activeIngredientKeypad;
+
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      const keypadElement = ingredientKeypadRef.current;
+      const activeFieldElement = document.getElementById(
+        `ingredient-${keypadTarget.index}-${keypadTarget.field}`
+      );
+
+      if (keypadElement?.contains(target) || activeFieldElement?.contains(target)) return;
+
+      setActiveIngredientKeypad(null);
+      setManualIngredientKeypad(null);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [activeIngredientKeypad]);
+
+  function focusIngredientField(index: number, field: IngredientKeypadField | "item") {
+    window.setTimeout(() => {
+      document.getElementById(`ingredient-${index}-${field}`)?.focus();
+    }, 0);
+  }
+
+  function activateIngredientKeypad(index: number, field: IngredientKeypadField) {
+    const target = { index, field };
+    setActiveIngredientKeypad(target);
+    setManualIngredientKeypad((current) =>
+      ingredientKeypadTargetKey(current) === ingredientKeypadTargetKey(target) ? current : null
+    );
+  }
+
+  function ingredientKeypadFieldName(target: IngredientKeypadTarget) {
+    return `ingredients.${target.index}.${target.field}` as `ingredients.${number}.${IngredientKeypadField}`;
+  }
+
+  function updateIngredientKeypadValue(target: IngredientKeypadTarget, value: string) {
+    setValue(ingredientKeypadFieldName(target), value, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
+
+  function handleIngredientKeypadInsert(text: string) {
+    if (!activeIngredientKeypad) return;
+    const fieldName = ingredientKeypadFieldName(activeIngredientKeypad);
+    const currentValue = String(getValues(fieldName) ?? "");
+    const nextValue = text === " " && (!currentValue || currentValue.endsWith(" "))
+      ? currentValue
+      : `${currentValue}${text}`;
+    updateIngredientKeypadValue(activeIngredientKeypad, nextValue);
+    focusIngredientField(activeIngredientKeypad.index, activeIngredientKeypad.field);
+  }
+
+  function handleIngredientKeypadUnit(unit: string) {
+    if (!activeIngredientKeypad) return;
+    updateIngredientKeypadValue({ index: activeIngredientKeypad.index, field: "unit" }, unit);
+
+    if (activeIngredientKeypad.field === "quantity") {
+      setActiveIngredientKeypad(null);
+      setManualIngredientKeypad(null);
+      focusIngredientField(activeIngredientKeypad.index, "item");
+      return;
+    }
+
+    focusIngredientField(activeIngredientKeypad.index, "unit");
+  }
+
+  function handleIngredientKeypadBackspace() {
+    if (!activeIngredientKeypad) return;
+    const fieldName = ingredientKeypadFieldName(activeIngredientKeypad);
+    const currentValue = String(getValues(fieldName) ?? "");
+    updateIngredientKeypadValue(activeIngredientKeypad, currentValue.slice(0, -1));
+    focusIngredientField(activeIngredientKeypad.index, activeIngredientKeypad.field);
+  }
+
+  function handleIngredientKeypadNext() {
+    if (!activeIngredientKeypad) return;
+
+    if (activeIngredientKeypad.field === "quantity") {
+      const nextTarget = { index: activeIngredientKeypad.index, field: "unit" as const };
+      setActiveIngredientKeypad(nextTarget);
+      setManualIngredientKeypad(null);
+      focusIngredientField(activeIngredientKeypad.index, "unit");
+      return;
+    }
+
+    setActiveIngredientKeypad(null);
+    setManualIngredientKeypad(null);
+    focusIngredientField(activeIngredientKeypad.index, "item");
+  }
+
+  function enableManualIngredientKeypad() {
+    if (!activeIngredientKeypad) return;
+    setManualIngredientKeypad(activeIngredientKeypad);
+    focusIngredientField(activeIngredientKeypad.index, activeIngredientKeypad.field);
+  }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -785,25 +1016,44 @@ export function RecipeForm({
             </p>
             <div className="space-y-2">
               {ingredients.map((field, index) => (
-                <div key={field.id} className="flex gap-2 items-start">
+                <div key={field.id} className="relative flex gap-2 items-start">
                   <GripVertical size={16} className="text-ink-soft mt-3.5 shrink-0 opacity-40" />
                   <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:grid-cols-[5rem_7rem_1fr]">
                     <input
-                      className="input-cookbook text-sm"
+                      id={`ingredient-${index}-quantity`}
+                      className={clsx(
+                        "input-cookbook text-sm",
+                        ingredientKeypadTargetKey(activeIngredientKeypad) === `${index}-quantity` && "border-green-sage bg-card"
+                      )}
                       placeholder="Qty"
+                      inputMode={ingredientKeypadTargetKey(manualIngredientKeypad) === `${index}-quantity` ? "text" : "none"}
+                      readOnly={ingredientKeypadTargetKey(manualIngredientKeypad) !== `${index}-quantity`}
+                      onFocus={() => activateIngredientKeypad(index, "quantity")}
                       {...register(`ingredients.${index}.quantity`)}
                     />
                     <input
-                      className="input-cookbook text-sm"
+                      id={`ingredient-${index}-unit`}
+                      className={clsx(
+                        "input-cookbook text-sm",
+                        ingredientKeypadTargetKey(activeIngredientKeypad) === `${index}-unit` && "border-green-sage bg-card"
+                      )}
                       placeholder="Unit"
+                      inputMode={ingredientKeypadTargetKey(manualIngredientKeypad) === `${index}-unit` ? "text" : "none"}
+                      readOnly={ingredientKeypadTargetKey(manualIngredientKeypad) !== `${index}-unit`}
+                      onFocus={() => activateIngredientKeypad(index, "unit")}
                       {...register(`ingredients.${index}.unit`)}
                     />
                     <div className="col-span-2 min-w-0 sm:col-span-1">
                       <input
+                        id={`ingredient-${index}-item`}
                         className="input-cookbook text-sm w-full"
                         placeholder="Ingredient"
                         required
                         aria-label={`Ingredient ${index + 1} name, required`}
+                        onFocus={() => {
+                          setActiveIngredientKeypad(null);
+                          setManualIngredientKeypad(null);
+                        }}
                         {...register(`ingredients.${index}.item`)}
                       />
                       {errors.ingredients?.[index]?.item && (
@@ -816,19 +1066,42 @@ export function RecipeForm({
                   {ingredients.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => removeIngredient(index)}
+                      onClick={() => {
+                        setActiveIngredientKeypad(null);
+                        setManualIngredientKeypad(null);
+                        removeIngredient(index);
+                      }}
                       className="mt-3 text-ink-soft hover:text-danger transition-colors"
                       aria-label="Remove ingredient"
                     >
                       <Trash2 size={14} strokeWidth={1.75} />
                     </button>
                   )}
+                  {activeIngredientKeypad?.index === index && (
+                    <IngredientKeypad
+                      containerRef={ingredientKeypadRef}
+                      target={activeIngredientKeypad}
+                      onInsert={handleIngredientKeypadInsert}
+                      onInsertUnit={handleIngredientKeypadUnit}
+                      onBackspace={handleIngredientKeypadBackspace}
+                      onNext={handleIngredientKeypadNext}
+                      onManual={enableManualIngredientKeypad}
+                      onClose={() => {
+                        setActiveIngredientKeypad(null);
+                        setManualIngredientKeypad(null);
+                      }}
+                    />
+                  )}
                 </div>
               ))}
             </div>
             <button
               type="button"
-              onClick={() => addIngredient({ quantity: "", unit: "", item: "", note: "" })}
+              onClick={() => {
+                setActiveIngredientKeypad(null);
+                setManualIngredientKeypad(null);
+                addIngredient({ quantity: "", unit: "", item: "", note: "" });
+              }}
               className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
             >
               <Plus size={14} /> Add ingredient
