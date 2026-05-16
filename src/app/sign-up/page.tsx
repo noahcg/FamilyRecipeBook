@@ -4,14 +4,16 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail } from "lucide-react";
+import { Eye, EyeOff, Mail } from "lucide-react";
 import { Button, Input } from "@/components/ui";
+import { EntryShell } from "@/components/layout/EntryShell";
 import { signUpSchema, type SignUpInput } from "@/lib/validators/auth";
 import { signUp } from "@/lib/actions/auth";
 
 export default function SignUpPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -32,8 +34,26 @@ export default function SignUpPage() {
 
   if (checkEmail) {
     return (
-      <div className="app-paper-bg paper-texture min-h-screen flex flex-col items-center justify-center px-5 py-12">
-        <div className="w-full max-w-sm text-center relative z-10">
+      <EntryShell
+        eyebrow="Almost there"
+        title="Check your email"
+        description="Confirm your address to finish setting up your Home Cooked account."
+        maxWidth="md"
+        sideImageSrc="/images/entry/check-email.jpg"
+        sideImageAlt="Laptop and coffee on a kitchen table"
+        sideTitle="One quick confirmation, then your cookbook is ready."
+        sideDescription="After confirmation, you can create a book, save the first recipe, and invite the people who should be part of it."
+        sideNote="Almost ready to start cooking."
+        footer={
+          <p className="text-center text-xs text-ink-soft mt-6">
+            Already confirmed?{" "}
+            <Link href="/sign-in" className="text-green-deep font-semibold hover:underline">
+              Sign in
+            </Link>
+          </p>
+        }
+      >
+        <div className="text-center">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm"
             style={{ background: "var(--color-sage-soft)" }}
@@ -50,81 +70,23 @@ export default function SignUpPage() {
             We sent a confirmation link to your email address. Click it to
             finish setting up your account.
           </p>
-          <p className="text-xs text-ink-soft mt-6">
-            Already confirmed?{" "}
-            <Link href="/sign-in" className="text-green-deep font-semibold hover:underline">
-              Sign in
-            </Link>
-          </p>
         </div>
-      </div>
+      </EntryShell>
     );
   }
 
   return (
-    <div className="app-paper-bg paper-texture min-h-screen flex flex-col items-center justify-center px-5 py-12">
-      <div className="w-full max-w-sm relative z-10">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl overflow-hidden mb-3 shadow-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" aria-hidden="true" className="h-full w-full" />
-          </div>
-          <h1
-            className="text-2xl font-bold text-green-deep text-center"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            Create your recipe book
-          </h1>
-          <p className="text-sm text-ink-muted mt-1 text-center">
-            A home for your family&rsquo;s recipes and memories
-          </p>
-        </div>
-
-        <div className="recipe-card p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              label="Your name"
-              required
-              type="text"
-              autoComplete="name"
-              placeholder="e.g. Katherine"
-              error={errors.full_name?.message}
-              {...register("full_name")}
-            />
-            <Input
-              label="Email address"
-              required
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              error={errors.email?.message}
-              {...register("email")}
-            />
-            <Input
-              label="Password"
-              required
-              type="password"
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              error={errors.password?.message}
-              {...register("password")}
-            />
-
-            {serverError && (
-              <p className="text-sm text-danger font-medium">{serverError}</p>
-            )}
-
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              loading={isSubmitting}
-            >
-              Get started
-            </Button>
-          </form>
-        </div>
-
+    <EntryShell
+      eyebrow="Start a new recipe book"
+      title="Create your Home Cooked account"
+      description="A warm, private place for family recipes, kitchen notes, and the stories behind them."
+      maxWidth="md"
+      sideImageSrc="/images/entry/sign-up.jpg"
+      sideImageAlt="Blank recipe cards with kitchen ingredients"
+      sideTitle="Start with one recipe. Build a book over time."
+      sideDescription="Capture the dish everyone asks about, then add the stories and people that make it feel like home."
+      sideNote="A place for the meals worth remembering."
+      footer={
         <p className="text-center text-sm text-ink-muted mt-5">
           Already have an account?{" "}
           <Link
@@ -134,7 +96,60 @@ export default function SignUpPage() {
             Sign in
           </Link>
         </p>
-      </div>
-    </div>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Input
+          label="Your name"
+          required
+          type="text"
+          autoComplete="name"
+          placeholder="e.g. Katherine"
+          error={errors.full_name?.message}
+          {...register("full_name")}
+        />
+        <Input
+          label="Email address"
+          required
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <Input
+          label="Password"
+          required
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          placeholder="At least 8 characters"
+          error={errors.password?.message}
+          rightElement={
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((value) => !value)}
+              className="pointer-events-auto flex size-9 items-center justify-center rounded-full text-ink-soft transition hover:bg-green-pale hover:text-green-deep"
+            >
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+            </button>
+          }
+          {...register("password")}
+        />
+
+        {serverError && (
+          <p className="text-sm text-danger font-medium">{serverError}</p>
+        )}
+
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          loading={isSubmitting}
+        >
+          Get started
+        </Button>
+      </form>
+    </EntryShell>
   );
 }

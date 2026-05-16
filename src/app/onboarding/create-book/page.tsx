@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Button, Input, Textarea, BookCover } from "@/components/ui";
+import { EntryShell } from "@/components/layout/EntryShell";
 import type { CoverStyle } from "@/components/ui";
 import { createBookSchema, type CreateBookInput } from "@/lib/validators/book";
 import { createBook } from "@/lib/actions/books";
@@ -49,30 +48,22 @@ export default function CreateBookPage() {
   }
 
   return (
-    <div>
-      <Link
-        href="/app"
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink mb-6"
-      >
-        <ArrowLeft size={14} strokeWidth={2} />
-        Back to app
-      </Link>
-      <p className="text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">
-        Step 1 of 3
-      </p>
-      <h1
-        className="text-3xl font-bold text-green-deep mb-2"
-        style={{ fontFamily: "var(--font-playfair)" }}
-      >
-        Name your recipe book
-      </h1>
-      <p className="text-ink-muted mb-8">
-        Give it a name that feels like home.
-      </p>
-
-      <div className="flex flex-col sm:flex-row gap-8 items-start">
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 w-full space-y-6">
+    <EntryShell
+      eyebrow="Step 1 of 3"
+      title="Name your recipe book"
+      description="Give it a name and cover that feel like home."
+      backHref="/app"
+      backLabel="Back to app"
+      maxWidth="lg"
+      framed={false}
+      sideImageSrc="/images/entry/create-book.jpg"
+      sideImageAlt="Cookbooks and recipe cards on a kitchen table"
+      sideTitle="Give your family recipes a place to live."
+      sideDescription="Choose a cover now. You can keep adding recipes, memories, and family members once the book is created."
+      sideNote="Choose a cover. Add the memories next."
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="recipe-card w-full space-y-6 p-5 sm:p-6">
+        <div className="space-y-4">
           <Input
             label="Book title"
             required
@@ -87,54 +78,61 @@ export default function CreateBookPage() {
             error={errors.description?.message}
             {...register("description")}
           />
+        </div>
 
-          {/* Cover style picker */}
-          <div>
-            <p className="text-sm font-semibold text-ink mb-3">Cover colour</p>
-            <div className="flex gap-3">
-              {COVER_STYLES.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setValue("cover_style", s.id)}
-                  className={clsx(
-                    "w-10 h-10 rounded-lg border-2 transition-transform",
-                    selectedStyle === s.id
-                      ? "scale-110 shadow-sm"
-                      : "border-transparent opacity-60 hover:opacity-90"
-                  )}
-                  style={{
-                    background: s.bg,
-                    borderColor: selectedStyle === s.id ? s.border : "transparent",
-                  }}
-                  aria-label={s.label}
-                  aria-pressed={selectedStyle === s.id}
-                />
-              ))}
-            </div>
+        {/* Cover style picker */}
+        <div>
+          <p className="text-sm font-semibold text-ink mb-3">Cover colour</p>
+          <div className="flex gap-3">
+            {COVER_STYLES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setValue("cover_style", s.id)}
+                className={clsx(
+                  "w-10 h-10 rounded-lg border-2 transition-transform",
+                  selectedStyle === s.id
+                    ? "scale-110 shadow-sm"
+                    : "border-transparent opacity-60 hover:opacity-90"
+                )}
+                style={{
+                  background: s.bg,
+                  borderColor: selectedStyle === s.id ? s.border : "transparent",
+                }}
+                aria-label={s.label}
+                aria-pressed={selectedStyle === s.id}
+              />
+            ))}
           </div>
+        </div>
 
-          {serverError && (
-            <p className="text-sm text-danger font-medium">{serverError}</p>
-          )}
-
-          <Button type="submit" variant="primary" fullWidth loading={isSubmitting}>
-            Create book
-          </Button>
-        </form>
-
-        {/* Live preview */}
-        <div className="flex flex-col items-center gap-3 w-full sm:w-auto sm:sticky sm:top-8">
-          <p className="text-xs font-semibold text-ink-soft uppercase tracking-wider">
-            Preview
-          </p>
+        <div className="flex items-center gap-4 rounded-lg border border-line-soft bg-white-soft/60 p-3">
           <BookCover
             title={watchedTitle.trim() || "Your Book"}
             style={selectedStyle as CoverStyle}
-            size="lg"
+            size="sm"
           />
+          <div className="min-w-0">
+            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-accent-cinnamon">
+              Cover preview
+            </p>
+            <p className="mt-1 text-sm font-bold text-green-deep">
+              {watchedTitle.trim() || "Your Book"}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-ink-muted">
+              This is how your cookbook will appear in your book list.
+            </p>
+          </div>
         </div>
-      </div>
-    </div>
+
+        {serverError && (
+          <p className="text-sm text-danger font-medium">{serverError}</p>
+        )}
+
+        <Button type="submit" variant="primary" fullWidth loading={isSubmitting}>
+          Create book
+        </Button>
+      </form>
+    </EntryShell>
   );
 }

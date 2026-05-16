@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
 import { Button, Input } from "@/components/ui";
+import { EntryShell } from "@/components/layout/EntryShell";
 import { signInSchema, type SignInInput } from "@/lib/validators/auth";
 import { signIn } from "@/lib/actions/auth";
 
 export default function SignInPage() {
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -24,62 +27,17 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="app-paper-bg paper-texture min-h-screen flex flex-col items-center justify-center px-5 py-12">
-      <div className="w-full max-w-sm relative z-10">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl overflow-hidden mb-3 shadow-sm">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" aria-hidden="true" className="h-full w-full" />
-          </div>
-          <h1
-            className="text-2xl font-bold text-green-deep"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            Welcome back
-          </h1>
-          <p className="text-sm text-ink-muted mt-1">
-            Sign in to your recipe book
-          </p>
-        </div>
-
-        {/* Form */}
-        <div className="recipe-card p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              label="Email address"
-              required
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              error={errors.email?.message}
-              {...register("email")}
-            />
-            <Input
-              label="Password"
-              required
-              type="password"
-              autoComplete="current-password"
-              placeholder="••••••••"
-              error={errors.password?.message}
-              {...register("password")}
-            />
-
-            {serverError && (
-              <p className="text-sm text-danger font-medium">{serverError}</p>
-            )}
-
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              loading={isSubmitting}
-            >
-              Sign in
-            </Button>
-          </form>
-        </div>
-
+    <EntryShell
+      eyebrow="Welcome back"
+      title="Sign in to your recipe book"
+      description="Pick up where your family left off and keep the good meals easy to find."
+      maxWidth="md"
+      sideImageSrc="/images/entry/sign-in.jpg"
+      sideImageAlt="Open recipe notebook on a kitchen counter"
+      sideTitle="Pick up where your family left off."
+      sideDescription="Open the cookbook, find the recipe you meant to make, and keep adding the notes that make it yours."
+      sideNote="Back to the recipes everyone asks for."
+      footer={
         <p className="text-center text-sm text-ink-muted mt-5">
           Don&rsquo;t have an account?{" "}
           <Link
@@ -89,7 +47,51 @@ export default function SignInPage() {
             Create one
           </Link>
         </p>
-      </div>
-    </div>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Input
+          label="Email address"
+          required
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <Input
+          label="Password"
+          required
+          type={showPassword ? "text" : "password"}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          error={errors.password?.message}
+          rightElement={
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((value) => !value)}
+              className="pointer-events-auto flex size-9 items-center justify-center rounded-full text-ink-soft transition hover:bg-green-pale hover:text-green-deep"
+            >
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+            </button>
+          }
+          {...register("password")}
+        />
+
+        {serverError && (
+          <p className="text-sm text-danger font-medium">{serverError}</p>
+        )}
+
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          loading={isSubmitting}
+        >
+          Sign in
+        </Button>
+      </form>
+    </EntryShell>
   );
 }

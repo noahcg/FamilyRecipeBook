@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AddMemberForm } from "@/components/book/AddMemberForm";
+import { EntryShell } from "@/components/layout/EntryShell";
 
 interface Props {
   searchParams: Promise<{ bookId?: string }>;
@@ -10,27 +11,23 @@ export default async function AddMemberOnboardingPage({ searchParams }: Props) {
   if (!bookId) redirect("/onboarding/create-book");
 
   return (
-    <div>
-      <p className="text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">
-        Step 3 of 3
-      </p>
-      <h1
-        className="text-3xl font-bold text-green-deep mb-2"
-        style={{ fontFamily: "var(--font-playfair)" }}
-      >
-        Add someone to this book
-      </h1>
-      <p className="text-ink-muted mb-8">
-        Invite family to share recipes, memories, and more. They&rsquo;ll see
-        the recipes you&rsquo;ve already added.
-      </p>
-
+    <EntryShell
+      eyebrow="Step 3 of 3"
+      title="Add someone to this book"
+      description="Invite family to share recipes, memories, and more. They’ll see the recipes you’ve already added."
+      maxWidth="md"
+      sideImageSrc="/images/entry/add-member.jpg"
+      sideImageAlt="Family-style dinner table with shared food"
+      sideTitle="Bring the people behind the recipes into the book."
+      sideDescription="Invite a contributor for recipe entry or family members who just want to read, react, and remember."
+      sideNote="Recipes are better when everyone can add their part."
+    >
       <AddMemberForm
         bookId={bookId}
         onSuccessRedirect={`/app/books/${bookId}`}
         skipLabel="Skip for now"
         skipHref={`/app/books/${bookId}`}
       />
-    </div>
+    </EntryShell>
   );
 }

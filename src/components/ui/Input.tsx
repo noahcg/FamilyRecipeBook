@@ -5,10 +5,11 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   hint?: string;
+  rightElement?: React.ReactNode;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, hint, className, id, required, ...props }, ref) => {
+  ({ label, error, hint, className, id, required, rightElement, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
@@ -27,21 +28,29 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             )}
           </label>
         )}
-        <input
-          ref={ref}
-          id={inputId}
-          required={required}
-          className={clsx(
-            "input-cookbook",
-            error && "border-danger focus:border-danger",
-            className
+        <div className="relative w-full">
+          <input
+            ref={ref}
+            id={inputId}
+            required={required}
+            className={clsx(
+              "input-cookbook w-full",
+              rightElement && "pr-12",
+              error && "border-danger focus:border-danger",
+              className
+            )}
+            aria-invalid={error ? "true" : undefined}
+            aria-describedby={
+              error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
+            }
+            {...props}
+          />
+          {rightElement && (
+            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center">
+              {rightElement}
+            </div>
           )}
-          aria-invalid={error ? "true" : undefined}
-          aria-describedby={
-            error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
-          }
-          {...props}
-        />
+        </div>
         {error && (
           <p
             id={`${inputId}-error`}
