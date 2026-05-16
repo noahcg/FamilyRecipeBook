@@ -21,7 +21,7 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
       description="Start with a dish everyone knows. You can use a photo import, manual entry, or skip and come back later."
       maxWidth="xl"
       framed={false}
-      sideImageSrc="/images/entry/add-first-recipe.jpg"
+      sideImageSrc="/images/entry/add-first.jpg"
       sideImageAlt="Homemade dish beside handwritten recipe notes"
       sideTitle="The first recipe sets the table."
       sideDescription="Add one favorite now, then invite family to help fill the rest of the book."

@@ -56,7 +56,7 @@ export default function CreateBookPage() {
       backLabel="Back to app"
       maxWidth="lg"
       framed={false}
-      sideImageSrc="/images/entry/create-book.jpg"
+      sideImageSrc="/images/entry/create-new-book.jpg"
       sideImageAlt="Cookbooks and recipe cards on a kitchen table"
       sideTitle="Give your family recipes a place to live."
       sideDescription="Choose a cover now. You can keep adding recipes, memories, and family members once the book is created."

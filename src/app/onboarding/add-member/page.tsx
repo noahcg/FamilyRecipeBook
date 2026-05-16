@@ -16,7 +16,7 @@ export default async function AddMemberOnboardingPage({ searchParams }: Props) {
       title="Add someone to this book"
       description="Invite family to share recipes, memories, and more. They’ll see the recipes you’ve already added."
       maxWidth="md"
-      sideImageSrc="/images/entry/add-member.jpg"
+      sideImageSrc="/images/entry/add-family.jpg"
       sideImageAlt="Family-style dinner table with shared food"
       sideTitle="Bring the people behind the recipes into the book."
       sideDescription="Invite a contributor for recipe entry or family members who just want to read, react, and remember."
