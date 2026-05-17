@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Fraunces, Inter, Nunito, Playfair_Display } from "next/font/google";
+import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -45,6 +46,7 @@ export const metadata: Metadata = {
   },
   description: "A warm, shared cookbook for family recipes, kitchen notes, and the stories behind them.",
   applicationName: "Home Cooked",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/logo.png", type: "image/png" }],
     shortcut: "/logo.png",
@@ -89,7 +91,10 @@ export default function RootLayout({
       lang="en"
       className={`${playfair.variable} ${nunito.variable} ${caveat.variable} ${fraunces.variable} ${inter.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+      <body className="min-h-full flex flex-col antialiased">
+        <ServiceWorkerRegistration />
+        {children}
+      </body>
     </html>
   );
 }

@@ -19,6 +19,7 @@ import { clsx } from "clsx";
 import { Button, Dialog } from "@/components/ui";
 import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
+import { OfflineRecipeButton } from "./OfflineRecipeButton";
 import { addRecipeStory, deleteRecipe } from "@/lib/actions/recipes";
 import { addRecipeIngredientsToGrocery } from "@/lib/actions/grocery";
 import { setRecipeRating, toggleReaction } from "@/lib/actions/reactions";
@@ -315,6 +316,12 @@ export function RecipeDetail({
                     className="absolute right-0 top-12 z-50 w-44 overflow-hidden rounded-md py-1 shadow-md"
                     style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
                   >
+                    <OfflineRecipeButton
+                      recipe={recipe}
+                      bookId={bookId}
+                      userId={userId}
+                      variant="menu"
+                    />
                     {canEdit && (
                       <Link
                         href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}

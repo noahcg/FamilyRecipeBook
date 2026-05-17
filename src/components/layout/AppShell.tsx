@@ -10,6 +10,7 @@ import {
   Home,
   ListChecks,
   LogOut,
+  Download,
   ShieldCheck,
   Plus,
   Settings,
@@ -50,6 +51,7 @@ const NAV = (bookId: string) => [
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
   { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
+  { id: "offline", href: `/app/books/${bookId}/offline`, icon: Download, label: "Offline" },
   { id: "settings", href: `/app/books/${bookId}/settings`, icon: Settings, label: "Settings" },
   { id: "add", href: `/app/books/${bookId}/recipes/new`, icon: Plus, label: "Add", isAdd: true },
 ];
@@ -63,6 +65,7 @@ const DESKTOP_NAV = (bookId: string) => [
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
   { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
+  { id: "offline", href: `/app/books/${bookId}/offline`, icon: Download, label: "Offline" },
 ];
 
 function isActiveNavItem(pathname: string, href: string, id?: string) {
