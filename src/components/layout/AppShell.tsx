@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -126,11 +126,34 @@ function CookbookCoverMark({
 export function AppShell({ children, bookId, bookTitle: bookTitleProp, mobileSideDrawer }: AppShellProps) {
   const pathname = usePathname();
   const [isBookShelfOpen, setIsBookShelfOpen] = useState(false);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+  const mobileNavItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const navItems = NAV(bookId);
   const { bookTitle: bookTitleCtx, books, isAdmin } = useBook();
   const bookTitle = bookTitleProp ?? bookTitleCtx;
   const visibleBooks = books.length > 0 ? books : [{ id: bookId, title: bookTitle, icon: "bowl", cover_style: "sage" }];
   const currentBook = visibleBooks.find((userBook) => userBook.id === bookId) ?? visibleBooks[0];
+  const activeMobileNavId = navItems.find(({ id, href }) => isActiveNavItem(pathname, href, id))?.id;
+
+  useEffect(() => {
+    if (!activeMobileNavId) return;
+
+    const timeout = window.setTimeout(() => {
+      const activeItem = mobileNavItemRefs.current[activeMobileNavId];
+      const container = mobileNavRef.current;
+      if (!activeItem || !container) return;
+
+      const nextLeft =
+        activeItem.offsetLeft - container.clientWidth / 2 + activeItem.clientWidth / 2;
+
+      container.scrollTo({
+        left: Math.max(0, nextLeft),
+        behavior: "smooth",
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [activeMobileNavId, pathname]);
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
@@ -398,6 +421,7 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp, mobileSid
         className="fixed inset-x-0 bottom-[calc(0.5rem+env(safe-area-inset-bottom,0px))] z-40 px-2 sm:px-4 lg:hidden"
       >
         <div
+          ref={mobileNavRef}
           className="mx-auto flex h-[62px] max-w-[760px] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-[30px] border border-green-deep bg-green-forest-dark p-1.5 shadow-[0_10px_28px_rgba(31,58,45,0.24),inset_0_1px_0_rgba(255,252,246,0.10)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
@@ -407,6 +431,9 @@ export function AppShell({ children, bookId, bookTitle: bookTitleProp, mobileSid
             return (
               <Link
                 key={id}
+                ref={(element) => {
+                  mobileNavItemRefs.current[id] = element;
+                }}
                 href={href}
                 aria-label={isAdd ? "Add recipe" : label}
                 aria-current={isActive ? "page" : undefined}
