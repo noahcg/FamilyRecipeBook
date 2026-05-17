@@ -5,6 +5,8 @@ import { randomBytes } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
+import { createMemberInviteEmail } from "@/lib/email/memberInviteTemplate";
+import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEmail";
 import { canManageMembers } from "@/lib/permissions";
 import {
   inviteMemberSchema,
@@ -42,6 +44,14 @@ export async function inviteMember(
   const token = randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+  const [bookRes, profileRes] = await Promise.all([
+    supabase.from("recipe_books").select("title").eq("id", bookId).single(),
+    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+  ]);
+
+  const cookbookTitle = bookRes.data?.title ?? "a cookbook";
+  const inviterName = profileRes.data?.full_name ?? user.email ?? null;
+
   const { data: invitation, error } = await supabase
     .from("book_invitations")
     .insert({
@@ -59,7 +69,33 @@ export async function inviteMember(
     return { success: false, error: error?.message ?? "Could not create invitation" };
   }
 
-  // TODO: send invitation email
+  const inviteUrl = `${getAppBaseUrl()}/invite/${token}`;
+  const email = createMemberInviteEmail({
+    inviteUrl,
+    cookbookTitle,
+    inviterName,
+    invitedEmail: parsed.data.email,
+    role: parsed.data.role,
+    expiresAt,
+    logoUrl: getDefaultLogoUrl(),
+  });
+
+  try {
+    await sendEmail({
+      to: parsed.data.email,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+    });
+  } catch (emailError) {
+    return {
+      success: false,
+      error: emailError instanceof Error
+        ? `Invitation was created, but the email could not be sent: ${emailError.message}`
+        : "Invitation was created, but the email could not be sent.",
+    };
+  }
+
   revalidatePath(`/app/books/${bookId}/members`);
   return { success: true, data: invitation };
 }
