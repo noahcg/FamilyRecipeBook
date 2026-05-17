@@ -17,9 +17,9 @@ export default async function BookSettingsPage({ params }: Props) {
     getAISettings(),
   ]);
 
-  const [bookRes, bookPrefsRes, memberRes, settingsRes] = await Promise.all([
-    supabase.from("recipe_books").select("title").eq("id", bookId).single(),
-    supabase.from("recipe_books").select("cover_style").eq("id", bookId).single(),
+  const [bookRes, bookPrefsRes, memberRes, settingsRes, sharedMemberRes, pendingInviteRes] = await Promise.all([
+    supabase.from("recipe_books").select("title,sharing_enabled").eq("id", bookId).single(),
+    supabase.from("recipe_books").select("cover_style,sharing_enabled").eq("id", bookId).single(),
     supabase
       .from("book_members")
       .select("role")
@@ -31,6 +31,17 @@ export default async function BookSettingsPage({ params }: Props) {
       .select("default_book_id")
       .eq("user_id", user.id)
       .maybeSingle(),
+    supabase
+      .from("book_members")
+      .select("id", { count: "exact", head: true })
+      .eq("book_id", bookId)
+      .neq("role", "keeper"),
+    supabase
+      .from("book_invitations")
+      .select("id", { count: "exact", head: true })
+      .eq("book_id", bookId)
+      .is("accepted_at", null)
+      .gte("expires_at", new Date().toISOString()),
   ]);
 
   if (!bookRes.data || !memberRes.data) notFound();
@@ -46,8 +57,11 @@ export default async function BookSettingsPage({ params }: Props) {
       bookId={bookId}
       bookTitle={bookRes.data.title}
       bookCoverStyle={bookPrefsRes.data?.cover_style ?? "sage"}
+      sharingEnabled={bookRes.data.sharing_enabled ?? false}
+      sharingBlockerCount={(sharedMemberRes.count ?? 0) + (pendingInviteRes.count ?? 0)}
       isDefaultBook={settingsRes.data?.default_book_id === bookId}
       bookPreferencesReady={!bookPrefsRes.error && !settingsRes.error}
+      sharingPreferencesReady={!bookRes.error && !sharedMemberRes.error && !pendingInviteRes.error}
       isKeeper={memberRes.data.role === "keeper"}
       aiSettings={aiSettings}
       cloudflareConfigured={cloudflareConfigured}

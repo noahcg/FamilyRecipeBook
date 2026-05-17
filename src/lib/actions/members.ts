@@ -14,6 +14,11 @@ import {
 } from "@/lib/validators/member";
 import type { ActionResult, BookInvitation, MemberWithProfile } from "@/lib/types";
 
+export type PendingBookInvitation = Pick<
+  BookInvitation,
+  "id" | "email" | "role" | "expires_at" | "created_at"
+>;
+
 async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, bookId: string, userId: string) {
   const { data } = await supabase
     .from("book_members")
@@ -45,9 +50,20 @@ export async function inviteMember(
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const [bookRes, profileRes] = await Promise.all([
-    supabase.from("recipe_books").select("title").eq("id", bookId).single(),
+    supabase.from("recipe_books").select("title,sharing_enabled").eq("id", bookId).single(),
     supabase.from("profiles").select("full_name").eq("id", user.id).single(),
   ]);
+
+  if (bookRes.error || !bookRes.data) {
+    return { success: false, error: bookRes.error?.message ?? "Could not find cookbook." };
+  }
+
+  if (!bookRes.data.sharing_enabled) {
+    return {
+      success: false,
+      error: "Turn on sharing for this cookbook before inviting members.",
+    };
+  }
 
   const cookbookTitle = bookRes.data?.title ?? "a cookbook";
   const inviterName = profileRes.data?.full_name ?? user.email ?? null;
@@ -160,6 +176,42 @@ export async function getBookMembers(bookId: string): Promise<MemberWithProfile[
   return (data as MemberWithProfile[]) ?? [];
 }
 
+export async function getPendingBookInvitations(bookId: string): Promise<PendingBookInvitation[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("book_invitations")
+    .select("id,email,role,expires_at,created_at")
+    .eq("book_id", bookId)
+    .is("accepted_at", null)
+    .gte("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+
+  return (data as PendingBookInvitation[]) ?? [];
+}
+
+export async function cancelInvitation(bookId: string, invitationId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const role = await getBookRole(supabase, bookId, user.id);
+
+  if (!canManageMembers(role)) {
+    return { success: false, error: "Only the keeper can cancel invitations." };
+  }
+
+  const { error } = await supabase
+    .from("book_invitations")
+    .delete()
+    .eq("id", invitationId)
+    .eq("book_id", bookId)
+    .is("accepted_at", null);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath(`/app/books/${bookId}/members`);
+  revalidatePath(`/app/books/${bookId}/settings`);
+  return { success: true, data: undefined };
+}
+
 export async function removeMember(bookId: string, userId: string): Promise<ActionResult> {
   const user = await requireUser();
   const supabase = await createClient();
@@ -181,5 +233,6 @@ export async function removeMember(bookId: string, userId: string): Promise<Acti
   if (error) return { success: false, error: error.message };
 
   revalidatePath(`/app/books/${bookId}/members`);
+  revalidatePath(`/app/books/${bookId}/settings`);
   return { success: true, data: undefined };
 }

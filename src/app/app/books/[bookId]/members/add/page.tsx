@@ -1,8 +1,9 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock, Settings } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { AddMemberForm } from "@/components/book/AddMemberForm";
 import { getBook } from "@/lib/actions/books";
+import { Button, EmptyState } from "@/components/ui";
 
 interface Props {
   params: Promise<{ bookId: string }>;
@@ -33,11 +34,26 @@ export default async function AddMemberPage({ params }: Props) {
           Invite family to share recipes, memories, and more.
         </p>
 
-        <AddMemberForm
-          bookId={bookId}
-          bookTitle={book?.title}
-          onSuccessRedirect={`/app/books/${bookId}/members`}
-        />
+        {book?.sharing_enabled ? (
+          <AddMemberForm
+            bookId={bookId}
+            bookTitle={book?.title}
+            onSuccessRedirect={`/app/books/${bookId}/members`}
+          />
+        ) : (
+          <EmptyState
+            icon={<Lock size={28} />}
+            title="Sharing is off"
+            description="Turn on sharing for this cookbook before inviting members."
+            action={
+              <Link href={`/app/books/${bookId}/settings`}>
+                <Button variant="primary" size="sm">
+                  <Settings size={14} /> Open settings
+                </Button>
+              </Link>
+            }
+          />
+        )}
       </div>
     </AppShell>
   );

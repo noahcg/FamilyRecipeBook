@@ -2,6 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
 import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
+import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { signOut } from "@/lib/actions/auth";
 import type { Profile } from "@/lib/types";
@@ -12,8 +13,11 @@ interface SettingsPageContentProps {
   bookId: string;
   bookTitle: string;
   bookCoverStyle: string;
+  sharingEnabled: boolean;
+  sharingBlockerCount: number;
   isDefaultBook: boolean;
   bookPreferencesReady: boolean;
+  sharingPreferencesReady: boolean;
   isKeeper: boolean;
   aiSettings: {
     ai_provider: AIProvider | null;
@@ -57,8 +61,11 @@ export function SettingsPageContent({
   bookId,
   bookTitle,
   bookCoverStyle,
+  sharingEnabled,
+  sharingBlockerCount,
   isDefaultBook,
   bookPreferencesReady,
+  sharingPreferencesReady,
   isKeeper,
   aiSettings,
   cloudflareConfigured,
@@ -117,6 +124,22 @@ export function SettingsPageContent({
             <div className="recipe-card p-5">
               <div className="space-y-6">
                 <RenameBookForm bookId={bookId} currentTitle={bookTitle} />
+                {sharingPreferencesReady ? (
+                  <SharingSettingsForm
+                    bookId={bookId}
+                    sharingEnabled={sharingEnabled}
+                    blockerCount={sharingBlockerCount}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-accent-honey/45 bg-paper-warm/60 p-4">
+                    <p className="text-sm font-bold text-green-deep">
+                      Cookbook sharing needs the latest database migration.
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-ink-muted">
+                      Apply migration 012_cookbook_sharing.sql to enable private and shared cookbooks.
+                    </p>
+                  </div>
+                )}
                 {bookPreferencesReady ? (
                   <BookPreferencesForm
                     bookId={bookId}

@@ -10,6 +10,7 @@ import type { CoverStyle } from "@/components/ui";
 import { createBookSchema, type CreateBookInput } from "@/lib/validators/book";
 import { createBook } from "@/lib/actions/books";
 import { clsx } from "clsx";
+import { Lock, Users } from "lucide-react";
 
 const COVER_STYLES: { id: CoverStyle; label: string; bg: string; border: string }[] = [
   { id: "sage", label: "Sage", bg: "#DDE7D7", border: "#8BA888" },
@@ -31,11 +32,12 @@ export default function CreateBookPage() {
     formState: { errors, isSubmitting },
   } = useForm<CreateBookInput>({
     resolver: zodResolver(createBookSchema),
-    defaultValues: { title: "", cover_style: "sage", icon: "bowl" },
+    defaultValues: { title: "", cover_style: "sage", icon: "bowl", sharing_enabled: false },
   });
 
   const watchedTitle = useWatch({ control, name: "title" });
   const selectedStyle = useWatch({ control, name: "cover_style" });
+  const sharingEnabled = useWatch({ control, name: "sharing_enabled" });
 
   async function onSubmit(data: CreateBookInput) {
     setServerError(null);
@@ -59,7 +61,7 @@ export default function CreateBookPage() {
       sideImageSrc="/images/entry/create-new-book.jpg"
       sideImageAlt="Cookbooks and recipe cards on a kitchen table"
       sideTitle="Give your family recipes a place to live."
-      sideDescription="Choose a cover now. You can keep adding recipes, memories, and family members once the book is created."
+      sideDescription="Choose a cover now. You can keep adding recipes and decide when this cookbook is ready to share."
       sideNote="Choose a cover. Add the memories next."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="recipe-card w-full space-y-6 p-5 sm:p-6">
@@ -78,6 +80,53 @@ export default function CreateBookPage() {
             error={errors.description?.message}
             {...register("description")}
           />
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-ink mb-3">Sharing</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              {
+                value: false,
+                label: "Private",
+                description: "Only you can access this cookbook until you turn sharing on.",
+                icon: Lock,
+              },
+              {
+                value: true,
+                label: "Shared",
+                description: "You can invite members to this cookbook after it is created.",
+                icon: Users,
+              },
+            ].map((option) => {
+              const Icon = option.icon;
+              const selected = sharingEnabled === option.value;
+              return (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => setValue("sharing_enabled", option.value)}
+                  aria-pressed={selected}
+                  className={clsx(
+                    "flex min-h-28 items-start gap-3 rounded-lg border p-4 text-left transition-[border-color,background-color,box-shadow]",
+                    selected
+                      ? "border-green-deep bg-green-pale/70 shadow-xs"
+                      : "border-line-soft bg-white-soft/60 hover:bg-card"
+                  )}
+                >
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-card text-green-deep">
+                    <Icon size={17} />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-bold text-green-deep">{option.label}</span>
+                    <span className="mt-1 block text-sm leading-relaxed text-ink-muted">
+                      {option.description}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Cover style picker */}

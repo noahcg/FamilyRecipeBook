@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { RecipeCard, EmptyState, CookbookIcon } from "@/components/ui";
 import { MemberProfileCard } from "@/components/members/MemberProfileCard";
+import { RemoveMemberButton } from "@/components/members/RemoveMemberButton";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberWithProfile } from "@/lib/types";
 
@@ -56,7 +57,11 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   const { tab = "recipes" } = await searchParams;
   const supabase = await createClient();
 
-  const [memberRes, recipesRes, activityRes] = await Promise.all([
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [memberRes, recipesRes, activityRes, viewerMemberRes] = await Promise.all([
     supabase
       .from("book_members")
       .select("*, profile:profiles(*)")
@@ -76,9 +81,16 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       .eq("actor_id", memberId)
       .order("created_at", { ascending: false })
       .limit(20),
+    user
+      ? supabase
+          .from("book_members")
+          .select("role")
+          .eq("book_id", bookId)
+          .eq("user_id", user.id)
+          .single()
+      : Promise.resolve({ data: null }),
   ]);
 
-  const { data: { user } } = await supabase.auth.getUser();
   const favRes = user
     ? await supabase.from("recipe_reactions").select("recipe_id").eq("user_id", user.id).eq("type", "favorite")
     : { data: [] };
@@ -109,6 +121,12 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           recipeCount={recipes.length}
           className="mb-6"
         />
+
+        {viewerMemberRes.data?.role === "keeper" && member.role !== "keeper" && (
+          <div className="mb-6">
+            <RemoveMemberButton bookId={bookId} userId={member.user_id} />
+          </div>
+        )}
 
         {/* Tabs */}
         <div

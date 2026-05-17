@@ -33,9 +33,51 @@ function isMissingPreferenceMigration(error: { message?: string; code?: string }
   return (
     error?.code === "PGRST204" ||
     message.includes("recipe_books.icon") ||
+    message.includes("sharing_enabled") ||
     message.includes("default_book_id") ||
     message.includes("schema cache")
   );
+}
+
+function getBookMigrationMessage(error: { message?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? "";
+  if (message.includes("sharing_enabled")) {
+    return "Apply migration 012_cookbook_sharing.sql before changing cookbook sharing.";
+  }
+  return "Apply migration 008_book_preferences.sql before saving cookbook preferences.";
+}
+
+async function getSharingBlockers(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  bookId: string
+) {
+  const [memberRes, inviteRes] = await Promise.all([
+    supabase
+      .from("book_members")
+      .select("id", { count: "exact", head: true })
+      .eq("book_id", bookId)
+      .neq("role", "keeper"),
+    supabase
+      .from("book_invitations")
+      .select("id", { count: "exact", head: true })
+      .eq("book_id", bookId)
+      .is("accepted_at", null)
+      .gte("expires_at", new Date().toISOString()),
+  ]);
+
+  if (memberRes.error || inviteRes.error) {
+    return {
+      error: memberRes.error?.message ?? inviteRes.error?.message ?? "Could not check sharing status.",
+      memberCount: 0,
+      inviteCount: 0,
+    };
+  }
+
+  return {
+    error: null,
+    memberCount: memberRes.count ?? 0,
+    inviteCount: inviteRes.count ?? 0,
+  };
 }
 
 export async function createBook(
@@ -51,15 +93,20 @@ export async function createBook(
   // into book_members without being blocked by RLS. Auth is enforced above
   // via requireUser() and owner_id is explicitly set to user.id.
   const admin = createServiceClient();
+  const createPayload = {
+    ...parsed.data,
+    sharing_enabled: parsed.data.sharing_enabled ?? false,
+  };
   let { data: book, error } = await admin
     .from("recipe_books")
-    .insert({ ...parsed.data, owner_id: user.id })
+    .insert({ ...createPayload, owner_id: user.id })
     .select()
     .single();
 
-  if (error && isMissingPreferenceMigration(error) && "icon" in parsed.data) {
-    const withoutIcon = { ...parsed.data };
+  if (error && isMissingPreferenceMigration(error)) {
+    const withoutIcon: Partial<typeof createPayload> = { ...createPayload };
     delete withoutIcon.icon;
+    delete withoutIcon.sharing_enabled;
     const retry = await admin
       .from("recipe_books")
       .insert({ ...withoutIcon, owner_id: user.id })
@@ -139,6 +186,20 @@ export async function updateBook(
     return { success: false, error: "Only the keeper can update the book." };
   }
 
+  if (parsed.data.sharing_enabled === false) {
+    const blockers = await getSharingBlockers(supabase, bookId);
+    if (blockers.error) {
+      return { success: false, error: blockers.error };
+    }
+    if (blockers.memberCount > 0 || blockers.inviteCount > 0) {
+      return {
+        success: false,
+        error:
+          "Remove non-keeper members and cancel pending invitations before making this cookbook private.",
+      };
+    }
+  }
+
   const updatePayload = { ...parsed.data, updated_at: new Date().toISOString() };
   let { data: book, error } = await supabase
     .from("recipe_books")
@@ -162,7 +223,7 @@ export async function updateBook(
     if (!Object.keys(withoutIcon).length && !error) {
       return {
         success: false,
-        error: "Apply migration 008_book_preferences.sql before saving cookbook icons.",
+        error: getBookMigrationMessage(error),
       };
     }
   }
@@ -171,12 +232,13 @@ export async function updateBook(
     return {
       success: false,
       error: isMissingPreferenceMigration(error)
-        ? "Apply migration 008_book_preferences.sql before saving cookbook icons."
+        ? getBookMigrationMessage(error)
         : error?.message ?? "Could not update book",
     };
   }
 
   revalidatePath("/app/books/[bookId]", "layout");
+  revalidatePath(`/app/books/${bookId}/members`);
   revalidatePath(`/app/books/${bookId}/settings`);
   revalidatePath("/app/settings");
   return { success: true, data: book };

@@ -19,6 +19,7 @@ export interface RecipeBook {
   cover_image_url: string | null;
   cover_style: string;
   icon: string;
+  sharing_enabled: boolean;
   owner_id: string;
   created_at: string;
   updated_at: string;

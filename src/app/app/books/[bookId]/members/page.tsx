@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Plus, UserPlus } from "lucide-react";
+import { Lock, Plus, Settings, UserPlus } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
 import { Button, EmptyState } from "@/components/ui";
 import { MemberProfileCard } from "@/components/members/MemberProfileCard";
-import { getBookMembers } from "@/lib/actions/members";
+import { PendingInvitationsList } from "@/components/members/PendingInvitationsList";
+import { getBookMembers, getPendingBookInvitations } from "@/lib/actions/members";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberWithProfile } from "@/lib/types";
@@ -24,7 +25,7 @@ export default async function MembersPage({ params }: Props) {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [members, memberRes, recipeCounts] = await Promise.all([
+  const [members, memberRes, recipeCounts, bookRes, pendingInvites] = await Promise.all([
     getBookMembers(bookId),
     supabase
       .from("book_members")
@@ -36,9 +37,16 @@ export default async function MembersPage({ params }: Props) {
       .from("recipes")
       .select("created_by")
       .eq("book_id", bookId),
+    supabase
+      .from("recipe_books")
+      .select("sharing_enabled")
+      .eq("id", bookId)
+      .single(),
+    getPendingBookInvitations(bookId),
   ]);
 
   const userRole = memberRes.data?.role ?? null;
+  const sharingEnabled = bookRes.data?.sharing_enabled ?? false;
   const countMap: Record<string, number> = {};
   for (const r of recipeCounts.data ?? []) {
     countMap[r.created_by] = (countMap[r.created_by] ?? 0) + 1;
@@ -65,7 +73,7 @@ export default async function MembersPage({ params }: Props) {
               Members
             </h1>
           </div>
-          {userRole === "keeper" && (
+          {userRole === "keeper" && sharingEnabled && (
             <Link href={`/app/books/${bookId}/members/add`}>
               <Button variant="primary" size="md" className="rounded-md">
                 <Plus size={16} /> Add Someone
@@ -74,7 +82,22 @@ export default async function MembersPage({ params }: Props) {
           )}
         </div>
 
-        {members.length === 0 ? (
+        {!sharingEnabled ? (
+          <EmptyState
+            title="This cookbook is private"
+            description="Members can only be invited after the keeper turns on sharing for this cookbook."
+            icon={<Lock size={28} />}
+            action={
+              userRole === "keeper" ? (
+                <Link href={`/app/books/${bookId}/settings`}>
+                  <Button variant="primary" size="sm">
+                    <Settings size={14} /> Open settings
+                  </Button>
+                </Link>
+              ) : undefined
+            }
+          />
+        ) : members.length === 0 ? (
           <EmptyState
             title="Invite someone you cook with"
             description="Share the book with family or friends so recipes, notes, and memories stay in one place."
@@ -90,6 +113,9 @@ export default async function MembersPage({ params }: Props) {
           />
         ) : (
           <div className="space-y-8">
+            {userRole === "keeper" && pendingInvites.length > 0 && (
+              <PendingInvitationsList bookId={bookId} invitations={pendingInvites} />
+            )}
             {ROLE_SECTIONS.map(({ role, label }) => {
               const group = grouped[role] ?? [];
               if (group.length === 0) return null;
