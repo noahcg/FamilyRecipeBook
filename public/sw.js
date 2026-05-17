@@ -1,4 +1,4 @@
-const CACHE_NAME = "home-cooked-static-v1";
+const CACHE_NAME = "home-cooked-static-v2";
 const PRECACHE_URLS = ["/manifest.webmanifest", "/offline.html", "/logo.png"];
 
 self.addEventListener("install", (event) => {
@@ -28,6 +28,34 @@ function shouldCache(request) {
   return ["script", "style", "font", "image", "manifest"].includes(request.destination);
 }
 
+function cacheFirst(request) {
+  return caches.match(request).then((cached) => {
+    const fetchPromise = fetch(request)
+      .then((response) => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() => cached ?? Response.error());
+
+    return cached || fetchPromise;
+  });
+}
+
+function networkFirst(request) {
+  return fetch(request)
+    .then((response) => {
+      if (response && response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    })
+    .catch(() => caches.match(request).then((cached) => cached ?? Response.error()));
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -52,18 +80,8 @@ self.addEventListener("fetch", (event) => {
   if (!shouldCache(request)) return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request)
-        .then((response) => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => cached ?? Response.error());
-
-      return cached || fetchPromise;
-    })
+    request.destination === "script" || request.destination === "style"
+      ? networkFirst(request)
+      : cacheFirst(request)
   );
 });

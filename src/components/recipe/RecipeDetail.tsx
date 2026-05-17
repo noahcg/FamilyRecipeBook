@@ -10,6 +10,7 @@ import {
   Edit2,
   Heart,
   MoreHorizontal,
+  Printer,
   ShoppingCart,
   Star,
   Trash2,
@@ -325,6 +326,14 @@ export function RecipeDetail({
                       userId={userId}
                       variant="menu"
                     />
+                    <Link
+                      href={`/app/books/${bookId}/recipes/${recipe.id}/print`}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Printer size={15} strokeWidth={1.75} className="text-ink-soft" />
+                      Print recipe
+                    </Link>
                     {canEdit && (
                       <Link
                         href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}

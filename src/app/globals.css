@@ -443,3 +443,253 @@ select:focus-visible {
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
+
+/* ─── Printable Recipe ───────────────────────────────────────── */
+.recipe-print-sheet {
+  color: var(--color-ink);
+}
+
+.recipe-print-page {
+  font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+}
+
+.recipe-print-header {
+  border-bottom: 2px solid var(--color-deep-green);
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+}
+
+.recipe-print-kicker {
+  color: var(--color-accent-cinnamon);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+.recipe-print-header h1 {
+  color: var(--color-green-deep);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(2.1rem, 6vw, 3.25rem);
+  line-height: 1.02;
+  margin: 0;
+}
+
+.recipe-print-meta,
+.recipe-print-source {
+  color: var(--color-ink-muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin: 0.45rem 0 0;
+}
+
+.recipe-print-story {
+  border-left: 3px solid var(--color-accent-honey);
+  color: var(--color-accent-cinnamon);
+  font-family: var(--font-caveat), Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  margin: 0 0 1.25rem;
+  padding-left: 1rem;
+}
+
+.recipe-print-grid {
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 760px) {
+  .recipe-print-grid {
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  }
+}
+
+.recipe-print-grid h2 {
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-green-deep);
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 1.55rem;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.45rem;
+}
+
+.recipe-print-ingredients,
+.recipe-print-steps {
+  color: var(--color-ink);
+  font-size: 0.96rem;
+  line-height: 1.5;
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.recipe-print-ingredients li,
+.recipe-print-steps li {
+  display: grid;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+}
+
+.recipe-print-ingredients li {
+  grid-template-columns: 1rem minmax(0, 1fr);
+}
+
+.recipe-print-steps li {
+  grid-template-columns: 1.65rem minmax(0, 1fr);
+}
+
+.recipe-print-checkbox {
+  border: 1.5px solid var(--color-green-sage);
+  border-radius: 999px;
+  display: block;
+  height: 0.9rem;
+  margin-top: 0.25rem;
+  width: 0.9rem;
+}
+
+.recipe-print-step-number {
+  align-items: center;
+  background: var(--color-green-deep);
+  border-radius: 999px;
+  color: var(--color-ink-inverse);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 900;
+  height: 1.35rem;
+  justify-content: center;
+  margin-top: 0.08rem;
+  width: 1.35rem;
+}
+
+.recipe-print-ingredients em {
+  color: var(--color-ink-muted);
+  display: block;
+  font-size: 0.86rem;
+  font-style: normal;
+  margin-top: 0.1rem;
+}
+
+@media print {
+  @page {
+    margin: 0.55in;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #243128 !important;
+    overflow: visible !important;
+  }
+
+  .print-preview-actions {
+    display: none !important;
+  }
+
+  .print-preview-shell {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .recipe-print-page {
+    color: #243128;
+    font-family: Arial, sans-serif;
+  }
+
+  .recipe-print-header {
+    border-bottom: 2px solid #2F4F3F;
+    margin-bottom: 0.22in;
+    padding-bottom: 0.18in;
+  }
+
+  .recipe-print-kicker {
+    color: #8D5E34;
+    font-family: Arial, sans-serif;
+    font-size: 9pt;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.08in;
+    text-transform: uppercase;
+  }
+
+  .recipe-print-header h1 {
+    color: #2F4F3F;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 24pt;
+    line-height: 1.05;
+    margin: 0;
+  }
+
+  .recipe-print-meta,
+  .recipe-print-source {
+    color: #756F64;
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    margin: 0.08in 0 0;
+  }
+
+  .recipe-print-story {
+    border-left: 3px solid #D8A053;
+    color: #8D5E34;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 11.5pt;
+    line-height: 1.35;
+    margin: 0 0 0.22in;
+    padding-left: 0.16in;
+  }
+
+  .recipe-print-grid {
+    display: grid;
+    gap: 0.32in;
+    grid-template-columns: 34% minmax(0, 1fr);
+  }
+
+  .recipe-print-grid h2 {
+    border-bottom: 1px solid #DED4C3;
+    color: #2F4F3F;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15pt;
+    margin: 0 0 0.12in;
+    padding-bottom: 0.07in;
+  }
+
+  .recipe-print-ingredients,
+  .recipe-print-steps {
+    font-family: Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.42;
+    margin: 0;
+    padding-left: 0.18in;
+  }
+
+  .recipe-print-ingredients li,
+  .recipe-print-steps li {
+    break-inside: avoid;
+    margin-bottom: 0.08in;
+  }
+
+  .recipe-print-checkbox {
+    border-color: #8BA888;
+    height: 0.13in;
+    margin-top: 0.035in;
+    width: 0.13in;
+  }
+
+  .recipe-print-step-number {
+    background: #2F4F3F;
+    color: #ffffff;
+    font-size: 7.5pt;
+    height: 0.2in;
+    width: 0.2in;
+  }
+
+  .recipe-print-ingredients em {
+    color: #756F64;
+    display: block;
+    font-size: 9pt;
+    font-style: normal;
+    margin-top: 0.02in;
+  }
+}
