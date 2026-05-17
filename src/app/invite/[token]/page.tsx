@@ -15,6 +15,8 @@ interface Props {
 export default function InvitePage({ params }: Props) {
   const { token } = use(params);
   const router = useRouter();
+  const nextPath = `/invite/${token}`;
+  const encodedNextPath = encodeURIComponent(nextPath);
   const [status, setStatus] = useState<"idle" | "accepting" | "success" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +28,7 @@ export default function InvitePage({ params }: Props) {
       setStatus("error");
     } else {
       setStatus("success");
-      setTimeout(() => router.push("/app"), 2000);
+      setTimeout(() => router.push(`/app/books/${result.data.bookId}`), 1200);
     }
   }
 
@@ -67,7 +69,7 @@ export default function InvitePage({ params }: Props) {
               Invitation not found
             </h1>
             <p className="text-ink-muted mb-6">{error}</p>
-            <Link href="/sign-in">
+            <Link href={`/sign-in?next=${encodedNextPath}`}>
               <Button variant="primary">Sign in</Button>
             </Link>
           </>
@@ -92,10 +94,16 @@ export default function InvitePage({ params }: Props) {
               Accept invitation
             </Button>
             <Link
-              href="/sign-in"
+              href={`/sign-in?next=${encodedNextPath}`}
               className="block mt-3 text-sm text-ink-soft hover:text-ink"
             >
               Sign in first
+            </Link>
+            <Link
+              href={`/sign-up?next=${encodedNextPath}`}
+              className="block mt-3 text-sm text-ink-soft hover:text-ink"
+            >
+              Create an account
             </Link>
           </>
         )}

@@ -4,33 +4,47 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
 
+function getSafeRedirectPath(value?: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/app";
+  return value;
+}
+
 export async function signIn(
   email: string,
-  password: string
+  password: string,
+  redirectTo?: string | null
 ): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { success: false, error: error.message };
-  redirect("/app");
+  redirect(getSafeRedirectPath(redirectTo));
 }
 
 export async function signUp(
   fullName: string,
   email: string,
-  password: string
+  password: string,
+  redirectTo?: string | null
 ): Promise<ActionResult<{ needsConfirmation: boolean }>> {
   const supabase = await createClient();
+  const nextPath = getSafeRedirectPath(redirectTo);
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      data: { full_name: fullName },
+      emailRedirectTo: `${origin}${nextPath}`,
+    },
   });
   if (error) return { success: false, error: error.message };
   // When email confirmation is required, session is null
   if (!data.session) {
     return { success: true, data: { needsConfirmation: true } };
   }
-  redirect("/onboarding/create-book");
+  redirect(nextPath);
 }
 
 export async function signOut(): Promise<void> {

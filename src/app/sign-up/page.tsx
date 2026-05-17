@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Mail } from "lucide-react";
@@ -10,7 +11,10 @@ import { EntryShell } from "@/components/layout/EntryShell";
 import { signUpSchema, type SignUpInput } from "@/lib/validators/auth";
 import { signUp } from "@/lib/actions/auth";
 
-export default function SignUpPage() {
+function SignUpContent() {
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next");
+  const signInHref = nextPath ? `/sign-in?next=${encodeURIComponent(nextPath)}` : "/sign-in";
   const [serverError, setServerError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +27,7 @@ export default function SignUpPage() {
 
   async function onSubmit(data: SignUpInput) {
     setServerError(null);
-    const result = await signUp(data.full_name, data.email, data.password);
+    const result = await signUp(data.full_name, data.email, data.password, nextPath);
     if (!result) return; // redirect happened
     if (!result.success) {
       setServerError(result.error);
@@ -47,7 +51,7 @@ export default function SignUpPage() {
         footer={
           <p className="text-center text-xs text-ink-soft mt-6">
             Already confirmed?{" "}
-            <Link href="/sign-in" className="text-green-deep font-semibold hover:underline">
+            <Link href={signInHref} className="text-green-deep font-semibold hover:underline">
               Sign in
             </Link>
           </p>
@@ -90,7 +94,7 @@ export default function SignUpPage() {
         <p className="text-center text-sm text-ink-muted mt-5">
           Already have an account?{" "}
           <Link
-            href="/sign-in"
+            href={signInHref}
             className="text-green-deep font-semibold hover:underline"
           >
             Sign in
@@ -151,5 +155,13 @@ export default function SignUpPage() {
         </Button>
       </form>
     </EntryShell>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense>
+      <SignUpContent />
+    </Suspense>
   );
 }

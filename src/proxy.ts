@@ -35,13 +35,16 @@ export async function proxy(request: NextRequest) {
   if (!user && (pathname.startsWith("/app") || pathname.startsWith("/onboarding"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";
+    url.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
   }
 
   // Redirect authenticated users away from auth pages
   if (user && (pathname === "/sign-in" || pathname === "/sign-up")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/app";
+    const nextPath = request.nextUrl.searchParams.get("next");
+    url.pathname = nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/app";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
@@ -10,7 +11,10 @@ import { EntryShell } from "@/components/layout/EntryShell";
 import { signInSchema, type SignInInput } from "@/lib/validators/auth";
 import { signIn } from "@/lib/actions/auth";
 
-export default function SignInPage() {
+function SignInContent() {
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next");
+  const signUpHref = nextPath ? `/sign-up?next=${encodeURIComponent(nextPath)}` : "/sign-up";
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,7 +26,7 @@ export default function SignInPage() {
 
   async function onSubmit(data: SignInInput) {
     setServerError(null);
-    const result = await signIn(data.email, data.password);
+    const result = await signIn(data.email, data.password, nextPath);
     if (result && !result.success) setServerError(result.error);
   }
 
@@ -41,7 +45,7 @@ export default function SignInPage() {
         <p className="text-center text-sm text-ink-muted mt-5">
           Don&rsquo;t have an account?{" "}
           <Link
-            href="/sign-up"
+            href={signUpHref}
             className="text-green-deep font-semibold hover:underline"
           >
             Create one
@@ -93,5 +97,13 @@ export default function SignInPage() {
         </Button>
       </form>
     </EntryShell>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense>
+      <SignInContent />
+    </Suspense>
   );
 }

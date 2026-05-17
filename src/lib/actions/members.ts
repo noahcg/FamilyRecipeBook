@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { randomBytes } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
-import { requireUser } from "@/lib/auth";
+import { getUser, requireUser } from "@/lib/auth";
 import { createMemberInviteEmail } from "@/lib/email/memberInviteTemplate";
 import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEmail";
 import { canManageMembers } from "@/lib/permissions";
@@ -100,8 +100,11 @@ export async function inviteMember(
   return { success: true, data: invitation };
 }
 
-export async function acceptInvitation(token: string): Promise<ActionResult> {
-  const user = await requireUser();
+export async function acceptInvitation(token: string): Promise<ActionResult<{ bookId: string }>> {
+  const user = await getUser();
+  if (!user) {
+    return { success: false, error: "Please sign in or create an account to accept this invitation." };
+  }
 
   // Use service role to read the invitation — RLS only allows keepers to query
   // book_invitations, but the accepting user is not yet a member at this point.
@@ -117,6 +120,13 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
 
   if (!invitation) {
     return { success: false, error: "This invitation is invalid or has expired." };
+  }
+
+  if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+    return {
+      success: false,
+      error: `This invitation was sent to ${invitation.email}. Sign in with that email address to accept it.`,
+    };
   }
 
   // Add user to book_members via service role (user may not yet be a member)
@@ -135,7 +145,8 @@ export async function acceptInvitation(token: string): Promise<ActionResult> {
     .eq("id", invitation.id);
 
   revalidatePath(`/app/books/${invitation.book_id}`);
-  return { success: true, data: undefined };
+  revalidatePath("/app");
+  return { success: true, data: { bookId: invitation.book_id } };
 }
 
 export async function getBookMembers(bookId: string): Promise<MemberWithProfile[]> {
