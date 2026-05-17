@@ -54,6 +54,11 @@ type IngredientKeypadTarget = {
 };
 
 const INGREDIENT_KEYPAD_UNITS = ["tsp", "Tbsp", "oz", "lb", "can", "cup"];
+const entryGridClassName = "grid gap-8 lg:grid-cols-2 lg:gap-12";
+const entryCardClassName = "rounded-xl border border-line bg-card p-5 shadow-xs";
+const entryCardHeaderClassName = "flex items-start gap-3";
+const entryCardIconClassName =
+  "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-pale text-green-deep";
 
 function duplicateImportKeys(recipes: NormalizedImportedRecipe[]) {
   const counts = new Map<string, number>();
@@ -780,196 +785,10 @@ export function RecipeForm({
       )}
 
       {(!showPasteEntry || entryMode === "manual") ? (
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+      <div className={entryGridClassName}>
 
         {/* ── Left column: photo + about + details ── */}
         <div className="space-y-6">
-          {!isEdit && (
-            <section
-              className="rounded-xl border border-line p-4"
-              style={{ background: "var(--color-card)" }}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-                  style={{
-                    background: "var(--color-sage-pale)",
-                    color: "var(--color-deep-green)",
-                  }}
-                >
-                  <WandSparkles size={18} strokeWidth={1.8} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-ink">Import from cookbook photo</p>
-                  <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Free OCR runs in your browser first. For better extraction, you can improve
-                    the result with your own OpenAI API key.
-                  </p>
-                </div>
-              </div>
-
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  if (!isImporting) importFileRef.current?.click();
-                }}
-                onKeyDown={(e) => {
-                  if ((e.key === "Enter" || e.key === " ") && !isImporting) {
-                    e.preventDefault();
-                    importFileRef.current?.click();
-                  }
-                }}
-                onDragEnter={(e) => {
-                  e.preventDefault();
-                  if (!isImporting) setIsImportDragging(true);
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (!isImporting) setIsImportDragging(true);
-                }}
-                onDragLeave={(e) => {
-                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                    setIsImportDragging(false);
-                  }
-                }}
-                onDrop={handleImportDrop}
-                className={clsx(
-                  "mt-4 rounded-lg border-2 border-dashed p-4 text-center transition-colors",
-                  "focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]",
-                  isImportDragging
-                    ? "border-green-deep bg-green-pale"
-                    : "border-line bg-paper-soft hover:border-green-sage hover:bg-green-pale/60",
-                  isImporting && "cursor-wait opacity-80"
-                )}
-              >
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <Camera size={20} className="text-green-deep" strokeWidth={1.8} />
-                  <p className="text-sm font-bold text-ink">
-                    {isImporting ? "Reading photo" : "Drop a recipe photo here"}
-                  </p>
-                  <p className="text-xs text-ink-soft">
-                    or choose a JPEG, PNG, or WebP from your device
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    importFileRef.current?.click();
-                  }}
-                  loading={isImporting}
-                  className="mt-3 justify-center"
-                >
-                  Choose photo
-                </Button>
-                {importFileName && (
-                  <p className="mx-auto mt-2 max-w-full truncate text-xs font-medium text-ink-soft">
-                    {importFileName}
-                  </p>
-                )}
-              </div>
-              {isImporting && (
-                <div className="mt-3">
-                  <div className="h-1.5 overflow-hidden rounded-full bg-card-muted">
-                    <div
-                      className="h-full rounded-full bg-green-deep transition-[width]"
-                      style={{ width: `${Math.max(8, importProgress)}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs font-medium text-ink-soft">
-                    {importStatus ?? "Reading recipe text"}
-                  </p>
-                </div>
-              )}
-              <input
-                ref={importFileRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleImportImageChange}
-                className="sr-only"
-              />
-
-              {importError && (
-                <div className="mt-3 flex gap-2 rounded-md border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
-                  <AlertTriangle size={16} className="mt-0.5 shrink-0" strokeWidth={1.8} />
-                  <p>{importError}</p>
-                </div>
-              )}
-
-              {importedRecipe && (
-                <div className="mt-4 rounded-lg border border-line bg-paper-soft p-3">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2
-                      size={16}
-                      className="mt-0.5 shrink-0 text-green-deep"
-                      strokeWidth={1.8}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-ink">
-                        {importedRecipe.title}
-                      </p>
-                      <p className="mt-1 text-xs text-ink-soft">
-                        Found {importedRecipe.ingredients.length} ingredients and{" "}
-                        {importedRecipe.instructions.length} steps. Confidence:{" "}
-                        {importedRecipe.confidence}.
-                        {importSource === "openai" && " Improved with OpenAI."}
-                      </p>
-                    </div>
-                  </div>
-                  {importedRecipe.warnings.length > 0 && (
-                    <ul className="mt-3 space-y-1 text-xs text-ink-soft">
-                      {importedRecipe.warnings.map((warning) => (
-                        <li key={warning}>- {warning}</li>
-                      ))}
-                    </ul>
-                  )}
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={applyImportedRecipe}
-                    className="mt-3 w-full"
-                  >
-                    Apply to recipe form
-                  </Button>
-                  {preparedImportImage && importSource !== "openai" && (
-                    hasOpenAIKey ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleImproveImport}
-                        loading={isImprovingImport}
-                        className="mt-2 w-full"
-                      >
-                        Improve with OpenAI
-                      </Button>
-                    ) : (
-                      <div className="mt-3 rounded-md border border-accent-honey/35 bg-paper-warm/70 p-3">
-                        <p className="text-xs font-bold text-green-deep">
-                          Want better extraction?
-                        </p>
-                        <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                          Add your OpenAI API key in{" "}
-                          <a
-                            href={`/app/books/${bookId}/settings`}
-                            className="font-bold text-green-deep underline underline-offset-2"
-                          >
-                            Settings
-                          </a>
-                          . Your key is only used when you choose to improve an import.
-                        </p>
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-            </section>
-          )}
-
           {/* Photo upload */}
           <div>
             <button
@@ -1321,11 +1140,11 @@ export function RecipeForm({
         </div>
       </div>
       ) : entryMode === "paste" ? (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
+        <div className={entryGridClassName}>
           <div className="space-y-6">
-            <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-pale text-green-deep">
+            <section className={entryCardClassName}>
+              <div className={entryCardHeaderClassName}>
+                <span className={entryCardIconClassName}>
                   <ClipboardPaste size={18} strokeWidth={1.8} />
                 </span>
                 <div>
@@ -1542,95 +1361,272 @@ export function RecipeForm({
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-10">
-          <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-pale text-green-deep">
-                <FileUp size={18} strokeWidth={1.8} />
-              </span>
-              <div>
-                <p className="text-sm font-bold text-ink">Import recipe files</p>
-                <p className="mt-1 text-sm leading-5 text-ink-soft">
-                  Choose Paprika, Plan to Eat, HTML, JSON, TXT, CSV, or ZIP exports. Review
-                  everything before saving.
-                </p>
+        <div className={entryGridClassName}>
+          <div className="space-y-6">
+            <section className={entryCardClassName}>
+              <div className={entryCardHeaderClassName}>
+                <span className={entryCardIconClassName}>
+                  <WandSparkles size={18} strokeWidth={1.8} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-ink">Import from cookbook photo</p>
+                  <p className="mt-1 text-sm leading-5 text-ink-soft">
+                    Free OCR runs in your browser first. For better extraction, you can improve
+                    the result with your own OpenAI API key.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={() => fileImportRef.current?.click()}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                void parseRecipeFiles(Array.from(event.dataTransfer.files));
-              }}
-              className="mt-5 flex min-h-40 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-line bg-paper-soft p-5 text-center transition hover:border-green-sage hover:bg-green-pale/60"
-            >
-              <FileUp size={24} className="text-green-deep" strokeWidth={1.8} />
-              <span className="mt-2 text-sm font-bold text-ink">
-                {isFileParsing ? "Parsing files" : "Drop files here"}
-              </span>
-              <span className="mt-1 text-xs text-ink-soft">
-                or choose multiple exports from your device
-              </span>
-            </button>
-            <input
-              ref={fileImportRef}
-              type="file"
-              multiple
-              accept=".paprikarecipes,.html,.htm,.json,.jsonld,.zip,.csv,.txt,text/html,application/json,application/zip,text/csv,text/plain"
-              onChange={(event) => void parseRecipeFiles(Array.from(event.target.files ?? []))}
-              className="sr-only"
-            />
-
-            <div className="mt-5 grid grid-cols-3 gap-2">
-              <div className="rounded-md border border-line bg-paper-soft p-3">
-                <p className="text-xl font-bold text-green-deep">{fileImportRecipes.length}</p>
-                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Parsed</p>
-              </div>
-              <div className="rounded-md border border-line bg-paper-soft p-3">
-                <p className="text-xl font-bold text-green-deep">
-                  {fileImportRecipes.reduce((count, recipe) => count + recipe.warnings.length, 0) + fileImportWarnings.length}
-                </p>
-                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Warnings</p>
-              </div>
-              <div className="rounded-md border border-line bg-paper-soft p-3">
-                <p className="text-xl font-bold text-green-deep">{skippedImportFiles.length}</p>
-                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Skipped</p>
-              </div>
-            </div>
-
-            {(fileImportError || skippedImportFiles.length > 0) && (
-              <div className="mt-4 rounded-md border border-danger/25 bg-danger/5 p-3 text-sm text-danger">
-                {fileImportError && <p className="font-semibold">{fileImportError}</p>}
-                {skippedImportFiles.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {skippedImportFiles.slice(0, 6).map((file) => (
-                      <li key={`${file.fileName}-${file.reason}`}>
-                        {file.fileName}: {file.reason}
-                      </li>
-                    ))}
-                  </ul>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (!isImporting) importFileRef.current?.click();
+                }}
+                onKeyDown={(e) => {
+                  if ((e.key === "Enter" || e.key === " ") && !isImporting) {
+                    e.preventDefault();
+                    importFileRef.current?.click();
+                  }
+                }}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  if (!isImporting) setIsImportDragging(true);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (!isImporting) setIsImportDragging(true);
+                }}
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                    setIsImportDragging(false);
+                  }
+                }}
+                onDrop={handleImportDrop}
+                className={clsx(
+                  "mt-5 rounded-lg border-2 border-dashed p-4 text-center transition-colors",
+                  "focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]",
+                  isImportDragging
+                    ? "border-green-deep bg-green-pale"
+                    : "border-line bg-paper-soft hover:border-green-sage hover:bg-green-pale/60",
+                  isImporting && "cursor-wait opacity-80"
+                )}
+              >
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Camera size={20} className="text-green-deep" strokeWidth={1.8} />
+                  <p className="text-sm font-bold text-ink">
+                    {isImporting ? "Reading photo" : "Drop a recipe photo here"}
+                  </p>
+                  <p className="text-xs text-ink-soft">
+                    or choose a JPEG, PNG, or WebP from your device
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    importFileRef.current?.click();
+                  }}
+                  loading={isImporting}
+                  className="mt-3 justify-center"
+                >
+                  Choose photo
+                </Button>
+                {importFileName && (
+                  <p className="mx-auto mt-2 max-w-full truncate text-xs font-medium text-ink-soft">
+                    {importFileName}
+                  </p>
                 )}
               </div>
-            )}
+              {isImporting && (
+                <div className="mt-3">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-card-muted">
+                    <div
+                      className="h-full rounded-full bg-green-deep transition-[width]"
+                      style={{ width: `${Math.max(8, importProgress)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-ink-soft">
+                    {importStatus ?? "Reading recipe text"}
+                  </p>
+                </div>
+              )}
+              <input
+                ref={importFileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImportImageChange}
+                className="sr-only"
+              />
 
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row lg:flex-col">
-              <Button type="button" variant="secondary" onClick={() => router.back()}>
-                Cancel
-              </Button>
-              <Button
+              {importError && (
+                <div className="mt-3 flex gap-2 rounded-md border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+                  <AlertTriangle size={16} className="mt-0.5 shrink-0" strokeWidth={1.8} />
+                  <p>{importError}</p>
+                </div>
+              )}
+
+              {importedRecipe && (
+                <div className="mt-4 rounded-lg border border-line bg-paper-soft p-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2
+                      size={16}
+                      className="mt-0.5 shrink-0 text-green-deep"
+                      strokeWidth={1.8}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-ink">
+                        {importedRecipe.title}
+                      </p>
+                      <p className="mt-1 text-xs text-ink-soft">
+                        Found {importedRecipe.ingredients.length} ingredients and{" "}
+                        {importedRecipe.instructions.length} steps. Confidence:{" "}
+                        {importedRecipe.confidence}.
+                        {importSource === "openai" && " Improved with OpenAI."}
+                      </p>
+                    </div>
+                  </div>
+                  {importedRecipe.warnings.length > 0 && (
+                    <ul className="mt-3 space-y-1 text-xs text-ink-soft">
+                      {importedRecipe.warnings.map((warning) => (
+                        <li key={warning}>- {warning}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={applyImportedRecipe}
+                    className="mt-3 w-full"
+                  >
+                    Apply to recipe form
+                  </Button>
+                  {preparedImportImage && importSource !== "openai" && (
+                    hasOpenAIKey ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleImproveImport}
+                        loading={isImprovingImport}
+                        className="mt-2 w-full"
+                      >
+                        Improve with OpenAI
+                      </Button>
+                    ) : (
+                      <div className="mt-3 rounded-md border border-accent-honey/35 bg-paper-warm/70 p-3">
+                        <p className="text-xs font-bold text-green-deep">
+                          Want better extraction?
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                          Add your OpenAI API key in{" "}
+                          <a
+                            href={`/app/books/${bookId}/settings`}
+                            className="font-bold text-green-deep underline underline-offset-2"
+                          >
+                            Settings
+                          </a>
+                          . Your key is only used when you choose to improve an import.
+                        </p>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </section>
+
+            <section className={entryCardClassName}>
+              <div className={entryCardHeaderClassName}>
+                <span className={entryCardIconClassName}>
+                  <FileUp size={18} strokeWidth={1.8} />
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-ink">Import recipe files</p>
+                  <p className="mt-1 text-sm leading-5 text-ink-soft">
+                    Choose Paprika, Plan to Eat, HTML, JSON, TXT, CSV, or ZIP exports. Review
+                    everything before saving.
+                  </p>
+                </div>
+              </div>
+
+              <button
                 type="button"
-                variant="primary"
-                loading={isSavingImport}
-                disabled={!fileImportRecipes.length || selectedImportIds.size === 0}
-                onClick={handleSaveImportedRecipes}
+                onClick={() => fileImportRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  void parseRecipeFiles(Array.from(event.dataTransfer.files));
+                }}
+                className="mt-5 flex min-h-40 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-line bg-paper-soft p-5 text-center transition hover:border-green-sage hover:bg-green-pale/60"
               >
-                Save selected recipes
-              </Button>
-            </div>
-          </section>
+                <FileUp size={24} className="text-green-deep" strokeWidth={1.8} />
+                <span className="mt-2 text-sm font-bold text-ink">
+                  {isFileParsing ? "Parsing files" : "Drop files here"}
+                </span>
+                <span className="mt-1 text-xs text-ink-soft">
+                  or choose multiple exports from your device
+                </span>
+              </button>
+              <input
+                ref={fileImportRef}
+                type="file"
+                multiple
+                accept=".paprikarecipes,.html,.htm,.json,.jsonld,.zip,.csv,.txt,text/html,application/json,application/zip,text/csv,text/plain"
+                onChange={(event) => void parseRecipeFiles(Array.from(event.target.files ?? []))}
+                className="sr-only"
+              />
+
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="rounded-md border border-line bg-paper-soft p-3">
+                  <p className="text-xl font-bold text-green-deep">{fileImportRecipes.length}</p>
+                  <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Parsed</p>
+                </div>
+                <div className="rounded-md border border-line bg-paper-soft p-3">
+                  <p className="text-xl font-bold text-green-deep">
+                    {fileImportRecipes.reduce((count, recipe) => count + recipe.warnings.length, 0) + fileImportWarnings.length}
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Warnings</p>
+                </div>
+                <div className="rounded-md border border-line bg-paper-soft p-3">
+                  <p className="text-xl font-bold text-green-deep">{skippedImportFiles.length}</p>
+                  <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Skipped</p>
+                </div>
+              </div>
+
+              {(fileImportError || skippedImportFiles.length > 0) && (
+                <div className="mt-4 rounded-md border border-danger/25 bg-danger/5 p-3 text-sm text-danger">
+                  {fileImportError && <p className="font-semibold">{fileImportError}</p>}
+                  {skippedImportFiles.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {skippedImportFiles.slice(0, 6).map((file) => (
+                        <li key={`${file.fileName}-${file.reason}`}>
+                          {file.fileName}: {file.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row lg:flex-col">
+                <Button type="button" variant="secondary" onClick={() => router.back()}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  loading={isSavingImport}
+                  disabled={!fileImportRecipes.length || selectedImportIds.size === 0}
+                  onClick={handleSaveImportedRecipes}
+                >
+                  Save selected recipes
+                </Button>
+              </div>
+            </section>
+          </div>
 
           <section className="space-y-3">
             {fileImportRecipes.length === 0 ? (
