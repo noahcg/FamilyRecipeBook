@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { clsx } from "clsx";
+import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
 import type { RecipeIngredient } from "@/lib/types";
 
 interface IngredientChecklistProps {
   ingredients: RecipeIngredient[];
   className?: string;
+  scaleFactor?: number;
 }
 
-export function IngredientChecklist({ ingredients, className }: IngredientChecklistProps) {
+export function IngredientChecklist({ ingredients, className, scaleFactor = 1 }: IngredientChecklistProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
   function toggle(id: string) {
@@ -25,7 +27,8 @@ export function IngredientChecklist({ ingredients, className }: IngredientCheckl
     <ul className={clsx("grid gap-x-8 gap-y-2 sm:grid-cols-2", className)}>
       {ingredients.map((ing) => {
         const isChecked = checked.has(ing.id);
-        const label = [ing.quantity, ing.unit, ing.item].filter(Boolean).join(" ");
+        const quantity = scaleIngredientQuantity(ing.quantity, scaleFactor);
+        const label = [quantity, ing.unit, ing.item].filter(Boolean).join(" ");
 
         return (
           <li key={ing.id}>

@@ -20,6 +20,7 @@ import { Button, Dialog } from "@/components/ui";
 import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
+import { ServingScaler } from "./ServingScaler";
 import { addRecipeStory, deleteRecipe } from "@/lib/actions/recipes";
 import { addRecipeIngredientsToGrocery } from "@/lib/actions/grocery";
 import { setRecipeRating, toggleReaction } from "@/lib/actions/reactions";
@@ -116,6 +117,7 @@ export function RecipeDetail({
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [servingScale, setServingScale] = useState(1);
   const [isAddingGroceries, startAddingGroceries] = useTransition();
   const [groceryMessage, setGroceryMessage] = useState<string | null>(null);
   const [confirmGroceryOpen, setConfirmGroceryOpen] = useState(false);
@@ -134,6 +136,7 @@ export function RecipeDetail({
   const addedByLabel = `${addedByName}${wasAddedViaUpload ? " (via upload)" : ""}`;
   const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
   const noteCount = (recipe.stories?.length ?? 0) + (recipe.story ? 1 : 0);
+  const displayedServings = recipe.servings ? recipe.servings * servingScale : recipe.servings;
   const addedDate = new Date(recipe.created_at).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -365,10 +368,10 @@ export function RecipeDetail({
               <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/86">
                 <span className="font-semibold text-white">Added by {addedByLabel}</span>
                 <span>{addedDate}</span>
-                {recipe.servings != null && (
+                {displayedServings != null && (
                   <span className="inline-flex items-center gap-1.5">
                     <Users size={15} />
-                    Serves {recipe.servings}
+                    Serves {displayedServings}
                   </span>
                 )}
                 {recipe.cook_minutes != null && (
@@ -402,7 +405,7 @@ export function RecipeDetail({
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-line-soft text-sm lg:border-l lg:pl-8">
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Servings</dt>
-              <dd className="mt-1 font-bold text-green-deep">{recipe.servings ?? "Family"}</dd>
+              <dd className="mt-1 font-bold text-green-deep">{displayedServings ?? "Family"}</dd>
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Cook</dt>
@@ -413,8 +416,18 @@ export function RecipeDetail({
               <dd className="mt-1 truncate font-bold text-green-deep">{recipe.category ?? "Family"}</dd>
             </div>
             <div>
-              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Memories</dt>
-              <dd className="mt-1 font-bold text-green-deep">{noteCount}</dd>
+              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Scale</dt>
+              <dd>
+                {recipe.servings ? (
+                  <ServingScaler
+                    baseServings={recipe.servings}
+                    scale={servingScale}
+                    onChange={setServingScale}
+                  />
+                ) : (
+                  <span className="mt-1 block font-bold text-green-deep">1x</span>
+                )}
+              </dd>
             </div>
           </dl>
         </section>
@@ -476,7 +489,11 @@ export function RecipeDetail({
                   </p>
                 )}
               </div>
-              <IngredientChecklist ingredients={recipe.ingredients} className="sm:grid-cols-1" />
+              <IngredientChecklist
+                ingredients={recipe.ingredients}
+                className="sm:grid-cols-1"
+                scaleFactor={servingScale}
+              />
             </section>
           )}
 
