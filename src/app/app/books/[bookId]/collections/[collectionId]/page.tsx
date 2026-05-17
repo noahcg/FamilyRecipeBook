@@ -22,8 +22,14 @@ interface CollectionRecipeRow {
     photo_url: string | null;
     source_name: string | null;
     category: string | null;
+    creator?: { full_name: string | null } | { full_name: string | null }[] | null;
     reactions?: { type: string }[] | null;
   } | null;
+}
+
+function getRecipeAttribution(recipe: NonNullable<CollectionRecipeRow["recipe"]>) {
+  const creator = Array.isArray(recipe.creator) ? recipe.creator[0] : recipe.creator;
+  return recipe.source_name?.trim() || creator?.full_name?.trim() || undefined;
 }
 
 export default async function CollectionDetailPage({ params }: Props) {
@@ -34,7 +40,7 @@ export default async function CollectionDetailPage({ params }: Props) {
     supabase
       .from("collections")
       .select(
-        "*, recipes:collection_recipes(recipe:recipes(*, reactions:recipe_reactions(type)))"
+        "*, recipes:collection_recipes(recipe:recipes(*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type)))"
       )
       .eq("id", collectionId)
       .eq("book_id", bookId)
@@ -99,7 +105,7 @@ export default async function CollectionDetailPage({ params }: Props) {
                   title={recipe.title}
                   description={recipe.description ?? undefined}
                   imageUrl={recipe.photo_url ?? undefined}
-                  fromPerson={recipe.source_name ?? undefined}
+                  fromPerson={getRecipeAttribution(recipe)}
                   loveCount={recipe.loveCount}
                   category={recipe.category ?? undefined}
                   isFavorited={favoriteIds.has(recipe.id)}

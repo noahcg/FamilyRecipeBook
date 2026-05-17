@@ -194,7 +194,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                   title={recipe.title}
                   description={recipe.description ?? undefined}
                   imageUrl={recipe.photo_url ?? undefined}
-                  fromPerson={recipe.source_name ?? undefined}
+                  fromPerson={recipe.source_name?.trim() || member.profile.full_name?.trim() || undefined}
                   loveCount={recipe.loveCount}
                   category={recipe.category ?? undefined}
                   isFavorited={favoriteIds.has(recipe.id)}

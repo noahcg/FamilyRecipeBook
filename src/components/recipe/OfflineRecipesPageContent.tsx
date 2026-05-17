@@ -26,8 +26,9 @@ function formatSavedDate(value: string) {
 
 function recipeMeta(record: OfflineRecipeRecord) {
   const recipe = record.recipe;
+  const attribution = recipe.source_name?.trim() || recipe.creator?.full_name?.trim();
   return [
-    recipe.source_name ?? recipe.creator?.full_name,
+    attribution,
     recipe.cook_minutes ? `${recipe.cook_minutes} min` : null,
     recipe.servings ? `Serves ${recipe.servings}` : null,
   ]

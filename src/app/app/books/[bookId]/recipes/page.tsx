@@ -31,7 +31,7 @@ interface RecipeListItem {
   servings: number | null;
   category: string | null;
   created_at: string;
-  creator: { full_name: string | null } | null;
+  creator: { full_name: string | null } | { full_name: string | null }[] | null;
   reactions: RecipeReaction[] | null;
   loveCount: number;
 }
@@ -54,13 +54,20 @@ function formatAddedDate(value: string) {
 }
 
 function recipeMeta(recipe: RecipeListItem) {
+  const creator = Array.isArray(recipe.creator) ? recipe.creator[0] : recipe.creator;
+  const attribution = recipe.source_name?.trim() || creator?.full_name?.trim();
   const items = [
-    recipe.source_name ?? recipe.creator?.full_name,
+    attribution,
     recipe.cook_minutes ? `${recipe.cook_minutes} min` : null,
     recipe.servings ? `Serves ${recipe.servings}` : null,
   ];
 
   return items.filter(Boolean).join(" · ");
+}
+
+function recipeCreatorName(recipe: RecipeListItem) {
+  const creator = Array.isArray(recipe.creator) ? recipe.creator[0] : recipe.creator;
+  return creator?.full_name;
 }
 
 export default function RecipesPage({ params }: Props) {
@@ -128,7 +135,7 @@ export default function RecipesPage({ params }: Props) {
       [
         recipe.title,
         recipe.source_name,
-        recipe.creator?.full_name,
+        recipeCreatorName(recipe),
         recipe.category,
         recipe.description,
       ]

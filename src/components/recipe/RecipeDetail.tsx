@@ -101,6 +101,10 @@ function StarRatingControl({
   );
 }
 
+function firstNonEmpty(...values: Array<string | null | undefined>) {
+  return values.find((value) => value?.trim())?.trim();
+}
+
 export function RecipeDetail({
   recipe,
   bookId,
@@ -131,7 +135,7 @@ export function RecipeDetail({
     userRole === "keeper" ||
     (userRole === "contributor" && recipe.created_by === userId);
 
-  const sourceName = recipe.source_name ?? recipe.creator?.full_name ?? "Family";
+  const sourceName = firstNonEmpty(recipe.source_name, recipe.creator?.full_name) ?? "Family";
   const wasAddedViaUpload = recipe.import_method === "image_upload";
   const addedByName = wasAddedViaUpload ? recipe.creator?.full_name ?? "Family" : sourceName;
   const addedByLabel = `${addedByName}${wasAddedViaUpload ? " (via upload)" : ""}`;
@@ -421,8 +425,8 @@ export function RecipeDetail({
               <dd className="mt-1 font-bold text-green-deep">{recipe.cook_minutes ? `${recipe.cook_minutes} min` : "Anytime"}</dd>
             </div>
             <div>
-              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Category</dt>
-              <dd className="mt-1 truncate font-bold text-green-deep">{recipe.category ?? "Family"}</dd>
+              <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Prep</dt>
+              <dd className="mt-1 font-bold text-green-deep">{recipe.prep_minutes ? `${recipe.prep_minutes} min` : "Anytime"}</dd>
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Scale</dt>

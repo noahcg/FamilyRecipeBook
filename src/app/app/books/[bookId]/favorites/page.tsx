@@ -18,7 +18,12 @@ interface FavoriteRecipe {
   cook_minutes: number | null;
   servings: number | null;
   category: string | null;
-  creator?: { full_name: string | null }[] | null;
+  creator?: { full_name: string | null } | { full_name: string | null }[] | null;
+}
+
+function getRecipeAttribution(recipe: FavoriteRecipe) {
+  const creator = Array.isArray(recipe.creator) ? recipe.creator[0] : recipe.creator;
+  return recipe.source_name?.trim() || creator?.full_name?.trim() || undefined;
 }
 
 export default async function FavoritesPage({ params }: Props) {
@@ -65,7 +70,7 @@ export default async function FavoritesPage({ params }: Props) {
                   title={recipe.title}
                   description={recipe.description ?? undefined}
                   imageUrl={recipe.photo_url ?? undefined}
-                  fromPerson={recipe.source_name ?? recipe.creator?.[0]?.full_name ?? undefined}
+                  fromPerson={getRecipeAttribution(recipe)}
                   cookTime={recipe.cook_minutes ? `${recipe.cook_minutes} min` : undefined}
                   servings={recipe.servings ?? undefined}
                   category={recipe.category ?? undefined}
