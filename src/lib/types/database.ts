@@ -58,7 +58,11 @@ export interface Recipe {
   servings: number | null;
   category: string | null;
   tags: string[];
-  import_method: "image_upload" | null;
+  import_method: "image_upload" | "file_import" | null;
+  source_url: string | null;
+  import_source: string | null;
+  import_metadata: Record<string, unknown>;
+  nutrition: Record<string, unknown>;
   created_by: string;
   created_at: string;
   updated_at: string;

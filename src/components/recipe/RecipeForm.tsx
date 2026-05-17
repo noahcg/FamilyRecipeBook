@@ -4,12 +4,12 @@ import { useEffect, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, CheckCircle2, ClipboardPaste, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
 import { createRecipeSchema, type CreateRecipeInput } from "@/lib/validators/recipe";
-import { createRecipe, updateRecipe } from "@/lib/actions/recipes";
+import { createRecipe, createRecipesBatch, updateRecipe } from "@/lib/actions/recipes";
 import { uploadRecipeImage } from "@/lib/upload";
 import {
   importRecipeWithLocalOcr,
@@ -18,6 +18,7 @@ import {
 } from "@/lib/imageImport";
 import { selectRecipeImage } from "@/lib/actions/pexels";
 import { parsePastedRecipe } from "@/lib/recipeTextImport";
+import { importRecipeFiles, type NormalizedImportedRecipe } from "@/lib/recipeFileImport";
 import { useUser } from "@/lib/hooks/useUser";
 import { RECIPE_CATEGORIES } from "@/lib/recipeCategories";
 import type { RecipeWithRelations } from "@/lib/types";
@@ -53,6 +54,62 @@ type IngredientKeypadTarget = {
 };
 
 const INGREDIENT_KEYPAD_UNITS = ["tsp", "Tbsp", "oz", "lb", "can", "cup"];
+
+function duplicateImportKeys(recipes: NormalizedImportedRecipe[]) {
+  const counts = new Map<string, number>();
+  for (const recipe of recipes) {
+    const key = `${recipe.title.toLowerCase().trim()}|${recipe.source_url?.toLowerCase().trim() ?? ""}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function truncateImportValue(value: string | undefined, max: number) {
+  if (!value) return undefined;
+  return value.length > max ? value.slice(0, max).trim() : value;
+}
+
+function validImportUrl(value: string | undefined) {
+  if (!value) return undefined;
+  try {
+    return new URL(value).toString();
+  } catch {
+    return undefined;
+  }
+}
+
+function importedRecipeToInput(recipe: NormalizedImportedRecipe, photoUrl?: string): CreateRecipeInput {
+  return {
+    title: truncateImportValue(recipe.title, 200) ?? "Imported recipe",
+    description: truncateImportValue(recipe.description, 500),
+    photo_url: photoUrl ?? null,
+    source_name: truncateImportValue(recipe.source_name, 100),
+    story: truncateImportValue(recipe.story || recipe.notes, 2000),
+    prep_minutes: recipe.prep_minutes,
+    cook_minutes: recipe.cook_minutes,
+    servings: recipe.servings,
+    category: truncateImportValue(recipe.category, 50),
+    tags: recipe.tags.map((tag) => truncateImportValue(tag, 30)).filter((tag): tag is string => Boolean(tag)).slice(0, 10),
+    import_method: "file_import",
+    source_url: validImportUrl(recipe.source_url),
+    import_source: truncateImportValue(recipe.import_source, 100),
+    import_metadata: recipe.import_metadata,
+    nutrition: recipe.nutrition,
+    ingredients: recipe.ingredients.length
+      ? recipe.ingredients.map((ingredient) => ({
+          quantity: truncateImportValue(ingredient.quantity, 20) ?? "",
+          unit: truncateImportValue(ingredient.unit, 30) ?? "",
+          item: truncateImportValue(ingredient.item, 200) ?? "Imported ingredient",
+          note: truncateImportValue(ingredient.note, 200) ?? "",
+        }))
+      : [{ quantity: "", unit: "", item: "Imported recipe", note: "" }],
+    instructions: recipe.instructions.length
+      ? recipe.instructions.map((instruction) => ({
+          body: truncateImportValue(instruction.body, 2000) ?? "Review imported instructions.",
+        }))
+      : [{ body: "Review imported instructions." }],
+  };
+}
 
 function hasFieldValue(value: unknown) {
   return value !== undefined && value !== null && String(value).trim() !== "";
@@ -207,11 +264,20 @@ export function RecipeForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const isEdit = !!recipe;
   const showPasteEntry = enablePasteEntry && !isEdit;
-  const [entryMode, setEntryMode] = useState<"manual" | "paste">("manual");
+  const [entryMode, setEntryMode] = useState<"manual" | "paste" | "import">("manual");
   const [pastedRecipe, setPastedRecipe] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [pasteSummary, setPasteSummary] = useState<string | null>(null);
   const [pasteDetails, setPasteDetails] = useState<PasteDetails>({});
+  const fileImportRef = useRef<HTMLInputElement>(null);
+  const [fileImportRecipes, setFileImportRecipes] = useState<NormalizedImportedRecipe[]>([]);
+  const [selectedImportIds, setSelectedImportIds] = useState<Set<string>>(new Set());
+  const [expandedImportId, setExpandedImportId] = useState<string | null>(null);
+  const [fileImportWarnings, setFileImportWarnings] = useState<string[]>([]);
+  const [skippedImportFiles, setSkippedImportFiles] = useState<{ fileName: string; reason: string }[]>([]);
+  const [fileImportError, setFileImportError] = useState<string | null>(null);
+  const [isFileParsing, setIsFileParsing] = useState(false);
+  const [isSavingImport, setIsSavingImport] = useState(false);
   const [activeIngredientKeypad, setActiveIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
   const [manualIngredientKeypad, setManualIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
 
@@ -237,6 +303,10 @@ export function RecipeForm({
           category: recipe.category ?? "",
           tags: recipe.tags ?? [],
           import_method: recipe.import_method,
+          source_url: recipe.source_url ?? "",
+          import_source: recipe.import_source ?? "",
+          import_metadata: recipe.import_metadata ?? {},
+          nutrition: recipe.nutrition ?? {},
           ingredients: recipe.ingredients?.length
             ? recipe.ingredients.map((i) => ({
                 quantity: i.quantity ?? "",
@@ -257,6 +327,10 @@ export function RecipeForm({
           story: "",
           tags: [],
           import_method: undefined,
+          source_url: "",
+          import_source: "",
+          import_metadata: {},
+          nutrition: {},
           ingredients: [{ quantity: "", unit: "", item: "", note: "" }],
           instructions: [{ body: "" }],
         },
@@ -563,6 +637,70 @@ export function RecipeForm({
     );
   }
 
+  async function parseRecipeFiles(files: File[]) {
+    if (!files.length) return;
+    setFileImportError(null);
+    setIsFileParsing(true);
+
+    try {
+      const result = await importRecipeFiles(files);
+      setFileImportRecipes(result.recipes);
+      setSelectedImportIds(new Set(result.recipes.map((recipe) => recipe.id)));
+      setSkippedImportFiles(result.skippedFiles);
+      setFileImportWarnings(result.warnings);
+      setExpandedImportId(result.recipes[0]?.id ?? null);
+      if (!result.recipes.length) {
+        setFileImportError("No recipes were found in those files.");
+      }
+    } catch (error) {
+      setFileImportError(error instanceof Error ? error.message : "Could not import those files.");
+    } finally {
+      setIsFileParsing(false);
+      if (fileImportRef.current) fileImportRef.current.value = "";
+    }
+  }
+
+  async function handleSaveImportedRecipes() {
+    const selectedRecipes = fileImportRecipes.filter((recipe) => selectedImportIds.has(recipe.id));
+    if (!selectedRecipes.length) {
+      setFileImportError("Select at least one recipe to save.");
+      return;
+    }
+
+    setFileImportError(null);
+    setIsSavingImport(true);
+
+    const payload: CreateRecipeInput[] = [];
+    for (const recipe of selectedRecipes) {
+      let photoUrl: string | undefined;
+      if (recipe.image && userId) {
+        const uploaded = await uploadRecipeImage(recipe.image.file, userId);
+        if ("error" in uploaded) {
+          setFileImportError(`${recipe.title}: ${uploaded.error}`);
+          setIsSavingImport(false);
+          return;
+        }
+        photoUrl = uploaded.url;
+      }
+      payload.push(importedRecipeToInput(recipe, photoUrl));
+    }
+
+    const result = await createRecipesBatch(bookId, payload);
+    setIsSavingImport(false);
+
+    if (!result.success) {
+      setFileImportError(result.error);
+      return;
+    }
+
+    const firstId = result.data.ids[0];
+    router.push(
+      result.data.ids.length === 1
+        ? `/app/books/${bookId}/recipes/${firstId}`
+        : `/app/books/${bookId}/recipes`
+    );
+  }
+
   async function onSubmit(data: CreateRecipeInput) {
     setServerError(null);
 
@@ -618,13 +756,14 @@ export function RecipeForm({
           {[
             ["manual", "Manual entry"],
             ["paste", "Copy/paste"],
+            ["import", "Import"],
           ].map(([mode, label]) => {
             const selected = entryMode === mode;
             return (
               <button
                 key={mode}
                 type="button"
-                onClick={() => setEntryMode(mode as "manual" | "paste")}
+                onClick={() => setEntryMode(mode as "manual" | "paste" | "import")}
                 className={clsx(
                   "rounded-full px-4 py-2 text-sm font-extrabold transition-colors",
                   selected
@@ -1181,7 +1320,7 @@ export function RecipeForm({
           </div>
         </div>
       </div>
-      ) : (
+      ) : entryMode === "paste" ? (
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
           <div className="space-y-6">
             <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
@@ -1401,6 +1540,214 @@ export function RecipeForm({
               </Button>
             </div>
           </div>
+        </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-10">
+          <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-pale text-green-deep">
+                <FileUp size={18} strokeWidth={1.8} />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-ink">Import recipe files</p>
+                <p className="mt-1 text-sm leading-5 text-ink-soft">
+                  Choose Paprika, Plan to Eat, HTML, JSON, TXT, CSV, or ZIP exports. Review
+                  everything before saving.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => fileImportRef.current?.click()}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                void parseRecipeFiles(Array.from(event.dataTransfer.files));
+              }}
+              className="mt-5 flex min-h-40 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-line bg-paper-soft p-5 text-center transition hover:border-green-sage hover:bg-green-pale/60"
+            >
+              <FileUp size={24} className="text-green-deep" strokeWidth={1.8} />
+              <span className="mt-2 text-sm font-bold text-ink">
+                {isFileParsing ? "Parsing files" : "Drop files here"}
+              </span>
+              <span className="mt-1 text-xs text-ink-soft">
+                or choose multiple exports from your device
+              </span>
+            </button>
+            <input
+              ref={fileImportRef}
+              type="file"
+              multiple
+              accept=".paprikarecipes,.html,.htm,.json,.jsonld,.zip,.csv,.txt,text/html,application/json,application/zip,text/csv,text/plain"
+              onChange={(event) => void parseRecipeFiles(Array.from(event.target.files ?? []))}
+              className="sr-only"
+            />
+
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              <div className="rounded-md border border-line bg-paper-soft p-3">
+                <p className="text-xl font-bold text-green-deep">{fileImportRecipes.length}</p>
+                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Parsed</p>
+              </div>
+              <div className="rounded-md border border-line bg-paper-soft p-3">
+                <p className="text-xl font-bold text-green-deep">
+                  {fileImportRecipes.reduce((count, recipe) => count + recipe.warnings.length, 0) + fileImportWarnings.length}
+                </p>
+                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Warnings</p>
+              </div>
+              <div className="rounded-md border border-line bg-paper-soft p-3">
+                <p className="text-xl font-bold text-green-deep">{skippedImportFiles.length}</p>
+                <p className="mt-0.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted">Skipped</p>
+              </div>
+            </div>
+
+            {(fileImportError || skippedImportFiles.length > 0) && (
+              <div className="mt-4 rounded-md border border-danger/25 bg-danger/5 p-3 text-sm text-danger">
+                {fileImportError && <p className="font-semibold">{fileImportError}</p>}
+                {skippedImportFiles.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {skippedImportFiles.slice(0, 6).map((file) => (
+                      <li key={`${file.fileName}-${file.reason}`}>
+                        {file.fileName}: {file.reason}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row lg:flex-col">
+              <Button type="button" variant="secondary" onClick={() => router.back()}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                loading={isSavingImport}
+                disabled={!fileImportRecipes.length || selectedImportIds.size === 0}
+                onClick={handleSaveImportedRecipes}
+              >
+                Save selected recipes
+              </Button>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            {fileImportRecipes.length === 0 ? (
+              <div className="rounded-xl border border-line bg-card p-8 text-center shadow-xs">
+                <p className="text-sm font-bold text-ink">No recipes parsed yet</p>
+                <p className="mt-1 text-sm text-ink-soft">
+                  Parsed recipes will appear here with checkboxes, warnings, and field previews.
+                </p>
+              </div>
+            ) : (
+              fileImportRecipes.map((recipe) => {
+                const duplicateCounts = duplicateImportKeys(fileImportRecipes);
+                const duplicateKey = `${recipe.title.toLowerCase().trim()}|${recipe.source_url?.toLowerCase().trim() ?? ""}`;
+                const isDuplicate = (duplicateCounts.get(duplicateKey) ?? 0) > 1;
+                const expanded = expandedImportId === recipe.id;
+                const selected = selectedImportIds.has(recipe.id);
+
+                return (
+                  <article key={recipe.id} className="rounded-xl border border-line bg-card p-4 shadow-xs">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={(event) => {
+                          setSelectedImportIds((current) => {
+                            const next = new Set(current);
+                            if (event.target.checked) next.add(recipe.id);
+                            else next.delete(recipe.id);
+                            return next;
+                          });
+                        }}
+                        className="mt-1 size-4 accent-[var(--color-deep-green)]"
+                        aria-label={`Select ${recipe.title}`}
+                      />
+                      {recipe.image && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={recipe.image.previewUrl} alt="" className="size-14 rounded-md object-cover" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="truncate text-sm font-bold text-ink">{recipe.title}</h3>
+                          {isDuplicate && (
+                            <span className="rounded-sm bg-accent-honey/25 px-2 py-0.5 text-[11px] font-bold text-accent-cinnamon">
+                              Possible duplicate
+                            </span>
+                          )}
+                          {recipe.warnings.length > 0 && (
+                            <span className="rounded-sm bg-danger/10 px-2 py-0.5 text-[11px] font-bold text-danger">
+                              {recipe.warnings.length} warning{recipe.warnings.length === 1 ? "" : "s"}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-ink-soft">
+                          {recipe.import_source} · {recipe.ingredients.length} ingredients · {recipe.instructions.length} steps
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedImportId(expanded ? null : recipe.id)}
+                        className="grid size-8 shrink-0 place-items-center rounded-sm text-green-deep hover:bg-green-pale"
+                        aria-label={expanded ? "Collapse preview" : "Expand preview"}
+                      >
+                        <ChevronDown size={17} className={clsx("transition-transform", expanded && "rotate-180")} />
+                      </button>
+                    </div>
+
+                    {expanded && (
+                      <div className="mt-4 grid gap-4 border-t border-line pt-4 text-sm lg:grid-cols-2">
+                        <div className="space-y-3">
+                          {recipe.description && <p className="text-ink-soft">{recipe.description}</p>}
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <p><span className="font-bold text-ink">Prep:</span> {formatMinutes(recipe.prep_minutes) || "-"}</p>
+                            <p><span className="font-bold text-ink">Cook:</span> {formatMinutes(recipe.cook_minutes) || "-"}</p>
+                            <p><span className="font-bold text-ink">Serves:</span> {recipe.servings ?? "-"}</p>
+                          </div>
+                          {recipe.source_url && (
+                            <p className="truncate text-xs text-ink-muted">
+                              <span className="font-bold text-ink">Source:</span> {recipe.source_url}
+                            </p>
+                          )}
+                          {recipe.warnings.length > 0 && (
+                            <ul className="space-y-1 text-xs text-danger">
+                              {recipe.warnings.map((warning) => (
+                                <li key={warning}>- {warning}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-ink-muted">Ingredients</p>
+                            <ul className="space-y-1 text-xs text-ink-soft">
+                              {recipe.ingredients.slice(0, 8).map((ingredient, index) => (
+                                <li key={`${ingredient.item}-${index}`} className="line-clamp-1">
+                                  {[ingredient.quantity, ingredient.unit, ingredient.item].filter(Boolean).join(" ")}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-ink-muted">Steps</p>
+                            <ol className="space-y-1 text-xs text-ink-soft">
+                              {recipe.instructions.slice(0, 5).map((instruction, index) => (
+                                <li key={`${instruction.body}-${index}`} className="line-clamp-2">
+                                  {index + 1}. {instruction.body}
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              })
+            )}
+          </section>
         </div>
       )}
     </form>

@@ -129,7 +129,7 @@ function isStandaloneInstructionMarker(line: string) {
   return /^\d{1,2}$/.test(line.trim());
 }
 
-function parseIngredientLine(line: string): IngredientInput {
+export function parseIngredientLine(line: string): IngredientInput {
   const cleaned = stripIngredientMarker(line);
   const noteMatch = cleaned.match(/^(.*?)\s+\(([^)]+)\)\s*$/);
   const withoutParentheticalNote = noteMatch?.[1]?.trim() ?? cleaned;

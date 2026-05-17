@@ -82,6 +82,34 @@ export async function createRecipe(
   return { success: true, data: recipe };
 }
 
+export async function createRecipesBatch(
+  bookId: string,
+  inputs: CreateRecipeInput[]
+): Promise<ActionResult<{ ids: string[] }>> {
+  const ids: string[] = [];
+
+  if (!inputs.length) {
+    return { success: false, error: "Select at least one recipe to import." };
+  }
+
+  for (const input of inputs) {
+    const result = await createRecipe(bookId, input);
+    if (!result.success) {
+      return {
+        success: false,
+        error: ids.length
+          ? `Saved ${ids.length} recipe${ids.length === 1 ? "" : "s"}, then stopped: ${result.error}`
+          : result.error,
+      };
+    }
+    ids.push(result.data.id);
+  }
+
+  revalidatePath(`/app/books/${bookId}`);
+  revalidatePath(`/app/books/${bookId}/recipes`);
+  return { success: true, data: { ids } };
+}
+
 export async function updateRecipe(
   bookId: string,
   recipeId: string,

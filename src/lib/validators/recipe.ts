@@ -25,7 +25,14 @@ export const createRecipeSchema = z.object({
   servings: z.coerce.number().int().min(1).max(100).optional(),
   category: z.string().max(50).optional(),
   tags: z.array(z.string().max(30)).max(10).optional(),
-  import_method: z.enum(["image_upload"]).nullable().optional(),
+  import_method: z.enum(["image_upload", "file_import"]).nullable().optional(),
+  source_url: z.preprocess(
+    (value) => value === "" ? null : value,
+    z.string().url("Enter a valid source URL").nullable().optional()
+  ),
+  import_source: z.string().max(100).optional(),
+  import_metadata: z.record(z.string(), z.unknown()).optional(),
+  nutrition: z.record(z.string(), z.unknown()).optional(),
   ingredients: z.array(ingredientSchema).min(1, "Add at least one ingredient"),
   instructions: z
     .array(instructionSchema)
