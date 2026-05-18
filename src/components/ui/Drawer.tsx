@@ -42,12 +42,12 @@ export function Drawer({
       <button
         type="button"
         aria-label={`Close ${title.toLowerCase()}`}
-        className="absolute inset-0 animate-in fade-in duration-150 bg-ink/18"
+        className="drawer-backdrop-anim absolute inset-0 bg-ink/18"
         onClick={onClose}
       />
       <section
         className={clsx(
-          "relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]",
+          "drawer-panel-anim relative ml-auto flex h-full w-[min(86vw,360px)] flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]",
           className
         )}
       >
