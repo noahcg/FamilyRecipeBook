@@ -39,3 +39,5 @@ export { Badge } from "./Badge";
 export type { BadgeVariant } from "./Badge";
 
 export { Dialog } from "./Dialog";
+
+export { Drawer } from "./Drawer";

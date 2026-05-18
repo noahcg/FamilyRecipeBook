@@ -9,7 +9,7 @@ import {
   normalizeRecipeIngredientForGrocery,
   parseQuantity,
 } from "@/lib/grocery/packaging";
-import type { ActionResult, GroceryItem } from "@/lib/types";
+import type { ActionResult, GroceryItem, NearbyStore } from "@/lib/types";
 
 // ─── Category inference ───────────────────────────────────────
 // Isolated so it can be swapped for an AI call later without
@@ -376,4 +376,165 @@ export async function importFromMealPlan(
   if (error) return { success: false, error: error.message };
 
   return { success: true, data: { added: toInsert.length, skipped } };
+}
+
+// ─── Nearby grocery store search (Google Places API New) ──────
+
+interface PlacesApiPlace {
+  id: string;
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  location?: { latitude: number; longitude: number };
+  rating?: number;
+  userRatingCount?: number;
+  regularOpeningHours?: { openNow?: boolean };
+  googleMapsUri?: string;
+}
+
+function haversineMeters(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const R = 6371000;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export async function searchNearbyGroceryStores(input: {
+  query?: string;
+  latitude?: number;
+  longitude?: number;
+}): Promise<ActionResult<NearbyStore[]>> {
+  await requireUser();
+
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) {
+    return {
+      success: false,
+      error: "Grocery store search is not configured yet.",
+    };
+  }
+
+  const hasCoords =
+    typeof input.latitude === "number" && typeof input.longitude === "number";
+  const trimmedQuery = input.query?.trim() ?? "";
+  const hasQuery = trimmedQuery.length > 0;
+
+  if (!hasCoords && !hasQuery) {
+    return {
+      success: false,
+      error: "Enter an address or use your location to search.",
+    };
+  }
+
+  const fieldMask = [
+    "places.id",
+    "places.displayName",
+    "places.formattedAddress",
+    "places.location",
+    "places.rating",
+    "places.userRatingCount",
+    "places.regularOpeningHours.openNow",
+    "places.googleMapsUri",
+  ].join(",");
+
+  let url: string;
+  let body: Record<string, unknown>;
+
+  if (hasCoords) {
+    url = "https://places.googleapis.com/v1/places:searchNearby";
+    body = {
+      includedTypes: ["supermarket", "grocery_store"],
+      maxResultCount: 15,
+      locationRestriction: {
+        circle: {
+          center: { latitude: input.latitude, longitude: input.longitude },
+          radius: 8000,
+        },
+      },
+    };
+  } else {
+    url = "https://places.googleapis.com/v1/places:searchText";
+    body = {
+      textQuery: `grocery stores near ${trimmedQuery}`,
+      maxResultCount: 15,
+    };
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": fieldMask,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(
+        "[searchNearbyGroceryStores] Places API error:",
+        response.status,
+        text
+      );
+      return {
+        success: false,
+        error: "Could not load nearby grocery stores. Please try again.",
+      };
+    }
+
+    const data = (await response.json()) as { places?: PlacesApiPlace[] };
+    const places = data.places ?? [];
+
+    const origin = hasCoords
+      ? { lat: input.latitude!, lng: input.longitude! }
+      : null;
+
+    const stores: NearbyStore[] = places.map((p) => {
+      const lat = p.location?.latitude ?? 0;
+      const lng = p.location?.longitude ?? 0;
+      return {
+        id: p.id,
+        name: p.displayName?.text ?? "Unnamed store",
+        address: p.formattedAddress ?? "",
+        latitude: lat,
+        longitude: lng,
+        rating: p.rating ?? null,
+        ratingCount: p.userRatingCount ?? null,
+        openNow: p.regularOpeningHours?.openNow ?? null,
+        googleMapsUri: p.googleMapsUri ?? null,
+        distanceMeters: origin
+          ? haversineMeters(origin.lat, origin.lng, lat, lng)
+          : null,
+      };
+    });
+
+    // Sort by distance when we have an origin, otherwise leave Places order.
+    if (origin) {
+      stores.sort((a, b) => {
+        const da = a.distanceMeters ?? Number.POSITIVE_INFINITY;
+        const db = b.distanceMeters ?? Number.POSITIVE_INFINITY;
+        return da - db;
+      });
+    }
+
+    return { success: true, data: stores };
+  } catch (error) {
+    console.error("[searchNearbyGroceryStores] exception:", error);
+    return {
+      success: false,
+      error: "Could not load nearby grocery stores. Please try again.",
+    };
+  }
 }
