@@ -96,7 +96,12 @@ export async function POST(request: NextRequest) {
   // Always use our app base URL — `email_data.site_url` is whatever is set in
   // Supabase's URL Configuration and can default to the Supabase project URL,
   // which would produce broken confirmation links.
-  const siteUrl = getAppBaseUrl();
+  let siteUrl: string;
+  try {
+    siteUrl = getAppBaseUrl();
+  } catch (error) {
+    return fail("config", error, 500);
+  }
   let logoUrl: string | undefined;
   try {
     logoUrl = getDefaultLogoUrl();
