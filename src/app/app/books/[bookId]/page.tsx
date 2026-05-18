@@ -15,6 +15,7 @@ import { TimeOfDayHeadline } from "@/components/home/TimeOfDayHeadline";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { getBookPageData } from "@/lib/actions/books";
+import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
 import type { Recipe } from "@/lib/types";
 
 interface Props {
@@ -27,15 +28,22 @@ interface HomeRecipe extends Recipe {
 }
 
 const RECIPE_THEMES = ["quick weeknights", "family favorites", "make-ahead", "something new", "comfort meals"];
-const WEEK_DAYS = [
-  { day: "M", planned: true },
-  { day: "T", planned: true },
-  { day: "W", planned: false },
-  { day: "T", planned: true },
-  { day: "F", planned: false },
-  { day: "S", planned: false },
-  { day: "S", planned: true },
-];
+const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
+
+function getMondayOfCurrentWeek(): string {
+  const today = new Date();
+  const day = today.getDay(); // 0 = Sun
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diff);
+  return monday.toISOString().slice(0, 10);
+}
+
+function addDays(dateStr: string, n: number): string {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
 
 function DashboardCard({
   children,
@@ -126,10 +134,13 @@ function SectionHeader({
 
 export default async function BookHomePage({ params }: Props) {
   const { bookId } = await params;
-  const data = await getBookPageData(bookId);
+  const [data, householdId] = await Promise.all([
+    getBookPageData(bookId),
+    getHouseholdId(),
+  ]);
   if (!data) notFound();
 
-  const { book, recent } = data;
+  const { book, recent, favorites } = data;
   const latestRecipe = (recent as HomeRecipe[])[0] ?? null;
   const hasRecipes = latestRecipe !== null;
   const featuredTitle = latestRecipe?.title ?? "";
@@ -137,6 +148,50 @@ export default async function BookHomePage({ params }: Props) {
     ? `/app/books/${bookId}/recipes/${latestRecipe.id}`
     : `/app/books/${bookId}/ideas`;
   const featuredImage = latestRecipe?.photo_url ?? "/images/entry/add-first.jpg";
+
+  // Real meal-plan data for Weekly snapshot + Helpful cues
+  const weekStart = getMondayOfCurrentWeek();
+  const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekMealPlans = householdId
+    ? await getMealPlanWeek(householdId, weekStart)
+    : [];
+  const plannedDates = new Set(weekMealPlans.map((m) => m.planned_date));
+  const daysWithMeals = weekDates.filter((d) => plannedDates.has(d)).length;
+  const totalMealsPlanned = weekMealPlans.length;
+  const openDays = 7 - daysWithMeals;
+  const hasAnyMealPlanned = totalMealsPlanned > 0;
+  const totalFavorites = favorites.length;
+
+  // Two helpful cues, derived from real state with empty-state nudges
+  const mealPlanCue = !hasAnyMealPlanned
+    ? {
+        title: "Your week is wide open.",
+        body: "Plan a meal so the table feels less rushed.",
+      }
+    : openDays > 0
+    ? {
+        title: `${openDays} day${openDays === 1 ? "" : "s"} still open this week.`,
+        body: "Fill the gap before the week catches up.",
+      }
+    : {
+        title: "The week is fully planned.",
+        body: "Open the meal plan if you need to swap something.",
+      };
+
+  const recipeCue = !hasRecipes
+    ? {
+        title: "Your cookbook is empty.",
+        body: "Add a recipe everyone asks for so the book can start growing.",
+      }
+    : totalFavorites === 0
+    ? {
+        title: "No favorites marked yet.",
+        body: "Save the recipes you'll cook again so they're easy to find.",
+      }
+    : {
+        title: `${totalFavorites} favorite${totalFavorites === 1 ? "" : "s"} saved.`,
+        body: "Open one to add it to this week's plan.",
+      };
 
   return (
     <AppShell bookId={bookId}>
@@ -289,34 +344,34 @@ export default async function BookHomePage({ params }: Props) {
                 </div>
               </DashboardCard>
 
-              {hasRecipes && (
-                <div className="grid gap-9 border-y border-line-soft py-9 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10">
-                  <section className="border-line-soft lg:border-r lg:pr-10">
-                    <SectionHeader eyebrow="Smart kitchen notes" title="Helpful cues" />
-                    <div className="mt-5 space-y-5">
-                      <div className="flex gap-4">
-                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-accent-honey/20 text-accent-cinnamon">
-                          <CalendarDays size={17} />
-                        </span>
-                        <div>
-                          <p className="text-sm font-bold text-ink">A planning gap is coming up.</p>
-                          <p className="mt-0.5 text-sm text-ink-muted">Choose one reliable recipe before the week fills in.</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-4">
-                        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-green-soft text-green-deep">
-                          <ShoppingCart size={17} />
-                        </span>
-                        <div>
-                          <p className="text-sm font-bold text-ink">One saved favorite is ready to shop.</p>
-                          <p className="mt-0.5 text-sm text-ink-muted">Review the list before your next grocery run.</p>
-                        </div>
+              <div className="grid gap-9 border-y border-line-soft py-9 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10">
+                <section className="border-line-soft lg:border-r lg:pr-10">
+                  <SectionHeader eyebrow="Smart kitchen notes" title="Helpful cues" />
+                  <div className="mt-5 space-y-5">
+                    <div className="flex gap-4">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-accent-honey/20 text-accent-cinnamon">
+                        <CalendarDays size={17} />
+                      </span>
+                      <div>
+                        <p className="text-sm font-bold text-ink">{mealPlanCue.title}</p>
+                        <p className="mt-0.5 text-sm text-ink-muted">{mealPlanCue.body}</p>
                       </div>
                     </div>
-                  </section>
+                    <div className="flex gap-4">
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-green-soft text-green-deep">
+                        <ShoppingCart size={17} />
+                      </span>
+                      <div>
+                        <p className="text-sm font-bold text-ink">{recipeCue.title}</p>
+                        <p className="mt-0.5 text-sm text-ink-muted">{recipeCue.body}</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
 
-                  <section className="lg:pl-1">
-                    <SectionHeader eyebrow="Pick up where you left off" title="Continue cooking" />
+                <section className="lg:pl-1">
+                  <SectionHeader eyebrow="Pick up where you left off" title="Continue cooking" />
+                  {hasRecipes ? (
                     <div className="mt-5 flex w-full min-w-0 max-w-full flex-nowrap items-start gap-5 overflow-hidden">
                       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale">
                         {latestRecipe?.photo_url ? (
@@ -343,9 +398,29 @@ export default async function BookHomePage({ params }: Props) {
                         </Link>
                       </div>
                     </div>
-                  </section>
-                </div>
-              )}
+                  ) : (
+                    <div className="mt-5 flex w-full min-w-0 max-w-full flex-nowrap items-start gap-5 overflow-hidden">
+                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale flex items-center justify-center">
+                        <BookOpenFallback />
+                      </div>
+                      <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
+                        <h3
+                          className="block w-full max-w-full text-xl font-bold text-green-deep"
+                          style={{ fontFamily: "var(--font-playfair)" }}
+                        >
+                          Nothing to continue yet
+                        </h3>
+                        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-muted">
+                          Save a recipe and we&rsquo;ll keep the most recent one handy here.
+                        </p>
+                        <Link href={`/app/books/${bookId}/recipes/new`} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
+                          Add a recipe <ChevronRight size={15} />
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </section>
+              </div>
 
               <PageSection>
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -404,29 +479,44 @@ export default async function BookHomePage({ params }: Props) {
                 </Link>
               </PageSection>
 
-              {hasRecipes && (
-                <PageSection>
-                  <SectionHeader eyebrow="Weekly snapshot" title="The week ahead" />
+              <PageSection>
+                <SectionHeader eyebrow="Weekly snapshot" title="The week ahead" />
+                {hasAnyMealPlanned ? (
                   <p className="mt-2 text-xl font-bold leading-snug text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
-                    3 meals planned · 2 open days
+                    {totalMealsPlanned} meal{totalMealsPlanned === 1 ? "" : "s"} planned · {openDays} open day{openDays === 1 ? "" : "s"}
                   </p>
-                  <div className="mt-4 grid grid-cols-7 gap-1.5">
-                    {WEEK_DAYS.map((item, index) => (
+                ) : (
+                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+                    No meals planned this week yet. Set one up so the table feels less rushed.
+                  </p>
+                )}
+                <div className="mt-4 grid grid-cols-7 gap-1.5">
+                  {weekDates.map((date, index) => {
+                    const planned = plannedDates.has(date);
+                    return (
                       <Link
-                        key={`${item.day}-${index}`}
+                        key={date}
                         href={`/app/books/${bookId}/meal-plan`}
                         className={`flex aspect-square items-center justify-center rounded-sm text-xs font-bold ${
-                          item.planned
+                          planned
                             ? "bg-green-deep text-ink-inverse"
                             : "border border-dashed border-line text-ink-soft"
                         }`}
                       >
-                        {item.day}
+                        {DAY_LETTERS[index]}
                       </Link>
-                    ))}
-                  </div>
-                </PageSection>
-              )}
+                    );
+                  })}
+                </div>
+                {!hasAnyMealPlanned && (
+                  <Link
+                    href={`/app/books/${bookId}/meal-plan`}
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline"
+                  >
+                    Plan a meal <ChevronRight size={15} />
+                  </Link>
+                )}
+              </PageSection>
 
               <DashboardCard className="overflow-hidden">
                 <div className="p-5">
