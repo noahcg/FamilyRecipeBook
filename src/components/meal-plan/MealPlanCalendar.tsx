@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, CalendarDays, Plus, X, Search } from "lucide-react";
 import { clsx } from "clsx";
 import { getMealPlanWeek, setMealPlan, removeMealPlan } from "@/lib/actions/households";
@@ -67,6 +67,18 @@ export function MealPlanCalendar({
   const [weekStart, setWeekStart] = useState(initialWeekStart);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>(initialMealPlans);
   const [isPending, startTransition] = useTransition();
+  const todayMobileRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = todayMobileRef.current;
+    if (!el) return;
+    // Skip on desktop — the mobile column is display:none there (no client rects).
+    if (el.getClientRects().length === 0) return;
+    const raf = requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [weekStart]);
 
   // Picker state
   const [picking, setPicking] = useState<{ date: string; slot: MealSlot } | null>(null);
@@ -235,7 +247,11 @@ export function MealPlanCalendar({
       {/* Mobile: stacked day cards */}
       <div className="lg:hidden divide-y divide-line-soft">
         {weekDates.map((date, i) => (
-          <div key={date} className="px-4 py-4">
+          <div
+            key={date}
+            ref={isToday(date) ? todayMobileRef : null}
+            className="px-4 py-4 scroll-mt-20"
+          >
             <div className="mb-3 flex items-center gap-2">
               <div
                 className={clsx(
