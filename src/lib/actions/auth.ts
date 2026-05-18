@@ -47,8 +47,13 @@ export async function signUp(
   redirect(nextPath);
 }
 
-export async function signOut(): Promise<void> {
+export async function signOut(formData?: FormData): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/");
+  const value = formData?.get("redirect_to");
+  const path =
+    typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+      ? value
+      : "/";
+  redirect(path);
 }

@@ -19,6 +19,39 @@ export type PendingBookInvitation = Pick<
   "id" | "email" | "role" | "expires_at" | "created_at"
 >;
 
+export interface InvitationLookup {
+  book_id: string;
+  email: string;
+  role: BookInvitation["role"];
+  expires_at: string;
+  accepted_at: string | null;
+  cookbook_title: string;
+}
+
+export async function lookupInvitation(
+  token: string
+): Promise<InvitationLookup | null> {
+  if (!token) return null;
+  const admin = createServiceClient();
+  const { data } = await admin
+    .from("book_invitations")
+    .select(
+      "book_id, email, role, expires_at, accepted_at, recipe_books(title)"
+    )
+    .eq("token", token)
+    .single();
+  if (!data) return null;
+  const cookbook = (data.recipe_books ?? null) as { title?: string } | null;
+  return {
+    book_id: data.book_id,
+    email: data.email,
+    role: data.role,
+    expires_at: data.expires_at,
+    accepted_at: data.accepted_at,
+    cookbook_title: cookbook?.title ?? "this cookbook",
+  };
+}
+
 async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, bookId: string, userId: string) {
   const { data } = await supabase
     .from("book_members")

@@ -14,7 +14,14 @@ import { signUp } from "@/lib/actions/auth";
 function SignUpContent() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next");
-  const signInHref = nextPath ? `/sign-in?next=${encodeURIComponent(nextPath)}` : "/sign-in";
+  const prefilledEmail = searchParams.get("email") ?? "";
+  const signInHref = (() => {
+    const params = new URLSearchParams();
+    if (nextPath) params.set("next", nextPath);
+    if (prefilledEmail) params.set("email", prefilledEmail);
+    const qs = params.toString();
+    return qs ? `/sign-in?${qs}` : "/sign-in";
+  })();
   const [serverError, setServerError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +30,10 @@ function SignUpContent() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<SignUpInput>({ resolver: zodResolver(signUpSchema) });
+  } = useForm<SignUpInput>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { email: prefilledEmail },
+  });
 
   async function onSubmit(data: SignUpInput) {
     setServerError(null);
