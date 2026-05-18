@@ -23,7 +23,7 @@ const ROLE_OPTIONS = [
   {
     id: "contributor" as const,
     label: "Contributor",
-    description: "Can add and edit recipes, notes, and collections.",
+    description: "Can add and edit recipes and notes.",
     icon: BookOpen,
   },
   {

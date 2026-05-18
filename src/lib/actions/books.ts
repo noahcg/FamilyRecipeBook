@@ -295,7 +295,7 @@ export async function getBookPageData(bookId: string) {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [bookRes, recipesRes, collectionsRes] = await Promise.all([
+  const [bookRes, recipesRes] = await Promise.all([
     supabase
       .from("recipe_books")
       .select("*, members:book_members(*, profile:profiles(*))")
@@ -309,11 +309,6 @@ export async function getBookPageData(bookId: string) {
       .eq("book_id", bookId)
       .order("created_at", { ascending: false })
       .limit(30),
-    supabase
-      .from("collections")
-      .select("*, recipes:collection_recipes(id)")
-      .eq("book_id", bookId)
-      .order("created_at", { ascending: false }),
   ]);
 
   if (!bookRes.data) return null;
@@ -337,7 +332,6 @@ export async function getBookPageData(bookId: string) {
     userId: user.id,
     recent: allRecipes.slice(0, 6),
     favorites,
-    collections: collectionsRes.data ?? [],
   };
 }
 

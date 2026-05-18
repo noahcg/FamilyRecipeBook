@@ -38,10 +38,6 @@ export function canReact(role: BookRole | null): boolean {
   return role !== null;
 }
 
-export function canManageCollections(role: BookRole | null): boolean {
-  return role === "keeper" || role === "contributor";
-}
-
 export function canManageMembers(role: BookRole | null): boolean {
   return role === "keeper";
 }

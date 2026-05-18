@@ -6,6 +6,7 @@ const DB_NAME = "home-cooked-offline";
 const DB_VERSION = 1;
 const STORE_NAME = "recipes";
 const CURRENT_USER_KEY = "home-cooked-offline-user";
+export const OFFLINE_RECIPES_CHANGED_EVENT = "home-cooked-offline-recipes-changed";
 
 export type OfflineRecipeRecord = {
   key: string;
@@ -110,11 +111,13 @@ export async function saveRecipeOffline(recipe: RecipeWithRelations, bookId: str
   };
 
   await runStore("readwrite", (store) => store.put(record));
+  window.dispatchEvent(new CustomEvent(OFFLINE_RECIPES_CHANGED_EVENT));
   return record;
 }
 
 export async function removeRecipeOffline(recipeId: string, userId: string) {
   await runStore("readwrite", (store) => store.delete(offlineRecipeKey(userId, recipeId)));
+  window.dispatchEvent(new CustomEvent(OFFLINE_RECIPES_CHANGED_EVENT));
 }
 
 export async function getOfflineRecipe(recipeId: string, userId: string) {

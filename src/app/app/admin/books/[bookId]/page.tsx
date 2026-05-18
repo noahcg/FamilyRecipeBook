@@ -83,7 +83,7 @@ export default async function AdminBookDetailPage({ params }: Props) {
   const { bookId } = await params;
   const admin = createServiceClient();
 
-  const [{ data: book }, { data: recipes }, { data: invites }, { count: collectionCount }] =
+  const [{ data: book }, { data: recipes }, { data: invites }] =
     await Promise.all([
       admin
         .from("recipe_books")
@@ -102,10 +102,6 @@ export default async function AdminBookDetailPage({ params }: Props) {
         .eq("book_id", bookId)
         .order("created_at", { ascending: false })
         .limit(12),
-      admin
-        .from("collections")
-        .select("id", { count: "exact", head: true })
-        .eq("book_id", bookId),
     ]);
 
   if (!book) notFound();
@@ -138,10 +134,9 @@ export default async function AdminBookDetailPage({ params }: Props) {
           </p>
         </div>
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-3">
           <SupportStat label="Members" value={members.length} icon={<Users size={20} />} />
           <SupportStat label="Recipes" value={recipeRows.length} icon={<BookOpen size={20} />} />
-          <SupportStat label="Collections" value={collectionCount ?? 0} icon={<BookOpen size={20} />} />
           <SupportStat label="Created" value={formatDate(bookDetail.created_at)} icon={<Clock size={20} />} />
         </section>
 

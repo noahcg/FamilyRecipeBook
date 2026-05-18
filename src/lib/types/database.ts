@@ -113,24 +113,6 @@ export interface RecipeRating {
   updated_at: string;
 }
 
-export interface Collection {
-  id: string;
-  book_id: string;
-  title: string;
-  description: string | null;
-  icon: string | null;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CollectionRecipe {
-  id: string;
-  collection_id: string;
-  recipe_id: string;
-  created_at: string;
-}
-
 export interface ActivityEvent {
   id: string;
   book_id: string;

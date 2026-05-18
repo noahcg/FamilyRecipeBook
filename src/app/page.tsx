@@ -4,12 +4,9 @@ import {
   BookHeart,
   BookMarked,
   BookOpen,
-  Check,
-  FolderHeart,
   HeartHandshake,
   Paperclip,
   Star,
-  Utensils,
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 
@@ -18,13 +15,6 @@ const AVATARS = [
   { name: "G", color: "#DDE5D7" },
   { name: "L", color: "#F5D48D" },
   { name: "A", color: "#E8D5B8" },
-];
-
-const COLLECTIONS = [
-  "Sunday Dinners",
-  "Holiday Favorites",
-  "Quick & Easy",
-  "Desserts",
 ];
 
 function LeafLine({ className = "" }: { className?: string }) {
@@ -70,23 +60,6 @@ function HeartSwoosh({ className = "" }: { className?: string }) {
         strokeWidth="2.1"
         strokeLinecap="round"
       />
-    </svg>
-  );
-}
-
-function BotanicalSprig({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 92 128"
-      className={className}
-      fill="none"
-    >
-      <path d="M18 116C31 75 45 42 75 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M30 88C15 84 7 72 5 54c16 4 25 15 25 34Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M42 63C27 56 21 43 24 27c14 7 21 20 18 36Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M55 43c-1-16 7-27 23-34 1 17-7 29-23 34Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M24 102c15-1 27 6 36 21-17 0-29-7-36-21Z" fill="currentColor" opacity=".18" stroke="currentColor" strokeWidth="1.4" />
     </svg>
   );
 }
@@ -344,35 +317,6 @@ export default function LandingPage() {
               />
             </article>
 
-            <article className="relative grid gap-8 border-t border-dotted border-[rgba(36,79,59,0.22)] p-6 sm:p-9 md:grid-cols-[1fr_0.95fr] md:items-center lg:min-h-[370px] lg:p-10">
-              <FeatureCopy
-                icon={FolderHeart}
-                tone="bg-green-soft/80 text-green-deep"
-                title="Build collections"
-                body="Organize recipes into collections for holidays, quick meals, Sunday dinners, and more."
-              />
-
-              <div className="relative mx-auto w-full max-w-[295px]">
-                <BotanicalSprig className="absolute -right-8 -top-10 h-24 w-20 rotate-12 text-green-sage/75" />
-                <div className="relative space-y-3">
-                  {COLLECTIONS.map((collection, index) => (
-                    <div
-                      key={collection}
-                      className={`flex min-h-13 items-center gap-3 rounded-full border border-[rgba(36,79,59,0.12)] px-5 text-[1rem] font-extrabold text-green-deep shadow-[0_10px_22px_rgba(57,45,25,0.07)] ${
-                        index === 1 ? "bg-green-soft" : "bg-paper"
-                      }`}
-                    >
-                      {index === 1 ? (
-                        <Check aria-hidden="true" size={18} strokeWidth={2.2} />
-                      ) : (
-                        <Utensils aria-hidden="true" size={18} strokeWidth={1.8} />
-                      )}
-                      {collection}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </article>
           </div>
         </section>
       </main>
