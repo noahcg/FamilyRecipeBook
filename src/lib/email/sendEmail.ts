@@ -10,7 +10,7 @@ export function getAppBaseUrl() {
 }
 
 export function getDefaultLogoUrl() {
-  return `${getAppBaseUrl()}/logo.png`;
+  return `${getAppBaseUrl()}/images/homecooked.png`;
 }
 
 export async function sendEmail({
