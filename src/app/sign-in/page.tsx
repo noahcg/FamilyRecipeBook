@@ -93,6 +93,19 @@ function SignInContent() {
           {...register("password")}
         />
 
+        <div className="flex justify-end -mt-1">
+          <Link
+            href={
+              prefilledEmail
+                ? `/forgot-password?email=${encodeURIComponent(prefilledEmail)}`
+                : "/forgot-password"
+            }
+            className="text-xs font-semibold text-green-deep hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
         {serverError && (
           <p className="text-sm text-danger font-medium">{serverError}</p>
         )}

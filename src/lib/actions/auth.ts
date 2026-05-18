@@ -47,6 +47,42 @@ export async function signUp(
   redirect(nextPath);
 }
 
+export async function requestPasswordReset(
+  email: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/reset-password`,
+  });
+  // Don't leak whether the email exists — return success either way unless
+  // it's a clear server-side failure.
+  if (error && error.status && error.status >= 500) {
+    return { success: false, error: error.message };
+  }
+  return { success: true, data: undefined };
+}
+
+export async function updatePassword(
+  password: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      success: false,
+      error: "Your reset link is no longer valid. Request a new one and try again.",
+    };
+  }
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: undefined };
+}
+
 export async function signOut(formData?: FormData): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
