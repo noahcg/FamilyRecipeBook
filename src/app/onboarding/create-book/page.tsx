@@ -46,12 +46,12 @@ export default function CreateBookPage() {
       setServerError(result.error);
       return;
     }
-    router.push(`/onboarding/add-first-recipe?bookId=${result.data.id}`);
+    router.push(`/onboarding/add-member?bookId=${result.data.id}`);
   }
 
   return (
     <EntryShell
-      eyebrow="Step 1 of 3"
+      eyebrow="Step 1 of 2"
       title="Name your recipe book"
       description="Give it a name and cover that feel like home."
       backHref="/app"
