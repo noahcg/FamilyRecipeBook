@@ -98,6 +98,15 @@ function copyFor(actionType: AuthActionType, newEmail?: string): Copy {
         cta: "Confirm it's me",
         closing: "If you did not request this, change your password.",
       };
+    default:
+      return {
+        subject: "Action required on your Home Cooked account",
+        eyebrow: "Home Cooked",
+        title: "One quick step.",
+        body: "Use the link below to continue with your Home Cooked account.",
+        cta: "Continue",
+        closing: "If you did not expect this, you can safely ignore this email.",
+      };
   }
 }
 

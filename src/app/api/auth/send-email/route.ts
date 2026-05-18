@@ -11,6 +11,9 @@ import {
   sendEmail,
 } from "@/lib/email/sendEmail";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 interface SupabaseSendEmailPayload {
   user: {
     id: string;
@@ -39,24 +42,40 @@ function buildConfirmationUrl(
   return `${siteUrl.replace(/\/$/, "")}/auth/confirm?${params.toString()}`;
 }
 
+function fail(stage: string, error: unknown, status = 500) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`[send-email-hook] ${stage} failed:`, message);
+  return NextResponse.json(
+    { error: `${stage} failed`, detail: message },
+    { status }
+  );
+}
+
 export async function POST(request: NextRequest) {
   const rawSecret = process.env.SEND_EMAIL_HOOK_SECRET;
   if (!rawSecret) {
-    return NextResponse.json(
-      { error: "Send email hook is not configured." },
-      { status: 500 }
-    );
+    return fail("config", "SEND_EMAIL_HOOK_SECRET is not set", 500);
+  }
+  if (!process.env.RESEND_API_KEY) {
+    return fail("config", "RESEND_API_KEY is not set", 500);
+  }
+  if (!process.env.EMAIL_FROM) {
+    return fail("config", "EMAIL_FROM is not set", 500);
   }
 
   // Supabase issues secrets prefixed with `v1,whsec_<base64>`.
-  // standardwebhooks handles the `whsec_` prefix; strip the `v1,` part.
-  const secret = rawSecret.replace(/^v1,/, "");
+  // standardwebhooks already handles the `whsec_` prefix; strip the `v1,` part.
+  const secret = rawSecret.trim().replace(/^v1,/, "");
 
   const headers = {
     "webhook-id": request.headers.get("webhook-id") ?? "",
     "webhook-timestamp": request.headers.get("webhook-timestamp") ?? "",
     "webhook-signature": request.headers.get("webhook-signature") ?? "",
   };
+
+  if (!headers["webhook-id"] || !headers["webhook-signature"]) {
+    return fail("verify", "Missing webhook headers", 400);
+  }
 
   const rawBody = await request.text();
 
@@ -65,15 +84,29 @@ export async function POST(request: NextRequest) {
     const wh = new Webhook(secret);
     payload = wh.verify(rawBody, headers) as SupabaseSendEmailPayload;
   } catch (error) {
-    console.error("[send-email-hook] signature verification failed", error);
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    return fail("verify", error, 401);
   }
 
   const { user, email_data } = payload;
+  if (!user?.email) return fail("payload", "Missing user.email", 400);
+  if (!email_data?.email_action_type) {
+    return fail("payload", "Missing email_action_type", 400);
+  }
+
   const siteUrl = email_data.site_url || getAppBaseUrl();
-  const logoUrl = getDefaultLogoUrl();
+  let logoUrl: string | undefined;
+  try {
+    logoUrl = getDefaultLogoUrl();
+  } catch {
+    logoUrl = undefined; // template falls back to text wordmark
+  }
   const fullName = user.user_metadata?.full_name ?? null;
   const actionType = email_data.email_action_type;
+
+  console.log("[send-email-hook] handling", {
+    actionType,
+    to: user.email,
+  });
 
   try {
     if (actionType === "signup") {
@@ -113,13 +146,6 @@ export async function POST(request: NextRequest) {
     await sendEmail({ to: user.email, subject, html, text });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[send-email-hook] send failed", {
-      actionType,
-      error: error instanceof Error ? error.message : error,
-    });
-    return NextResponse.json(
-      { error: "Failed to send email" },
-      { status: 500 }
-    );
+    return fail(`send(${actionType})`, error, 500);
   }
 }
