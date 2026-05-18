@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
@@ -8,8 +8,8 @@ import { X } from "lucide-react";
 interface DrawerProps {
   open: boolean;
   onClose: () => void;
-  title?: string;
-  description?: string;
+  eyebrow?: string;
+  title: string;
   children: React.ReactNode;
   className?: string;
 }
@@ -17,13 +17,11 @@ interface DrawerProps {
 export function Drawer({
   open,
   onClose,
+  eyebrow,
   title,
-  description,
   children,
   className,
 }: DrawerProps) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
@@ -40,53 +38,45 @@ export function Drawer({
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-[100] flex items-end justify-center sm:items-stretch sm:justify-end"
-      role="dialog"
-      aria-modal="true"
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
-      }}
-    >
-      <div className="absolute inset-0 bg-ink/45 backdrop-blur-md" />
-
-      <div
+    <div className="fixed inset-0 z-50">
+      <button
+        type="button"
+        aria-label={`Close ${title.toLowerCase()}`}
+        className="absolute inset-0 animate-in fade-in duration-150 bg-ink/18"
+        onClick={onClose}
+      />
+      <section
         className={clsx(
-          "relative flex w-full flex-col shadow-lg",
-          "max-h-[88dvh] rounded-t-2xl",
-          "sm:h-full sm:max-h-none sm:w-[420px] sm:max-w-[90vw] sm:rounded-none sm:rounded-l-2xl",
-          "animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-right-4 duration-200",
+          "relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]",
           className
         )}
-        style={{ background: "var(--color-paper-soft)" }}
       >
-        {(title || description) && (
-          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-line-soft px-4 pb-3 pt-5 sm:px-5">
-            <div className="min-w-0">
-              {title && (
-                <h2
-                  className="text-lg font-bold text-green-deep"
-                  style={{ fontFamily: "var(--font-playfair)" }}
-                >
-                  {title}
-                </h2>
-              )}
-              {description && (
-                <p className="mt-0.5 text-xs text-ink-muted">{description}</p>
-              )}
-            </div>
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-line-soft"
-              aria-label="Close"
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            {eyebrow && (
+              <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+                {eyebrow}
+              </p>
+            )}
+            <h2
+              className="mt-1 truncate text-2xl font-bold leading-tight text-green-deep"
+              style={{ fontFamily: "var(--font-playfair)" }}
             >
-              <X size={18} strokeWidth={1.75} />
-            </button>
+              {title}
+            </h2>
           </div>
-        )}
-        <div className="flex-1 overflow-y-auto">{children}</div>
-      </div>
+          <button
+            type="button"
+            aria-label={`Close ${title.toLowerCase()}`}
+            onClick={onClose}
+            className="flex size-10 shrink-0 items-center justify-center rounded-full border border-line-soft bg-white-soft text-green-deep"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {children}
+      </section>
     </div>,
     document.body
   );

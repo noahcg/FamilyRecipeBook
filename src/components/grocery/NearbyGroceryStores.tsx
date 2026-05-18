@@ -167,22 +167,24 @@ export function NearbyGroceryStores() {
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title="Nearby grocery stores"
-        description={
-          search.status === "done"
-            ? `Near ${search.usedQuery}`
-            : undefined
-        }
+        eyebrow="Grocery"
+        title="Nearby stores"
       >
+        {search.status === "done" && (
+          <p className="-mt-3 mb-3 text-xs text-ink-muted">
+            Near {search.usedQuery}
+          </p>
+        )}
+
         {search.status === "loading" && (
-          <div className="flex flex-col items-center justify-center gap-3 py-12 text-sm text-ink-muted">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-ink-muted">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-line border-t-green-deep" />
             Searching nearby stores…
           </div>
         )}
 
         {search.status === "error" && (
-          <div className="px-5 py-10 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center px-2 text-center">
             <p className="text-sm font-semibold text-danger">{search.message}</p>
             <button
               type="button"
@@ -195,7 +197,7 @@ export function NearbyGroceryStores() {
         )}
 
         {search.status === "done" && search.stores.length === 0 && (
-          <div className="px-5 py-10 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center px-2 text-center">
             <p className="text-sm text-ink-muted">
               No grocery stores found near {search.usedQuery}. Try a different
               address.
@@ -204,7 +206,7 @@ export function NearbyGroceryStores() {
         )}
 
         {search.status === "done" && search.stores.length > 0 && (
-          <ul className="divide-y divide-line-soft">
+          <ul className="-mx-1 min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto pr-1">
             {search.stores.map((store) => (
               <StoreRow key={store.id} store={store} />
             ))}
@@ -218,7 +220,7 @@ export function NearbyGroceryStores() {
 function StoreRow({ store }: { store: NearbyStore }) {
   const distance = formatDistance(store.distanceMeters);
   return (
-    <li className="px-4 py-4 sm:px-5">
+    <li className="px-1 py-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-ink">{store.name}</p>
