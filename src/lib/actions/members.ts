@@ -29,6 +29,13 @@ async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, b
   return data?.role ?? null;
 }
 
+function getInviteDisplayName(fullName?: string | null) {
+  const trimmed = fullName?.trim();
+  if (!trimmed) return null;
+  if (trimmed.includes("@")) return null;
+  return trimmed.split(/\s+/)[0] ?? null;
+}
+
 export async function inviteMember(
   bookId: string,
   input: InviteMemberInput
@@ -66,7 +73,7 @@ export async function inviteMember(
   }
 
   const cookbookTitle = bookRes.data?.title ?? "a cookbook";
-  const inviterName = profileRes.data?.full_name ?? user.email ?? null;
+  const inviterName = getInviteDisplayName(profileRes.data?.full_name);
 
   const { data: invitation, error } = await supabase
     .from("book_invitations")
@@ -85,18 +92,18 @@ export async function inviteMember(
     return { success: false, error: error?.message ?? "Could not create invitation" };
   }
 
-  const inviteUrl = `${getAppBaseUrl()}/invite/${token}`;
-  const email = createMemberInviteEmail({
-    inviteUrl,
-    cookbookTitle,
-    inviterName,
-    invitedEmail: parsed.data.email,
-    role: parsed.data.role,
-    expiresAt,
-    logoUrl: getDefaultLogoUrl(),
-  });
-
   try {
+    const inviteUrl = `${getAppBaseUrl()}/invite/${token}`;
+    const email = createMemberInviteEmail({
+      inviteUrl,
+      cookbookTitle,
+      inviterName,
+      invitedEmail: parsed.data.email,
+      role: parsed.data.role,
+      expiresAt,
+      logoUrl: getDefaultLogoUrl(),
+    });
+
     await sendEmail({
       to: parsed.data.email,
       subject: email.subject,

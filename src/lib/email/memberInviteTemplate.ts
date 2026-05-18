@@ -126,8 +126,7 @@ export function createMemberInviteEmail({
               <td style="padding:18px 36px 34px;">
                 <p style="margin:0;text-align:center;font-size:13px;line-height:1.6;color:#8B7F70;">${safeExpirationText}</p>
                 <p style="margin:18px 0 0;text-align:center;font-size:12px;line-height:1.6;color:#8B7F70;">
-                  If the button does not work, copy and paste this link into your browser:<br />
-                  <a href="${safeInviteUrl}" style="color:#B95A40;word-break:break-all;">${safeInviteUrl}</a>
+                  If the button does not work, open this <a href="${safeInviteUrl}" style="color:#B95A40;font-weight:700;text-decoration:underline;">secure invitation link</a>.
                 </p>
               </td>
             </tr>
@@ -143,7 +142,7 @@ export function createMemberInviteEmail({
     "",
     `Join as a ${roleLabel} to save recipes, share kitchen notes, and keep the good meals easy to find.`,
     "",
-    `Accept invitation: ${inviteUrl}`,
+    `Accept invitation with this secure invitation link: ${inviteUrl}`,
     "",
     expirationText,
   ].join("\n");
