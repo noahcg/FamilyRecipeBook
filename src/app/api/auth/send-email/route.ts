@@ -93,7 +93,10 @@ export async function POST(request: NextRequest) {
     return fail("payload", "Missing email_action_type", 400);
   }
 
-  const siteUrl = email_data.site_url || getAppBaseUrl();
+  // Always use our app base URL — `email_data.site_url` is whatever is set in
+  // Supabase's URL Configuration and can default to the Supabase project URL,
+  // which would produce broken confirmation links.
+  const siteUrl = getAppBaseUrl();
   let logoUrl: string | undefined;
   try {
     logoUrl = getDefaultLogoUrl();
