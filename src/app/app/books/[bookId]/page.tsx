@@ -456,24 +456,23 @@ export default async function BookHomePage({ params }: Props) {
               <PageSection>
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <SectionEyebrow>Browse by feel</SectionEyebrow>
+                    <SectionEyebrow>Browse by effort</SectionEyebrow>
                     <h2
                       className="mt-2 text-xl font-bold text-green-deep"
                       style={{ fontFamily: "var(--font-playfair)" }}
                     >
-                      Find the right kind of recipe
+                      Find a recipe that fits the day
                     </h2>
                   </div>
-                  <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4 lg:w-[min(520px,100%)]">
+                  <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 lg:w-[min(520px,100%)]">
                     {[
-                      ["Comfort", "warm and cozy"],
-                      ["Quick", "under 30"],
-                      ["Fresh", "bright and light"],
-                      ["Something New", "surprise me"],
-                    ].map(([label, hint]) => (
+                      ["Quick", "under 30 minutes", "quick"],
+                      ["Few Steps", "easy to follow", "few-steps"],
+                      ["Few Ingredients", "short shopping list", "few-ingredients"],
+                    ].map(([label, hint, filter]) => (
                       <Link
                         key={label}
-                        href={`/app/books/${bookId}/ideas`}
+                        href={`/app/books/${bookId}/recipes?filter=${filter}`}
                         className="rounded-sm border border-line-soft bg-white-soft/70 px-3 py-3 text-sm font-bold text-green-deep transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-green-sage/40 hover:bg-green-pale"
                       >
                         {label}

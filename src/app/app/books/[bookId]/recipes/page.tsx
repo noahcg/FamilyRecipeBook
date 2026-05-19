@@ -2,6 +2,7 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   BookOpen,
   Heart,
@@ -21,6 +22,10 @@ interface RecipeReaction {
   type: string;
 }
 
+interface RecipeCountRow {
+  id: string;
+}
+
 interface RecipeListItem {
   id: string;
   title: string;
@@ -33,6 +38,8 @@ interface RecipeListItem {
   created_at: string;
   creator: { full_name: string | null } | { full_name: string | null }[] | null;
   reactions: RecipeReaction[] | null;
+  ingredients: RecipeCountRow[] | null;
+  instructions: RecipeCountRow[] | null;
   loveCount: number;
 }
 
@@ -41,6 +48,23 @@ interface FavoriteRow {
 }
 
 const UNCATEGORIZED = "Family Notes";
+
+const PRACTICAL_FILTERS = {
+  quick: {
+    label: "Quick",
+    description: "Recipes with a cook time of 30 minutes or less.",
+  },
+  "few-steps": {
+    label: "Few Steps",
+    description: "Recipes with 5 or fewer instruction steps.",
+  },
+  "few-ingredients": {
+    label: "Few Ingredients",
+    description: "Recipes with 8 or fewer ingredients.",
+  },
+} as const;
+
+type PracticalFilter = keyof typeof PRACTICAL_FILTERS;
 
 function chapterId(category: string) {
   return `chapter-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
@@ -70,8 +94,39 @@ function recipeCreatorName(recipe: RecipeListItem) {
   return creator?.full_name;
 }
 
+function recipeHaystack(recipe: RecipeListItem) {
+  return [
+    recipe.title,
+    recipe.source_name,
+    recipeCreatorName(recipe),
+    recipe.category,
+    recipe.description,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function isPracticalFilter(value: string | null): value is PracticalFilter {
+  return value === "quick" || value === "few-steps" || value === "few-ingredients";
+}
+
+function recipeMatchesPracticalFilter(recipe: RecipeListItem, filter: PracticalFilter) {
+  if (filter === "quick") return recipe.cook_minutes != null && recipe.cook_minutes <= 30;
+  if (filter === "few-steps") {
+    const stepCount = recipe.instructions?.length ?? 0;
+    return stepCount > 0 && stepCount <= 5;
+  }
+
+  const ingredientCount = recipe.ingredients?.length ?? 0;
+  return ingredientCount > 0 && ingredientCount <= 8;
+}
+
 export default function RecipesPage({ params }: Props) {
   const { bookId } = use(params);
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
+  const activeFilter: PracticalFilter | null = isPracticalFilter(filterParam) ? filterParam : null;
   const [query, setQuery] = useState("");
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
@@ -87,7 +142,7 @@ export default function RecipesPage({ params }: Props) {
 
       const recipesRequest = supabase
         .from("recipes")
-        .select("*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type)")
+        .select("*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type), ingredients:recipe_ingredients(id), instructions:recipe_instructions(id)")
         .eq("book_id", bookId)
         .order("created_at", { ascending: false });
 
@@ -129,20 +184,16 @@ export default function RecipesPage({ params }: Props) {
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return recipes;
+    const practicalFiltered = activeFilter
+      ? recipes.filter((recipe) => recipeMatchesPracticalFilter(recipe, activeFilter))
+      : recipes;
 
-    return recipes.filter((recipe) =>
-      [
-        recipe.title,
-        recipe.source_name,
-        recipeCreatorName(recipe),
-        recipe.category,
-        recipe.description,
-      ]
-        .filter(Boolean)
-        .some((value) => value?.toLowerCase().includes(normalizedQuery))
+    if (!normalizedQuery) return practicalFiltered;
+
+    return practicalFiltered.filter((recipe) =>
+      recipeHaystack(recipe).includes(normalizedQuery)
     );
-  }, [query, recipes]);
+  }, [activeFilter, query, recipes]);
 
   const chapters = useMemo(() => {
     const grouped = new Map<string, RecipeListItem[]>();
@@ -162,8 +213,8 @@ export default function RecipesPage({ params }: Props) {
   }, [filtered]);
 
   const newestRecipe = recipes[0] ?? null;
-  const favoriteCount = favoriteIds.size;
   const showContents = !loading && filtered.length > 0;
+  const activeFilterDetails = activeFilter ? PRACTICAL_FILTERS[activeFilter] : null;
 
   function closeContents() {
     setIsContentsOpen(false);
@@ -235,9 +286,20 @@ export default function RecipesPage({ params }: Props) {
                 Contents
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-                {recipes.length} {recipes.length === 1 ? "recipe" : "recipes"} across{" "}
-                {chapters.length || 0} {chapters.length === 1 ? "chapter" : "chapters"}
+                {activeFilterDetails
+                  ? activeFilterDetails.description
+                  : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`}
               </p>
+              {activeFilterDetails && (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="rounded-sm bg-green-deep px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-ink-inverse">
+                    {activeFilterDetails.label}
+                  </span>
+                  <Link href={`/app/books/${bookId}/recipes`} className="text-sm font-bold text-green-deep hover:underline">
+                    View all recipes
+                  </Link>
+                </div>
+              )}
             </div>
 
             <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
@@ -275,9 +337,9 @@ export default function RecipesPage({ params }: Props) {
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
-            title={query ? "No matching recipes" : "Your first recipe belongs here"}
+            title={query || activeFilterDetails ? "No matching recipes" : "Your first recipe belongs here"}
             description={
-              query
+              query || activeFilterDetails
                 ? "Try another search term or browse the full recipe list."
                 : "Start with one recipe you already know you will want to find again."
             }
