@@ -28,7 +28,6 @@ interface HomeRecipe extends Recipe {
   loveCount?: number;
 }
 
-const RECIPE_THEMES = ["quick weeknights", "family favorites", "make-ahead", "something new", "comfort meals"];
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
 const QUICK_PICK_POOL: ReadonlyArray<readonly [string, string]> = [
@@ -48,6 +47,43 @@ const QUICK_PICK_POOL: ReadonlyArray<readonly [string, string]> = [
   ["Try something new",       "A new-to-me recipe that's a little outside our usual rotation."],
   ["Light and fresh",         "Something light and fresh — lots of vegetables, not too heavy."],
   ["Bake something sweet",    "A simple sweet bake or dessert."],
+] as const;
+
+const INSPIRATION_POOL: ReadonlyArray<{
+  title: string;
+  body: string;
+  prompt: string;
+}> = [
+  {
+    title: "Make Sunday feel special",
+    body: "Ask for a slow, generous dinner that still leaves room for leftovers.",
+    prompt: "A slow, generous Sunday dinner that feels special and still leaves room for leftovers.",
+  },
+  {
+    title: "Bring back a family classic",
+    body: "Ask for something familiar, comforting, and worth writing into the cookbook.",
+    prompt: "A familiar, comforting family-style recipe that would feel worth saving in our cookbook.",
+  },
+  {
+    title: "Use up what is waiting",
+    body: "Ask for a recipe built around pantry staples and anything that needs using soon.",
+    prompt: "A practical recipe that uses pantry staples and helps use up ingredients that may already be in the fridge.",
+  },
+  {
+    title: "Cook once, eat twice",
+    body: "Ask for a meal that holds up well and makes tomorrow easier.",
+    prompt: "A dinner that makes great leftovers and can be cooked once for at least two meals.",
+  },
+  {
+    title: "Make a weeknight calmer",
+    body: "Ask for a low-effort dinner that still feels like a real meal.",
+    prompt: "A low-effort weeknight dinner that still feels complete and satisfying.",
+  },
+  {
+    title: "Bake something simple",
+    body: "Ask for a sweet bake that feels homemade without taking over the day.",
+    prompt: "A simple homemade dessert or sweet bake that does not take over the whole day.",
+  },
 ] as const;
 
 function getMondayOfCurrentWeek(): string {
@@ -228,6 +264,7 @@ export default async function BookHomePage({ params }: Props) {
       };
 
   const weeklyQuickPicks = pickWeekly(QUICK_PICK_POOL, weekStart, 4);
+  const weeklyInspiration = pickWeekly(INSPIRATION_POOL, `${weekStart}:inspiration`, 1)[0];
 
   return (
     <AppShell bookId={bookId}>
@@ -496,20 +533,6 @@ export default async function BookHomePage({ params }: Props) {
               </PageSection>
 
               <PageSection>
-                <SectionHeader eyebrow="Recipe paths" title="Start somewhere useful" />
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {RECIPE_THEMES.map((item) => (
-                    <span key={item} className="rounded-sm bg-green-pale px-3 py-1 text-sm font-semibold text-green-deep">
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <Link href={`/app/books/${bookId}/ideas`} className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
-                  Browse recipe ideas <ChevronRight size={15} />
-                </Link>
-              </PageSection>
-
-              <PageSection>
                 <SectionHeader eyebrow="Weekly snapshot" title="The week ahead" />
                 {hasAnyMealPlanned ? (
                   <p className="mt-2 text-xl font-bold leading-snug text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
@@ -555,12 +578,12 @@ export default async function BookHomePage({ params }: Props) {
                     className="mt-2 text-xl font-bold leading-tight text-green-deep"
                     style={{ fontFamily: "var(--font-playfair)" }}
                   >
-                    Make Sunday feel special
+                    {weeklyInspiration.title}
                   </h2>
                   <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                    Ask for a slow, generous dinner that still leaves room for leftovers.
+                    {weeklyInspiration.body}
                   </p>
-                  <Link href={`/app/books/${bookId}/ideas`}>
+                  <Link href={`/app/books/${bookId}/ideas?prompt=${encodeURIComponent(weeklyInspiration.prompt)}`}>
                     <Button variant="secondary" size="sm" className="mt-4 rounded-md">
                       <Lightbulb size={15} />
                       Get inspired
