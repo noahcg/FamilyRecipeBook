@@ -1,100 +1,38 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  BookHeart,
-  BookMarked,
-  BookOpen,
-  HeartHandshake,
-  Paperclip,
-  Star,
-} from "lucide-react";
+import { BookOpen, ChefHat, ShoppingCart } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
-
-const AVATARS = [
-  { name: "M", color: "#EAC6B8" },
-  { name: "G", color: "#DDE5D7" },
-  { name: "L", color: "#F5D48D" },
-  { name: "A", color: "#E8D5B8" },
-];
-
-function LeafLine({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 130 58"
-      className={className}
-      fill="none"
-    >
-      <path
-        d="M18 48C42 28 68 15 113 11"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path d="M39 31c-13-2-22 3-27 14 13 2 22-3 27-14Z" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M57 22c-8-10-18-12-29-6 8 10 18 12 29 6Z" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M78 16c-9-8-19-8-28 0 9 8 19 8 28 0Z" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M101 12c-6-10-15-14-27-10 6 11 16 14 27 10Z" stroke="currentColor" strokeWidth="1.7" />
-    </svg>
-  );
-}
-
-function HeartSwoosh({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 95 54"
-      className={className}
-      fill="none"
-    >
-      <path
-        d="M16 22c8-9 18 0 14 9-3 7-12 12-12 12S7 35 6 27c-1-9 9-12 16-5Z"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M39 36c16 4 33-1 48-14"
-        stroke="currentColor"
-        strokeWidth="2.1"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 function FeatureCopy({
   icon: Icon,
   tone,
-  title,
+  titleLead,
+  titleAccent,
   body,
 }: {
-  icon: typeof BookHeart;
+  icon: typeof BookOpen;
   tone: string;
-  title: string;
+  titleLead: string;
+  titleAccent: string;
   body: string;
 }) {
   return (
-    <div className="max-w-[25rem]">
-      <span className={`mb-5 grid size-14 place-items-center rounded-full ${tone}`}>
-        <Icon aria-hidden="true" size={24} strokeWidth={1.75} />
+    <div className="max-w-[28rem]">
+      <span className={`mb-4 grid size-12 place-items-center rounded-full ${tone}`}>
+        <Icon aria-hidden="true" size={22} strokeWidth={1.75} />
       </span>
       <h3
-        className="text-[1.55rem] font-bold leading-[1.08] text-green-deep sm:text-[1.8rem]"
+        className="text-[clamp(1.9rem,3.8vw,2.5rem)] font-bold leading-[1.06] text-green-deep"
         style={{ fontFamily: "var(--font-playfair)" }}
       >
-        {title}
+        {titleLead}{" "}
+        <span className="font-semibold italic text-accent-terracotta">
+          {titleAccent}
+        </span>
       </h3>
-      <p className="mt-3 text-[1rem] leading-relaxed text-ink-muted sm:text-[1.08rem]">
+      <p className="mt-3 text-[1.02rem] leading-relaxed text-ink-muted sm:text-[1.08rem]">
         {body}
       </p>
-      <Link
-        href="/sign-up"
-        className="mt-5 inline-flex text-[1rem] font-extrabold text-accent-terracotta transition hover:text-green-deep"
-      >
-        Learn more →
-      </Link>
     </div>
   );
 }
@@ -141,12 +79,10 @@ export default function LandingPage() {
         <Link href="/" className="shrink-0">
           <BrandLockup className="brand-lockup--homepage" />
         </Link>
-
-        
       </header>
 
       <main>
-        <section className="relative min-h-[560px] pb-4 pt-8 sm:min-h-[580px] lg:min-h-[600px] lg:pb-6 lg:pt-8">
+        <section className="relative min-h-[480px] pb-4 pt-8 sm:min-h-[520px] lg:min-h-[560px] lg:pb-6 lg:pt-8">
           <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 sm:px-8 lg:px-12">
             <div className="max-w-2xl">
               <h1
@@ -180,143 +116,128 @@ export default function LandingPage() {
                   Sign in
                 </Link>
               </div>
-
-              <div className="mt-7 flex flex-col gap-4 sm:mt-8 sm:flex-row sm:items-center">
-                <div className="flex -space-x-3">
-                  {AVATARS.map((avatar) => (
-                    <span
-                      key={avatar.name}
-                      className="grid size-10 place-items-center rounded-full border-[3px] border-paper text-sm font-black text-green-forest-dark shadow-soft"
-                      style={{ backgroundColor: avatar.color }}
-                    >
-                      {avatar.name}
-                    </span>
-                  ))}
-                </div>
-                <div>
-                  <p className="text-sm font-extrabold text-green-deep">
-                    Loved by families everywhere
-                  </p>
-                  <div className="mt-1 flex items-center gap-2 text-sm font-bold text-ink-muted">
-                    <span className="flex text-accent-mustard">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <Star
-                          key={index}
-                          aria-hidden="true"
-                          className="fill-current"
-                          size={15}
-                        />
-                      ))}
-                    </span>
-                    4.9 (320+ reviews)
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </section>
 
-        <section className="relative z-10 -mt-[50px] mx-auto w-full max-w-[1360px] px-4 pb-10 pt-14 sm:px-8 sm:pt-18 lg:px-12">
+        <section className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pb-16 pt-6 sm:px-8 sm:pb-20 sm:pt-10 lg:px-12 lg:pb-28 lg:pt-12">
           <div className="text-center">
-            <LeafLine className="mx-auto mb-4 h-10 w-24 text-green-sage" />
             <h2
-              className="text-[clamp(2.75rem,7vw,5.5rem)] font-semibold italic leading-[0.98] tracking-normal text-green-deep"
+              className="text-[clamp(2.5rem,6.5vw,5rem)] font-semibold italic leading-[1.02] tracking-normal text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
               More than recipes.
-              <span className="relative mt-1 block text-accent-terracotta">
+              <span className="mt-1 block text-accent-terracotta">
                 It&rsquo;s your story.
-                <HeartSwoosh className="absolute left-[calc(50%+8.5rem)] top-2 hidden h-12 w-20 text-accent-terracotta sm:block lg:left-[calc(50%+13rem)] lg:top-5" />
               </span>
             </h2>
           </div>
         </section>
 
-        <section className="relative z-10 mx-auto w-full max-w-[1360px] px-4 pb-12 sm:px-8 lg:px-12">
-          <div className="grid overflow-hidden rounded-[2rem] border border-[rgba(36,79,59,0.12)] bg-[rgba(255,250,240,0.46)] shadow-[0_18px_45px_rgba(57,45,25,0.10)] lg:grid-cols-2">
-            <article className="relative grid gap-8 p-6 sm:p-9 md:grid-cols-[0.92fr_1fr] md:items-center lg:min-h-[370px] lg:border-r lg:border-b lg:border-[rgba(36,79,59,0.18)] lg:p-10">
-              <div className="relative mx-auto w-full max-w-[250px] rotate-[-3deg] rounded-[12px] border border-[rgba(36,79,59,0.12)] bg-paper p-3 pb-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]">
-                <span className="absolute -left-5 -top-4 z-10 h-10 w-24 rotate-[-13deg] rounded-[3px] bg-[#eadbc6]/85 shadow-sm" />
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[8px] bg-paper-deep">
+        <section className="relative z-10 mx-auto w-full max-w-[1200px] px-4 pb-20 sm:px-8 sm:pb-28 lg:px-12 lg:pb-36">
+          <div className="space-y-24 sm:space-y-32 lg:space-y-40">
+            <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+              <div className="order-1 flex justify-center lg:justify-start">
+                <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
-                    src="/images/recipes/apple-pie.png"
-                    alt="Apple pie recipe page"
-                    fill
-                    sizes="250px"
-                    className="object-cover"
+                    src="/images/homecooked-landing.png"
+                    alt="Home Cooked cookbook home screen with recipes, meal plan, and quick actions"
+                    width={1507}
+                    height={760}
+                    sizes="(min-width: 1024px) 640px, 100vw"
+                    className="h-auto w-full"
                   />
                 </div>
               </div>
-
-              <FeatureCopy
-                icon={BookHeart}
-                tone="bg-green-soft/80 text-green-deep"
-                title="Save family recipes"
-                body="Capture recipes with ingredients, instructions, and photos so they’re never lost."
-              />
-            </article>
-
-            <article className="relative grid gap-8 border-t border-dotted border-[rgba(36,79,59,0.22)] p-6 sm:p-9 md:grid-cols-[1fr_0.94fr] md:items-center lg:min-h-[370px] lg:border-t-0 lg:border-b lg:p-10">
-              <FeatureCopy
-                icon={BookMarked}
-                tone="bg-[#f3d7cc] text-accent-terracotta"
-                title="Add stories and memories"
-                body="Every recipe has a story. Add notes, memories, and moments that make it special."
-              />
-
-              <div className="relative mx-auto max-w-[285px] rotate-[3deg]">
-                <Paperclip
-                  aria-hidden="true"
-                  className="absolute -left-1 -top-6 z-20 rotate-[-18deg] text-green-sage drop-shadow-sm"
-                  size={38}
-                  strokeWidth={1.6}
+              <div className="order-2 flex justify-center lg:justify-start">
+                <FeatureCopy
+                  icon={BookOpen}
+                  tone="bg-green-soft/80 text-green-deep"
+                  titleLead="Your cookbooks,"
+                  titleAccent="all in one place."
+                  body="Every recipe, idea, and meal plan lives in your family's private cookbook — ready when you are."
                 />
-                <div
-                  className="relative border border-[rgba(36,79,59,0.12)] bg-[#fff4dc] px-6 py-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]"
-                  style={{
-                    clipPath:
-                      "polygon(0 4%, 9% 2%, 18% 5%, 29% 1%, 41% 4%, 53% 1%, 64% 4%, 76% 1%, 88% 5%, 100% 3%, 98% 100%, 3% 98%)",
-                  }}
-                >
-                  <p
-                    className="text-[1.65rem] leading-[1.18] text-accent-cinnamon"
-                    style={{ fontFamily: "var(--font-caveat)" }}
-                  >
-                    This was the first dessert I learned to make with Grandma. Now I
-                    make it for my kids.
-                  </p>
-                  <HeartSwoosh className="ml-auto mt-2 h-9 w-14 text-accent-terracotta" />
-                </div>
               </div>
-            </article>
+            </div>
 
-            <article className="relative grid gap-8 border-t border-dotted border-[rgba(36,79,59,0.22)] p-6 sm:p-9 md:grid-cols-[0.92fr_1fr] md:items-center lg:min-h-[370px] lg:border-r lg:border-t-0 lg:p-10">
-              <div className="relative mx-auto w-full max-w-[270px] rotate-[2deg] rounded-[12px] border border-[rgba(36,79,59,0.12)] bg-paper p-3 pb-8 shadow-[0_18px_45px_rgba(57,45,25,0.10)]">
-                <div className="relative aspect-[4/3] overflow-hidden rounded-[8px] bg-paper-deep">
+            <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-14">
+              <div className="order-2 flex justify-center lg:order-1 lg:justify-end">
+                <FeatureCopy
+                  icon={ChefHat}
+                  tone="bg-[#f3d7cc] text-accent-terracotta"
+                  titleLead="Recipes that"
+                  titleAccent="read like a story."
+                  body="Beautiful, easy-to-follow pages with photos, ingredients, and step-by-step instructions the whole family can cook from."
+                />
+              </div>
+              <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
+                <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
-                    src="/images/landing-cookbook-hero.png"
-                    alt="Family cooking together"
-                    fill
-                    sizes="270px"
-                    className="object-cover object-[44%_56%]"
+                    src="/images/homecooked-recipe.png"
+                    alt="A recipe page in Home Cooked showing photo, ingredients, and step-by-step method"
+                    width={1507}
+                    height={763}
+                    sizes="(min-width: 1024px) 640px, 100vw"
+                    className="h-auto w-full"
                   />
                 </div>
-                <div
-                  className="absolute -bottom-5 -left-4 rotate-[-5deg] rounded-[8px] border border-[rgba(36,79,59,0.12)] bg-green-soft px-4 py-3 text-center text-[1.35rem] leading-none text-green-deep shadow-[0_10px_22px_rgba(57,45,25,0.10)]"
-                  style={{ fontFamily: "var(--font-caveat)" }}
-                >
-                  Grandma, Mom &amp; Ava ♡
+              </div>
+            </div>
+
+            <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+              <div className="order-1 flex justify-center lg:justify-start">
+                <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
+                  <Image
+                    src="/images/homecooked-groceries.png"
+                    alt="The grocery list in Home Cooked with categorized items and nearby store suggestions"
+                    width={1507}
+                    height={761}
+                    sizes="(min-width: 1024px) 640px, 100vw"
+                    className="h-auto w-full"
+                  />
                 </div>
               </div>
+              <div className="order-2 flex justify-center lg:justify-start">
+                <FeatureCopy
+                  icon={ShoppingCart}
+                  tone="bg-[#f5df9e]/70 text-accent-cinnamon"
+                  titleLead="Grocery lists,"
+                  titleAccent="made smart."
+                  body="Build your list straight from the week's meal plan, then find the closest stores to shop at."
+                />
+              </div>
+            </div>
+          </div>
+        </section>
 
-              <FeatureCopy
-                icon={HeartHandshake}
-                tone="bg-[#f5df9e]/70 text-accent-cinnamon"
-                title="Bring family into the book"
-                body="Invite family to view, add, and share their favorite recipes and memories."
-              />
-            </article>
-
+        <section className="relative z-10 mx-auto w-full max-w-[1140px] px-4 pb-24 text-center sm:px-8 sm:pb-28 lg:px-12 lg:pb-32">
+          <h2
+            className="text-[clamp(2rem,4.5vw,3rem)] font-bold leading-[1.05] text-green-deep"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Start your family&rsquo;s{" "}
+            <span className="font-semibold italic text-accent-terracotta">
+              recipe book.
+            </span>
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-[1.05rem] leading-relaxed text-ink-muted">
+            It only takes a minute to begin. The recipes you save today become
+            heirlooms tomorrow.
+          </p>
+          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/sign-up"
+              className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-base font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"
+            >
+              <BookOpen aria-hidden="true" size={18} strokeWidth={2} />
+              Start your recipe book
+            </Link>
+            <Link
+              href="/sign-in"
+              className="inline-flex min-h-13 items-center justify-center rounded-full border border-line bg-card px-6 text-base font-extrabold text-green-deep shadow-soft transition hover:bg-white-soft"
+            >
+              Sign in
+            </Link>
           </div>
         </section>
       </main>
