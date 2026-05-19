@@ -17,11 +17,12 @@ import {
 
 interface AIRecipeIdeaPanelProps {
   bookId: string;
+  initialPrompt?: string;
 }
 
-export function AIRecipeIdeaPanel({ bookId }: AIRecipeIdeaPanelProps) {
+export function AIRecipeIdeaPanel({ bookId, initialPrompt }: AIRecipeIdeaPanelProps) {
   const router = useRouter();
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(initialPrompt ?? "");
   const [idea, setIdea] = useState<AIRecipeIdea | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, startGenerating] = useTransition();

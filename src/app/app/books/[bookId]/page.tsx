@@ -30,6 +30,25 @@ interface HomeRecipe extends Recipe {
 const RECIPE_THEMES = ["quick weeknights", "family favorites", "make-ahead", "something new", "comfort meals"];
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
+const QUICK_PICK_POOL: ReadonlyArray<readonly [string, string]> = [
+  ["Dinner tonight",          "Something to make for dinner tonight."],
+  ["Make-ahead for the week", "A meal I can make ahead and eat throughout the week."],
+  ["Weekend project",         "A weekend cooking project — something a bit more involved that's worth the time."],
+  ["Comfort food",            "Cozy comfort food."],
+  ["Use what's in the fridge","Help me use up what's already in my fridge."],
+  ["Under 30 minutes",        "A dinner I can put together in under 30 minutes."],
+  ["Kid-friendly",            "Something the whole family — including picky kids — will eat."],
+  ["One-pan or one-pot",      "A meal that comes together in one pan or one pot."],
+  ["Sheet-pan dinner",        "A sheet-pan dinner I can roast all at once."],
+  ["Pantry raid",             "A meal built mostly from pantry staples."],
+  ["Big-batch leftovers",     "Something that makes great leftovers for the next few days."],
+  ["Cozy soup or stew",       "A cozy soup or stew for tonight."],
+  ["Slow-cooked",             "A slow-cooked meal I can start early and forget about."],
+  ["Try something new",       "A new-to-me recipe that's a little outside our usual rotation."],
+  ["Light and fresh",         "Something light and fresh — lots of vegetables, not too heavy."],
+  ["Bake something sweet",    "A simple sweet bake or dessert."],
+] as const;
+
 function getMondayOfCurrentWeek(): string {
   const today = new Date();
   const day = today.getDay(); // 0 = Sun
@@ -43,6 +62,20 @@ function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + "T00:00:00");
   d.setDate(d.getDate() + n);
   return d.toISOString().slice(0, 10);
+}
+
+function pickWeekly<T>(pool: ReadonlyArray<T>, seed: string, n: number): T[] {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 16777619) >>> 0;
+  }
+  const arr = pool.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
+    const j = h % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr.slice(0, n);
 }
 
 function DashboardCard({
@@ -193,6 +226,8 @@ export default async function BookHomePage({ params }: Props) {
         body: "Open one to add it to this week's plan.",
       };
 
+  const weeklyQuickPicks = pickWeekly(QUICK_PICK_POOL, weekStart, 4);
+
   return (
     <AppShell bookId={bookId}>
       <div className="relative min-h-dvh overflow-hidden px-2.5 py-5 min-[360px]:px-3 min-[425px]:px-4 sm:px-5 lg:rounded-tr-xl lg:px-8 lg:py-8">
@@ -256,15 +291,10 @@ export default async function BookHomePage({ params }: Props) {
                 <TimeOfDayHeadline />
 
                 <div className="mt-5 flex flex-wrap gap-2 min-[425px]:mt-7 min-[425px]:gap-3">
-                  {[
-                    ["Cook with what I have", `/app/books/${bookId}/ideas`],
-                    ["Quick meals", `/app/books/${bookId}/ideas`],
-                    ["Plan the week", `/app/books/${bookId}/meal-plan`],
-                    ["Surprise me", `/app/books/${bookId}/ideas`],
-                  ].map(([label, href], index) => (
+                  {weeklyQuickPicks.map(([label, promptText], index) => (
                     <Link
                       key={label}
-                      href={href}
+                      href={`/app/books/${bookId}/ideas?prompt=${encodeURIComponent(promptText)}`}
                       className={`inline-flex min-h-10 items-center rounded-full border px-3 text-xs font-extrabold shadow-xs transition-colors min-[425px]:min-h-11 min-[425px]:px-4 min-[425px]:text-sm ${
                         index === 0
                           ? "border-green-deep bg-green-deep text-ink-inverse hover:bg-green-forest-dark"
