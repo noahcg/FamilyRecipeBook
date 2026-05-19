@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, ChefHat, ShoppingCart } from "lucide-react";
+import { BookOpen, ChefHat, ShoppingCart, Sparkles } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 
 function FeatureCopy({
@@ -163,20 +163,20 @@ export default function LandingPage() {
             <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-14">
               <div className="order-1 flex justify-center lg:justify-end">
                 <FeatureCopy
-                  icon={ChefHat}
-                  tone="bg-[#f3d7cc] text-accent-terracotta"
-                  titleLead="Recipes that"
-                  titleAccent="read like a story."
-                  body="Beautiful, easy-to-follow pages with photos, ingredients, and step-by-step instructions anyone can cook from."
+                  icon={Sparkles}
+                  tone="bg-[#dde5d7]/80 text-green-forest-dark"
+                  titleLead="Let AI help"
+                  titleAccent="spark the idea."
+                  body="Describe what you're in the mood for and Home Cooked drafts a recipe you can tweak, save, and put on the table tonight."
                 />
               </div>
               <div className="order-2 flex justify-center lg:justify-end">
                 <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
-                    src="/images/homecooked-recipe.png"
-                    alt="A recipe page in Home Cooked showing photo, ingredients, and step-by-step method"
-                    width={1507}
-                    height={763}
+                    src="/images/homecooked-ideas.png"
+                    alt="The Home Cooked recipe ideas screen, turning a short description into a draft recipe"
+                    width={1508}
+                    height={658}
                     sizes="(min-width: 1024px) 640px, 100vw"
                     className="h-auto w-full"
                   />
@@ -188,6 +188,39 @@ export default function LandingPage() {
               <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
                 <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
+                    src="/images/homecooked-recipe.png"
+                    alt="A recipe page in Home Cooked showing photo, ingredients, and step-by-step method"
+                    width={1507}
+                    height={763}
+                    sizes="(min-width: 1024px) 640px, 100vw"
+                    className="h-auto w-full"
+                  />
+                </div>
+              </div>
+              <div className="order-1 flex justify-center lg:order-2 lg:justify-start">
+                <FeatureCopy
+                  icon={ChefHat}
+                  tone="bg-[#f3d7cc] text-accent-terracotta"
+                  titleLead="Recipes that"
+                  titleAccent="read like a story."
+                  body="Beautiful, easy-to-follow pages with photos, ingredients, and step-by-step instructions anyone can cook from."
+                />
+              </div>
+            </div>
+
+            <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-14">
+              <div className="order-1 flex justify-center lg:justify-end">
+                <FeatureCopy
+                  icon={ShoppingCart}
+                  tone="bg-[#f5df9e]/70 text-accent-cinnamon"
+                  titleLead="Grocery lists,"
+                  titleAccent="made smart."
+                  body="Build your list straight from the week's meal plan, then find the closest stores to shop at."
+                />
+              </div>
+              <div className="order-2 flex justify-center lg:justify-end">
+                <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
+                  <Image
                     src="/images/homecooked-groceries.png"
                     alt="The grocery list in Home Cooked with categorized items and nearby store suggestions"
                     width={1507}
@@ -196,15 +229,6 @@ export default function LandingPage() {
                     className="h-auto w-full"
                   />
                 </div>
-              </div>
-              <div className="order-1 flex justify-center lg:order-2 lg:justify-start">
-                <FeatureCopy
-                  icon={ShoppingCart}
-                  tone="bg-[#f5df9e]/70 text-accent-cinnamon"
-                  titleLead="Grocery lists,"
-                  titleAccent="made smart."
-                  body="Build your list straight from the week's meal plan, then find the closest stores to shop at."
-                />
               </div>
             </div>
           </div>
