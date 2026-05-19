@@ -137,7 +137,7 @@ export default function LandingPage() {
         <section className="relative z-10 mx-auto w-full max-w-[1200px] px-4 pb-20 sm:px-8 sm:pb-28 lg:px-12 lg:pb-36">
           <div className="space-y-24 sm:space-y-32 lg:space-y-40">
             <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
-              <div className="order-1 flex justify-center lg:justify-start">
+              <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
                 <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
                     src="/images/homecooked-landing.png"
@@ -149,7 +149,7 @@ export default function LandingPage() {
                   />
                 </div>
               </div>
-              <div className="order-2 flex justify-center lg:justify-start">
+              <div className="order-1 flex justify-center lg:order-2 lg:justify-start">
                 <FeatureCopy
                   icon={BookOpen}
                   tone="bg-green-soft/80 text-green-deep"
@@ -161,7 +161,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-14">
-              <div className="order-2 flex justify-center lg:order-1 lg:justify-end">
+              <div className="order-1 flex justify-center lg:justify-end">
                 <FeatureCopy
                   icon={ChefHat}
                   tone="bg-[#f3d7cc] text-accent-terracotta"
@@ -170,7 +170,7 @@ export default function LandingPage() {
                   body="Beautiful, easy-to-follow pages with photos, ingredients, and step-by-step instructions anyone can cook from."
                 />
               </div>
-              <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
+              <div className="order-2 flex justify-center lg:justify-end">
                 <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
                     src="/images/homecooked-recipe.png"
@@ -185,7 +185,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
-              <div className="order-1 flex justify-center lg:justify-start">
+              <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
                 <div className="relative w-full overflow-hidden rounded-[14px] border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
                     src="/images/homecooked-groceries.png"
@@ -197,7 +197,7 @@ export default function LandingPage() {
                   />
                 </div>
               </div>
-              <div className="order-2 flex justify-center lg:justify-start">
+              <div className="order-1 flex justify-center lg:order-2 lg:justify-start">
                 <FeatureCopy
                   icon={ShoppingCart}
                   tone="bg-[#f5df9e]/70 text-accent-cinnamon"
