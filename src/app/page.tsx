@@ -165,7 +165,7 @@ export default function LandingPage() {
                 <FeatureCopy
                   icon={Sparkles}
                   tone="bg-[#dde5d7]/80 text-green-forest-dark"
-                  titleLead="Let AI hel"
+                  titleLead="Let AI help"
                   titleAccent="spark the idea."
                   body="Describe what you're in the mood for and Home Cooked drafts a recipe you can tweak, save, and put on the table tonight."
                 />
