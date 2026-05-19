@@ -23,9 +23,10 @@ interface BookPageBook extends RecipeBook {
 }
 
 interface BookPageRecipe extends Recipe {
-  reactions?: { type: string }[] | null;
+  reactions?: { type: string; user_id: string }[] | null;
   creator?: Pick<Profile, "full_name" | "avatar_url"> | null;
   loveCount: number;
+  favoriteCount: number;
 }
 
 function isMissingPreferenceMigration(error: { message?: string; code?: string } | null | undefined) {
@@ -304,7 +305,7 @@ export async function getBookPageData(bookId: string) {
     supabase
       .from("recipes")
       .select(
-        "*, reactions:recipe_reactions(type), creator:profiles!created_by(full_name, avatar_url)"
+        "*, reactions:recipe_reactions(type, user_id), creator:profiles!created_by(full_name, avatar_url)"
       )
       .eq("book_id", bookId)
       .order("created_at", { ascending: false })
@@ -319,11 +320,14 @@ export async function getBookPageData(bookId: string) {
   const allRecipes = ((recipesRes.data ?? []) as BookPageRecipe[]).map((recipe) => ({
     ...recipe,
     loveCount: recipe.reactions?.filter((reaction) => reaction.type === "love").length ?? 0,
+    favoriteCount:
+      recipe.reactions?.filter(
+        (reaction) => reaction.type === "favorite" && reaction.user_id === user.id
+      ).length ?? 0,
   }));
 
   const favorites = [...allRecipes]
-    .filter((r) => r.loveCount > 0)
-    .sort((a, b) => b.loveCount - a.loveCount)
+    .filter((r) => r.favoriteCount > 0)
     .slice(0, 4);
 
   return {

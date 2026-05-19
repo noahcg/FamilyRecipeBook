@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   CalendarDays,
   ChevronRight,
+  Heart,
   Lightbulb,
   Plus,
   Refrigerator,
@@ -389,7 +390,7 @@ export default async function BookHomePage({ params }: Props) {
                     </div>
                     <div className="flex gap-4">
                       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-green-soft text-green-deep">
-                        <ShoppingCart size={17} />
+                        <Heart size={17} />
                       </span>
                       <div>
                         <p className="text-sm font-bold text-ink">{recipeCue.title}</p>
