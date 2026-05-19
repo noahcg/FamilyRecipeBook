@@ -59,7 +59,7 @@ export default function LandingPage() {
       >
         <Image
           src="/images/landing-cookbook-hero.png"
-          alt="Open handwritten family recipe book on a warm kitchen counter with apples, herbs, flour, spices, and coffee"
+          alt="Open handwritten recipe book on a warm kitchen counter with apples, herbs, flour, spices, and coffee"
           fill
           priority
           sizes="(min-width: 1024px) 58vw, 100vw"
@@ -155,7 +155,7 @@ export default function LandingPage() {
                   tone="bg-green-soft/80 text-green-deep"
                   titleLead="Your cookbooks,"
                   titleAccent="all in one place."
-                  body="Every recipe, idea, and meal plan lives in your family's private cookbook — ready when you are."
+                  body="Every recipe, idea, and meal plan lives in your own private cookbook — ready when you are."
                 />
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function LandingPage() {
                   tone="bg-[#f3d7cc] text-accent-terracotta"
                   titleLead="Recipes that"
                   titleAccent="read like a story."
-                  body="Beautiful, easy-to-follow pages with photos, ingredients, and step-by-step instructions the whole family can cook from."
+                  body="Beautiful, easy-to-follow pages with photos, ingredients, and step-by-step instructions anyone can cook from."
                 />
               </div>
               <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
@@ -215,14 +215,14 @@ export default function LandingPage() {
             className="text-[clamp(2rem,4.5vw,3rem)] font-bold leading-[1.05] text-green-deep"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
-            Start your family&rsquo;s{" "}
+            Start your{" "}
             <span className="font-semibold italic text-accent-terracotta">
               recipe book.
             </span>
           </h2>
           <p className="mx-auto mt-4 max-w-md text-[1.05rem] leading-relaxed text-ink-muted">
-            It only takes a minute to begin. The recipes you save today become
-            heirlooms tomorrow.
+            It only takes a minute. Save the recipes that matter — and the
+            moments behind them.
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
