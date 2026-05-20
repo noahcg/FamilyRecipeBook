@@ -6,14 +6,12 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   CalendarDays,
-  CircleCheck,
   Heart,
   Home,
   BookOpen,
   LogOut,
   Download,
   ShieldCheck,
-  Plus,
   Settings,
   ShoppingCart,
   Sparkles,
@@ -45,23 +43,22 @@ interface AppShellProps {
   };
 }
 
-const NAV = (bookId: string, bookTitle: string, hasOfflineRecipes: boolean) => [
+const NAV = (bookId: string, hasOfflineRecipes: boolean) => [
   { id: "home", href: `/app/books/${bookId}`, icon: Home, label: "Home" },
   { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
   { id: "ideas", href: `/app/books/${bookId}/ideas`, icon: Sparkles, label: "Ideas" },
   { id: "meal-plan", href: `/app/books/${bookId}/meal-plan`, icon: CalendarDays, label: "Meal Plan" },
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
-  { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
-  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: bookTitle, isCurrentBook: true },
+  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: "Choose Book" },
   ...(hasOfflineRecipes
     ? [{ id: "offline", href: `/app/books/${bookId}/offline`, icon: Download, label: "Offline" }]
     : []),
   { id: "settings", href: `/app/books/${bookId}/settings`, icon: Settings, label: "Settings" },
-  { id: "add", href: `/app/books/${bookId}/recipes/new`, icon: Plus, label: "Add", isAdd: true },
+  { id: "logout", href: "", icon: LogOut, label: "Logout", isLogout: true },
 ];
 
-const DESKTOP_NAV = (bookId: string, bookTitle: string, hasOfflineRecipes: boolean) => [
+const DESKTOP_NAV = (bookId: string, hasOfflineRecipes: boolean) => [
   { id: "home", href: `/app/books/${bookId}`, icon: Home, label: "Home" },
   { id: "recipes", href: `/app/books/${bookId}/recipes`, icon: UtensilsCrossed, label: "Recipes" },
   { id: "ideas", href: `/app/books/${bookId}/ideas`, icon: Sparkles, label: "Ideas" },
@@ -69,7 +66,7 @@ const DESKTOP_NAV = (bookId: string, bookTitle: string, hasOfflineRecipes: boole
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
   { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
-  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: bookTitle, isCurrentBook: true },
+  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: "Choose Book" },
   ...(hasOfflineRecipes
     ? [{ id: "offline", href: `/app/books/${bookId}/offline`, icon: Download, label: "Offline" }]
     : []),
@@ -87,8 +84,8 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
   const mobileNavItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [hasOfflineRecipes, setHasOfflineRecipes] = useState(false);
   const { userId } = useUser();
-  const { bookTitle, isAdmin } = useBook();
-  const navItems = NAV(bookId, bookTitle, hasOfflineRecipes);
+  const { isAdmin } = useBook();
+  const navItems = NAV(bookId, hasOfflineRecipes);
   const activeMobileNavId = navItems.find(({ id, href }) => isActiveNavItem(pathname, href, id))?.id;
 
   useEffect(() => {
@@ -144,7 +141,7 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
 
         <nav aria-label="Primary navigation" className="shrink-0 px-6">
           <div className="space-y-2.5">
-            {DESKTOP_NAV(bookId, bookTitle, hasOfflineRecipes).map(({ id, href, icon: Icon, label, isCurrentBook }) => {
+            {DESKTOP_NAV(bookId, hasOfflineRecipes).map(({ id, href, icon: Icon, label }) => {
               const isActive = isActiveNavItem(pathname, href, id);
               return (
                 <Link
@@ -153,16 +150,13 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
                   aria-current={isActive ? "page" : undefined}
                   className={clsx(
                     "flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
-                    isCurrentBook
-                      ? "border border-line-soft/80 bg-white-soft/45 text-green-deep hover:bg-white-soft"
-                      : isActive
+                    isActive
                       ? "bg-green-soft/70 text-green-deep shadow-xs"
                       : "text-ink hover:bg-green-soft/55 hover:text-green-deep"
                   )}
                 >
                   <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
                   <span className="min-w-0 flex-1 truncate">{label}</span>
-                  {isCurrentBook && <CircleCheck size={15} className="shrink-0 text-green-deep/70" />}
                 </Link>
               );
             })}
@@ -272,8 +266,23 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
           className="mx-auto flex h-[62px] max-w-[760px] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-[30px] border border-green-deep bg-green-forest-dark p-1.5 shadow-[0_10px_28px_rgba(31,58,45,0.24),inset_0_1px_0_rgba(255,252,246,0.10)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          {navItems.map(({ id, href, icon: Icon, label, isAdd, isCurrentBook }) => {
+          {navItems.map(({ id, href, icon: Icon, label, isLogout }) => {
             const isActive = isActiveNavItem(pathname, href, id);
+
+            if (isLogout) {
+              return (
+                <form key={id} action={signOut} className="contents">
+                  <button
+                    type="submit"
+                    aria-label={label}
+                    className="relative flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-[background-color,color,transform] duration-150 active:translate-y-px focus-visible:outline-none min-w-[64px] text-ink-inverse hover:bg-green-deep hover:text-ink-inverse"
+                  >
+                    <Icon size={19} strokeWidth={1.75} />
+                    <span className="max-w-[84px] truncate text-[10px] font-bold leading-none">{label}</span>
+                  </button>
+                </form>
+              );
+            }
 
             return (
               <Link
@@ -282,23 +291,16 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
                   mobileNavItemRefs.current[id] = element;
                 }}
                 href={href}
-                aria-label={isAdd ? "Add recipe" : label}
+                aria-label={label}
                 aria-current={isActive ? "page" : undefined}
                 className={clsx(
                   "relative flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-[background-color,color,transform] duration-150 active:translate-y-px focus-visible:outline-none",
-                  isAdd
-                    ? "min-w-[64px] bg-accent-terracotta text-ink-inverse hover:bg-accent-terracotta-dark"
-                    : isCurrentBook
-                      ? "min-w-[86px] border border-white-soft/15 text-ink-inverse hover:bg-green-deep hover:text-ink-inverse"
-                    : isActive
+                  isActive
                       ? "min-w-[98px] bg-white-soft text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_4px_12px_rgba(14,35,25,0.20)]"
                       : "min-w-[64px] text-ink-inverse hover:bg-green-deep hover:text-ink-inverse"
                 )}
               >
                 <Icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
-                {isCurrentBook && (
-                  <CircleCheck size={10} className="absolute right-2 top-2 text-green-soft" />
-                )}
                 <span className="max-w-[84px] truncate text-[10px] font-bold leading-none">{label}</span>
               </Link>
             );
