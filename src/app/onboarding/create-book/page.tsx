@@ -4,21 +4,13 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { Button, Input, Textarea, BookCover } from "@/components/ui";
+import { Button, Input, Textarea, BookCoverArt } from "@/components/ui";
 import { EntryShell } from "@/components/layout/EntryShell";
-import type { CoverStyle } from "@/components/ui";
+import { BOOK_COVER_COLORS } from "@/lib/bookCovers";
 import { createBookSchema, type CreateBookInput } from "@/lib/validators/book";
 import { createBook } from "@/lib/actions/books";
 import { clsx } from "clsx";
 import { Lock, Users } from "lucide-react";
-
-const COVER_STYLES: { id: CoverStyle; label: string; bg: string; border: string }[] = [
-  { id: "sage", label: "Sage", bg: "#DDE7D7", border: "#8BA888" },
-  { id: "terracotta", label: "Terracotta", bg: "#FADDD6", border: "#E76F51" },
-  { id: "mustard", label: "Mustard", bg: "#FAE8C0", border: "#F2B348" },
-  { id: "forest", label: "Forest", bg: "#C8D8CC", border: "#2F4F3F" },
-  { id: "clay", label: "Clay", bg: "#F0DDD0", border: "#B8754B" },
-];
 
 export default function CreateBookPage() {
   const router = useRouter();
@@ -32,7 +24,7 @@ export default function CreateBookPage() {
     formState: { errors, isSubmitting },
   } = useForm<CreateBookInput>({
     resolver: zodResolver(createBookSchema),
-    defaultValues: { title: "", cover_style: "sage", icon: "bowl", sharing_enabled: false },
+    defaultValues: { title: "", cover_style: BOOK_COVER_COLORS[0].hex, icon: "bowl", sharing_enabled: false },
   });
 
   const watchedTitle = useWatch({ control, name: "title" });
@@ -129,37 +121,39 @@ export default function CreateBookPage() {
           </div>
         </div>
 
-        {/* Cover style picker */}
+        {/* Cover color picker */}
         <div>
-          <p className="text-sm font-semibold text-ink mb-3">Cover colour</p>
-          <div className="flex gap-3">
-            {COVER_STYLES.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setValue("cover_style", s.id)}
-                className={clsx(
-                  "w-10 h-10 rounded-lg border-2 transition-transform",
-                  selectedStyle === s.id
-                    ? "scale-110 shadow-sm"
-                    : "border-transparent opacity-60 hover:opacity-90"
-                )}
-                style={{
-                  background: s.bg,
-                  borderColor: selectedStyle === s.id ? s.border : "transparent",
-                }}
-                aria-label={s.label}
-                aria-pressed={selectedStyle === s.id}
-              />
-            ))}
+          <p className="text-sm font-semibold text-ink mb-3">Cover color</p>
+          <div className="flex flex-wrap gap-2.5">
+            {BOOK_COVER_COLORS.map((c) => {
+              const selected = selectedStyle === c.hex;
+              return (
+                <button
+                  key={c.hex}
+                  type="button"
+                  onClick={() => setValue("cover_style", c.hex)}
+                  className={clsx(
+                    "h-9 w-9 rounded-full border-2 transition-transform",
+                    selected
+                      ? "scale-110 border-green-deep shadow-sm"
+                      : "border-transparent opacity-70 hover:opacity-100"
+                  )}
+                  style={{ background: c.hex }}
+                  title={c.label}
+                  aria-label={c.label}
+                  aria-pressed={selected}
+                />
+              );
+            })}
           </div>
         </div>
 
         <div className="flex items-center gap-4 rounded-lg border border-line-soft bg-white-soft/60 p-3">
-          <BookCover
+          <BookCoverArt
             title={watchedTitle.trim() || "Your Book"}
-            style={selectedStyle as CoverStyle}
-            size="sm"
+            seed="preview"
+            color={selectedStyle}
+            className="w-20 shrink-0"
           />
           <div className="min-w-0">
             <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-accent-cinnamon">

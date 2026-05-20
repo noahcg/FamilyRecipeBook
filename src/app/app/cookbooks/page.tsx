@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Plus, Search, Star } from "lucide-react";
-import { BookCover, type CoverStyle } from "@/components/ui";
+import { AppShell } from "@/components/layout/AppShell";
+import { BookCoverArt, Button, EmptyState } from "@/components/ui";
+import { resolveCoverColor } from "@/lib/bookCovers";
 import { getUserBooks } from "@/lib/actions/books";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -36,107 +38,136 @@ export default async function CookbooksPage({ searchParams }: CookbooksPageProps
     ? books.filter((book) => book.title.toLowerCase().includes(query.toLowerCase()))
     : books;
 
-  return (
-    <div className="app-paper-bg paper-texture min-h-screen px-4 py-7 sm:px-6 lg:px-8">
-      <main className="mx-auto max-w-[1180px]">
-        <div className="mb-7 flex flex-col gap-5 border-b border-line-soft pb-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <Link href="/app" className="text-sm font-bold text-green-deep hover:underline">
-              Back to current cookbook
-            </Link>
-            <p className="mt-4 text-xs font-extrabold uppercase tracking-[0.08em] text-accent-cinnamon">
-              Cookbook shelf
-            </p>
+  // The chooser lives outside any single book, so point the shell's nav at the
+  // user's current book (their default, otherwise the first one they belong to).
+  const navBookId =
+    defaultBookId && books.some((book) => book.id === defaultBookId)
+      ? defaultBookId
+      : books[0]?.id ?? null;
+
+  const content = (
+    <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-5 lg:px-8">
+      <header className="mb-7 border-b border-line-soft pb-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
             <h1
-              className="mt-1 text-4xl font-bold leading-tight text-green-deep"
+              className="text-4xl font-bold leading-tight text-green-deep lg:text-5xl"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
               Choose a cookbook
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-              Pick the book you want to open. Each cookbook keeps its own recipes, members, and settings.
+              {books.length} {books.length === 1 ? "cookbook" : "cookbooks"} on your shelf. Each keeps its own
+              recipes, members, and settings.
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row lg:max-w-xl">
-            <form
-              action="/app/cookbooks"
-              className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full border border-line-soft bg-card/90 px-4 shadow-xs"
-            >
-              <span className="flex shrink-0 items-center justify-center text-ink-soft">
-                <Search size={16} />
-              </span>
+          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+            <form action="/app/cookbooks" className="relative min-w-0 flex-1 lg:w-[340px] lg:flex-none">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
+                strokeWidth={1.75}
+              />
               <input
                 name="q"
                 defaultValue={query}
-                placeholder="Search cookbooks"
-                className="min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-ink-soft focus:outline-none"
+                className="input-cookbook h-12 w-full text-sm"
+                style={{ paddingLeft: "2.25rem" }}
+                placeholder="Search cookbooks..."
               />
             </form>
-            <Link
-              href="/onboarding/create-book"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-green-deep px-5 text-sm font-extrabold text-ink-inverse shadow-xs transition-colors hover:bg-green-forest-dark focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]"
-            >
-              <Plus size={17} /> New cookbook
+            <Link href="/onboarding/create-book">
+              <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 sm:w-auto">
+                <Plus size={17} /> New cookbook
+              </Button>
             </Link>
           </div>
         </div>
+      </header>
 
-        {filteredBooks.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-line-soft bg-card/70 px-6 py-14 text-center">
-            <p className="font-bold text-green-deep">No cookbooks found</p>
-            <p className="mt-1 text-sm text-ink-muted">
-              Try another search or create a new cookbook.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredBooks.map((book) => (
+      {filteredBooks.length === 0 ? (
+        <EmptyState
+          title={query ? "No matching cookbooks" : "No cookbooks yet"}
+          description={
+            query
+              ? "Try another search term or create a new cookbook."
+              : "Create your first cookbook to start collecting recipes."
+          }
+          action={
+            !query ? (
+              <Link href="/onboarding/create-book">
+                <Button variant="primary" size="sm">
+                  <Plus size={14} /> New cookbook
+                </Button>
+              </Link>
+            ) : undefined
+          }
+        />
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {filteredBooks.map((book) => {
+            const isDefault = book.id === defaultBookId;
+            return (
               <Link
                 key={book.id}
                 href={`/app/books/${book.id}`}
-                className="group rounded-lg border border-line-soft bg-card/78 p-4 shadow-xs transition-[background-color,border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-accent-honey/55 hover:bg-white-soft hover:shadow-[0_14px_34px_rgba(75,53,31,0.12)] focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]"
+                className="recipe-card group flex items-start gap-3 p-4 focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)] sm:gap-4"
               >
-                <div className="flex items-start gap-4">
-                  <BookCover
+                <div className="relative shrink-0">
+                  <BookCoverArt
                     title={book.title}
-                    style={(book.cover_style ?? "sage") as CoverStyle}
-                    size="sm"
-                    className="shrink-0"
+                    seed={book.id}
+                    color={resolveCoverColor(book.cover_style, book.id)}
+                    className="w-24 sm:w-28"
                   />
-                  <div className="min-w-0 flex-1 pt-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <h2
-                        className="truncate text-lg font-bold leading-tight text-green-deep"
-                        style={{ fontFamily: "var(--font-playfair)" }}
-                      >
-                        {book.title}
-                      </h2>
-                      {book.id === defaultBookId && (
-                        <span
-                          aria-label="Default cookbook"
-                          title="Default cookbook"
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-honey/30 text-accent-cinnamon"
-                        >
-                          <Star size={14} />
-                        </span>
-                      )}
-                    </div>
-                    {book.description && (
-                      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-muted">
-                        {book.description}
-                      </p>
-                    )}
-                    <p className="mt-4 text-xs font-semibold text-ink-soft">
-                      Updated {formatDate(book.updated_at)}
+                  {isDefault && (
+                    <span
+                      aria-label="Default cookbook"
+                      title="Default cookbook"
+                      className="absolute -right-1.5 -top-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-card bg-accent-honey text-white-soft shadow-sm"
+                    >
+                      <Star size={13} fill="currentColor" />
+                    </span>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1 pt-1">
+                  <h2
+                    className="truncate text-lg font-bold leading-tight text-green-deep"
+                    style={{ fontFamily: "var(--font-playfair)" }}
+                  >
+                    {book.title}
+                  </h2>
+                  {isDefault && (
+                    <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-[0.06em] text-accent-cinnamon">
+                      <Star size={11} fill="currentColor" /> Default
+                    </span>
+                  )}
+                  {book.description && (
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-muted">
+                      {book.description}
                     </p>
-                  </div>
+                  )}
+                  <p className="mt-3 text-xs font-semibold text-ink-soft">
+                    Updated {formatDate(book.updated_at)}
+                  </p>
                 </div>
               </Link>
-            ))}
-          </div>
-        )}
-      </main>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
+
+  // With at least one book we render inside the app shell so the chooser keeps
+  // the same left nav (desktop) and bottom nav (mobile) as the rest of the app.
+  // A brand-new user with no books has nowhere for that nav to point, so they
+  // get the bare page with just the empty state.
+  if (!navBookId) {
+    return <div className="app-paper-bg paper-texture min-h-dvh">{content}</div>;
+  }
+
+  return <AppShell bookId={navBookId}>{content}</AppShell>;
 }
