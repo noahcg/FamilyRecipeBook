@@ -50,7 +50,7 @@ const NAV = (bookId: string, hasOfflineRecipes: boolean) => [
   { id: "meal-plan", href: `/app/books/${bookId}/meal-plan`, icon: CalendarDays, label: "Meal Plan" },
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
-  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: "Choose Book" },
+  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: "Book Shelf" },
   ...(hasOfflineRecipes
     ? [{ id: "offline", href: `/app/books/${bookId}/offline`, icon: Download, label: "Offline" }]
     : []),
@@ -66,7 +66,7 @@ const DESKTOP_NAV = (bookId: string, hasOfflineRecipes: boolean) => [
   { id: "groceries", href: `/app/books/${bookId}/groceries`, icon: ShoppingCart, label: "Groceries" },
   { id: "favorites", href: `/app/books/${bookId}/favorites`, icon: Heart, label: "Favorites" },
   { id: "members", href: `/app/books/${bookId}/members`, icon: Users, label: "Members" },
-  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: "Choose Book" },
+  { id: "current-book", href: "/app/cookbooks", icon: BookOpen, label: "Book Shelf" },
   ...(hasOfflineRecipes
     ? [{ id: "offline", href: `/app/books/${bookId}/offline`, icon: Download, label: "Offline" }]
     : []),
