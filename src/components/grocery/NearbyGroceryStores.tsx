@@ -99,70 +99,14 @@ export function NearbyGroceryStores() {
 
   return (
     <>
-      <section className="rounded-xl border border-line-soft bg-card p-4 shadow-xs">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-soft text-green-deep">
-            <Store size={19} strokeWidth={1.75} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-ink">
-                  Find nearby grocery stores
-                </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-                  Search around your current location, or enter a city, ZIP, or
-                  neighborhood.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={locateUser}
-                disabled={geo.status === "loading"}
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-line bg-white-soft px-3 py-2 text-xs font-bold text-green-deep transition hover:bg-green-pale disabled:opacity-50"
-              >
-                <LocateFixed size={14} />
-                {geo.status === "loading" ? "Locating..." : "Use my location"}
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
-              <div className="relative flex-1">
-                <MapPin
-                  aria-hidden="true"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
-                  size={15}
-                />
-                <input
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                  placeholder="City, ZIP, or neighborhood"
-                  className="input-cookbook h-10 w-full text-sm"
-                  style={{ paddingLeft: "2.25rem" }}
-                  autoComplete="postal-code"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={!canSubmit || search.status === "loading"}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-deep text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40"
-                aria-label="Search grocery stores"
-              >
-                <Search size={16} />
-              </button>
-            </form>
-
-            {geo.status === "error" && (
-              <p className="mt-2 text-xs text-danger">{geo.message}</p>
-            )}
-            {geo.status === "ready" && location.trim().length === 0 && (
-              <p className="mt-2 text-xs text-ink-muted">
-                Using your current location. You can also type an address.
-              </p>
-            )}
-          </div>
-        </div>
-      </section>
+      <button
+        type="button"
+        onClick={() => setDrawerOpen(true)}
+        className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-line-soft bg-card px-4 py-2 text-sm font-semibold text-green-deep shadow-xs transition hover:bg-green-pale"
+      >
+        <Store size={16} strokeWidth={1.75} />
+        Find Nearby Stores
+      </button>
 
       <Drawer
         open={drawerOpen}
@@ -170,8 +114,55 @@ export function NearbyGroceryStores() {
         eyebrow="Grocery"
         title="Nearby stores"
       >
+        <div className="mb-4 shrink-0">
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            <div className="relative flex-1">
+              <MapPin
+                aria-hidden="true"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
+                size={15}
+              />
+              <input
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder="City, ZIP, or neighborhood"
+                className="input-cookbook h-10 w-full text-sm"
+                style={{ paddingLeft: "2.25rem" }}
+                autoComplete="postal-code"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!canSubmit || search.status === "loading"}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-deep text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40"
+              aria-label="Search grocery stores"
+            >
+              <Search size={16} />
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={locateUser}
+            disabled={geo.status === "loading"}
+            className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white-soft px-3 py-2 text-xs font-bold text-green-deep transition hover:bg-green-pale disabled:opacity-50"
+          >
+            <LocateFixed size={14} />
+            {geo.status === "loading" ? "Locating..." : "Use my location"}
+          </button>
+
+          {geo.status === "error" && (
+            <p className="mt-2 text-xs text-danger">{geo.message}</p>
+          )}
+          {geo.status === "ready" && location.trim().length === 0 && (
+            <p className="mt-2 text-xs text-ink-muted">
+              Using your current location. You can also type an address.
+            </p>
+          )}
+        </div>
+
         {search.status === "done" && (
-          <p className="-mt-3 mb-3 text-xs text-ink-muted">
+          <p className="mb-3 shrink-0 text-xs text-ink-muted">
             Near {search.usedQuery}
           </p>
         )}

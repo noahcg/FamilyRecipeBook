@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { Plus, ShoppingCart, Trash2, X, Check, CalendarDays, ChevronDown } from "lucide-react";
+import { Plus, ShoppingCart, Trash2, X, Check, CalendarDays } from "lucide-react";
 import { clsx } from "clsx";
 import {
   getGroceryItems,
@@ -40,23 +40,27 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
   const [isPending, startTransition] = useTransition();
   const [addInput, setAddInput] = useState("");
   const [importMsg, setImportMsg] = useState<string | null>(null);
-  const [showChecked, setShowChecked] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const unchecked = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
 
-  // Group unchecked by category in store-aisle order
+  // Group all items by category in store-aisle order; checked items sink within
+  // their group but stay in the single list.
   const grouped = CATEGORY_ORDER.reduce<Record<string, GroceryItem[]>>((acc, cat) => {
-    const inCat = unchecked.filter((i) => i.category === cat);
+    const inCat = items.filter((i) => i.category === cat);
     if (inCat.length) acc[cat] = inCat;
     return acc;
   }, {});
   // Catch any categories not in CATEGORY_ORDER
-  for (const item of unchecked) {
+  for (const item of items) {
     if (!grouped[item.category]) grouped[item.category] = [];
     if (!grouped[item.category].includes(item)) grouped[item.category].push(item);
+  }
+  // Within each category, keep unchecked items first
+  for (const cat of Object.keys(grouped)) {
+    grouped[cat].sort((a, b) => Number(a.checked) - Number(b.checked));
   }
 
   async function refresh() {
@@ -148,27 +152,43 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
     <>
       {/* Sticky header */}
       <div className="border-b border-line-soft bg-[rgba(251,247,237,0.95)] px-4 py-4 sm:px-6 lg:rounded-tr-xl">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h1
-              className="text-2xl font-bold text-green-deep"
-              style={{ fontFamily: "var(--font-playfair)" }}
-            >
-              Grocery List
-            </h1>
-            <p className="mt-0.5 text-sm text-ink-muted">
-              {unchecked.length} item{unchecked.length !== 1 ? "s" : ""} to grab
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-1">
+        <div className="min-w-0">
+          <h1
+            className="text-2xl font-bold text-green-deep"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
+            Grocery List
+          </h1>
+          <p className="mt-0.5 text-sm text-ink-muted">
+            {unchecked.length} item{unchecked.length !== 1 ? "s" : ""} to grab
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[3fr_1fr]">
+        <div className="space-y-5">
+        {/* Toolbar */}
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <button
+            onClick={handleImport}
+            disabled={isPending}
+            className="flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-green-deep px-4 py-2 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            <CalendarDays size={15} />
+            Import from meal plan
+          </button>
+
+          <NearbyGroceryStores />
+
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             {checked.length > 0 && (
               <button
                 onClick={handleClearChecked}
                 disabled={isPending}
-                className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
               >
                 <Trash2 size={13} />
-                Clear {checked.length} checked
+                Remove {checked.length} checked item{checked.length !== 1 ? "s" : ""}
               </button>
             )}
             {hasItems && (
@@ -176,195 +196,75 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
                 onClick={handleClearAll}
                 disabled={isPending}
                 className={clsx(
-                  "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40",
+                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40",
                   confirmClear
                     ? "bg-red-50 text-red-600 hover:bg-red-100"
                     : "text-ink-muted hover:bg-card/70 hover:text-ink"
                 )}
               >
                 <Trash2 size={13} />
-                {confirmClear ? "Tap again to confirm" : "Clear list"}
+                {confirmClear ? "Tap again to confirm" : "Delete all items"}
               </button>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_280px] xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
-          {/* Import from meal plan */}
-          <div className="rounded-xl border border-line-soft bg-card p-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink">From this week&apos;s meal plan</p>
-                <p className="mt-0.5 text-xs text-ink-muted">
-                  Pull all ingredients from your planned recipes straight onto the list.
-                </p>
-                {importMsg && (
-                  <p className="mt-2 text-xs font-medium text-green-deep">{importMsg}</p>
-                )}
-              </div>
-              <button
-                onClick={handleImport}
-                disabled={isPending}
-                className="flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-green-deep px-4 py-2 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40 sm:w-auto"
-              >
-                <CalendarDays size={15} />
-                Import
-              </button>
-            </div>
+        {importMsg && (
+          <p className="text-xs font-medium text-green-deep">{importMsg}</p>
+        )}
+
+        {/* Quick add */}
+        <form onSubmit={handleAdd} className="flex gap-2">
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              value={addInput}
+              onChange={(e) => setAddInput(e.target.value)}
+              placeholder="Add an item…"
+              className="input-cookbook h-11 w-full text-sm"
+              style={{ paddingLeft: "1rem" }}
+              autoComplete="off"
+            />
           </div>
+          <button
+            type="submit"
+            disabled={isPending || !addInput.trim()}
+            aria-label="Add item"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-deep text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            <Plus size={18} />
+          </button>
+        </form>
 
-          <NearbyGroceryStores />
-
-          {/* Quick add */}
-          <form onSubmit={handleAdd} className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                ref={inputRef}
-                value={addInput}
-                onChange={(e) => setAddInput(e.target.value)}
-                placeholder="Add an item…"
-                className="input-cookbook h-11 w-full text-sm"
-                style={{ paddingLeft: "1rem" }}
-                autoComplete="off"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isPending || !addInput.trim()}
-              aria-label="Add item"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-deep text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              <Plus size={18} />
-            </button>
-          </form>
-
-          {/* List */}
-          {!hasItems ? (
-            <EmptyState onImport={handleImport} isPending={isPending} />
-          ) : (
-            <>
-              {/* Unchecked, grouped by category */}
-              {Object.entries(grouped).length > 0 ? (
-                Object.entries(grouped).map(([category, catItems]) => (
-                  <div key={category}>
-                    <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
-                      {category}
-                    </p>
-                    <div className="space-y-1">
-                      {catItems.map((item) => (
-                        <ItemRow
-                          key={item.id}
-                          item={item}
-                          onToggle={() => handleToggle(item)}
-                          onDelete={() => handleDelete(item.id)}
-                          isPending={isPending}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-xl border border-line-soft bg-card p-6 text-center">
-                  <p className="text-sm font-bold text-green-deep">Everything is in the cart.</p>
-                  <p className="mt-1 text-sm text-ink-muted">Uncheck an item in the cart rail if it still needs grabbing.</p>
-                </div>
-              )}
-
-              {/* Checked / in cart, mobile and tablet */}
-              {checked.length > 0 && (
-                <div className="lg:hidden">
-                  <CheckedItemsSection
-                    checked={checked}
-                    showChecked={showChecked}
-                    setShowChecked={setShowChecked}
-                    handleToggle={handleToggle}
-                    handleDelete={handleDelete}
+        {/* List */}
+        {!hasItems ? (
+          <EmptyState onImport={handleImport} isPending={isPending} />
+        ) : (
+          Object.entries(grouped).map(([category, catItems]) => (
+            <div key={category}>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
+                {category}
+              </p>
+              <div className="space-y-1">
+                {catItems.map((item) => (
+                  <ItemRow
+                    key={item.id}
+                    item={item}
+                    onToggle={() => handleToggle(item)}
+                    onDelete={() => handleDelete(item.id)}
                     isPending={isPending}
                   />
-                </div>
-              )}
-            </>
-          )}
+                ))}
+              </div>
+            </div>
+          ))
+        )}
         </div>
 
-        <aside className="hidden lg:block">
-          <div className="sticky top-6 rounded-xl border border-line-soft bg-card/82 p-4 shadow-sm">
-            <CheckedItemsSection
-              checked={checked}
-              showChecked={showChecked}
-              setShowChecked={setShowChecked}
-              handleToggle={handleToggle}
-              handleDelete={handleDelete}
-              isPending={isPending}
-              rail
-            />
-          </div>
-        </aside>
+        {/* Right column — reserved for future content */}
+        <aside className="hidden lg:block" />
       </div>
     </>
-  );
-}
-
-function CheckedItemsSection({
-  checked,
-  showChecked,
-  setShowChecked,
-  handleToggle,
-  handleDelete,
-  isPending,
-  rail = false,
-}: {
-  checked: GroceryItem[];
-  showChecked: boolean;
-  setShowChecked: React.Dispatch<React.SetStateAction<boolean>>;
-  handleToggle: (item: GroceryItem) => void;
-  handleDelete: (itemId: string) => void;
-  isPending: boolean;
-  rail?: boolean;
-}) {
-  if (!checked.length) {
-    return (
-      <div className={clsx(rail ? "py-8 text-center" : "rounded-xl border border-line-soft bg-card p-5 text-center")}>
-        <p className="text-xs font-bold uppercase tracking-widest text-ink-muted">In cart</p>
-        <p className="mt-2 text-sm text-ink-soft">Checked items will collect here.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <button
-        onClick={() => setShowChecked((v) => !v)}
-        className="mb-3 flex w-full items-center justify-between gap-2 text-left text-[11px] font-bold uppercase tracking-widest text-ink-muted"
-      >
-        <span className="inline-flex items-center gap-1.5">
-          <ChevronDown
-            size={13}
-            className={clsx("transition-transform", showChecked ? "" : "-rotate-90")}
-          />
-          In cart
-        </span>
-        <span className="rounded-full bg-green-soft px-2 py-0.5 text-[10px] text-green-deep">
-          {checked.length}
-        </span>
-      </button>
-      {showChecked && (
-        <div className={clsx("space-y-1", rail && "max-h-[calc(100dvh-12rem)] overflow-y-auto pr-1")}>
-          {checked.map((item) => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              onToggle={() => handleToggle(item)}
-              onDelete={() => handleDelete(item.id)}
-              isPending={isPending}
-              compact={rail}
-            />
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 
