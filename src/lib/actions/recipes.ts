@@ -2,15 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
-import { canContribute, canEditRecipe, canDeleteRecipe } from "@/lib/permissions";
+import {
+  canContribute,
+  canEditRecipe,
+  canDeleteRecipe,
+  canManageBook,
+  canView,
+} from "@/lib/permissions";
 import {
   createRecipeSchema,
   updateRecipeSchema,
   type CreateRecipeInput,
   type UpdateRecipeInput,
 } from "@/lib/validators/recipe";
-import type { ActionResult, Recipe, RecipeWithRelations } from "@/lib/types";
+import type {
+  ActionResult,
+  BookRole,
+  Recipe,
+  RecipeTransferTarget,
+  RecipeWithRelations,
+} from "@/lib/types";
 
 async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, bookId: string, userId: string) {
   const { data } = await supabase
@@ -198,6 +211,261 @@ export async function deleteRecipe(
 
   revalidatePath(`/app/books/${bookId}`);
   return { success: true, data: undefined };
+}
+
+// ─── Copy / move recipes between books ────────────────────────
+
+// The user's other cookbooks (excluding the current one) with their role in
+// each, used to power the "copy/move to another book" picker.
+export async function getRecipeTransferTargets(
+  currentBookId: string
+): Promise<RecipeTransferTarget[]> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("book_members")
+    .select("role, book:recipe_books(id, title)")
+    .eq("user_id", user.id);
+
+  const rows = (data ?? []) as unknown as {
+    role: BookRole;
+    book: { id: string; title: string } | { id: string; title: string }[] | null;
+  }[];
+
+  const targets: RecipeTransferTarget[] = [];
+  for (const row of rows) {
+    const book = Array.isArray(row.book) ? row.book[0] : row.book;
+    if (!book || book.id === currentBookId) continue;
+    targets.push({ id: book.id, title: book.title, role: row.role });
+  }
+  return targets.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+// Duplicate a recipe (and everything attached to it — ingredients,
+// instructions, memories, reactions, and ratings) into another cookbook.
+// The copier owns the new recipe; authored content keeps its original
+// authorship, which requires the service-role client to preserve.
+export async function copyRecipeToBook(
+  sourceBookId: string,
+  recipeId: string,
+  targetBookId: string
+): Promise<ActionResult<{ recipeId: string; bookId: string }>> {
+  const user = await requireUser();
+  if (sourceBookId === targetBookId) {
+    return { success: false, error: "Choose a different cookbook." };
+  }
+
+  const supabase = await createClient();
+  const [sourceRole, targetRole] = await Promise.all([
+    getBookRole(supabase, sourceBookId, user.id),
+    getBookRole(supabase, targetBookId, user.id),
+  ]);
+
+  if (!canView(sourceRole as BookRole | null)) {
+    return { success: false, error: "You don't have access to this recipe." };
+  }
+  if (!canContribute(targetRole as BookRole | null)) {
+    return {
+      success: false,
+      error: "You can only copy into cookbooks where you can add recipes.",
+    };
+  }
+
+  const { data: src } = await supabase
+    .from("recipes")
+    .select("*")
+    .eq("id", recipeId)
+    .eq("book_id", sourceBookId)
+    .single();
+  if (!src) return { success: false, error: "Recipe not found." };
+
+  const [
+    { data: ingredients },
+    { data: instructions },
+    { data: stories },
+    { data: reactions },
+    { data: ratings },
+  ] = await Promise.all([
+    supabase
+      .from("recipe_ingredients")
+      .select("position, quantity, unit, item, note")
+      .eq("recipe_id", recipeId)
+      .order("position", { ascending: true }),
+    supabase
+      .from("recipe_instructions")
+      .select("position, body")
+      .eq("recipe_id", recipeId)
+      .order("position", { ascending: true }),
+    supabase
+      .from("recipe_stories")
+      .select("author_id, body, created_at")
+      .eq("recipe_id", recipeId),
+    supabase
+      .from("recipe_reactions")
+      .select("user_id, type, created_at")
+      .eq("recipe_id", recipeId),
+    supabase
+      .from("recipe_ratings")
+      .select("user_id, rating, created_at")
+      .eq("recipe_id", recipeId),
+  ]);
+
+  const { data: copy, error: insertError } = await supabase
+    .from("recipes")
+    .insert({
+      book_id: targetBookId,
+      created_by: user.id,
+      title: src.title,
+      description: src.description,
+      photo_url: src.photo_url,
+      source_name: src.source_name,
+      story: src.story,
+      prep_minutes: src.prep_minutes,
+      cook_minutes: src.cook_minutes,
+      servings: src.servings,
+      category: src.category,
+      tags: src.tags ?? [],
+    })
+    .select()
+    .single();
+
+  if (insertError || !copy) {
+    return { success: false, error: insertError?.message ?? "Could not copy recipe." };
+  }
+
+  if (ingredients?.length) {
+    await supabase
+      .from("recipe_ingredients")
+      .insert(ingredients.map((ing) => ({ ...ing, recipe_id: copy.id })));
+  }
+  if (instructions?.length) {
+    await supabase
+      .from("recipe_instructions")
+      .insert(instructions.map((ins) => ({ ...ins, recipe_id: copy.id })));
+  }
+
+  // Memories, reactions, and ratings keep their original author/user, which
+  // RLS would otherwise reject — duplicate them with the service-role client.
+  const hasAuthored =
+    (stories?.length ?? 0) + (reactions?.length ?? 0) + (ratings?.length ?? 0) > 0;
+  if (hasAuthored) {
+    const admin = createServiceClient();
+    if (stories?.length) {
+      await admin.from("recipe_stories").insert(
+        stories.map((s) => ({
+          recipe_id: copy.id,
+          author_id: s.author_id,
+          body: s.body,
+          created_at: s.created_at,
+        }))
+      );
+    }
+    if (reactions?.length) {
+      await admin.from("recipe_reactions").insert(
+        reactions.map((r) => ({
+          recipe_id: copy.id,
+          user_id: r.user_id,
+          type: r.type,
+          created_at: r.created_at,
+        }))
+      );
+    }
+    if (ratings?.length) {
+      await admin.from("recipe_ratings").insert(
+        ratings.map((r) => ({
+          recipe_id: copy.id,
+          user_id: r.user_id,
+          rating: r.rating,
+          created_at: r.created_at,
+        }))
+      );
+    }
+  }
+
+  await supabase.from("activity_events").insert({
+    book_id: targetBookId,
+    recipe_id: copy.id,
+    actor_id: user.id,
+    type: "recipe_created",
+    metadata: { recipe_title: copy.title, copied_from: sourceBookId },
+  });
+
+  revalidatePath(`/app/books/${targetBookId}`);
+  revalidatePath(`/app/books/${targetBookId}/recipes`);
+  return { success: true, data: { recipeId: copy.id, bookId: targetBookId } };
+}
+
+// Move a recipe to another cookbook, removing it from the current one. Child
+// rows reference the recipe, so they travel with it automatically.
+export async function moveRecipeToBook(
+  sourceBookId: string,
+  recipeId: string,
+  targetBookId: string
+): Promise<ActionResult<{ bookId: string }>> {
+  const user = await requireUser();
+  if (sourceBookId === targetBookId) {
+    return { success: false, error: "Choose a different cookbook." };
+  }
+
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("recipes")
+    .select("created_by, book_id, title")
+    .eq("id", recipeId)
+    .single();
+  if (!existing || existing.book_id !== sourceBookId) {
+    return { success: false, error: "Recipe not found." };
+  }
+
+  const isCreator = existing.created_by === user.id;
+  const [sourceRole, targetRole] = await Promise.all([
+    getBookRole(supabase, sourceBookId, user.id),
+    getBookRole(supabase, targetBookId, user.id),
+  ]);
+
+  // Mirrors the recipes UPDATE policy on both the old and the new row.
+  const canRemove =
+    canManageBook(sourceRole as BookRole | null) ||
+    (isCreator && canContribute(sourceRole as BookRole | null));
+  if (!canRemove) {
+    return { success: false, error: "You don't have permission to move this recipe." };
+  }
+
+  const canPlace = isCreator
+    ? canContribute(targetRole as BookRole | null)
+    : canManageBook(targetRole as BookRole | null);
+  if (!canPlace) {
+    return {
+      success: false,
+      error: "You can only move into cookbooks where you can add recipes.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("recipes")
+    .update({ book_id: targetBookId, updated_at: new Date().toISOString() })
+    .eq("id", recipeId);
+  if (error) return { success: false, error: error.message };
+
+  // The recipe may have belonged to collections in the old book; those links
+  // are no longer valid once it leaves. Best-effort cleanup.
+  const admin = createServiceClient();
+  await admin.from("collection_recipes").delete().eq("recipe_id", recipeId);
+
+  await supabase.from("activity_events").insert({
+    book_id: targetBookId,
+    recipe_id: recipeId,
+    actor_id: user.id,
+    type: "recipe_created",
+    metadata: { recipe_title: existing.title, moved_from: sourceBookId },
+  });
+
+  revalidatePath(`/app/books/${sourceBookId}`);
+  revalidatePath(`/app/books/${targetBookId}`);
+  revalidatePath(`/app/books/${targetBookId}/recipes/${recipeId}`);
+  return { success: true, data: { bookId: targetBookId } };
 }
 
 export async function getRecipe(recipeId: string): Promise<RecipeWithRelations | null> {

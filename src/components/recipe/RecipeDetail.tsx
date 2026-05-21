@@ -5,12 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   BookOpen,
+  Check,
   Clock,
+  Copy,
   Edit2,
+  FolderInput,
   Heart,
   MoreHorizontal,
   Printer,
+  Search,
   ShoppingCart,
   Star,
   Trash2,
@@ -22,10 +27,22 @@ import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
 import { ServingScaler } from "./ServingScaler";
-import { addRecipeStory, deleteRecipe } from "@/lib/actions/recipes";
+import {
+  addRecipeStory,
+  deleteRecipe,
+  getRecipeTransferTargets,
+  copyRecipeToBook,
+  moveRecipeToBook,
+} from "@/lib/actions/recipes";
 import { addRecipeIngredientsToGrocery } from "@/lib/actions/grocery";
 import { setRecipeRating, toggleReaction } from "@/lib/actions/reactions";
-import type { RecipeWithRelations, UserReactions, BookRole, RecipeRatingSummary } from "@/lib/types";
+import type {
+  RecipeWithRelations,
+  UserReactions,
+  BookRole,
+  RecipeRatingSummary,
+  RecipeTransferTarget,
+} from "@/lib/types";
 
 interface RecipeDetailProps {
   recipe: RecipeWithRelations;
@@ -127,6 +144,17 @@ export function RecipeDetail({
   const [groceryMessage, setGroceryMessage] = useState<string | null>(null);
   const [confirmGroceryOpen, setConfirmGroceryOpen] = useState(false);
 
+  // Copy / move to another book
+  const [transferMode, setTransferMode] = useState<"copy" | "move" | null>(null);
+  const [targets, setTargets] = useState<RecipeTransferTarget[] | null>(null);
+  const [targetQuery, setTargetQuery] = useState("");
+  const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+  const [transferring, setTransferring] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
+  const [copiedTo, setCopiedTo] = useState<{ bookId: string; recipeId: string } | null>(null);
+
+  const isCreator = recipe.created_by === userId;
+
   const canEdit =
     userRole === "keeper" ||
     (userRole === "contributor" && recipe.created_by === userId);
@@ -193,6 +221,57 @@ export function RecipeDetail({
       setDeleteOpen(false);
     } else {
       router.push(`/app/books/${bookId}`);
+    }
+  }
+
+  function openTransfer(mode: "copy" | "move") {
+    setTransferMode(mode);
+    setSelectedTargetId(null);
+    setTransferError(null);
+    setCopiedTo(null);
+    setTargets(null);
+    setTargetQuery("");
+    getRecipeTransferTargets(bookId).then(setTargets);
+  }
+
+  function closeTransfer() {
+    setTransferMode(null);
+    setTransferError(null);
+    setCopiedTo(null);
+  }
+
+  const filteredTargets = (targets ?? []).filter((t) =>
+    t.title.toLowerCase().includes(targetQuery.trim().toLowerCase())
+  );
+
+  function targetEligible(role: BookRole) {
+    if (transferMode === "copy") return role === "keeper" || role === "contributor";
+    // move
+    return isCreator ? role === "keeper" || role === "contributor" : role === "keeper";
+  }
+
+  async function handleTransfer() {
+    if (!transferMode || !selectedTargetId) return;
+    setTransferring(true);
+    setTransferError(null);
+
+    if (transferMode === "copy") {
+      const result = await copyRecipeToBook(bookId, recipe.id, selectedTargetId);
+      setTransferring(false);
+      if (!result.success) {
+        setTransferError(result.error);
+        return;
+      }
+      setCopiedTo({ bookId: result.data.bookId, recipeId: result.data.recipeId });
+    } else {
+      const result = await moveRecipeToBook(bookId, recipe.id, selectedTargetId);
+      if (!result.success) {
+        setTransferring(false);
+        setTransferError(result.error);
+        return;
+      }
+      // The recipe now lives in the target book; its old URL would 404.
+      router.push(`/app/books/${result.data.bookId}/recipes/${recipe.id}`);
     }
   }
 
@@ -347,6 +426,24 @@ export function RecipeDetail({
                         <Edit2 size={15} strokeWidth={1.75} className="text-ink-soft" />
                         Edit recipe
                       </Link>
+                    )}
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                      onClick={() => { setMenuOpen(false); openTransfer("copy"); }}
+                    >
+                      <Copy size={15} strokeWidth={1.75} className="text-ink-soft" />
+                      Copy to book
+                    </button>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                        onClick={() => { setMenuOpen(false); openTransfer("move"); }}
+                      >
+                        <FolderInput size={15} strokeWidth={1.75} className="text-ink-soft" />
+                        Move to book
+                      </button>
                     )}
                     {canDelete && (
                       <button
@@ -612,6 +709,186 @@ export function RecipeDetail({
             Delete
           </Button>
         </div>
+      </Dialog>
+
+      <Dialog
+        open={transferMode !== null}
+        onClose={closeTransfer}
+        title={
+          copiedTo
+            ? "Recipe copied"
+            : transferMode === "move"
+              ? "Move to another book"
+              : "Copy to another book"
+        }
+      >
+        {copiedTo ? (
+          <div className="space-y-6 pt-5">
+            <p className="text-sm leading-relaxed text-ink-muted">
+              <span className="font-semibold text-ink">{recipe.title}</span> was
+              copied — memories, reactions, and ratings included.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1"
+                onClick={closeTransfer}
+              >
+                Done
+              </Button>
+              <Link
+                href={`/app/books/${copiedTo.bookId}/recipes/${copiedTo.recipeId}`}
+                className="flex flex-1"
+              >
+                <Button variant="primary" size="sm" className="w-full">
+                  Open the copy
+                  <ArrowRight size={15} />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-5 pt-5">
+            <p className="text-sm leading-relaxed text-ink-muted">
+              {transferMode === "move" ? (
+                <>
+                  Move <span className="font-semibold text-ink">{recipe.title}</span>{" "}
+                  into another cookbook. It will be removed from this one.
+                </>
+              ) : (
+                <>
+                  Copy <span className="font-semibold text-ink">{recipe.title}</span>{" "}
+                  — including its memories, reactions, and ratings — into another
+                  cookbook.
+                </>
+              )}
+            </p>
+
+            {targets === null ? (
+              <div className="flex items-center justify-center gap-3 py-10 text-sm text-ink-muted">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-green-deep" />
+                Loading your cookbooks…
+              </div>
+            ) : targets.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-line-soft px-4 py-8 text-center">
+                <p className="text-sm text-ink-muted">
+                  You don&rsquo;t have another cookbook yet.
+                </p>
+                <Link
+                  href="/onboarding/create-book"
+                  className="mt-2 inline-block text-sm font-bold text-green-deep hover:underline"
+                >
+                  Create a cookbook
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs font-bold uppercase tracking-[0.06em] text-ink-soft">
+                  Choose a cookbook
+                </p>
+
+                {targets.length > 5 && (
+                  <div className="relative">
+                    <Search
+                      size={15}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
+                    />
+                    <input
+                      type="search"
+                      value={targetQuery}
+                      onChange={(e) => setTargetQuery(e.target.value)}
+                      placeholder="Search cookbooks…"
+                      className="input-cookbook h-10 w-full text-sm"
+                      style={{ paddingLeft: "2.25rem" }}
+                    />
+                  </div>
+                )}
+
+                <div className="max-h-72 divide-y divide-line-soft overflow-y-auto rounded-xl border border-line-soft">
+                  {filteredTargets.length === 0 ? (
+                    <p className="px-4 py-8 text-center text-sm text-ink-muted">
+                      No cookbooks match &ldquo;{targetQuery.trim()}&rdquo;.
+                    </p>
+                  ) : (
+                    filteredTargets.map((target) => {
+                      const eligible = targetEligible(target.role);
+                      const selected = selectedTargetId === target.id;
+                      return (
+                        <button
+                          key={target.id}
+                          type="button"
+                          disabled={!eligible}
+                          onClick={() => setSelectedTargetId(target.id)}
+                          aria-pressed={selected}
+                          className={clsx(
+                            "flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors",
+                            selected
+                              ? "bg-green-soft/50"
+                              : "hover:bg-green-pale/60",
+                            !eligible && "cursor-not-allowed opacity-55 hover:bg-transparent"
+                          )}
+                        >
+                          <span
+                            className={clsx(
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                              selected ? "bg-green-deep text-ink-inverse" : "bg-green-soft text-green-deep"
+                            )}
+                          >
+                            <BookOpen size={16} strokeWidth={1.75} />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-ink">
+                              {target.title}
+                            </span>
+                            <span className="block text-xs capitalize text-ink-muted">
+                              {eligible
+                                ? target.role
+                                : transferMode === "move" && !isCreator
+                                  ? "Keeper access needed"
+                                  : "View-only access"}
+                            </span>
+                          </span>
+                          {selected && (
+                            <Check size={18} className="shrink-0 text-green-deep" />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+
+            {transferError && (
+              <p className="text-sm font-medium text-danger">{transferError}</p>
+            )}
+
+            {targets !== null && targets.length > 0 && (
+              <div className="flex gap-3 pt-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1"
+                  onClick={closeTransfer}
+                  disabled={transferring}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="flex-1"
+                  onClick={handleTransfer}
+                  loading={transferring}
+                  disabled={!selectedTargetId}
+                >
+                  {transferMode === "move" ? "Move recipe" : "Copy recipe"}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </Dialog>
 
       <Dialog

@@ -1,3 +1,5 @@
+import type { BookRole } from "./database";
+
 export type * from "./database";
 
 /* ─── Action result types ───────────────────────────────────── */
@@ -14,6 +16,14 @@ export interface BookPreview {
   categories: { name: string; count: number }[];
   recipes: { id: string; title: string; category: string | null }[];
   lastUpdated: string | null;
+}
+
+/* ─── Recipe copy / move targets ─────────────────────────────── */
+
+export interface RecipeTransferTarget {
+  id: string;
+  title: string;
+  role: BookRole;
 }
 
 /* ─── Nearby grocery store search ───────────────────────────── */
