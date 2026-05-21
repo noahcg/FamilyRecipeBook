@@ -50,43 +50,6 @@ const QUICK_PICK_POOL: ReadonlyArray<readonly [string, string]> = [
   ["Bake something sweet",    "A simple sweet bake or dessert."],
 ] as const;
 
-const INSPIRATION_POOL: ReadonlyArray<{
-  title: string;
-  body: string;
-  prompt: string;
-}> = [
-  {
-    title: "Make Sunday feel special",
-    body: "Ask for a slow, generous dinner that still leaves room for leftovers.",
-    prompt: "A slow, generous Sunday dinner that feels special and still leaves room for leftovers.",
-  },
-  {
-    title: "Bring back a family classic",
-    body: "Ask for something familiar, comforting, and worth writing into the cookbook.",
-    prompt: "A familiar, comforting family-style recipe that would feel worth saving in our cookbook.",
-  },
-  {
-    title: "Use up what is waiting",
-    body: "Ask for a recipe built around pantry staples and anything that needs using soon.",
-    prompt: "A practical recipe that uses pantry staples and helps use up ingredients that may already be in the fridge.",
-  },
-  {
-    title: "Cook once, eat twice",
-    body: "Ask for a meal that holds up well and makes tomorrow easier.",
-    prompt: "A dinner that makes great leftovers and can be cooked once for at least two meals.",
-  },
-  {
-    title: "Make a weeknight calmer",
-    body: "Ask for a low-effort dinner that still feels like a real meal.",
-    prompt: "A low-effort weeknight dinner that still feels complete and satisfying.",
-  },
-  {
-    title: "Bake something simple",
-    body: "Ask for a sweet bake that feels homemade without taking over the day.",
-    prompt: "A simple homemade dessert or sweet bake that does not take over the whole day.",
-  },
-] as const;
-
 function getMondayOfCurrentWeek(): string {
   const today = new Date();
   const day = today.getDay(); // 0 = Sun
@@ -267,7 +230,6 @@ export default async function BookHomePage({ params, searchParams }: Props) {
       };
 
   const weeklyQuickPicks = pickWeekly(QUICK_PICK_POOL, weekStart, 4);
-  const weeklyInspiration = pickWeekly(INSPIRATION_POOL, `${weekStart}:inspiration`, 1)[0];
 
   return (
     <AppShell bookId={bookId}>
@@ -347,7 +309,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                     </Link>
                   ))}
                   <Link
-                    href={`/app/books/${bookId}/ideas?prompt=${encodeURIComponent(weeklyInspiration.prompt)}`}
+                    href={`/app/books/${bookId}/ideas?surprise=1`}
                     className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-accent-cinnamon/40 bg-accent-honey/15 px-3 text-xs font-extrabold text-accent-cinnamon shadow-xs transition-colors hover:bg-accent-honey/25 min-[425px]:min-h-10 min-[425px]:px-3.5"
                   >
                     <Sparkles size={13} aria-hidden="true" />

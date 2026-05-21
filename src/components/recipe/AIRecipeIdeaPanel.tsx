@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Check,
@@ -18,15 +18,34 @@ import {
 interface AIRecipeIdeaPanelProps {
   bookId: string;
   initialPrompt?: string;
+  autoGenerate?: boolean;
 }
 
-export function AIRecipeIdeaPanel({ bookId, initialPrompt }: AIRecipeIdeaPanelProps) {
+// Open-ended prompts for the "Get Inspired" / surprise entry point. One is
+// picked at random each time the panel auto-generates, so every click differs.
+const SURPRISE_PROMPTS = [
+  "A cozy, comforting dinner that feels like a treat on an ordinary night.",
+  "A bright, fresh meal full of vegetables that still feels satisfying.",
+  "A slow, generous weekend dinner worth saving in our cookbook.",
+  "A quick weeknight dinner I can pull together in under 30 minutes.",
+  "A one-pan or one-pot meal with easy cleanup.",
+  "A hearty soup or stew for a chilly evening.",
+  "A crowd-pleasing dinner the whole family — including picky kids — will eat.",
+  "A make-ahead meal that reheats well for leftovers during the week.",
+  "Something a little outside our usual rotation that's worth trying.",
+  "A simple homemade dessert or sweet bake that doesn't take over the day.",
+  "A globally inspired dinner that introduces a new flavor or technique.",
+  "A meal built mostly from pantry staples and whatever's in the fridge.",
+];
+
+export function AIRecipeIdeaPanel({ bookId, initialPrompt, autoGenerate }: AIRecipeIdeaPanelProps) {
   const router = useRouter();
   const [prompt, setPrompt] = useState(initialPrompt ?? "");
   const [idea, setIdea] = useState<AIRecipeIdea | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, startGenerating] = useTransition();
   const [isSaving, startSaving] = useTransition();
+  const didAutoGenerate = useRef(false);
 
   function handleGenerate(nextPrompt = prompt) {
     const trimmed = nextPrompt.trim();
@@ -54,6 +73,21 @@ export function AIRecipeIdeaPanel({ bookId, initialPrompt }: AIRecipeIdeaPanelPr
       router.push(`/app/books/${bookId}/recipes/${result.data.id}`);
     });
   }
+
+  // "Get Inspired" asks us to generate straight away so the user lands on a
+  // finished draft. Pick a random prompt (unless one was passed) and run once.
+  useEffect(() => {
+    if (autoGenerate && !didAutoGenerate.current) {
+      didAutoGenerate.current = true;
+      const seeded = initialPrompt?.trim();
+      const chosen =
+        seeded && seeded.length >= 10
+          ? seeded
+          : SURPRISE_PROMPTS[Math.floor(Math.random() * SURPRISE_PROMPTS.length)];
+      handleGenerate(chosen);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerate, initialPrompt]);
 
   return (
     <div className="min-h-dvh px-4 py-8 sm:px-5 lg:px-8">
