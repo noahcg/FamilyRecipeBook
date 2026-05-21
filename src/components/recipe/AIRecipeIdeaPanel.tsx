@@ -224,15 +224,17 @@ export function AIRecipeIdeaPanel({ bookId, initialPrompt }: AIRecipeIdeaPanelPr
                 </div>
               </div>
             ) : (
-              <div className="flex min-h-[430px] flex-col justify-center lg:min-h-[calc(100%-3.25rem)]">
-                <h3
-                  className="max-w-md text-2xl font-bold leading-tight text-green-deep"
-                  style={{ fontFamily: "var(--font-playfair)" }}
-                >
-                  Your recipe draft will appear here.
-                </h3>
-                <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-muted">
-                  The saved recipe will include ingredients, instructions, timing, category, and an automatically selected food photo.
+              <div className="flex min-h-[430px] flex-col items-center justify-center rounded-2xl border border-dashed border-line bg-card/40 px-6 py-12 text-center lg:min-h-[calc(100%-3.25rem)]">
+                <span className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-soft text-green-deep/80">
+                  <Sparkles size={26} strokeWidth={1.6} />
+                </span>
+                <p className="text-base font-semibold text-ink">
+                  Your recipe draft will appear here
+                </p>
+                <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-muted">
+                  Describe what you have and what you&rsquo;re craving, then generate an
+                  idea. Drafts include ingredients, instructions, timing, category, and
+                  an automatically selected food photo.
                 </p>
               </div>
             )}
