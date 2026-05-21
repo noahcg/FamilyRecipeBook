@@ -46,8 +46,8 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
   const unchecked = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
 
-  // Group all items by category in store-aisle order; checked items sink within
-  // their group but stay in the single list.
+  // Group all items by category in store-aisle order. Items keep a stable spot
+  // within their category, so checking one off doesn't move it.
   const grouped = CATEGORY_ORDER.reduce<Record<string, GroceryItem[]>>((acc, cat) => {
     const inCat = items.filter((i) => i.category === cat);
     if (inCat.length) acc[cat] = inCat;
@@ -58,9 +58,9 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
     if (!grouped[item.category]) grouped[item.category] = [];
     if (!grouped[item.category].includes(item)) grouped[item.category].push(item);
   }
-  // Within each category, keep unchecked items first
+  // Stable order by when each item was added, regardless of checked state.
   for (const cat of Object.keys(grouped)) {
-    grouped[cat].sort((a, b) => Number(a.checked) - Number(b.checked));
+    grouped[cat].sort((a, b) => a.created_at.localeCompare(b.created_at));
   }
 
   async function refresh() {
@@ -168,7 +168,7 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
       <div className="grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[3fr_1fr]">
         <div className="space-y-5">
         {/* Toolbar */}
-        <div className="flex items-center gap-2 overflow-x-auto">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleImport}
             disabled={isPending}
@@ -180,33 +180,34 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
 
           <NearbyGroceryStores />
 
-          <div className="ml-auto flex shrink-0 items-center gap-1">
-            {checked.length > 0 && (
-              <button
-                onClick={handleClearChecked}
-                disabled={isPending}
-                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
-              >
-                <Trash2 size={13} />
-                Remove {checked.length} checked item{checked.length !== 1 ? "s" : ""}
-              </button>
-            )}
-            {hasItems && (
-              <button
-                onClick={handleClearAll}
-                disabled={isPending}
-                className={clsx(
-                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40",
-                  confirmClear
-                    ? "bg-red-50 text-red-600 hover:bg-red-100"
-                    : "text-ink-muted hover:bg-card/70 hover:text-ink"
-                )}
-              >
-                <Trash2 size={13} />
-                {confirmClear ? "Tap again to confirm" : "Delete all items"}
-              </button>
-            )}
-          </div>
+          {hasItems && (
+            <div className="ml-auto shrink-0">
+              {checked.length > 0 ? (
+                <button
+                  onClick={handleClearChecked}
+                  disabled={isPending}
+                  className="flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
+                >
+                  <Trash2 size={13} />
+                  Delete selected ({checked.length})
+                </button>
+              ) : (
+                <button
+                  onClick={handleClearAll}
+                  disabled={isPending}
+                  className={clsx(
+                    "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40",
+                    confirmClear
+                      ? "bg-red-50 text-red-600 hover:bg-red-100"
+                      : "text-ink-muted hover:bg-card/70 hover:text-ink"
+                  )}
+                >
+                  <Trash2 size={13} />
+                  {confirmClear ? "Tap again to confirm" : "Delete all"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {importMsg && (
