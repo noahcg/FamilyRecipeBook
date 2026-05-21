@@ -1,10 +1,28 @@
 "use client";
 
 import { useState, useTransition, useCallback, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, CalendarDays, Plus, X, Search } from "lucide-react";
+import Link from "next/link";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
+  Plus,
+  X,
+  Search,
+  Coffee,
+  Sandwich,
+  UtensilsCrossed,
+  Clock,
+  Users,
+  Trash2,
+  ArrowRight,
+  type LucideIcon,
+} from "lucide-react";
 import { clsx } from "clsx";
 import { getMealPlanWeek, setMealPlan, removeMealPlan } from "@/lib/actions/households";
-import type { MealPlan, MealSlot } from "@/lib/types";
+import { getRecipe } from "@/lib/actions/recipes";
+import { Drawer } from "@/components/ui";
+import type { MealPlan, MealSlot, RecipeWithRelations } from "@/lib/types";
 
 interface Recipe {
   id: string;
@@ -18,16 +36,17 @@ interface MealPlanWithRecipe extends MealPlan {
 }
 
 interface Props {
+  bookId: string;
   householdId: string;
   initialWeekStart: string;
   initialMealPlans: MealPlanWithRecipe[];
   recipes: Recipe[];
 }
 
-const SLOTS: { key: MealSlot; label: string }[] = [
-  { key: "breakfast", label: "Breakfast" },
-  { key: "lunch", label: "Lunch" },
-  { key: "dinner", label: "Dinner" },
+const SLOTS: { key: MealSlot; label: string; Icon: LucideIcon }[] = [
+  { key: "breakfast", label: "Breakfast", Icon: Coffee },
+  { key: "lunch", label: "Lunch", Icon: Sandwich },
+  { key: "dinner", label: "Dinner", Icon: UtensilsCrossed },
 ];
 
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -54,11 +73,28 @@ function formatMonthRange(weekStart: string): string {
   return `${MONTH_NAMES[start.getMonth()]} – ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
 }
 
+function formatWeekRange(weekStart: string): string {
+  const start = new Date(weekStart + "T00:00:00");
+  const end = new Date(weekStart + "T00:00:00");
+  end.setDate(end.getDate() + 6);
+  const startLabel = `${MONTH_NAMES[start.getMonth()].slice(0, 3)} ${start.getDate()}`;
+  if (start.getMonth() === end.getMonth()) {
+    return `${startLabel} – ${end.getDate()}`;
+  }
+  return `${startLabel} – ${MONTH_NAMES[end.getMonth()].slice(0, 3)} ${end.getDate()}`;
+}
+
 function isToday(dateStr: string): boolean {
   return dateStr === new Date().toISOString().slice(0, 10);
 }
 
+function dayLabel(dateStr: string): string {
+  const day = new Date(dateStr + "T00:00:00").getDay(); // 0 = Sun
+  return DAY_FULL[(day + 6) % 7]; // shift so Monday = 0
+}
+
 export function MealPlanCalendar({
+  bookId,
   householdId,
   initialWeekStart,
   initialMealPlans,
@@ -68,6 +104,13 @@ export function MealPlanCalendar({
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>(initialMealPlans);
   const [isPending, startTransition] = useTransition();
   const todayMobileRef = useRef<HTMLDivElement | null>(null);
+
+  // Detail drawer state
+  const [viewing, setViewing] = useState<MealPlanWithRecipe | null>(null);
+  const [detail, setDetail] = useState<RecipeWithRelations | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const plannedCount = mealPlans.filter((m) => m.recipe).length;
 
   useEffect(() => {
     const el = todayMobileRef.current;
@@ -158,6 +201,31 @@ export function MealPlanCalendar({
     });
   }
 
+  function openDetail(plan: MealPlanWithRecipe) {
+    if (!plan.recipe_id) return;
+    const recipeId = plan.recipe_id;
+    setViewing(plan);
+    setDetail(null);
+    setDetailLoading(true);
+    getRecipe(recipeId)
+      .then((r) => setDetail(r))
+      .finally(() => setDetailLoading(false));
+  }
+
+  function closeDetail() {
+    setViewing(null);
+    setDetail(null);
+    setDetailLoading(false);
+  }
+
+  function removeFromDetail() {
+    if (!viewing) return;
+    handleRemove(viewing.planned_date, viewing.meal_slot);
+    closeDetail();
+  }
+
+  const isCurrentWeek = weekStart === getThisMonday();
+
   const filteredRecipes = search.trim()
     ? recipes.filter((r) =>
         r.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -177,32 +245,46 @@ export function MealPlanCalendar({
             >
               Meal Plan
             </h1>
-            <p className="mt-0.5 text-sm text-ink-muted">{formatMonthRange(weekStart)}</p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-ink-muted">
+              <span>{formatMonthRange(weekStart)}</span>
+              {plannedCount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-green-soft px-2 py-0.5 text-xs font-semibold text-green-deep">
+                  <CalendarDays size={12} />
+                  {plannedCount} meal{plannedCount !== 1 ? "s" : ""} planned
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => navigateWeek(-1)}
-              disabled={isPending}
-              aria-label="Previous week"
-              className="flex h-9 w-9 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
-            >
-              <ChevronLeft size={18} />
-            </button>
+          <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={() => goToToday()}
-              disabled={isPending}
-              className="h-9 rounded-md px-3 text-sm font-semibold text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
+              disabled={isPending || isCurrentWeek}
+              className="h-9 rounded-lg border border-line-soft bg-card px-3 text-sm font-semibold text-green-deep shadow-xs transition-colors hover:bg-green-soft/50 disabled:opacity-40 disabled:hover:bg-card"
             >
               Today
             </button>
-            <button
-              onClick={() => navigateWeek(1)}
-              disabled={isPending}
-              aria-label="Next week"
-              className="flex h-9 w-9 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-card/70 hover:text-ink disabled:opacity-40"
-            >
-              <ChevronRight size={18} />
-            </button>
+            {/* Segmented week stepper */}
+            <div className="flex h-9 items-center overflow-hidden rounded-lg border border-line-soft bg-card shadow-xs">
+              <button
+                onClick={() => navigateWeek(-1)}
+                disabled={isPending}
+                aria-label="Previous week"
+                className="flex h-full w-9 items-center justify-center text-ink-muted transition-colors hover:bg-green-soft/50 hover:text-green-deep disabled:opacity-40"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="flex h-full min-w-[6rem] items-center justify-center border-x border-line-soft px-3 text-sm font-semibold tabular-nums text-ink">
+                {formatWeekRange(weekStart)}
+              </span>
+              <button
+                onClick={() => navigateWeek(1)}
+                disabled={isPending}
+                aria-label="Next week"
+                className="flex h-full w-9 items-center justify-center text-ink-muted transition-colors hover:bg-green-soft/50 hover:text-green-deep disabled:opacity-40"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -222,9 +304,12 @@ export function MealPlanCalendar({
           ))}
         </div>
 
-        {SLOTS.map(({ key: slot, label }) => (
+        {SLOTS.map(({ key: slot, label, Icon }) => (
           <div key={slot} className="mb-4">
-            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-ink-muted">{label}</p>
+            <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
+              <Icon size={13} strokeWidth={2} className="text-accent-cinnamon" />
+              {label}
+            </p>
             <div className="grid grid-cols-7 gap-2">
               {weekDates.map((date) => {
                 const meal = getMeal(date, slot);
@@ -234,6 +319,7 @@ export function MealPlanCalendar({
                     meal={meal}
                     isToday={isToday(date)}
                     onAdd={() => openPicker(date, slot)}
+                    onView={() => meal && openDetail(meal)}
                     onRemove={() => handleRemove(date, slot)}
                     isPending={isPending}
                   />
@@ -268,11 +354,12 @@ export function MealPlanCalendar({
               </span>
             </div>
             <div className="space-y-2">
-              {SLOTS.map(({ key: slot, label }) => {
+              {SLOTS.map(({ key: slot, label, Icon }) => {
                 const meal = getMeal(date, slot);
                 return (
                   <div key={slot} className="flex items-start gap-2">
-                    <span className="w-20 shrink-0 pt-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
+                    <span className="flex w-20 shrink-0 items-center gap-1.5 pt-2 text-[11px] font-bold uppercase tracking-wide text-ink-muted">
+                      <Icon size={12} strokeWidth={2} className="text-accent-cinnamon" />
                       {label}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -280,6 +367,7 @@ export function MealPlanCalendar({
                         meal={meal}
                         isToday={isToday(date)}
                         onAdd={() => openPicker(date, slot)}
+                        onView={() => meal && openDetail(meal)}
                         onRemove={() => handleRemove(date, slot)}
                         isPending={isPending}
                       />
@@ -371,6 +459,25 @@ export function MealPlanCalendar({
           </div>
         </div>
       )}
+
+      {/* Recipe detail drawer */}
+      <Drawer
+        open={viewing !== null}
+        onClose={closeDetail}
+        eyebrow={viewing ? `${dayLabel(viewing.planned_date)} · ${viewing.meal_slot}` : "Meal"}
+        title={viewing?.recipe?.title ?? "Recipe"}
+      >
+        {viewing && (
+          <MealDetail
+            bookId={bookId}
+            meal={viewing}
+            detail={detail}
+            loading={detailLoading}
+            onRemove={removeFromDetail}
+            isPending={isPending}
+          />
+        )}
+      </Drawer>
     </>
   );
 }
@@ -379,37 +486,49 @@ interface SlotCellProps {
   meal: MealPlanWithRecipe | null;
   isToday: boolean;
   onAdd: () => void;
+  onView: () => void;
   onRemove: () => void;
   isPending: boolean;
 }
 
-function SlotCell({ meal, isToday, onAdd, onRemove, isPending }: SlotCellProps) {
+function SlotCell({ meal, isToday, onAdd, onView, onRemove, isPending }: SlotCellProps) {
   if (meal?.recipe) {
     return (
       <div
         className={clsx(
-          "group relative min-h-[72px] rounded-xl border p-2 transition-colors",
+          "group relative min-h-[72px] overflow-hidden rounded-xl border transition-all hover:shadow-sm",
           isToday
-            ? "border-green-deep/30 bg-green-soft/40"
-            : "border-line-soft bg-card"
+            ? "border-green-deep/30 bg-green-soft/40 hover:border-green-deep/50"
+            : "border-line-soft bg-card hover:border-green-deep/30"
         )}
       >
-        {meal.recipe.photo_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={meal.recipe.photo_url}
-            alt=""
-            className="mb-1.5 h-12 w-full rounded-lg object-cover"
-          />
-        )}
-        <p className="line-clamp-2 text-xs font-semibold text-ink leading-snug">
-          {meal.recipe.title}
-        </p>
+        {/* Full-cell click target opens the detail drawer */}
+        <button
+          type="button"
+          onClick={onView}
+          aria-label={`View details for ${meal.recipe.title}`}
+          className="absolute inset-0 z-0"
+        />
+
+        <div className="pointer-events-none relative z-[1] p-2">
+          {meal.recipe.photo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={meal.recipe.photo_url}
+              alt=""
+              className="mb-1.5 h-12 w-full rounded-lg object-cover"
+            />
+          )}
+          <p className="line-clamp-2 text-xs font-semibold text-ink leading-snug">
+            {meal.recipe.title}
+          </p>
+        </div>
+
         <button
           onClick={onRemove}
           disabled={isPending}
           aria-label="Remove recipe"
-          className="absolute right-1.5 top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white group-hover:flex disabled:opacity-40"
+          className="absolute right-1.5 top-1.5 z-[2] hidden h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white group-hover:flex disabled:opacity-40"
         >
           <X size={10} />
         </button>
@@ -431,5 +550,123 @@ function SlotCell({ meal, isToday, onAdd, onRemove, isPending }: SlotCellProps) 
     >
       <Plus size={16} strokeWidth={1.75} />
     </button>
+  );
+}
+
+// ─── Recipe detail drawer body ────────────────────────────────
+
+interface MealDetailProps {
+  bookId: string;
+  meal: MealPlanWithRecipe;
+  detail: RecipeWithRelations | null;
+  loading: boolean;
+  onRemove: () => void;
+  isPending: boolean;
+}
+
+function MealDetail({ bookId, meal, detail, loading, onRemove, isPending }: MealDetailProps) {
+  const photo = detail?.photo_url ?? meal.recipe?.photo_url ?? null;
+  const totalMinutes = (detail?.prep_minutes ?? 0) + (detail?.cook_minutes ?? 0);
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="-mr-1 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photo}
+            alt=""
+            className="h-40 w-full rounded-xl object-cover"
+          />
+        ) : (
+          <div className="flex h-40 w-full items-center justify-center rounded-xl bg-green-soft text-green-deep">
+            <UtensilsCrossed size={32} strokeWidth={1.5} />
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center gap-3 py-8 text-sm text-ink-muted">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-green-deep" />
+            Loading recipe…
+          </div>
+        ) : !detail ? (
+          <p className="py-8 text-center text-sm text-ink-muted">
+            Couldn&apos;t load the recipe details. Open the full recipe instead.
+          </p>
+        ) : (
+          <>
+            {/* Meta */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              {totalMinutes > 0 && (
+                <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
+                  <Clock size={15} className="text-accent-cinnamon" />
+                  {totalMinutes} min
+                </span>
+              )}
+              {detail.servings != null && (
+                <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
+                  <Users size={15} className="text-accent-cinnamon" />
+                  Serves {detail.servings}
+                </span>
+              )}
+              {detail.category && (
+                <span className="rounded-full bg-green-soft px-2 py-0.5 text-xs font-semibold text-green-deep">
+                  {detail.category}
+                </span>
+              )}
+            </div>
+
+            {detail.description && (
+              <p className="text-sm leading-relaxed text-ink-muted">
+                {detail.description}
+              </p>
+            )}
+
+            {detail.ingredients.length > 0 && (
+              <div>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
+                  Ingredients
+                </p>
+                <ul className="space-y-1.5">
+                  {detail.ingredients.map((ing) => (
+                    <li key={ing.id} className="flex gap-2 text-sm text-ink">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-green-deep" />
+                      <span>
+                        {(ing.quantity || ing.unit) && (
+                          <span className="font-semibold text-ink">
+                            {[ing.quantity, ing.unit].filter(Boolean).join(" ")}{" "}
+                          </span>
+                        )}
+                        {ing.item}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Footer actions */}
+      <div className="mt-4 flex shrink-0 items-center gap-2 border-t border-line-soft pt-4">
+        <Link
+          href={`/app/books/${bookId}/recipes/${meal.recipe_id}`}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-deep px-4 py-2.5 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90"
+        >
+          View full recipe
+          <ArrowRight size={15} />
+        </Link>
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={isPending}
+          aria-label="Remove from meal plan"
+          className="inline-flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg border border-line text-ink-muted transition-colors hover:border-danger/40 hover:bg-red-50 hover:text-danger disabled:opacity-40"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
   );
 }

@@ -33,6 +33,7 @@ export default async function MealPlanPage({ params }: Props) {
   return (
     <AppShell bookId={bookId}>
       <MealPlanCalendar
+        bookId={bookId}
         householdId={householdId}
         initialWeekStart={weekStart}
         initialMealPlans={mealPlans}
