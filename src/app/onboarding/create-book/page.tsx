@@ -1,181 +1,104 @@
-"use client";
+import Link from "next/link";
+import { ArrowLeft, Pencil, Sparkles, Users } from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { CreateBookForm } from "@/components/book/CreateBookForm";
+import { getUserBooks } from "@/lib/actions/books";
+import { requireUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
-import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { Button, Input, Textarea, BookCoverArt } from "@/components/ui";
-import { EntryShell } from "@/components/layout/EntryShell";
-import { BOOK_COVER_COLORS } from "@/lib/bookCovers";
-import { createBookSchema, type CreateBookInput } from "@/lib/validators/book";
-import { createBook } from "@/lib/actions/books";
-import { clsx } from "clsx";
-import { Lock, Users } from "lucide-react";
+const TIPS = [
+  {
+    label: "Change it later",
+    description: "The title, cover, and description can all be edited anytime.",
+    icon: Pencil,
+  },
+  {
+    label: "Add recipes next",
+    description: "Once it's created, save your own recipes or generate an idea.",
+    icon: Sparkles,
+  },
+  {
+    label: "Share when ready",
+    description: "Keep it private for now and invite family whenever you like.",
+    icon: Users,
+  },
+];
 
-export default function CreateBookPage() {
-  const router = useRouter();
-  const [serverError, setServerError] = useState<string | null>(null);
+export default async function CreateBookPage() {
+  const [user, books, supabase] = await Promise.all([
+    requireUser(),
+    getUserBooks(),
+    createClient(),
+  ]);
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<CreateBookInput>({
-    resolver: zodResolver(createBookSchema),
-    defaultValues: { title: "", cover_style: BOOK_COVER_COLORS[0].hex, icon: "bowl", sharing_enabled: false },
-  });
+  const { data: settings } = await supabase
+    .from("user_settings")
+    .select("default_book_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const defaultBookId = settings?.default_book_id ?? null;
 
-  const watchedTitle = useWatch({ control, name: "title" });
-  const selectedStyle = useWatch({ control, name: "cover_style" });
-  const sharingEnabled = useWatch({ control, name: "sharing_enabled" });
+  // The chooser lives outside any single book, so point the shell's nav at the
+  // user's current book. A brand-new user with no books gets the bare page.
+  const navBookId =
+    defaultBookId && books.some((book) => book.id === defaultBookId)
+      ? defaultBookId
+      : books[0]?.id ?? null;
 
-  async function onSubmit(data: CreateBookInput) {
-    setServerError(null);
-    const result = await createBook(data);
-    if (!result.success) {
-      setServerError(result.error);
-      return;
-    }
-    router.push(`/onboarding/add-member?bookId=${result.data.id}`);
+  const content = (
+    <div className="px-4 py-8 sm:px-5 lg:px-8">
+      <div className="mb-7 border-b border-line-soft pb-6">
+        <Link
+          href={navBookId ? "/app/cookbooks" : "/app"}
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
+        >
+          <ArrowLeft size={14} strokeWidth={2} />
+          Cookbooks
+        </Link>
+        <h1
+          className="text-3xl font-bold leading-tight text-green-deep"
+          style={{ fontFamily: "var(--font-playfair)" }}
+        >
+          Create a cookbook
+        </h1>
+        <p className="mt-2 max-w-prose text-sm text-ink-muted">
+          Give it a name and a cover that feel like home. You can keep adding
+          recipes and decide when it&rsquo;s ready to share.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-8">
+        <div className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
+          <CreateBookForm />
+        </div>
+
+        <aside>
+          <div className="rounded-xl border border-line-soft bg-card/70 p-5 sm:p-6">
+            <h2 className="text-sm font-bold text-ink">How it works</h2>
+            <ul className="mt-4 space-y-4">
+              {TIPS.map(({ label, description, icon: Icon }) => (
+                <li key={label} className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-green-soft text-green-deep">
+                    <Icon size={16} strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-ink">{label}</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
+                      {description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+
+  if (!navBookId) {
+    return <div className="app-paper-bg paper-texture min-h-dvh">{content}</div>;
   }
 
-  return (
-    <EntryShell
-      eyebrow="Step 1 of 2"
-      title="Name your recipe book"
-      description="Give it a name and cover that feel like home."
-      backHref="/app"
-      backLabel="Back to app"
-      maxWidth="lg"
-      framed={false}
-      sideImageSrc="/images/entry/create-new-book.jpg"
-      sideImageAlt="Cookbooks and recipe cards on a kitchen table"
-      sideTitle="Give your family recipes a place to live."
-      sideDescription="Choose a cover now. You can keep adding recipes and decide when this cookbook is ready to share."
-      sideNote="Choose a cover. Add the memories next."
-    >
-      <form onSubmit={handleSubmit(onSubmit)} className="recipe-card w-full space-y-6 p-5 sm:p-6">
-        <div className="space-y-4">
-          <Input
-            label="Book title"
-            required
-            placeholder="e.g. The Family Table, Mom's Recipe Box"
-            error={errors.title?.message}
-            {...register("title")}
-          />
-
-          <Textarea
-            label="Description (optional)"
-            placeholder="A little about this book…"
-            error={errors.description?.message}
-            {...register("description")}
-          />
-        </div>
-
-        <div>
-          <p className="text-sm font-semibold text-ink mb-3">Sharing</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              {
-                value: false,
-                label: "Private",
-                description: "Only you can access this cookbook until you turn sharing on.",
-                icon: Lock,
-              },
-              {
-                value: true,
-                label: "Shared",
-                description: "You can invite members to this cookbook after it is created.",
-                icon: Users,
-              },
-            ].map((option) => {
-              const Icon = option.icon;
-              const selected = sharingEnabled === option.value;
-              return (
-                <button
-                  key={option.label}
-                  type="button"
-                  onClick={() => setValue("sharing_enabled", option.value)}
-                  aria-pressed={selected}
-                  className={clsx(
-                    "flex min-h-28 items-start gap-3 rounded-lg border p-4 text-left transition-[border-color,background-color,box-shadow]",
-                    selected
-                      ? "border-green-deep bg-green-pale/70 shadow-xs"
-                      : "border-line-soft bg-white-soft/60 hover:bg-card"
-                  )}
-                >
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-card text-green-deep">
-                    <Icon size={17} />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-green-deep">{option.label}</span>
-                    <span className="mt-1 block text-sm leading-relaxed text-ink-muted">
-                      {option.description}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Cover color picker */}
-        <div>
-          <p className="text-sm font-semibold text-ink mb-3">Cover color</p>
-          <div className="flex flex-wrap gap-2.5">
-            {BOOK_COVER_COLORS.map((c) => {
-              const selected = selectedStyle === c.hex;
-              return (
-                <button
-                  key={c.hex}
-                  type="button"
-                  onClick={() => setValue("cover_style", c.hex)}
-                  className={clsx(
-                    "h-9 w-9 rounded-full border-2 transition-transform",
-                    selected
-                      ? "scale-110 border-green-deep shadow-sm"
-                      : "border-transparent opacity-70 hover:opacity-100"
-                  )}
-                  style={{ background: c.hex }}
-                  title={c.label}
-                  aria-label={c.label}
-                  aria-pressed={selected}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 rounded-lg border border-line-soft bg-white-soft/60 p-3">
-          <BookCoverArt
-            title={watchedTitle.trim() || "Your Book"}
-            seed="preview"
-            color={selectedStyle}
-            className="w-20 shrink-0"
-          />
-          <div className="min-w-0">
-            <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-accent-cinnamon">
-              Cover preview
-            </p>
-            <p className="mt-1 text-sm font-bold text-green-deep">
-              {watchedTitle.trim() || "Your Book"}
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-ink-muted">
-              This is how your cookbook will appear in your book list.
-            </p>
-          </div>
-        </div>
-
-        {serverError && (
-          <p className="text-sm text-danger font-medium">{serverError}</p>
-        )}
-
-        <Button type="submit" variant="primary" fullWidth loading={isSubmitting}>
-          Create book
-        </Button>
-      </form>
-    </EntryShell>
-  );
+  return <AppShell bookId={navBookId}>{content}</AppShell>;
 }
