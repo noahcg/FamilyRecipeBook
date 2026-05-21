@@ -5,7 +5,6 @@ import {
   CalendarDays,
   ChevronRight,
   Heart,
-  Lightbulb,
   Plus,
   Refrigerator,
   ShoppingCart,
@@ -333,12 +332,12 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                 <SectionEyebrow>{book.title}</SectionEyebrow>
                 <TimeOfDayHeadline />
 
-                <div className="mt-5 flex flex-wrap gap-2 min-[425px]:mt-7 min-[425px]:gap-3">
+                <div className="mt-5 flex flex-wrap gap-2 min-[425px]:mt-7 min-[425px]:gap-2.5">
                   {weeklyQuickPicks.map(([label, promptText], index) => (
                     <Link
                       key={label}
                       href={`/app/books/${bookId}/ideas?prompt=${encodeURIComponent(promptText)}`}
-                      className={`inline-flex min-h-10 items-center rounded-full border px-3 text-xs font-extrabold shadow-xs transition-colors min-[425px]:min-h-11 min-[425px]:px-4 min-[425px]:text-sm ${
+                      className={`inline-flex min-h-9 items-center rounded-full border px-3 text-xs font-extrabold shadow-xs transition-colors min-[425px]:min-h-10 min-[425px]:px-3.5 ${
                         index === 0
                           ? "border-green-deep bg-green-deep text-ink-inverse hover:bg-green-forest-dark"
                           : "border-line bg-white-soft/80 text-green-deep hover:bg-card"
@@ -347,6 +346,13 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                       {label} <span className="ml-2" aria-hidden="true">→</span>
                     </Link>
                   ))}
+                  <Link
+                    href={`/app/books/${bookId}/ideas?prompt=${encodeURIComponent(weeklyInspiration.prompt)}`}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-accent-cinnamon/40 bg-accent-honey/15 px-3 text-xs font-extrabold text-accent-cinnamon shadow-xs transition-colors hover:bg-accent-honey/25 min-[425px]:min-h-10 min-[425px]:px-3.5"
+                  >
+                    <Sparkles size={13} aria-hidden="true" />
+                    Get Inspired
+                  </Link>
                 </div>
               </div>
             </div>
@@ -575,28 +581,6 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                   </Link>
                 )}
               </PageSection>
-
-              <DashboardCard className="overflow-hidden">
-                <div className="p-5">
-                  <SectionEyebrow>Inspiration</SectionEyebrow>
-                  <h2
-                    className="mt-2 text-xl font-bold leading-tight text-green-deep"
-                    style={{ fontFamily: "var(--font-playfair)" }}
-                  >
-                    {weeklyInspiration.title}
-                  </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                    {weeklyInspiration.body}
-                  </p>
-                  <Link href={`/app/books/${bookId}/ideas?prompt=${encodeURIComponent(weeklyInspiration.prompt)}`}>
-                    <Button variant="secondary" size="sm" className="mt-4 rounded-md">
-                      <Lightbulb size={15} />
-                      Get inspired
-                    </Button>
-                  </Link>
-                </div>
-                <div className="h-2 bg-gradient-to-r from-accent-honey via-accent-terracotta to-green-sage" />
-              </DashboardCard>
             </aside>
           </div>
         </div>
