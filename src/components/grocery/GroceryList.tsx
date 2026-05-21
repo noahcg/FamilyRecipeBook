@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
-import { Plus, ShoppingCart, Trash2, X, Check, CalendarDays } from "lucide-react";
+import { useState, useTransition, useRef, useEffect } from "react";
+import { Plus, ShoppingCart, Trash2, X, Check, CalendarDays, WifiOff } from "lucide-react";
 import { clsx } from "clsx";
 import {
   getGroceryItems,
@@ -15,6 +15,15 @@ import {
 import { formatStoreQuantity } from "@/lib/grocery/packaging";
 import type { GroceryItem } from "@/lib/types";
 import { NearbyGroceryStores } from "@/components/grocery/NearbyGroceryStores";
+import {
+  cacheItems,
+  clearQueue,
+  enqueueOp,
+  isTempId,
+  loadCachedItems,
+  loadQueue,
+  makeTempItem,
+} from "@/lib/offlineGroceries";
 
 // Ordered to match typical store layout — future sort_order will refine within these
 const CATEGORY_ORDER = [
@@ -41,7 +50,103 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
   const [addInput, setAddInput] = useState("");
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [online, setOnline] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const flushingRef = useRef(false);
+  const firstItemsRender = useRef(true);
+
+  function bumpPending() {
+    setPendingCount(loadQueue(householdId).length);
+  }
+
+  // Push any edits made offline up to the server, oldest first, then reconcile
+  // with the canonical server list.
+  async function flushQueue() {
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
+    if (flushingRef.current) return;
+    const queue = loadQueue(householdId);
+    if (!queue.length) return;
+
+    flushingRef.current = true;
+    setSyncing(true);
+    const idMap: Record<string, string> = {};
+    try {
+      for (const op of queue) {
+        if (op.type === "add") {
+          const result = await addGroceryItem(householdId, { name: op.name });
+          if (result.success) idMap[op.tempId] = result.data.id;
+        } else if (op.type === "toggle") {
+          const id = idMap[op.itemId] ?? op.itemId;
+          if (!isTempId(id)) await toggleGroceryItem(householdId, id, op.checked);
+        } else if (op.type === "delete") {
+          const id = idMap[op.itemId] ?? op.itemId;
+          if (!isTempId(id)) await deleteGroceryItem(householdId, id);
+        } else if (op.type === "clearChecked") {
+          await clearCheckedItems(householdId);
+        } else if (op.type === "clearAll") {
+          await clearAllItems(householdId);
+        }
+      }
+      clearQueue(householdId);
+      const fresh = await getGroceryItems(householdId);
+      setItems(fresh);
+      cacheItems(householdId, fresh);
+    } catch {
+      // Leave the queue in place and retry on the next reconnect.
+    } finally {
+      flushingRef.current = false;
+      setSyncing(false);
+      bumpPending();
+    }
+  }
+
+  // Track connectivity. These sync browser state after hydration, so a stable
+  // initial value (true) is intentional — lazy init would mismatch SSR.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOnline(navigator.onLine);
+    const goOnline = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  // Decide the initial source of truth and surface any pending queue.
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    bumpPending();
+    if (navigator.onLine) {
+      if (loadQueue(householdId).length === 0) cacheItems(householdId, initialItems);
+    } else {
+      const cached = loadCachedItems(householdId);
+      if (cached) setItems(cached);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep the offline cache in step with the list (after the first render).
+  useEffect(() => {
+    if (firstItemsRender.current) {
+      firstItemsRender.current = false;
+      return;
+    }
+    cacheItems(householdId, items);
+  }, [items, householdId]);
+
+  // Flush queued edits whenever we're (back) online. flushQueue manages its
+  // own sync state; this is an intentional external-state sync.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (online) flushQueue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   const unchecked = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
@@ -73,12 +178,19 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
     const name = addInput.trim();
     if (!name) return;
     setAddInput("");
-    startTransition(async () => {
-      const result = await addGroceryItem(householdId, { name });
-      if (result.success) {
-        setItems((prev) => [...prev, result.data]);
-      }
-    });
+    if (online) {
+      startTransition(async () => {
+        const result = await addGroceryItem(householdId, { name });
+        if (result.success) {
+          setItems((prev) => [...prev, result.data]);
+        }
+      });
+    } else {
+      const temp = makeTempItem(householdId, name);
+      setItems((prev) => [...prev, temp]);
+      enqueueOp(householdId, { type: "add", tempId: temp.id, name });
+      bumpPending();
+    }
   }
 
   function handleToggle(item: GroceryItem) {
@@ -86,29 +198,44 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
     setItems((prev) =>
       prev.map((i) => (i.id === item.id ? { ...i, checked: next } : i))
     );
-    startTransition(async () => {
-      const result = await toggleGroceryItem(householdId, item.id, next);
-      if (!result.success) {
-        // Revert on failure
-        setItems((prev) =>
-          prev.map((i) => (i.id === item.id ? { ...i, checked: item.checked } : i))
-        );
-      }
-    });
+    if (online) {
+      startTransition(async () => {
+        const result = await toggleGroceryItem(householdId, item.id, next);
+        if (!result.success) {
+          // Revert on failure
+          setItems((prev) =>
+            prev.map((i) => (i.id === item.id ? { ...i, checked: item.checked } : i))
+          );
+        }
+      });
+    } else {
+      enqueueOp(householdId, { type: "toggle", itemId: item.id, checked: next });
+      bumpPending();
+    }
   }
 
   function handleDelete(itemId: string) {
     setItems((prev) => prev.filter((i) => i.id !== itemId));
-    startTransition(async () => {
-      await deleteGroceryItem(householdId, itemId);
-    });
+    if (online) {
+      startTransition(async () => {
+        await deleteGroceryItem(householdId, itemId);
+      });
+    } else {
+      enqueueOp(householdId, { type: "delete", itemId });
+      bumpPending();
+    }
   }
 
   function handleClearChecked() {
     setItems((prev) => prev.filter((i) => !i.checked));
-    startTransition(async () => {
-      await clearCheckedItems(householdId);
-    });
+    if (online) {
+      startTransition(async () => {
+        await clearCheckedItems(householdId);
+      });
+    } else {
+      enqueueOp(householdId, { type: "clearChecked" });
+      bumpPending();
+    }
   }
 
   function handleClearAll() {
@@ -119,12 +246,18 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
     }
     setConfirmClear(false);
     setItems([]);
-    startTransition(async () => {
-      await clearAllItems(householdId);
-    });
+    if (online) {
+      startTransition(async () => {
+        await clearAllItems(householdId);
+      });
+    } else {
+      enqueueOp(householdId, { type: "clearAll" });
+      bumpPending();
+    }
   }
 
   function handleImport() {
+    if (!online) return;
     setImportMsg(null);
     startTransition(async () => {
       const result = await importFromMealPlan(householdId, currentWeekStart);
@@ -167,18 +300,35 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
 
       <div className="grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[3fr_1fr]">
         <div className="space-y-5">
+        {!online && (
+          <div className="flex items-center gap-2 rounded-lg border border-accent-honey/40 bg-accent-honey/10 px-3 py-2 text-xs font-semibold text-accent-cinnamon">
+            <WifiOff size={14} className="shrink-0" />
+            <span>
+              You&rsquo;re offline. Changes save on this device and sync when you
+              reconnect{pendingCount > 0 ? ` (${pendingCount} pending)` : ""}.
+            </span>
+          </div>
+        )}
+        {online && syncing && (
+          <div className="flex items-center gap-2 rounded-lg border border-line-soft bg-card px-3 py-2 text-xs font-semibold text-ink-muted">
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-line border-t-green-deep" />
+            Syncing your offline changes…
+          </div>
+        )}
+
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleImport}
-            disabled={isPending}
+            disabled={isPending || !online}
+            title={!online ? "Importing needs a connection" : undefined}
             className="flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-green-deep px-4 py-2 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             <CalendarDays size={15} />
             Import from meal plan
           </button>
 
-          <NearbyGroceryStores />
+          {online && <NearbyGroceryStores />}
 
           {hasItems && (
             <div className="ml-auto shrink-0">

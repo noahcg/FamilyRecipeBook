@@ -1,4 +1,4 @@
-const CACHE_NAME = "home-cooked-static-v2";
+const CACHE_NAME = "home-cooked-static-v3";
 const PRECACHE_URLS = ["/manifest.webmanifest", "/offline.html", "/logo.png"];
 
 self.addEventListener("install", (event) => {
@@ -56,6 +56,10 @@ function networkFirst(request) {
     .catch(() => caches.match(request).then((cached) => cached ?? Response.error()));
 }
 
+function isGroceriesRoute(url) {
+  return /^\/app\/books\/[^/]+\/groceries\/?$/.test(url.pathname);
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -73,6 +77,40 @@ self.addEventListener("fetch", (event) => {
           headers: { "content-type": "text/plain; charset=utf-8" },
         });
       })
+    );
+    return;
+  }
+
+  // Keep the grocery list usable offline: network-first, but fall back to the
+  // last cached copy of the route (full document or RSC navigation payload).
+  if (
+    url.origin === self.location.origin &&
+    isGroceriesRoute(url) &&
+    (request.mode === "navigate" || request.headers.get("RSC") === "1")
+  ) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cached =
+            (await caches.match(request)) ||
+            (await caches.match(request, { ignoreSearch: true }));
+          if (cached) return cached;
+          if (request.mode === "navigate") {
+            const shell = await caches.match("/offline.html");
+            if (shell) return shell;
+          }
+          return new Response("Offline.", {
+            status: 503,
+            headers: { "content-type": "text/plain; charset=utf-8" },
+          });
+        })
     );
     return;
   }
