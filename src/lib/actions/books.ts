@@ -12,7 +12,7 @@ import {
   type CreateBookInput,
   type UpdateBookInput,
 } from "@/lib/validators/book";
-import type { ActionResult, BookMember, Profile, Recipe, RecipeBook } from "@/lib/types";
+import type { ActionResult, BookMember, BookPreview, Profile, Recipe, RecipeBook } from "@/lib/types";
 
 interface BookPageMember extends BookMember {
   profile: Profile | null;
@@ -256,6 +256,66 @@ export async function getUserBooks(): Promise<RecipeBook[]> {
     .order("created_at", { ascending: false });
 
   return data ?? [];
+}
+
+// High-level summary of a book the user belongs to, used to "peek inside"
+// from the cookbook shelf without switching over to it.
+export async function getBookPreview(bookId: string): Promise<BookPreview | null> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  // Only members may peek inside.
+  const { data: member } = await supabase
+    .from("book_members")
+    .select("id")
+    .eq("book_id", bookId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!member) return null;
+
+  const [recipesRes, memberCountRes] = await Promise.all([
+    supabase
+      .from("recipes")
+      .select("id, title, category, updated_at")
+      .eq("book_id", bookId)
+      .order("category", { ascending: true, nullsFirst: false })
+      .order("title", { ascending: true })
+      .limit(300),
+    supabase
+      .from("book_members")
+      .select("id", { count: "exact", head: true })
+      .eq("book_id", bookId),
+  ]);
+
+  const rows = (recipesRes.data ?? []) as {
+    id: string;
+    title: string;
+    category: string | null;
+    updated_at: string | null;
+  }[];
+
+  const categoryCounts = new Map<string, number>();
+  let lastUpdated: string | null = null;
+  for (const r of rows) {
+    const cat = r.category?.trim() || "Uncategorized";
+    categoryCounts.set(cat, (categoryCounts.get(cat) ?? 0) + 1);
+    if (r.updated_at && (!lastUpdated || r.updated_at > lastUpdated)) {
+      lastUpdated = r.updated_at;
+    }
+  }
+
+  const categories = [...categoryCounts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+  return {
+    recipeCount: rows.length,
+    memberCount: memberCountRes.count ?? 0,
+    categories,
+    recipes: rows.map((r) => ({ id: r.id, title: r.title, category: r.category })),
+    lastUpdated,
+  };
 }
 
 export async function getFirstBookId(): Promise<string | null> {
