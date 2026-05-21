@@ -96,7 +96,7 @@ export default async function CookbooksPage({ searchParams }: CookbooksPageProps
           }
         />
       ) : (
-        <BookshelfGrid books={filteredBooks} defaultBookId={defaultBookId} />
+        <BookshelfGrid books={filteredBooks} defaultBookId={defaultBookId} userId={user.id} />
       )}
     </div>
   );

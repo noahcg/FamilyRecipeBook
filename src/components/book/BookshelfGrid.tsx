@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock, Star, Users } from "lucide-react";
-import { BookCoverArt, Drawer } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { ArrowRight, BookOpen, Clock, MoreHorizontal, Star, Trash2, Users } from "lucide-react";
+import { BookCoverArt, Button, Dialog, Drawer } from "@/components/ui";
 import { resolveCoverColor } from "@/lib/bookCovers";
-import { getBookPreview } from "@/lib/actions/books";
+import { deleteBook, getBookPreview } from "@/lib/actions/books";
 import type { BookPreview, RecipeBook } from "@/lib/types";
 
 interface Props {
   books: RecipeBook[];
   defaultBookId: string | null;
+  userId: string;
 }
 
 function formatDate(value: string | null) {
@@ -22,10 +24,15 @@ function formatDate(value: string | null) {
   });
 }
 
-export function BookshelfGrid({ books, defaultBookId }: Props) {
+export function BookshelfGrid({ books, defaultBookId, userId }: Props) {
+  const router = useRouter();
   const [previewBook, setPreviewBook] = useState<RecipeBook | null>(null);
   const [preview, setPreview] = useState<BookPreview | null>(null);
   const [loading, setLoading] = useState(false);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<RecipeBook | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   function openPreview(book: RecipeBook) {
     setPreviewBook(book);
@@ -42,11 +49,26 @@ export function BookshelfGrid({ books, defaultBookId }: Props) {
     setLoading(false);
   }
 
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const result = await deleteBook(deleteTarget.id);
+    setDeleting(false);
+    if (!result.success) {
+      setDeleteError(result.error);
+      return;
+    }
+    setDeleteTarget(null);
+    router.refresh();
+  }
+
   return (
     <>
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {books.map((book) => {
           const isDefault = book.id === defaultBookId;
+          const canDelete = book.owner_id === userId;
           return (
             <div
               key={book.id}
@@ -58,6 +80,40 @@ export function BookshelfGrid({ books, defaultBookId }: Props) {
                 aria-label={`Open ${book.title}`}
                 className="absolute inset-0 z-0 rounded-[inherit] focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]"
               />
+
+              {canDelete && (
+                <div className="absolute right-2 top-2 z-[3]">
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpenId((id) => (id === book.id ? null : book.id))}
+                    aria-label={`More options for ${book.title}`}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-card-muted hover:text-ink"
+                  >
+                    <MoreHorizontal size={18} />
+                  </button>
+                  {menuOpenId === book.id && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setMenuOpenId(null)}
+                      />
+                      <div
+                        className="absolute right-0 top-10 z-50 w-44 overflow-hidden rounded-md py-1 shadow-md"
+                        style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => { setMenuOpenId(null); setDeleteError(null); setDeleteTarget(book); }}
+                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-danger transition-colors hover:bg-green-pale"
+                        >
+                          <Trash2 size={15} strokeWidth={1.75} />
+                          Delete cookbook
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className="pointer-events-none relative z-[1] flex shrink-0 flex-col items-center gap-2">
                 <div className="relative">
@@ -128,6 +184,41 @@ export function BookshelfGrid({ books, defaultBookId }: Props) {
           />
         )}
       </Drawer>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onClose={() => !deleting && setDeleteTarget(null)}
+        title="Delete cookbook?"
+      >
+        <p className="mb-5 pt-5 text-sm leading-relaxed text-ink-muted">
+          This permanently deletes{" "}
+          <span className="font-semibold text-ink">{deleteTarget?.title}</span> and
+          every recipe, memory, and member in it. This cannot be undone.
+        </p>
+        {deleteError && (
+          <p className="mb-4 text-sm font-medium text-danger">{deleteError}</p>
+        )}
+        <div className="flex gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1"
+            onClick={() => setDeleteTarget(null)}
+            disabled={deleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            className="flex-1"
+            onClick={handleDelete}
+            loading={deleting}
+          >
+            Delete cookbook
+          </Button>
+        </div>
+      </Dialog>
     </>
   );
 }

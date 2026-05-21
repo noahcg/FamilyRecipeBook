@@ -12,7 +12,7 @@ import {
   type CreateBookInput,
   type UpdateBookInput,
 } from "@/lib/validators/book";
-import type { ActionResult, BookMember, BookPreview, Profile, Recipe, RecipeBook } from "@/lib/types";
+import type { ActionResult, BookMember, BookPreview, BookRole, Profile, Recipe, RecipeBook } from "@/lib/types";
 
 interface BookPageMember extends BookMember {
   profile: Profile | null;
@@ -316,6 +316,30 @@ export async function getBookPreview(bookId: string): Promise<BookPreview | null
     recipes: rows.map((r) => ({ id: r.id, title: r.title, category: r.category })),
     lastUpdated,
   };
+}
+
+// Permanently delete a cookbook and everything in it (recipes, members, meal
+// references all cascade). Keeper-only, enforced here and by RLS.
+export async function deleteBook(bookId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data: member } = await supabase
+    .from("book_members")
+    .select("role")
+    .eq("book_id", bookId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!canManageBook((member?.role ?? null) as BookRole | null)) {
+    return { success: false, error: "Only the cookbook keeper can delete it." };
+  }
+
+  const { error } = await supabase.from("recipe_books").delete().eq("id", bookId);
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath("/app/cookbooks");
+  return { success: true, data: undefined };
 }
 
 export async function getFirstBookId(): Promise<string | null> {
