@@ -46,7 +46,7 @@ export default async function AddMemberPage({ params }: Props) {
             className="text-3xl font-bold leading-tight text-green-deep"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
-            Add someone to this book
+            Share this book with someone
           </h1>
           <p className="mt-2 max-w-prose text-sm text-ink-muted">
             Invite family to share recipes, memories, and more.

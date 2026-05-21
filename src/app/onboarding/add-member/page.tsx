@@ -18,7 +18,7 @@ export default async function AddMemberOnboardingPage({ searchParams }: Props) {
   return (
     <EntryShell
       eyebrow="Step 2 of 2"
-      title={book?.sharing_enabled ? "Add someone to this book" : "Your private cookbook is ready"}
+      title={book?.sharing_enabled ? "Share this book with someone" : "Your private cookbook is ready"}
       description={
         book?.sharing_enabled
           ? "Invite family to share recipes, memories, and more. They can start adding alongside you right away."

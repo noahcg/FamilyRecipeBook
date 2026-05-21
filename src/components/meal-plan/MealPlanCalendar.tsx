@@ -236,7 +236,7 @@ export function MealPlanCalendar({
   return (
     <>
       {/* Page header */}
-      <div className="sticky top-0 z-20 border-b border-line-soft bg-[rgba(251,247,237,0.95)] px-4 py-4 backdrop-blur-sm sm:px-6 lg:rounded-tr-xl">
+      <div className="z-20 border-b border-line-soft bg-[rgba(251,247,237,0.95)] px-4 py-4 backdrop-blur-sm sm:sticky sm:top-0 sm:px-6 lg:rounded-tr-xl">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h1

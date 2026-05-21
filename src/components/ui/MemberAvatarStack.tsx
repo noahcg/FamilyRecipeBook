@@ -100,7 +100,7 @@ function MemberAvatarStack({
         <button
           type="button"
           onClick={onAddMember}
-          aria-label="Add someone to this book"
+          aria-label="Share this book with someone"
           className={clsx(
             "rounded-full border-2 border-dashed border-line flex items-center justify-center shrink-0 text-ink-soft",
             "hover:border-green-sage hover:text-green-sage transition-colors",

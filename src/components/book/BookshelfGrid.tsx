@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, Clock, MoreHorizontal, Star, Trash2, Users } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, MoreHorizontal, Star, Trash2, UserPlus, Users } from "lucide-react";
 import { BookCoverArt, Button, Dialog, Drawer } from "@/components/ui";
 import { resolveCoverColor } from "@/lib/bookCovers";
 import { deleteBook, getBookPreview } from "@/lib/actions/books";
@@ -98,9 +98,17 @@ export function BookshelfGrid({ books, defaultBookId, userId }: Props) {
                         onClick={() => setMenuOpenId(null)}
                       />
                       <div
-                        className="absolute right-0 top-10 z-50 w-44 overflow-hidden rounded-md py-1 shadow-md"
-                        style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
+                        className="absolute right-0 top-10 z-50 w-48 overflow-hidden rounded-lg border border-line py-1 shadow-[0_14px_36px_rgba(75,53,31,0.22)]"
+                        style={{ background: "var(--color-white-soft)" }}
                       >
+                        <Link
+                          href={`/app/books/${book.id}/members/add`}
+                          onClick={() => setMenuOpenId(null)}
+                          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                        >
+                          <UserPlus size={15} strokeWidth={1.75} className="text-ink-soft" />
+                          Share book
+                        </Link>
                         <button
                           type="button"
                           onClick={() => { setMenuOpenId(null); setDeleteError(null); setDeleteTarget(book); }}
@@ -145,7 +153,7 @@ export function BookshelfGrid({ books, defaultBookId, userId }: Props) {
 
               <div className="pointer-events-none relative z-[1] min-w-0 flex-1 pt-1">
                 <h2
-                  className="truncate text-lg font-bold leading-tight text-green-deep"
+                  className={`truncate text-lg font-bold leading-tight text-green-deep${canDelete ? " pr-8" : ""}`}
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >
                   {book.title}
