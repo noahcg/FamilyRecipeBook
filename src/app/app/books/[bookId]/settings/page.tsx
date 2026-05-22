@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { SettingsPageContent } from "@/components/settings/SettingsPageContent";
 import { getAISettings } from "@/lib/actions/aiSettings";
+import { isAdminEmail } from "@/lib/admin";
 import { requireProfile, requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -63,6 +64,7 @@ export default async function BookSettingsPage({ params }: Props) {
       bookPreferencesReady={!bookPrefsRes.error && !settingsRes.error}
       sharingPreferencesReady={!bookRes.error && !sharedMemberRes.error && !pendingInviteRes.error}
       isKeeper={memberRes.data.role === "keeper"}
+      isAdmin={isAdminEmail(user.email)}
       aiSettings={aiSettings}
       cloudflareConfigured={cloudflareConfigured}
     />

@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { clsx } from "clsx";
+import { ChevronRight, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
@@ -19,6 +22,7 @@ interface SettingsPageContentProps {
   bookPreferencesReady: boolean;
   sharingPreferencesReady: boolean;
   isKeeper: boolean;
+  isAdmin: boolean;
   aiSettings: {
     ai_provider: AIProvider | null;
     ai_api_key: string | null;
@@ -30,13 +34,20 @@ function SettingsSection({
   title,
   description,
   children,
+  className,
 }: {
   title: string;
   description: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-4 border-b border-line-soft py-8 last:border-b-0 lg:grid-cols-[280px_1fr] lg:gap-12">
+    <div
+      className={clsx(
+        "grid grid-cols-1 gap-4 border-b border-line-soft py-8 last:border-b-0 lg:grid-cols-[280px_1fr] lg:gap-12",
+        className
+      )}
+    >
       <div>
         <h2
           className="text-base font-bold text-green-deep"
@@ -67,6 +78,7 @@ export function SettingsPageContent({
   bookPreferencesReady,
   sharingPreferencesReady,
   isKeeper,
+  isAdmin,
   aiSettings,
   cloudflareConfigured,
 }: SettingsPageContentProps) {
@@ -203,6 +215,31 @@ export function SettingsPageContent({
             </div>
           </div>
         </SettingsSection>
+
+        {/* Admin entry — mobile only; desktop reaches Admin from the sidebar. */}
+        {isAdmin && (
+          <SettingsSection
+            title="Admin"
+            description="Site administration tools for managing books and members across the app."
+            className="lg:hidden"
+          >
+            <Link
+              href="/app/admin"
+              className="recipe-card flex items-center gap-3 p-5 text-accent-cinnamon transition-colors hover:bg-accent-honey/15"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent-honey/20 text-accent-cinnamon">
+                <ShieldCheck size={20} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-green-deep">Open Admin</span>
+                <span className="mt-0.5 block text-sm leading-relaxed text-ink-muted">
+                  Manage books and members across the app.
+                </span>
+              </span>
+              <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+            </Link>
+          </SettingsSection>
+        )}
 
         <div className="pt-4">
           <form action={signOut}>
