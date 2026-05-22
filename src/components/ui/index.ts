@@ -19,8 +19,6 @@ export type { RecipeStoryNoteProps } from "./RecipeStoryNote";
 export { ReactionPill, ReactionBar } from "./ReactionPill";
 export type { ReactionPillProps, ReactionType } from "./ReactionPill";
 
-export { BookCover } from "./BookCover";
-export type { BookCoverProps, CoverStyle } from "./BookCover";
 export { BookCoverArt } from "./BookCoverArt";
 export type { BookCoverArtProps } from "./BookCoverArt";
 export { CookbookIcon, cookbookIconOptions, normalizeCookbookIcon } from "./CookbookIcon";

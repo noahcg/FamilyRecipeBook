@@ -143,6 +143,7 @@ export function SettingsPageContent({
                 {bookPreferencesReady ? (
                   <BookPreferencesForm
                     bookId={bookId}
+                    bookTitle={bookTitle}
                     currentCoverStyle={bookCoverStyle}
                     isDefault={isDefaultBook}
                   />
