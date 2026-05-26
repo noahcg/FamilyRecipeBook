@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+early_access: false
+tone_instructions: |
+  Concise, technical, no filler. Flag real correctness, security, and data-integrity
+  risks. Skip nitpicks about style that ESLint/Prettier already enforce.
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: false
+  changed_files_summary: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_filters:
+    - "!**/.next/**"
+    - "!**/node_modules/**"
+    - "!**/*.lock"
+    - "!**/package-lock.json"
+    - "!**/.vercel/**"
+    - "!**/tsconfig.tsbuildinfo"
+    - "!**/*.svg"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.webp"
+
+  path_instructions:
+    - path: "supabase/migrations/**"
+      instructions: |
+        Treat migrations as production-critical. Check RLS policies for every new
+        table, verify policy coverage for Keeper, Contributor, Family, unauthenticated,
+        and unrelated-cookbook-member roles. Flag any service-role bypass that isn't
+        clearly intentional. Confirm storage bucket policies match table policies.
+    - path: "src/app/**/actions.ts"
+      instructions: |
+        Server actions must validate input with Zod, never trust client-provided IDs
+        without authorization checks, and must not leak service-role usage to the
+        client. Confirm errors don't leak private recipe content or invite tokens.
+    - path: "src/app/**/route.ts"
+      instructions: |
+        Route handlers should authenticate the request before reading or writing
+        private data. Confirm RLS still applies (i.e. anon/auth client used, not
+        service role) unless bypass is intentional and documented.
+    - path: "src/components/**"
+      instructions: |
+        React 19 + Next.js 16 App Router. Flag client components that import
+        server-only modules. Prefer existing primitives in src/components/ over
+        new ones. Mobile Safari is a first-class target — flag interactions that
+        rely on hover or desktop-only affordances for core flows.
+    - path: "src/**/*.tsx"
+      instructions: |
+        Verify loading, empty, error, and success states exist for primary flows.
+        Use lucide-react for icons.
+    - path: "**/*.ts"
+      instructions: |
+        Prefer Zod schemas and TS types over ad hoc runtime validation. Don't
+        introduce new abstractions when an existing local pattern fits.
+
+  tools:
+    languagetool:
+      enabled: false
+    gitleaks:
+      enabled: true
+    eslint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+    biome:
+      enabled: false
+    hadolint:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "auto"
+  issues:
+    scope: "auto"
+  pull_requests:
+    scope: "auto"
