@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getRecipe } from "@/lib/actions/recipes";
+import { listCategories } from "@/lib/actions/categories";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { canEditRecipe } from "@/lib/permissions";
@@ -18,7 +19,7 @@ export default async function EditRecipePage({ params }: Props) {
   const user = await requireUser();
 
   const supabase = await createClient();
-  const [recipe, memberRes] = await Promise.all([
+  const [recipe, memberRes, categories] = await Promise.all([
     getRecipe(recipeId),
     supabase
       .from("book_members")
@@ -26,6 +27,7 @@ export default async function EditRecipePage({ params }: Props) {
       .eq("book_id", bookId)
       .eq("user_id", user.id)
       .single(),
+    listCategories(bookId),
   ]);
 
   if (!recipe || recipe.book_id !== bookId) notFound();
@@ -54,7 +56,7 @@ export default async function EditRecipePage({ params }: Props) {
           </h1>
         </div>
 
-        <RecipeForm bookId={bookId} recipe={recipe} />
+        <RecipeForm bookId={bookId} categories={categories} recipe={recipe} />
       </div>
     </AppShell>
   );

@@ -17,7 +17,7 @@ interface FavoriteRecipe {
   source_name: string | null;
   cook_minutes: number | null;
   servings: number | null;
-  category: string | null;
+  category: { name: string } | null;
   creator?: { full_name: string | null } | { full_name: string | null }[] | null;
 }
 
@@ -33,7 +33,7 @@ export default async function FavoritesPage({ params }: Props) {
 
   const { data: favorites } = await supabase
     .from("recipes")
-    .select("id, title, description, photo_url, source_name, cook_minutes, servings, category, creator:profiles!created_by(full_name), reactions:recipe_reactions!inner(user_id, type)")
+    .select("id, title, description, photo_url, source_name, cook_minutes, servings, category:book_categories!recipes_category_id_fkey(name), creator:profiles!created_by(full_name), reactions:recipe_reactions!inner(user_id, type)")
     .eq("book_id", bookId)
     .eq("recipe_reactions.user_id", user.id)
     .eq("recipe_reactions.type", "favorite")
@@ -61,7 +61,7 @@ export default async function FavoritesPage({ params }: Props) {
           />
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-            {((favorites ?? []) as FavoriteRecipe[]).map((recipe) => (
+            {((favorites ?? []) as unknown as FavoriteRecipe[]).map((recipe) => (
               <Link
                 key={recipe.id}
                 href={`/app/books/${bookId}/recipes/${recipe.id}`}
@@ -73,7 +73,7 @@ export default async function FavoritesPage({ params }: Props) {
                   fromPerson={getRecipeAttribution(recipe)}
                   cookTime={recipe.cook_minutes ? `${recipe.cook_minutes} min` : undefined}
                   servings={recipe.servings ?? undefined}
-                  category={recipe.category ?? undefined}
+                  category={recipe.category?.name ?? undefined}
                   isFavorited
                 />
               </Link>

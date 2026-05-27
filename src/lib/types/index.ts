@@ -18,6 +18,10 @@ export interface BookPreview {
   lastUpdated: string | null;
 }
 
+/* The category alias used in joined Supabase selects. Convenience type for code
+ * that needs to read a recipe's category name via the FK join. */
+export type RecipeCategoryRef = { id: string; name: string } | null;
+
 /* ─── Recipe copy / move targets ─────────────────────────────── */
 
 export interface RecipeTransferTarget {

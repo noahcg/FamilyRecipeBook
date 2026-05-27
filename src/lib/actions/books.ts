@@ -277,9 +277,10 @@ export async function getBookPreview(bookId: string): Promise<BookPreview | null
   const [recipesRes, memberCountRes] = await Promise.all([
     supabase
       .from("recipes")
-      .select("id, title, category, updated_at")
+      .select(
+        "id, title, updated_at, category:book_categories!recipes_category_id_fkey(name)"
+      )
       .eq("book_id", bookId)
-      .order("category", { ascending: true, nullsFirst: false })
       .order("title", { ascending: true })
       .limit(300),
     supabase
@@ -288,17 +289,17 @@ export async function getBookPreview(bookId: string): Promise<BookPreview | null
       .eq("book_id", bookId),
   ]);
 
-  const rows = (recipesRes.data ?? []) as {
+  const rows = (recipesRes.data ?? []) as unknown as {
     id: string;
     title: string;
-    category: string | null;
     updated_at: string | null;
+    category: { name: string } | null;
   }[];
 
   const categoryCounts = new Map<string, number>();
   let lastUpdated: string | null = null;
   for (const r of rows) {
-    const cat = r.category?.trim() || "Uncategorized";
+    const cat = r.category?.name?.trim() || "Uncategorized";
     categoryCounts.set(cat, (categoryCounts.get(cat) ?? 0) + 1);
     if (r.updated_at && (!lastUpdated || r.updated_at > lastUpdated)) {
       lastUpdated = r.updated_at;
@@ -313,7 +314,7 @@ export async function getBookPreview(bookId: string): Promise<BookPreview | null
     recipeCount: rows.length,
     memberCount: memberCountRes.count ?? 0,
     categories,
-    recipes: rows.map((r) => ({ id: r.id, title: r.title, category: r.category })),
+    recipes: rows.map((r) => ({ id: r.id, title: r.title, category: r.category?.name ?? null })),
     lastUpdated,
   };
 }
@@ -389,7 +390,7 @@ export async function getBookPageData(bookId: string) {
     supabase
       .from("recipes")
       .select(
-        "*, reactions:recipe_reactions(type, user_id), creator:profiles!created_by(full_name, avatar_url)"
+        "*, reactions:recipe_reactions(type, user_id), creator:profiles!created_by(full_name, avatar_url), category:book_categories!recipes_category_id_fkey(id, name)"
       )
       .eq("book_id", bookId)
       .order("created_at", { ascending: false })

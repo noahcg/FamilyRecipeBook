@@ -609,9 +609,9 @@ function MealDetail({ bookId, meal, detail, loading, onRemove, isPending }: Meal
                   Serves {detail.servings}
                 </span>
               )}
-              {detail.category && (
+              {detail.category?.name && (
                 <span className="rounded-full bg-green-soft px-2 py-0.5 text-xs font-semibold text-green-deep">
-                  {detail.category}
+                  {detail.category.name}
                 </span>
               )}
             </div>

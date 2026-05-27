@@ -18,7 +18,7 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
     servingScale > 1 ? `Scaled ${servingScale}x` : null,
     formatMinutes("Prep", recipe.prep_minutes),
     formatMinutes("Cook", recipe.cook_minutes),
-    recipe.category,
+    recipe.category?.name,
   ].filter(Boolean);
 
   return (

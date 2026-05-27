@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
+import { listCategories } from "@/lib/actions/categories";
 import { EntryShell } from "@/components/layout/EntryShell";
 
 interface Props {
@@ -11,7 +12,10 @@ interface Props {
 export default async function AddFirstRecipePage({ searchParams }: Props) {
   const { bookId } = await searchParams;
   if (!bookId) redirect("/onboarding/create-book");
-  const aiSettings = await getAISettings();
+  const [aiSettings, categories] = await Promise.all([
+    getAISettings(),
+    listCategories(bookId),
+  ]);
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
 
   return (
@@ -36,6 +40,7 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
     >
       <RecipeForm
         bookId={bookId}
+        categories={categories}
         hasOpenAIKey={hasOpenAIKey}
         onSuccessRedirect={`/onboarding/add-member?bookId=${bookId}`}
       />

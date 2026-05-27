@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
+import { listCategories } from "@/lib/actions/categories";
 
 interface Props {
   params: Promise<{ bookId: string }>;
@@ -11,7 +12,10 @@ interface Props {
 
 export default async function NewRecipePage({ params }: Props) {
   const { bookId } = await params;
-  const aiSettings = await getAISettings();
+  const [aiSettings, categories] = await Promise.all([
+    getAISettings(),
+    listCategories(bookId),
+  ]);
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
 
   return (
@@ -38,7 +42,12 @@ export default async function NewRecipePage({ params }: Props) {
           </p>
         </div>
 
-        <RecipeForm bookId={bookId} hasOpenAIKey={hasOpenAIKey} enablePasteEntry />
+        <RecipeForm
+          bookId={bookId}
+          categories={categories}
+          hasOpenAIKey={hasOpenAIKey}
+          enablePasteEntry
+        />
       </div>
     </AppShell>
   );

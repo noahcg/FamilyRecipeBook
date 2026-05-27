@@ -20,7 +20,7 @@ import { selectRecipeImage } from "@/lib/actions/pexels";
 import { parsePastedRecipe } from "@/lib/recipeTextImport";
 import { importRecipeFiles, type NormalizedImportedRecipe } from "@/lib/recipeFileImport";
 import { useUser } from "@/lib/hooks/useUser";
-import { RECIPE_CATEGORIES } from "@/lib/recipeCategories";
+import type { BookCategory } from "@/lib/actions/categories";
 import type { RecipeWithRelations } from "@/lib/types";
 
 function getArrayErrorMessage(error: unknown) {
@@ -33,6 +33,7 @@ function getArrayErrorMessage(error: unknown) {
 
 interface RecipeFormProps {
   bookId: string;
+  categories: BookCategory[];
   recipe?: RecipeWithRelations;
   onSuccessRedirect?: string;
   hasOpenAIKey?: boolean;
@@ -241,6 +242,7 @@ function IngredientKeypad({
 
 export function RecipeForm({
   bookId,
+  categories,
   recipe,
   onSuccessRedirect,
   hasOpenAIKey = false,
@@ -305,7 +307,7 @@ export function RecipeForm({
           prep_minutes: recipe.prep_minutes ?? undefined,
           cook_minutes: recipe.cook_minutes ?? undefined,
           servings: recipe.servings ?? undefined,
-          category: recipe.category ?? "",
+          category: recipe.category?.name ?? "",
           tags: recipe.tags ?? [],
           import_method: recipe.import_method,
           source_url: recipe.source_url ?? "",
@@ -920,13 +922,13 @@ export function RecipeForm({
                 Category
               </label>
               <div className="flex flex-wrap gap-2">
-                {RECIPE_CATEGORIES.map((cat) => {
-                  const selected = selectedCategory === cat;
+                {categories.map((cat) => {
+                  const selected = selectedCategory === cat.name;
                   return (
-                    <label key={cat} className="flex items-center gap-1.5 cursor-pointer">
+                    <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="radio"
-                        value={cat}
+                        value={cat.name}
                         className="sr-only"
                         {...register("category")}
                       />
@@ -946,7 +948,7 @@ export function RecipeForm({
                               }
                         }
                       >
-                        {cat}
+                        {cat.name}
                       </span>
                     </label>
                   );
@@ -1202,13 +1204,13 @@ export function RecipeForm({
             <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
               <p className="text-sm font-semibold text-ink mb-3">Category</p>
               <div className="flex flex-wrap gap-2">
-                {RECIPE_CATEGORIES.map((cat) => {
-                  const selected = selectedCategory === cat;
+                {categories.map((cat) => {
+                  const selected = selectedCategory === cat.name;
                   return (
-                    <label key={cat} className="flex items-center gap-1.5 cursor-pointer">
+                    <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="radio"
-                        value={cat}
+                        value={cat.name}
                         className="sr-only"
                         {...register("category")}
                       />
@@ -1228,7 +1230,7 @@ export function RecipeForm({
                               }
                         }
                       >
-                        {cat}
+                        {cat.name}
                       </span>
                     </label>
                   );

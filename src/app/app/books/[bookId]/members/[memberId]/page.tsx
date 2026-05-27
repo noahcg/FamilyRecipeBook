@@ -33,7 +33,7 @@ interface MemberRecipe {
   description: string | null;
   photo_url: string | null;
   source_name: string | null;
-  category: string | null;
+  category: { name: string } | null;
   reactions?: { type: string }[] | null;
   loveCount: number;
 }
@@ -70,7 +70,9 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
       .single(),
     supabase
       .from("recipes")
-      .select("*, reactions:recipe_reactions(type)")
+      .select(
+        "*, reactions:recipe_reactions(type), category:book_categories!recipes_category_id_fkey(name)"
+      )
       .eq("book_id", bookId)
       .eq("created_by", memberId)
       .order("created_at", { ascending: false }),
@@ -214,7 +216,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
                   imageUrl={recipe.photo_url ?? undefined}
                   fromPerson={recipe.source_name?.trim() || member.profile.full_name?.trim() || undefined}
                   loveCount={recipe.loveCount}
-                  category={recipe.category ?? undefined}
+                  category={recipe.category?.name ?? undefined}
                   isFavorited={favoriteIds.has(recipe.id)}
                 />
               </Link>

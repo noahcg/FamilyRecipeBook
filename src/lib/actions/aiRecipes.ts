@@ -4,9 +4,35 @@ import { z } from "zod";
 import { createRecipe } from "@/lib/actions/recipes";
 import { selectRecipeImage } from "@/lib/actions/pexels";
 import { getUser } from "@/lib/auth";
-import { RECIPE_CATEGORIES } from "@/lib/recipeCategories";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Recipe } from "@/lib/types";
+
+async function fetchBookCategoryNames(bookId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("book_categories")
+    .select("name")
+    .eq("book_id", bookId)
+    .order("position", { ascending: true });
+  return (data ?? []).map((row) => row.name);
+}
+
+function buildRecipeIdeaJsonSchema(categories: string[]) {
+  const list = categories.length ? categories : ["Other"];
+  return {
+    ...recipeIdeaJsonSchema,
+    properties: {
+      ...recipeIdeaJsonSchema.properties,
+      category: { type: "string", enum: list },
+    },
+  };
+}
+
+function formatCategoryList(categories: string[]) {
+  if (categories.length === 0) return "Other";
+  if (categories.length === 1) return categories[0];
+  return `${categories.slice(0, -1).join(", ")}, or ${categories[categories.length - 1]}`;
+}
 
 const aiIngredientSchema = z.object({
   quantity: z.string().max(20),
@@ -27,7 +53,10 @@ const aiRecipeIdeaSchema = z.object({
   prep_minutes: z.number().int().min(0).max(10080),
   cook_minutes: z.number().int().min(0).max(10080),
   servings: z.number().int().min(1).max(100),
-  category: z.enum(RECIPE_CATEGORIES),
+  // Free-form — the AI is told the user's actual list, but we validate downstream
+  // by resolving the name to a book_categories row (case-insensitive) and falling
+  // back to "Other" if no match exists.
+  category: z.string().max(60),
   tags: z.array(z.string().max(30)).max(10),
   ingredients: z.array(aiIngredientSchema).min(1),
   instructions: z.array(aiInstructionSchema).min(1),
@@ -59,7 +88,7 @@ const recipeIdeaJsonSchema = {
     prep_minutes: { type: "integer" },
     cook_minutes: { type: "integer" },
     servings: { type: "integer" },
-    category: { type: "string", enum: RECIPE_CATEGORIES },
+    category: { type: "string" },
     tags: {
       type: "array",
       maxItems: 5,
@@ -132,18 +161,24 @@ function extractJsonObject(text: string) {
   return trimmed;
 }
 
-async function generateWithCloudflare(prompt: string): Promise<ActionResult<AIRecipeIdea> | null> {
+async function generateWithCloudflare(
+  prompt: string,
+  categories: string[]
+): Promise<ActionResult<AIRecipeIdea> | null> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN;
   const model = process.env.CLOUDFLARE_WORKERS_AI_MODEL ?? "@cf/meta/llama-3.1-8b-instruct";
 
   if (!accountId || !apiToken) return null;
 
+  const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
+  const categoryList = formatCategoryList(categories);
+  const exampleCategory = categories[0] ?? "Other";
+
   const messages = [
     {
       role: "system",
-      content:
-        "You are a warm, practical family cookbook assistant. Return only valid compact JSON matching this shape: {\"title\":\"\",\"description\":\"\",\"source_name\":\"AI Recipe Idea\",\"story\":\"\",\"prep_minutes\":0,\"cook_minutes\":0,\"servings\":4,\"category\":\"Dinner\",\"tags\":[\"\"],\"ingredients\":[{\"quantity\":\"\",\"unit\":\"\",\"item\":\"\",\"note\":\"\"}],\"instructions\":[{\"body\":\"\"}]}. Choose category from Breakfast, Lunch, Dinner, Appetizer, Side Dish, Dessert, Snack, Soup, Salad, Bread, Drink, or Other. Keep descriptions and steps concise. Use 4-8 ingredients and 3-6 steps. Use empty strings for unknown quantity, unit, or note. Do not include markdown.",
+      content: `You are a warm, practical family cookbook assistant. Return only valid compact JSON matching this shape: {"title":"","description":"","source_name":"AI Recipe Idea","story":"","prep_minutes":0,"cook_minutes":0,"servings":4,"category":"${exampleCategory}","tags":[""],"ingredients":[{"quantity":"","unit":"","item":"","note":""}],"instructions":[{"body":""}]}. Choose category from ${categoryList}. Keep descriptions and steps concise. Use 4-8 ingredients and 3-6 steps. Use empty strings for unknown quantity, unit, or note. Do not include markdown.`,
     },
     {
       role: "user",
@@ -170,8 +205,8 @@ async function generateWithCloudflare(prompt: string): Promise<ActionResult<AIRe
                   type: "json_schema",
                   json_schema: {
                     type: "object",
-                    properties: recipeIdeaJsonSchema.properties,
-                    required: recipeIdeaJsonSchema.required,
+                    properties: dynamicSchema.properties,
+                    required: dynamicSchema.required,
                   },
                 },
               }
@@ -262,9 +297,16 @@ async function generateWithCloudflare(prompt: string): Promise<ActionResult<AIRe
   }
 }
 
-async function generateWithOpenAI(prompt: string, overrideKey?: string): Promise<ActionResult<AIRecipeIdea> | null> {
+async function generateWithOpenAI(
+  prompt: string,
+  categories: string[],
+  overrideKey?: string
+): Promise<ActionResult<AIRecipeIdea> | null> {
   const apiKey = overrideKey ?? process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
+
+  const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
+  const categoryList = formatCategoryList(categories);
 
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -278,8 +320,7 @@ async function generateWithOpenAI(prompt: string, overrideKey?: string): Promise
       input: [
         {
           role: "system",
-          content:
-            "You are a warm, practical family cookbook assistant. Create one realistic, saveable recipe idea from the user's pantry and preferences. Favor common ingredients, clear steps, and family-friendly wording. Do not invent unavailable specialty ingredients unless they are explicitly optional.",
+          content: `You are a warm, practical family cookbook assistant. Create one realistic, saveable recipe idea from the user's pantry and preferences. Favor common ingredients, clear steps, and family-friendly wording. Do not invent unavailable specialty ingredients unless they are explicitly optional. Choose category from ${categoryList}.`,
         },
         {
           role: "user",
@@ -291,7 +332,7 @@ async function generateWithOpenAI(prompt: string, overrideKey?: string): Promise
           type: "json_schema",
           name: "recipe_idea",
           strict: true,
-          schema: recipeIdeaJsonSchema,
+          schema: dynamicSchema,
         },
       },
     }),
@@ -323,8 +364,14 @@ async function generateWithOpenAI(prompt: string, overrideKey?: string): Promise
   return { success: true, data: parsed.data };
 }
 
-async function generateWithAnthropic(prompt: string, apiKey: string): Promise<ActionResult<AIRecipeIdea> | null> {
+async function generateWithAnthropic(
+  prompt: string,
+  categories: string[],
+  apiKey: string
+): Promise<ActionResult<AIRecipeIdea> | null> {
   const model = process.env.ANTHROPIC_RECIPE_MODEL ?? "claude-haiku-4-5-20251001";
+  const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
+  const categoryList = formatCategoryList(categories);
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -337,14 +384,13 @@ async function generateWithAnthropic(prompt: string, apiKey: string): Promise<Ac
     body: JSON.stringify({
       model,
       max_tokens: 2000,
-      system:
-        "You are a warm, practical family cookbook assistant. Use the create_recipe tool to return exactly one realistic, saveable recipe idea. Favor common ingredients, clear steps, and family-friendly wording.",
+      system: `You are a warm, practical family cookbook assistant. Use the create_recipe tool to return exactly one realistic, saveable recipe idea. Favor common ingredients, clear steps, and family-friendly wording. Choose category from ${categoryList}.`,
       messages: [{ role: "user", content: `Pantry request: ${prompt}` }],
       tools: [
         {
           name: "create_recipe",
           description: "Return a single recipe idea as structured data.",
-          input_schema: recipeIdeaJsonSchema,
+          input_schema: dynamicSchema,
         },
       ],
       tool_choice: { type: "tool", name: "create_recipe" },
@@ -392,7 +438,8 @@ async function getUserAISettings(): Promise<{ provider: string | null; key: stri
 }
 
 export async function generateRecipeIdea(
-  pantryPrompt: string
+  pantryPrompt: string,
+  bookId: string
 ): Promise<ActionResult<AIRecipeIdea>> {
   const prompt = pantryPrompt.trim();
   if (prompt.length < 10) {
@@ -402,24 +449,28 @@ export async function generateRecipeIdea(
     };
   }
 
+  // Tell the AI about this cookbook's actual chapters, so suggestions land in
+  // the right place (including any custom chapters the user has added).
+  const categories = await fetchBookCategoryNames(bookId);
+
   // User's own provider/key takes priority
   const { provider, key } = await getUserAISettings();
   if (provider && key) {
     if (provider === "anthropic") {
-      const result = await generateWithAnthropic(prompt, key);
+      const result = await generateWithAnthropic(prompt, categories, key);
       if (result) return result;
     } else {
-      const result = await generateWithOpenAI(prompt, key);
+      const result = await generateWithOpenAI(prompt, categories, key);
       if (result) return result;
     }
   }
 
   // Fall back to server-configured Cloudflare Workers AI
-  const cloudflareResult = await generateWithCloudflare(prompt);
+  const cloudflareResult = await generateWithCloudflare(prompt, categories);
   if (cloudflareResult) return cloudflareResult;
 
   // Fall back to server-configured OpenAI key
-  const openAIResult = await generateWithOpenAI(prompt);
+  const openAIResult = await generateWithOpenAI(prompt, categories);
   if (openAIResult) return openAIResult;
 
   return {

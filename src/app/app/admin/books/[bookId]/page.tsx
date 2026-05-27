@@ -29,7 +29,7 @@ interface AdminRecipeRow {
   id: string;
   title: string;
   created_at: string | null;
-  category: string | null;
+  category: { name: string } | null;
   created_by: string;
   creator: { full_name: string | null }[] | null;
 }
@@ -92,7 +92,7 @@ export default async function AdminBookDetailPage({ params }: Props) {
         .single(),
       admin
         .from("recipes")
-        .select("id,title,created_at,category,created_by,creator:profiles!created_by(full_name)")
+        .select("id,title,created_at,created_by,creator:profiles!created_by(full_name),category:book_categories!recipes_category_id_fkey(name)")
         .eq("book_id", bookId)
         .order("created_at", { ascending: false })
         .limit(12),
@@ -107,7 +107,7 @@ export default async function AdminBookDetailPage({ params }: Props) {
   if (!book) notFound();
 
   const bookDetail = book as AdminBookDetail;
-  const recipeRows = (recipes ?? []) as AdminRecipeRow[];
+  const recipeRows = (recipes ?? []) as unknown as AdminRecipeRow[];
   const inviteRows = (invites ?? []) as AdminInviteRow[];
   const members = bookDetail.members ?? [];
 
@@ -180,7 +180,7 @@ export default async function AdminBookDetailPage({ params }: Props) {
                   <div key={recipe.id} className="px-5 py-4">
                     <p className="truncate text-sm font-black text-ink">{recipe.title}</p>
                     <p className="mt-1 text-xs text-ink-muted">
-                      {recipe.creator?.[0]?.full_name ?? "Unknown"} · {recipe.category ?? "Uncategorized"} · {formatDate(recipe.created_at)}
+                      {recipe.creator?.[0]?.full_name ?? "Unknown"} · {recipe.category?.name ?? "Uncategorized"} · {formatDate(recipe.created_at)}
                     </p>
                   </div>
                 ))
