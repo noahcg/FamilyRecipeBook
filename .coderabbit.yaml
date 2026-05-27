@@ -21,6 +21,13 @@ reviews:
     base_branches:
       - main
 
+  pre_merge_checks:
+    # This codebase intentionally avoids JSDoc/docstrings — readable identifiers
+    # plus sparing inline comments are the convention. Coverage checks here
+    # generate noise rather than signal.
+    docstrings:
+      mode: off
+
   path_filters:
     - "!**/.next/**"
     - "!**/node_modules/**"
