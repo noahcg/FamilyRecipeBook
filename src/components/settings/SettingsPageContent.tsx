@@ -3,11 +3,13 @@ import { clsx } from "clsx";
 import { ChevronRight, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
+import { BookCategoriesManager } from "@/components/book/BookCategoriesManager";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
 import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { signOut } from "@/lib/actions/auth";
+import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
 
@@ -22,6 +24,8 @@ interface SettingsPageContentProps {
   bookPreferencesReady: boolean;
   sharingPreferencesReady: boolean;
   isKeeper: boolean;
+  canManageCategories: boolean;
+  categories: BookCategory[];
   isAdmin: boolean;
   aiSettings: {
     ai_provider: AIProvider | null;
@@ -78,6 +82,8 @@ export function SettingsPageContent({
   bookPreferencesReady,
   sharingPreferencesReady,
   isKeeper,
+  canManageCategories,
+  categories,
   isAdmin,
   aiSettings,
   cloudflareConfigured,
@@ -170,6 +176,17 @@ export function SettingsPageContent({
                   </div>
                 )}
               </div>
+            </div>
+          </SettingsSection>
+        )}
+
+        {canManageCategories && (
+          <SettingsSection
+            title="Chapters"
+            description="Reorder, rename, add, or remove the chapters recipes are organized into. Every cookbook starts with the same defaults — change them to fit how you cook."
+          >
+            <div className="recipe-card p-5">
+              <BookCategoriesManager bookId={bookId} initialCategories={categories} />
             </div>
           </SettingsSection>
         )}

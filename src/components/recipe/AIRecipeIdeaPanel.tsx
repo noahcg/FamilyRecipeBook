@@ -52,7 +52,7 @@ export function AIRecipeIdeaPanel({ bookId, initialPrompt, autoGenerate }: AIRec
     setPrompt(nextPrompt);
     setError(null);
     startGenerating(async () => {
-      const result = await generateRecipeIdea(trimmed);
+      const result = await generateRecipeIdea(trimmed, bookId);
       if (!result.success) {
         setError(result.error);
         return;

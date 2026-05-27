@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-05-27
+
+### Custom chapter categories
+- Every cookbook now owns its own **chapter list**. Defaults seeded on creation are unchanged (Breakfast, Lunch, Dinner, Appetizer, Side Dish, Dessert, Snack, Soup, Salad, Bread, Drink, Other) — but users can **rename, reorder, add, and delete chapters per book** from Settings → Chapters.
+- Renames flow through automatically because recipes reference categories by id; existing recipes in "Dinner" stay put when "Dinner" becomes "Main Course".
+- **Delete is blocked when a chapter still has recipes**: the manager opens a "Move these N recipes" modal with a picker (defaults to **Other**) and runs the reassign + delete atomically.
+- The **AI recipe generator** now receives each cookbook's actual chapter list at request time (Cloudflare, OpenAI, and Anthropic providers), so a book with a custom "Tapas" chapter gets suggestions that land in Tapas.
+- **Recipe imports** with an unknown category quietly drop into the book's "Other" chapter instead of being rejected.
+- **Cross-book copy / move** re-resolves the category against the target book (case-insensitive match, fallback to Other) so a moved recipe never carries a stale FK.
+- Migration `014_book_categories.sql` adds the `book_categories` table (RLS mirroring book membership), seeds defaults for every existing cookbook, backfills `recipes.category_id` from the old free-text column, then drops `recipes.category`. A trigger on `recipe_books` insert auto-seeds new books.
+
 ## 2026-05-21
 
 ### Grocery page

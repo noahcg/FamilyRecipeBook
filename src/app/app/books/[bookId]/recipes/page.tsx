@@ -142,7 +142,9 @@ export default function RecipesPage({ params }: Props) {
 
       const recipesRequest = supabase
         .from("recipes")
-        .select("*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type), ingredients:recipe_ingredients(id), instructions:recipe_instructions(id)")
+        .select(
+          "*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type), ingredients:recipe_ingredients(id), instructions:recipe_instructions(id), category:book_categories!recipes_category_id_fkey(name)"
+        )
         .eq("book_id", bookId)
         .order("created_at", { ascending: false });
 
@@ -163,8 +165,12 @@ export default function RecipesPage({ params }: Props) {
 
       if (!active) return;
 
-      const nextRecipes = ((recipesRes.data ?? []) as RecipeListItem[]).map((recipe) => ({
+      const nextRecipes = ((recipesRes.data ?? []) as unknown as (Omit<
+        RecipeListItem,
+        "category" | "loveCount"
+      > & { category: { name: string } | null })[]).map((recipe) => ({
         ...recipe,
+        category: recipe.category?.name ?? null,
         loveCount: recipe.reactions?.filter((reaction) => reaction.type === "love").length ?? 0,
       }));
 

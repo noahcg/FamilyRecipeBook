@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
+import { resolveCategoryIdForBook } from "@/lib/actions/categories";
 import {
   canContribute,
   canEditRecipe,
@@ -24,6 +25,9 @@ import type {
   RecipeTransferTarget,
   RecipeWithRelations,
 } from "@/lib/types";
+
+const RECIPE_SELECT_WITH_CATEGORY =
+  "*, category:book_categories!recipes_category_id_fkey(id, name)";
 
 async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, bookId: string, userId: string) {
   const { data } = await supabase
@@ -52,12 +56,13 @@ export async function createRecipe(
     return { success: false, error: "You don't have permission to add recipes." };
   }
 
-  const { ingredients, instructions, ...recipeFields } = parsed.data;
+  const { ingredients, instructions, category, ...recipeFields } = parsed.data;
+  const category_id = await resolveCategoryIdForBook(bookId, category);
 
   const { data: recipe, error } = await supabase
     .from("recipes")
-    .insert({ ...recipeFields, book_id: bookId, created_by: user.id })
-    .select()
+    .insert({ ...recipeFields, category_id, book_id: bookId, created_by: user.id })
+    .select(RECIPE_SELECT_WITH_CATEGORY)
     .single();
 
   if (error || !recipe) {
@@ -147,13 +152,20 @@ export async function updateRecipe(
     return { success: false, error: "You don't have permission to edit this recipe." };
   }
 
-  const { ingredients, instructions, ...recipeFields } = parsed.data;
+  const { ingredients, instructions, category, ...recipeFields } = parsed.data;
+  const updatePayload: Record<string, unknown> = {
+    ...recipeFields,
+    updated_at: new Date().toISOString(),
+  };
+  if (category !== undefined) {
+    updatePayload.category_id = await resolveCategoryIdForBook(bookId, category);
+  }
 
   const { data: recipe, error } = await supabase
     .from("recipes")
-    .update({ ...recipeFields, updated_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq("id", recipeId)
-    .select()
+    .select(RECIPE_SELECT_WITH_CATEGORY)
     .single();
 
   if (error || !recipe) {
@@ -274,11 +286,15 @@ export async function copyRecipeToBook(
 
   const { data: src } = await supabase
     .from("recipes")
-    .select("*")
+    .select(RECIPE_SELECT_WITH_CATEGORY)
     .eq("id", recipeId)
     .eq("book_id", sourceBookId)
     .single();
   if (!src) return { success: false, error: "Recipe not found." };
+
+  const sourceCategoryName = (src as unknown as { category: { name?: string } | null })
+    .category?.name ?? null;
+  const targetCategoryId = await resolveCategoryIdForBook(targetBookId, sourceCategoryName);
 
   const [
     { data: ingredients },
@@ -324,7 +340,7 @@ export async function copyRecipeToBook(
       prep_minutes: src.prep_minutes,
       cook_minutes: src.cook_minutes,
       servings: src.servings,
-      category: src.category,
+      category_id: targetCategoryId,
       tags: src.tags ?? [],
     })
     .select()
@@ -412,12 +428,14 @@ export async function moveRecipeToBook(
 
   const { data: existing } = await supabase
     .from("recipes")
-    .select("created_by, book_id, title")
+    .select("created_by, book_id, title, category:book_categories!recipes_category_id_fkey(name)")
     .eq("id", recipeId)
     .single();
   if (!existing || existing.book_id !== sourceBookId) {
     return { success: false, error: "Recipe not found." };
   }
+  const sourceCategoryName = (existing as unknown as { category: { name?: string } | null })
+    .category?.name ?? null;
 
   const isCreator = existing.created_by === user.id;
   const [sourceRole, targetRole] = await Promise.all([
@@ -443,9 +461,18 @@ export async function moveRecipeToBook(
     };
   }
 
+  // The recipe's category_id points at a row in the source book's category
+  // list, which is no longer valid in the target. Re-resolve by name (with the
+  // usual fallback to the target's "Other") before flipping book_id.
+  const targetCategoryId = await resolveCategoryIdForBook(targetBookId, sourceCategoryName);
+
   const { error } = await supabase
     .from("recipes")
-    .update({ book_id: targetBookId, updated_at: new Date().toISOString() })
+    .update({
+      book_id: targetBookId,
+      category_id: targetCategoryId,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", recipeId);
   if (error) return { success: false, error: error.message };
 
@@ -473,7 +500,9 @@ export async function getRecipe(recipeId: string): Promise<RecipeWithRelations |
 
   const { data: recipe, error: recipeError } = await supabase
     .from("recipes")
-    .select("*, creator:profiles!created_by(*)")
+    .select(
+      "*, creator:profiles!created_by(*), category:book_categories!recipes_category_id_fkey(id, name)"
+    )
     .eq("id", recipeId)
     .single();
 
@@ -526,11 +555,25 @@ export async function getBookRecipes(
 
   const { data } = await supabase
     .from("recipes")
-    .select("id, title, photo_url, category")
+    .select(
+      "id, title, photo_url, category:book_categories!recipes_category_id_fkey(name)"
+    )
     .eq("book_id", bookId)
     .order("title", { ascending: true });
 
-  return (data ?? []) as { id: string; title: string; photo_url: string | null; category: string | null }[];
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    category: { name: string } | null;
+  }[];
+
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    photo_url: row.photo_url,
+    category: row.category?.name ?? null,
+  }));
 }
 
 export async function addRecipeStory(

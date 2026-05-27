@@ -57,7 +57,13 @@ export interface Recipe {
   prep_minutes: number | null;
   cook_minutes: number | null;
   servings: number | null;
-  category: string | null;
+  category_id: string | null;
+  /**
+   * Populated when the fetching query joins `category:book_categories(id, name)`.
+   * Unjoined SELECTs leave this undefined — read sites that need the name must
+   * include the join.
+   */
+  category: { id: string; name: string } | null;
   tags: string[];
   import_method: "image_upload" | "file_import" | null;
   source_url: string | null;

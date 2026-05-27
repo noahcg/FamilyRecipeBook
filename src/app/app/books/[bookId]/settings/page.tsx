@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import { SettingsPageContent } from "@/components/settings/SettingsPageContent";
 import { getAISettings } from "@/lib/actions/aiSettings";
+import { listCategories } from "@/lib/actions/categories";
 import { isAdminEmail } from "@/lib/admin";
 import { requireProfile, requireUser } from "@/lib/auth";
+import { canContribute } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import type { BookRole } from "@/lib/types";
 
 interface Props {
   params: Promise<{ bookId: string }>;
@@ -47,6 +50,10 @@ export default async function BookSettingsPage({ params }: Props) {
 
   if (!bookRes.data || !memberRes.data) notFound();
 
+  const role = memberRes.data.role as BookRole;
+  const canManageCategories = canContribute(role);
+  const categories = canManageCategories ? await listCategories(bookId) : [];
+
   const cloudflareConfigured = !!(
     process.env.CLOUDFLARE_ACCOUNT_ID &&
     process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN
@@ -63,7 +70,9 @@ export default async function BookSettingsPage({ params }: Props) {
       isDefaultBook={settingsRes.data?.default_book_id === bookId}
       bookPreferencesReady={!bookPrefsRes.error && !settingsRes.error}
       sharingPreferencesReady={!bookRes.error && !sharedMemberRes.error && !pendingInviteRes.error}
-      isKeeper={memberRes.data.role === "keeper"}
+      isKeeper={role === "keeper"}
+      canManageCategories={canManageCategories}
+      categories={categories}
       isAdmin={isAdminEmail(user.email)}
       aiSettings={aiSettings}
       cloudflareConfigured={cloudflareConfigured}

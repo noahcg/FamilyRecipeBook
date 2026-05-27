@@ -464,9 +464,9 @@ export function RecipeDetail({
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent pb-8 pt-24">
           <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
             <div className="max-w-4xl text-ink-inverse">
-              {recipe.category && (
+              {recipe.category?.name && (
                 <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-white/80">
-                  {recipe.category}
+                  {recipe.category.name}
                 </p>
               )}
               <h1
