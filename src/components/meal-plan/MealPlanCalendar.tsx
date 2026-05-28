@@ -16,10 +16,12 @@ import {
   Users,
   Trash2,
   ArrowRight,
+  ShoppingCart,
   type LucideIcon,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { getMealPlanWeek, setMealPlan, removeMealPlan } from "@/lib/actions/households";
+import { importFromMealPlan } from "@/lib/actions/grocery";
 import { getRecipe } from "@/lib/actions/recipes";
 import { Drawer } from "@/components/ui";
 import type { MealPlan, MealSlot, RecipeWithRelations } from "@/lib/types";
@@ -110,7 +112,18 @@ export function MealPlanCalendar({
   const [detail, setDetail] = useState<RecipeWithRelations | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  // Send-to-grocery-list state
+  const [groceryPending, startGroceryTransition] = useTransition();
+  const [groceryMsg, setGroceryMsg] = useState<{ text: string; tone: "ok" | "err" } | null>(null);
+
   const plannedCount = mealPlans.filter((m) => m.recipe).length;
+
+  // Auto-dismiss the grocery result message so the header doesn't grow stale.
+  useEffect(() => {
+    if (!groceryMsg) return;
+    const t = setTimeout(() => setGroceryMsg(null), 6000);
+    return () => clearTimeout(t);
+  }, [groceryMsg]);
 
   useEffect(() => {
     const el = todayMobileRef.current;
@@ -201,6 +214,31 @@ export function MealPlanCalendar({
     });
   }
 
+  function handleAddToGroceries() {
+    setGroceryMsg(null);
+    startGroceryTransition(async () => {
+      // Always this calendar week, regardless of the week being viewed —
+      // matches the "Import from meal plan" button on the grocery list page.
+      const result = await importFromMealPlan(householdId, getThisMonday());
+      if (!result.success) {
+        setGroceryMsg({ text: result.error, tone: "err" });
+        return;
+      }
+      const { added, skipped } = result.data;
+      if (added === 0) {
+        setGroceryMsg({ text: "All ingredients are already on your list.", tone: "ok" });
+      } else {
+        setGroceryMsg({
+          text:
+            skipped > 0
+              ? `Added ${added} item${added !== 1 ? "s" : ""}. ${skipped} already on list.`
+              : `Added ${added} item${added !== 1 ? "s" : ""} from this week's meals.`,
+          tone: "ok",
+        });
+      }
+    });
+  }
+
   function openDetail(plan: MealPlanWithRecipe) {
     if (!plan.recipe_id) return;
     const recipeId = plan.recipe_id;
@@ -286,6 +324,41 @@ export function MealPlanCalendar({
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Send this week's planned meals to the grocery list */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <button
+            onClick={handleAddToGroceries}
+            disabled={groceryPending}
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-green-deep px-3 text-sm font-semibold text-ink-inverse shadow-xs transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {groceryPending ? (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink-inverse/40 border-t-ink-inverse" />
+            ) : (
+              <ShoppingCart size={15} />
+            )}
+            Add this week to grocery list
+          </button>
+          {groceryMsg && (
+            <span
+              className={clsx(
+                "inline-flex items-center gap-2 text-xs font-medium",
+                groceryMsg.tone === "err" ? "text-danger" : "text-green-deep"
+              )}
+              role="status"
+            >
+              {groceryMsg.text}
+              {groceryMsg.tone === "ok" && (
+                <Link
+                  href={`/app/books/${bookId}/groceries`}
+                  className="underline underline-offset-2 hover:opacity-80"
+                >
+                  View list
+                </Link>
+              )}
+            </span>
+          )}
         </div>
       </div>
 
