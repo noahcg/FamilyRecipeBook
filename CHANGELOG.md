@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-05-28
+
+### Grocery list from the meal plan
+- Added an **Add to grocery list** button to the meal plan header that pulls this week's planned meals' ingredients straight onto the grocery list — the same import the grocery page already offered, now available where you actually plan. It always targets the **current calendar week** (regardless of the week on screen), de-dupes against items already on the list, and shows inline feedback with a **View list** link.
+- New opt-in setting under **Settings → Grocery List → "Label ingredients by day"**: when on, ingredients brought over from the meal plan are tagged with the weekday(s) they were planned for and shown as a small badge on the list — e.g. ground beef for Monday and Thursday dinners appears as **Mon, Thu**. Days are **unioned across every recipe** that uses the ingredient, ordered Monday-first.
+- The label preference is read **at import time** (not retroactive) and applies to both import entry points (meal plan button and the grocery page's import).
+- Migration `015_grocery_meal_day_labels.sql` adds `user_settings.grocery_meal_day_labels` (per-user toggle, default off) and `grocery_items.meal_days` (`text[]`). Both are columns on existing tables, so no new Data API grants are required.
+
 ## 2026-05-27
 
 ### Custom chapter categories

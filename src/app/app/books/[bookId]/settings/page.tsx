@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { SettingsPageContent } from "@/components/settings/SettingsPageContent";
 import { getAISettings } from "@/lib/actions/aiSettings";
+import { getGroceryDayLabelPref } from "@/lib/actions/grocery";
 import { listCategories } from "@/lib/actions/categories";
 import { isAdminEmail } from "@/lib/admin";
 import { requireProfile, requireUser } from "@/lib/auth";
@@ -14,11 +15,12 @@ interface Props {
 
 export default async function BookSettingsPage({ params }: Props) {
   const { bookId } = await params;
-  const [profile, user, supabase, aiSettings] = await Promise.all([
+  const [profile, user, supabase, aiSettings, groceryDayLabels] = await Promise.all([
     requireProfile(),
     requireUser(),
     createClient(),
     getAISettings(),
+    getGroceryDayLabelPref(),
   ]);
 
   const [bookRes, bookPrefsRes, memberRes, settingsRes, sharedMemberRes, pendingInviteRes] = await Promise.all([
@@ -76,6 +78,7 @@ export default async function BookSettingsPage({ params }: Props) {
       isAdmin={isAdminEmail(user.email)}
       aiSettings={aiSettings}
       cloudflareConfigured={cloudflareConfigured}
+      groceryDayLabels={groceryDayLabels}
     />
   );
 }

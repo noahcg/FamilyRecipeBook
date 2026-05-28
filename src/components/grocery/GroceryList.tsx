@@ -476,6 +476,13 @@ function ItemRow({ item, onToggle, onDelete, isPending, compact = false }: ItemR
         {/* Future: aisle badge will go here when store integration is added */}
       </div>
 
+      {item.meal_days && item.meal_days.length > 0 && (
+        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-green-soft px-2 py-0.5 text-[10px] font-semibold text-green-deep">
+          <CalendarDays size={10} />
+          {item.meal_days.map((d) => d.slice(0, 3)).join(", ")}
+        </span>
+      )}
+
       <button
         onClick={onDelete}
         disabled={isPending}
