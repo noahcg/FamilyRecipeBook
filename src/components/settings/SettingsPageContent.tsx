@@ -8,6 +8,7 @@ import { RenameBookForm } from "@/components/book/RenameBookForm";
 import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
+import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
 import { signOut } from "@/lib/actions/auth";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
@@ -32,6 +33,7 @@ interface SettingsPageContentProps {
     ai_api_key: string | null;
   };
   cloudflareConfigured: boolean;
+  groceryDayLabels: boolean;
 }
 
 function SettingsSection({
@@ -87,6 +89,7 @@ export function SettingsPageContent({
   isAdmin,
   aiSettings,
   cloudflareConfigured,
+  groceryDayLabels,
 }: SettingsPageContentProps) {
   return (
     <AppShell bookId={bookId} bookTitle={bookTitle}>
@@ -190,6 +193,13 @@ export function SettingsPageContent({
             </div>
           </SettingsSection>
         )}
+
+        <SettingsSection
+          title="Grocery List"
+          description="How ingredients you bring over from the meal plan appear on your grocery list."
+        >
+          <GroceryPreferencesForm dayLabelsEnabled={groceryDayLabels} />
+        </SettingsSection>
 
         <SettingsSection
           title="Recipe AI"

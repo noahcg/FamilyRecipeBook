@@ -338,7 +338,7 @@ export function MealPlanCalendar({
             ) : (
               <ShoppingCart size={15} />
             )}
-            Add this week to grocery list
+            Add to grocery list
           </button>
           {groceryMsg && (
             <span

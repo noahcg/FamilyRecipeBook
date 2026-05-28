@@ -35,6 +35,57 @@ function inferCategory(itemName: string): string {
   return "Other";
 }
 
+// ─── Weekday helpers (meal-plan day labels) ───────────────────
+// Date.getDay() is 0=Sunday..6=Saturday. We display/order weeks
+// Monday-first, matching the meal plan calendar.
+
+const WEEKDAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+function weekdayName(dateStr: string): string {
+  return WEEKDAY_NAMES[new Date(dateStr + "T00:00:00").getDay()];
+}
+
+function weekdayOrder(name: string): number {
+  const sundayIndex = WEEKDAY_NAMES.indexOf(name); // 0=Sun..6=Sat
+  return (sundayIndex + 6) % 7; // 0=Mon..6=Sun
+}
+
+function sortWeekdays(names: Iterable<string>): string[] {
+  return [...new Set(names)].sort((a, b) => weekdayOrder(a) - weekdayOrder(b));
+}
+
+// ─── Per-user grocery preferences ─────────────────────────────
+
+export async function getGroceryDayLabelPref(): Promise<boolean> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("user_settings")
+    .select("grocery_meal_day_labels")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  // Column absent (migration 015 not applied) or no row → default off.
+  if (error) return false;
+  return data?.grocery_meal_day_labels ?? false;
+}
+
+export async function setGroceryDayLabelPref(
+  enabled: boolean
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("user_settings")
+    .upsert(
+      { user_id: user.id, grocery_meal_day_labels: enabled },
+      { onConflict: "user_id" }
+    );
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: undefined };
+}
+
 // ─── Queries ─────────────────────────────────────────────────
 
 export async function getGroceryItems(householdId: string): Promise<GroceryItem[]> {
@@ -302,7 +353,7 @@ export async function importFromMealPlan(
 
   const { data: plans } = await supabase
     .from("meal_plans")
-    .select("recipe_id")
+    .select("recipe_id, planned_date")
     .eq("household_id", householdId)
     .gte("planned_date", weekStart)
     .lte("planned_date", weekEndStr)
@@ -312,7 +363,16 @@ export async function importFromMealPlan(
     return { success: false, error: "No recipes are planned for this week." };
   }
 
-  const recipeIds = [...new Set(plans.map((p) => p.recipe_id as string))];
+  // Map each recipe to the weekday(s) it's planned on this week. A recipe can
+  // appear on several days/slots, so collect them all.
+  const recipeDays = new Map<string, Set<string>>();
+  for (const p of plans) {
+    const rid = p.recipe_id as string;
+    if (!recipeDays.has(rid)) recipeDays.set(rid, new Set());
+    recipeDays.get(rid)!.add(weekdayName(p.planned_date as string));
+  }
+
+  const recipeIds = [...recipeDays.keys()];
 
   // Fetch all ingredients for those recipes
   const { data: ingredients } = await supabase
@@ -336,32 +396,51 @@ export async function importFromMealPlan(
     (existing ?? []).map((e) => e.name.toLowerCase().trim())
   );
 
-  // De-duplicate ingredients by name (case-insensitive), skip already listed
-  const seen = new Set<string>();
-  const toInsert: {
-    household_id: string;
-    name: string;
-    quantity: string | null;
-    unit: string | null;
-    category: string;
-    recipe_id: string;
-    created_by: string;
-  }[] = [];
+  // Only attach day labels if the importing user has opted in. When off we omit
+  // the column entirely so imports still work on DBs without migration 015.
+  const labelsOn = await getGroceryDayLabelPref();
+
+  // De-duplicate ingredients by name (case-insensitive), skip already listed.
+  // For each kept ingredient, union the weekdays of every recipe it appears in.
+  const seen = new Map<
+    string,
+    {
+      name: string;
+      quantity: string | null;
+      unit: string | null;
+      recipe_id: string;
+      days: Set<string>;
+    }
+  >();
 
   for (const ing of ingredients) {
     const key = ing.item.toLowerCase().trim();
-    if (seen.has(key) || existingNames.has(key)) continue;
-    seen.add(key);
-    toInsert.push({
-      household_id: householdId,
-      name: ing.item,
-      quantity: ing.quantity || null,
-      unit: ing.unit || null,
-      category: inferCategory(ing.item),
-      recipe_id: ing.recipe_id as string,
-      created_by: user.id,
-    });
+    if (existingNames.has(key)) continue;
+    const days = recipeDays.get(ing.recipe_id as string);
+    const entry = seen.get(key);
+    if (!entry) {
+      seen.set(key, {
+        name: ing.item,
+        quantity: ing.quantity || null,
+        unit: ing.unit || null,
+        recipe_id: ing.recipe_id as string,
+        days: new Set(days),
+      });
+    } else if (days) {
+      for (const d of days) entry.days.add(d);
+    }
   }
+
+  const toInsert = [...seen.values()].map((e) => ({
+    household_id: householdId,
+    name: e.name,
+    quantity: e.quantity,
+    unit: e.unit,
+    category: inferCategory(e.name),
+    recipe_id: e.recipe_id,
+    created_by: user.id,
+    ...(labelsOn ? { meal_days: e.days.size > 0 ? sortWeekdays(e.days) : null } : {}),
+  }));
 
   const skipped = ingredients.length - toInsert.length;
 

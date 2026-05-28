@@ -179,6 +179,9 @@ export interface GroceryItem {
   sort_order: number | null;
   notes: string | null;
   recipe_id: string | null;
+  // Full weekday names this item was planned for (meal-plan import, opt-in).
+  // Optional: absent when the 015 migration hasn't been applied.
+  meal_days?: string[] | null;
   checked: boolean;
   checked_by: string | null;
   checked_at: string | null;
