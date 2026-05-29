@@ -185,10 +185,16 @@ export async function acceptInvitation(token: string): Promise<ActionResult<{ bo
     };
   }
 
-  // Add user to book_members via service role (user may not yet be a member)
+  // Add user to book_members via service role (user may not yet be a member).
+  // onConflict targets the (book_id, user_id) unique constraint — without it,
+  // supabase-js upserts against the primary key (id), so re-accepting an invite
+  // for an existing membership throws a duplicate-key error instead of updating.
   const { error: memberError } = await admin
     .from("book_members")
-    .upsert({ book_id: invitation.book_id, user_id: user.id, role: invitation.role });
+    .upsert(
+      { book_id: invitation.book_id, user_id: user.id, role: invitation.role },
+      { onConflict: "book_id,user_id" }
+    );
 
   if (memberError) {
     return { success: false, error: memberError.message };
