@@ -72,7 +72,7 @@ export function BookshelfGrid({ books, defaultBookId, userId }: Props) {
           return (
             <div
               key={book.id}
-              className="recipe-card group relative flex items-start gap-3 p-4 sm:gap-4"
+              className="recipe-card recipe-card--interactive group relative flex items-start gap-3 p-4 sm:gap-4"
             >
               {/* Full-card link navigates into the book */}
               <Link
