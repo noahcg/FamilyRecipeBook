@@ -6,6 +6,6 @@ export default async function AppPage() {
   if (bookId) {
     redirect(`/app/books/${bookId}`);
   } else {
-    redirect("/onboarding/create-book");
+    redirect("/onboarding");
   }
 }

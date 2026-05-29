@@ -28,8 +28,11 @@ import { listOfflineRecipes, OFFLINE_RECIPES_CHANGED_EVENT } from "@/lib/offline
 
 interface AppShellProps {
   children: React.ReactNode;
-  bookId: string;
+  bookId?: string;
   bookTitle?: string;
+  // Onboarding mode: keep the shell chrome but hide navigation so a user
+  // without a book can't wander into the app before finishing onboarding.
+  lockNav?: boolean;
   mobileSideDrawer?: {
     label: string;
     ariaLabel: string;
@@ -78,18 +81,18 @@ function isActiveNavItem(pathname: string, href: string, id?: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) {
+export function AppShell({ children, bookId, lockNav = false, mobileSideDrawer }: AppShellProps) {
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLDivElement>(null);
   const mobileNavItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [hasOfflineRecipes, setHasOfflineRecipes] = useState(false);
   const { userId } = useUser();
   const { isAdmin } = useBook();
-  const navItems = NAV(bookId, hasOfflineRecipes);
+  const navItems = NAV(bookId ?? "", hasOfflineRecipes);
   const activeMobileNavId = navItems.find(({ id, href }) => isActiveNavItem(pathname, href, id))?.id;
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !bookId || lockNav) return;
 
     let active = true;
     const currentUserId = userId;
@@ -110,7 +113,7 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
       active = false;
       window.removeEventListener(OFFLINE_RECIPES_CHANGED_EVENT, refreshOfflineState);
     };
-  }, [bookId, userId]);
+  }, [bookId, userId, lockNav]);
 
   useEffect(() => {
     if (!activeMobileNavId) return;
@@ -135,36 +138,38 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
       <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[280px] overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
-        <Link href={`/app/books/${bookId}`} className="shrink-0 px-7 pb-7 pt-7">
+        <Link href={bookId ? `/app/books/${bookId}` : "/onboarding"} className="shrink-0 px-7 pb-7 pt-7">
           <BrandLockup compact />
         </Link>
 
-        <nav aria-label="Primary navigation" className="shrink-0 px-6">
-          <div className="space-y-2.5">
-            {DESKTOP_NAV(bookId, hasOfflineRecipes).map(({ id, href, icon: Icon, label }) => {
-              const isActive = isActiveNavItem(pathname, href, id);
-              return (
-                <Link
-                  key={label}
-                  href={href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={clsx(
-                    "flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
-                    isActive
-                      ? "bg-green-soft/70 text-green-deep shadow-xs"
-                      : "text-ink hover:bg-green-soft/55 hover:text-green-deep"
-                  )}
-                >
-                  <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
-                  <span className="min-w-0 flex-1 truncate">{label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
+        {!lockNav && bookId && (
+          <nav aria-label="Primary navigation" className="shrink-0 px-6">
+            <div className="space-y-2.5">
+              {DESKTOP_NAV(bookId, hasOfflineRecipes).map(({ id, href, icon: Icon, label }) => {
+                const isActive = isActiveNavItem(pathname, href, id);
+                return (
+                  <Link
+                    key={label}
+                    href={href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={clsx(
+                      "flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
+                      isActive
+                        ? "bg-green-soft/70 text-green-deep shadow-xs"
+                        : "text-ink hover:bg-green-soft/55 hover:text-green-deep"
+                    )}
+                  >
+                    <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
+                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        )}
 
         <div className="mt-6 shrink-0 border-t border-line-soft p-5">
-          {isAdmin && (
+          {!lockNav && isAdmin && (
             <Link
               href="/app/admin"
               className="mb-1 flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-semibold text-accent-cinnamon transition-colors hover:bg-accent-honey/20 hover:text-accent-terracotta-dark"
@@ -173,19 +178,21 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
               <span>Admin</span>
             </Link>
           )}
-          <Link
-            href={`/app/books/${bookId}/settings`}
-            aria-current={isActiveNavItem(pathname, `/app/books/${bookId}/settings`, "settings") ? "page" : undefined}
-            className={clsx(
-              "flex min-h-12 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors hover:bg-card/70",
-              isActiveNavItem(pathname, `/app/books/${bookId}/settings`, "settings")
-                ? "bg-green-soft/70 text-green-deep shadow-xs"
-                : "text-ink"
-            )}
-          >
-            <Settings size={18} className="shrink-0" />
-            <span>Settings</span>
-          </Link>
+          {!lockNav && bookId && (
+            <Link
+              href={`/app/books/${bookId}/settings`}
+              aria-current={isActiveNavItem(pathname, `/app/books/${bookId}/settings`, "settings") ? "page" : undefined}
+              className={clsx(
+                "flex min-h-12 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors hover:bg-card/70",
+                isActiveNavItem(pathname, `/app/books/${bookId}/settings`, "settings")
+                  ? "bg-green-soft/70 text-green-deep shadow-xs"
+                  : "text-ink"
+              )}
+            >
+              <Settings size={18} className="shrink-0" />
+              <span>Settings</span>
+            </Link>
+          )}
           <form action={signOut}>
             <button
               type="submit"
@@ -268,6 +275,8 @@ export function AppShell({ children, bookId, mobileSideDrawer }: AppShellProps) 
         >
           {navItems.map(({ id, href, icon: Icon, label, isLogout }) => {
             const isActive = isActiveNavItem(pathname, href, id);
+
+            if (lockNav && !isLogout) return null;
 
             if (isLogout) {
               return (
