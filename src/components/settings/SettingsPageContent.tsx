@@ -252,7 +252,7 @@ export function SettingsPageContent({
           >
             <Link
               href="/app/admin"
-              className="recipe-card flex items-center gap-3 p-5 text-accent-cinnamon transition-colors hover:bg-accent-honey/15"
+              className="recipe-card recipe-card--interactive flex items-center gap-3 p-5 text-accent-cinnamon transition-colors hover:bg-accent-honey/15"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent-honey/20 text-accent-cinnamon">
                 <ShieldCheck size={20} />

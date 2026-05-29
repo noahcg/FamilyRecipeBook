@@ -35,7 +35,7 @@ function RecipeCard({
   return (
     <article
       className={clsx(
-        "recipe-card overflow-hidden cursor-pointer group",
+        "recipe-card recipe-card--interactive overflow-hidden group",
         className
       )}
       onClick={onClick}

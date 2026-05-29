@@ -340,7 +340,12 @@ select:focus-visible {
     0 8px 24px rgba(75, 53, 31, 0.075);
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
 }
-.recipe-card:hover {
+/* Hover lift is reserved for cards that are actually clickable. Add the
+   recipe-card--interactive modifier to opt a card into this affordance. */
+.recipe-card--interactive {
+  cursor: pointer;
+}
+.recipe-card--interactive:hover {
   transform: translateY(-2px);
   border-color: rgba(139, 168, 136, 0.44);
   box-shadow:
