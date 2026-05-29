@@ -49,11 +49,11 @@ export default async function CreateBookPage() {
     <div className="px-4 py-8 sm:px-5 lg:px-8">
       <div className="mb-7 border-b border-line-soft pb-6">
         <Link
-          href={navBookId ? "/app/cookbooks" : "/app"}
+          href={navBookId ? "/app/cookbooks" : "/onboarding"}
           className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
         >
           <ArrowLeft size={14} strokeWidth={2} />
-          Cookbooks
+          {navBookId ? "Cookbooks" : "Back"}
         </Link>
         <h1
           className="text-3xl font-bold leading-tight text-green-deep"
@@ -97,7 +97,7 @@ export default async function CreateBookPage() {
   );
 
   if (!navBookId) {
-    return <div className="app-paper-bg paper-texture min-h-dvh">{content}</div>;
+    return <AppShell lockNav>{content}</AppShell>;
   }
 
   return <AppShell bookId={navBookId}>{content}</AppShell>;

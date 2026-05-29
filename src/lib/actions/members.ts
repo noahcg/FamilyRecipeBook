@@ -205,6 +205,54 @@ export async function acceptInvitation(token: string): Promise<ActionResult<{ bo
   return { success: true, data: { bookId: invitation.book_id } };
 }
 
+export interface OnboardingInvitation {
+  token: string;
+  book_id: string;
+  cookbook_title: string;
+  role: BookInvitation["role"];
+  invited_by_name: string | null;
+}
+
+// Pending invitations addressed to the signed-in user's email, surfaced at
+// onboarding so a new user can join instead of being forced to create a book.
+// RLS only lets keepers read book_invitations, so this uses the service client.
+export async function getPendingInvitationsForCurrentUser(): Promise<
+  OnboardingInvitation[]
+> {
+  const user = await getUser();
+  if (!user?.email) return [];
+
+  const admin = createServiceClient();
+  const { data } = await admin
+    .from("book_invitations")
+    .select(
+      "token, book_id, role, created_at, recipe_books(title), inviter:profiles!book_invitations_invited_by_fkey(full_name)"
+    )
+    .eq("email", user.email.toLowerCase())
+    .is("accepted_at", null)
+    .gte("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+
+  if (!data) return [];
+
+  const seen = new Set<string>();
+  const invitations: OnboardingInvitation[] = [];
+  for (const row of data) {
+    if (seen.has(row.book_id)) continue;
+    seen.add(row.book_id);
+    const cookbook = (row.recipe_books ?? null) as { title?: string } | null;
+    const inviter = (row.inviter ?? null) as { full_name?: string | null } | null;
+    invitations.push({
+      token: row.token,
+      book_id: row.book_id,
+      cookbook_title: cookbook?.title ?? "this cookbook",
+      role: row.role,
+      invited_by_name: getInviteDisplayName(inviter?.full_name),
+    });
+  }
+  return invitations;
+}
+
 export async function getBookMembers(bookId: string): Promise<MemberWithProfile[]> {
   const supabase = await createClient();
   const { data } = await supabase
