@@ -15,6 +15,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState, Button } from "@/components/ui";
 import { BookName } from "@/components/book/BookName";
 import { createClient } from "@/lib/supabase/client";
+import { canContribute, canManageBook, canManageMembers } from "@/lib/permissions";
+import type { BookRole } from "@/lib/types";
 
 interface Props {
   params: Promise<{ bookId: string }>;
@@ -133,6 +135,7 @@ export default function RecipesPage({ params }: Props) {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [memberCount, setMemberCount] = useState(0);
+  const [userRole, setUserRole] = useState<BookRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
 
@@ -164,15 +167,25 @@ export default function RecipesPage({ params }: Props) {
         memberCountRequest,
       ]);
       let favoriteRows: FavoriteRow[] = [];
+      let nextUserRole: BookRole | null = null;
 
       const user = userRes.data.user;
       if (user) {
-        const favoritesRes = await supabase
-          .from("recipe_reactions")
-          .select("recipe_id")
-          .eq("user_id", user.id)
-          .eq("type", "favorite");
+        const [favoritesRes, memberRes] = await Promise.all([
+          supabase
+            .from("recipe_reactions")
+            .select("recipe_id")
+            .eq("user_id", user.id)
+            .eq("type", "favorite"),
+          supabase
+            .from("book_members")
+            .select("role")
+            .eq("book_id", bookId)
+            .eq("user_id", user.id)
+            .maybeSingle(),
+        ]);
         favoriteRows = (favoritesRes.data ?? []) as FavoriteRow[];
+        nextUserRole = (memberRes.data?.role ?? null) as BookRole | null;
       }
 
       if (!active) return;
@@ -189,12 +202,14 @@ export default function RecipesPage({ params }: Props) {
       setRecipes(nextRecipes);
       setFavoriteIds(new Set(favoriteRows.map((row) => row.recipe_id)));
       setMemberCount(memberCountRes.count ?? 0);
+      setUserRole(nextUserRole);
       setLoading(false);
     }
 
     loadRecipes().catch(() => {
       if (active) {
         setMemberCount(0);
+        setUserRole(null);
         setLoading(false);
       }
     });
@@ -239,6 +254,10 @@ export default function RecipesPage({ params }: Props) {
   const activeFilterDetails = activeFilter ? PRACTICAL_FILTERS[activeFilter] : null;
   const recipeSummary = `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`;
   const memberSummary = `${memberCount} ${memberCount === 1 ? "member" : "members"}`;
+  const canAddRecipes = canContribute(userRole);
+  const canManageBookMembers = canManageMembers(userRole);
+  const canOpenBookSettings = canManageBook(userRole) || canContribute(userRole);
+  const toolbarActionCount = [canAddRecipes, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
 
   function closeContents() {
     setIsContentsOpen(false);
@@ -347,23 +366,38 @@ export default function RecipesPage({ params }: Props) {
                 />
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3 lg:flex lg:w-auto lg:shrink-0">
-                <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
-                  <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
-                    <Plus size={17} /> Add Recipe
-                  </Button>
-                </Link>
-                <Link href={`/app/books/${bookId}/members`} className="min-w-0">
-                  <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
-                    <Users size={17} /> Manage Members
-                  </Button>
-                </Link>
-                <Link href={`/app/books/${bookId}/settings`} className="min-w-0">
-                  <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
-                    <Settings size={17} /> Book Settings
-                  </Button>
-                </Link>
-              </div>
+              {toolbarActionCount > 0 && (
+                <div
+                  className={[
+                    toolbarActionCount === 1 ? "sm:grid-cols-1" : "",
+                    toolbarActionCount === 2 ? "sm:grid-cols-2" : "",
+                    toolbarActionCount >= 3 ? "sm:grid-cols-3" : "",
+                    "grid gap-3 lg:flex lg:w-auto lg:shrink-0",
+                  ].join(" ")}
+                >
+                  {canAddRecipes && (
+                    <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
+                      <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                        <Plus size={17} /> Add Recipe
+                      </Button>
+                    </Link>
+                  )}
+                  {canManageBookMembers && (
+                    <Link href={`/app/books/${bookId}/members`} className="min-w-0">
+                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                        <Users size={17} /> Manage Members
+                      </Button>
+                    </Link>
+                  )}
+                  {canOpenBookSettings && (
+                    <Link href={`/app/books/${bookId}/settings`} className="min-w-0">
+                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                        <Settings size={17} /> Book Settings
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </header>
