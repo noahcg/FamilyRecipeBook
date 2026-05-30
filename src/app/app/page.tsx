@@ -227,7 +227,7 @@ export default async function AppHomePage() {
                 <Link href="/app" className="-mt-2 mb-7 block w-[8.75rem] opacity-90 lg:hidden" aria-label="Home Cooked home">
                   <Image src="/images/homecooked.svg" alt="" width={180} height={96} className="h-auto w-full" />
                 </Link>
-                <SectionEyebrow>Home Cooked</SectionEyebrow>
+                <SectionEyebrow>Your kitchen</SectionEyebrow>
                 <TimeOfDayHeadline />
 
                 <div className="mt-5 flex flex-wrap gap-2 min-[425px]:mt-7 min-[425px]:gap-2.5">

@@ -44,8 +44,6 @@ interface BookTargetRow {
   id: string;
 }
 
-type SortMode = "chapter" | "recent";
-
 const UNCATEGORIZED = "Family Notes";
 
 const PRACTICAL_FILTERS = {
@@ -107,7 +105,6 @@ export default function MyRecipesPage() {
   const activeFilter: PracticalFilter | null = isPracticalFilter(filterParam) ? filterParam : null;
   const activeFilterDetails = activeFilter ? PRACTICAL_FILTERS[activeFilter] : null;
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<SortMode>("chapter");
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [addRecipeBookId, setAddRecipeBookId] = useState<string | null>(null);
@@ -223,7 +220,7 @@ export default function MyRecipesPage() {
 
   const bookCount = useMemo(() => new Set(recipes.map((r) => r.book_id)).size, [recipes]);
   const newestRecipe = recentList[0] ?? null;
-  const showContents = !loading && filtered.length > 0 && sort === "chapter";
+  const showContents = !loading && filtered.length > 0;
   const addRecipeHref = addRecipeBookId
     ? `/app/books/${addRecipeBookId}/recipes/new`
     : "/onboarding/create-book";
@@ -359,15 +356,6 @@ export default function MyRecipesPage() {
                   </Button>
                 </Link>
               )}
-              <select
-                aria-label="Sort recipes"
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortMode)}
-                className="input-cookbook h-12 w-full text-sm sm:w-auto"
-              >
-                <option value="chapter">By chapter</option>
-                <option value="recent">Recently added</option>
-              </select>
             </div>
           </div>
         </header>
@@ -402,8 +390,6 @@ export default function MyRecipesPage() {
               ) : undefined
             }
           />
-        ) : sort === "recent" ? (
-          <ol className="divide-y divide-line-soft">{recentList.map(renderRecipeRow)}</ol>
         ) : (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
             <main className="min-w-0">
