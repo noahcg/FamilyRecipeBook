@@ -200,7 +200,7 @@ export function CookbookNavigator({
                 <X size={16} />
               </button>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-3.5">{renderList(() => setOpen(false))}</div>
+            <div className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-3.5">{renderList(() => setOpen(false))}</div>
           </div>
         </div>
       )}
