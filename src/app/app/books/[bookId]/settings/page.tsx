@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
-import { SettingsPageContent } from "@/components/settings/SettingsPageContent";
-import { getAISettings } from "@/lib/actions/aiSettings";
-import { getGroceryDayLabelPref } from "@/lib/actions/grocery";
+import { BookSettingsPageContent } from "@/components/settings/SettingsPageContent";
 import { listCategories } from "@/lib/actions/categories";
-import { isAdminEmail } from "@/lib/admin";
-import { requireProfile, requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { canContribute } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { BookRole } from "@/lib/types";
@@ -15,12 +12,9 @@ interface Props {
 
 export default async function BookSettingsPage({ params }: Props) {
   const { bookId } = await params;
-  const [profile, user, supabase, aiSettings, groceryDayLabels] = await Promise.all([
-    requireProfile(),
+  const [user, supabase] = await Promise.all([
     requireUser(),
     createClient(),
-    getAISettings(),
-    getGroceryDayLabelPref(),
   ]);
 
   const [bookRes, bookPrefsRes, memberRes, settingsRes, sharedMemberRes, pendingInviteRes] = await Promise.all([
@@ -56,14 +50,8 @@ export default async function BookSettingsPage({ params }: Props) {
   const canManageCategories = canContribute(role);
   const categories = canManageCategories ? await listCategories(bookId) : [];
 
-  const cloudflareConfigured = !!(
-    process.env.CLOUDFLARE_ACCOUNT_ID &&
-    process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN
-  );
-
   return (
-    <SettingsPageContent
-      profile={profile}
+    <BookSettingsPageContent
       bookId={bookId}
       bookTitle={bookRes.data.title}
       bookCoverStyle={bookPrefsRes.data?.cover_style ?? "sage"}
@@ -75,10 +63,6 @@ export default async function BookSettingsPage({ params }: Props) {
       isKeeper={role === "keeper"}
       canManageCategories={canManageCategories}
       categories={categories}
-      isAdmin={isAdminEmail(user.email)}
-      aiSettings={aiSettings}
-      cloudflareConfigured={cloudflareConfigured}
-      groceryDayLabels={groceryDayLabels}
     />
   );
 }

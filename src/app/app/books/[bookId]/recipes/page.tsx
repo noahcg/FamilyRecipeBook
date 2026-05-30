@@ -8,6 +8,7 @@ import {
   Heart,
   Plus,
   Search,
+  Settings,
   Users,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -346,7 +347,7 @@ export default function RecipesPage({ params }: Props) {
                 />
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:w-auto lg:shrink-0">
+              <div className="grid gap-3 sm:grid-cols-3 lg:flex lg:w-auto lg:shrink-0">
                 <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
                   <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
                     <Plus size={17} /> Add Recipe
@@ -355,6 +356,11 @@ export default function RecipesPage({ params }: Props) {
                 <Link href={`/app/books/${bookId}/members`} className="min-w-0">
                   <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
                     <Users size={17} /> Manage Members
+                  </Button>
+                </Link>
+                <Link href={`/app/books/${bookId}/settings`} className="min-w-0">
+                  <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                    <Settings size={17} /> Book Settings
                   </Button>
                 </Link>
               </div>
