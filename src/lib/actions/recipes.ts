@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
-import { resolveCategoryIdForBook } from "@/lib/actions/categories";
+import { listCategories, resolveCategoryIdForBook } from "@/lib/actions/categories";
 import {
   canContribute,
   canEditRecipe,
@@ -574,6 +574,120 @@ export async function getBookRecipes(
     photo_url: row.photo_url,
     category: row.category?.name ?? null,
   }));
+}
+
+// Uncategorized recipes group under this label across global listings, matching
+// the per-book recipes page.
+const UNCATEGORIZED_LABEL = "Family Notes";
+
+export interface CookbookCategoryNav {
+  /** null = the uncategorized ("Family Notes") bucket. */
+  id: string | null;
+  name: string;
+  count: number;
+}
+
+// Categories for one cookbook with recipe counts, plus the total. Second level
+// of the cookbook navigator. Reuses `listCategories` for ordering and appends
+// an uncategorized bucket when present.
+export async function getCookbookCategories(
+  bookId: string
+): Promise<{ total: number; categories: CookbookCategoryNav[] }> {
+  const supabase = await createClient();
+  const [categories, { data: recipeRows }] = await Promise.all([
+    listCategories(bookId),
+    supabase.from("recipes").select("category_id").eq("book_id", bookId),
+  ]);
+
+  const counts = new Map<string, number>();
+  let uncategorized = 0;
+  let total = 0;
+  for (const row of (recipeRows ?? []) as { category_id: string | null }[]) {
+    total += 1;
+    if (row.category_id) counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
+    else uncategorized += 1;
+  }
+
+  const result: CookbookCategoryNav[] = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    count: counts.get(category.id) ?? 0,
+  }));
+  if (uncategorized > 0) {
+    result.push({ id: null, name: UNCATEGORIZED_LABEL, count: uncategorized });
+  }
+
+  return { total, categories: result };
+}
+
+// Recipes within one category of a cookbook. Third level of the navigator.
+// A null categoryId targets the uncategorized bucket.
+export async function getCategoryRecipes(
+  bookId: string,
+  categoryId: string | null
+): Promise<{ id: string; title: string; photo_url: string | null; cook_minutes: number | null }[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("recipes")
+    .select("id, title, photo_url, cook_minutes")
+    .eq("book_id", bookId)
+    .order("title", { ascending: true });
+  query = categoryId ? query.eq("category_id", categoryId) : query.is("category_id", null);
+
+  const { data } = await query;
+  return (data ?? []) as {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    cook_minutes: number | null;
+  }[];
+}
+
+// Every recipe the user can see, across all their cookbooks, tagged with the
+// cookbook it lives in. RLS scopes `recipes` to the user's books. Powers the
+// global My Recipes page, the Home dashboard, and the cross-book meal-plan
+// recipe picker.
+export async function getAllUserRecipes(): Promise<
+  {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    category: string | null;
+    bookId: string;
+    bookTitle: string;
+    created_at: string;
+  }[]
+> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, photo_url, created_at, book_id, category:book_categories!recipes_category_id_fkey(name), book:recipe_books!recipes_book_id_fkey(title)"
+    )
+    .order("title", { ascending: true });
+
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    created_at: string;
+    book_id: string;
+    category: { name: string } | null;
+    book: { title: string } | { title: string }[] | null;
+  }[];
+
+  return rows.map((row) => {
+    const book = Array.isArray(row.book) ? row.book[0] : row.book;
+    return {
+      id: row.id,
+      title: row.title,
+      photo_url: row.photo_url,
+      category: row.category?.name ?? null,
+      bookId: row.book_id,
+      bookTitle: book?.title ?? "Recipe Book",
+      created_at: row.created_at,
+    };
+  });
 }
 
 export async function addRecipeStory(

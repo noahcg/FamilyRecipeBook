@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback, useEffect, useRef } from "react";
+import { useState, useTransition, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -31,6 +31,8 @@ interface Recipe {
   title: string;
   photo_url: string | null;
   category: string | null;
+  /** Present in the cross-book (global) meal planner; absent in a single book. */
+  bookId?: string;
 }
 
 interface MealPlanWithRecipe extends MealPlan {
@@ -38,7 +40,9 @@ interface MealPlanWithRecipe extends MealPlan {
 }
 
 interface Props {
-  bookId: string;
+  /** Optional: the global meal planner spans every cookbook, so there is no
+   *  single book. Per-recipe book ids resolve the recipe-detail links instead. */
+  bookId?: string;
   householdId: string;
   initialWeekStart: string;
   initialMealPlans: MealPlanWithRecipe[];
@@ -102,6 +106,13 @@ export function MealPlanCalendar({
   initialMealPlans,
   recipes,
 }: Props) {
+  // In the global planner, each recipe carries its own cookbook; map it so the
+  // detail drawer can link to the right book even though the page spans many.
+  const recipeBookById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const recipe of recipes) if (recipe.bookId) map.set(recipe.id, recipe.bookId);
+    return map;
+  }, [recipes]);
   const [weekStart, setWeekStart] = useState(initialWeekStart);
   const [mealPlans, setMealPlans] = useState<MealPlanWithRecipe[]>(initialMealPlans);
   const [isPending, startTransition] = useTransition();
@@ -351,7 +362,7 @@ export function MealPlanCalendar({
               {groceryMsg.text}
               {groceryMsg.tone === "ok" && (
                 <Link
-                  href={`/app/books/${bookId}/groceries`}
+                  href="/app/groceries"
                   className="underline underline-offset-2 hover:opacity-80"
                 >
                   View list
@@ -542,7 +553,7 @@ export function MealPlanCalendar({
       >
         {viewing && (
           <MealDetail
-            bookId={bookId}
+            bookId={(viewing.recipe_id ? recipeBookById.get(viewing.recipe_id) : undefined) ?? bookId}
             meal={viewing}
             detail={detail}
             loading={detailLoading}
@@ -629,7 +640,7 @@ function SlotCell({ meal, isToday, onAdd, onView, onRemove, isPending }: SlotCel
 // ─── Recipe detail drawer body ────────────────────────────────
 
 interface MealDetailProps {
-  bookId: string;
+  bookId?: string;
   meal: MealPlanWithRecipe;
   detail: RecipeWithRelations | null;
   loading: boolean;
@@ -639,6 +650,8 @@ interface MealDetailProps {
 
 function MealDetail({ bookId, meal, detail, loading, onRemove, isPending }: MealDetailProps) {
   const photo = detail?.photo_url ?? meal.recipe?.photo_url ?? null;
+  // The loaded recipe knows its own book; fall back to the page's book id.
+  const resolvedBookId = detail?.book_id ?? bookId;
   const totalMinutes = (detail?.prep_minutes ?? 0) + (detail?.cook_minutes ?? 0);
 
   return (
@@ -723,13 +736,15 @@ function MealDetail({ bookId, meal, detail, loading, onRemove, isPending }: Meal
 
       {/* Footer actions */}
       <div className="mt-4 flex shrink-0 items-center gap-2 border-t border-line-soft pt-4">
-        <Link
-          href={`/app/books/${bookId}/recipes/${meal.recipe_id}`}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-deep px-4 py-2.5 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90"
-        >
-          View full recipe
-          <ArrowRight size={15} />
-        </Link>
+        {resolvedBookId && (
+          <Link
+            href={`/app/books/${resolvedBookId}/recipes/${meal.recipe_id}`}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-deep px-4 py-2.5 text-sm font-semibold text-ink-inverse transition-opacity hover:opacity-90"
+          >
+            View full recipe
+            <ArrowRight size={15} />
+          </Link>
+        )}
         <button
           type="button"
           onClick={onRemove}
