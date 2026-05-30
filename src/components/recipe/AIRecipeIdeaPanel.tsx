@@ -17,6 +17,7 @@ import {
 
 interface AIRecipeIdeaPanelProps {
   bookId: string;
+  bookOptions?: { id: string; title: string }[];
   initialPrompt?: string;
   autoGenerate?: boolean;
 }
@@ -38,8 +39,23 @@ const SURPRISE_PROMPTS = [
   "A meal built mostly from pantry staples and whatever's in the fridge.",
 ];
 
-export function AIRecipeIdeaPanel({ bookId, initialPrompt, autoGenerate }: AIRecipeIdeaPanelProps) {
+export function AIRecipeIdeaPanel({
+  bookId,
+  bookOptions,
+  initialPrompt,
+  autoGenerate,
+}: AIRecipeIdeaPanelProps) {
   const router = useRouter();
+  const assignmentOptions = bookOptions?.length
+    ? bookOptions
+    : [{ id: bookId, title: "This cookbook" }];
+  const initialBookId = assignmentOptions.some((book) => book.id === bookId)
+    ? bookId
+    : assignmentOptions[0]?.id ?? bookId;
+  const [selectedBookId, setSelectedBookId] = useState(initialBookId);
+  const resolvedBookId = assignmentOptions.some((book) => book.id === selectedBookId)
+    ? selectedBookId
+    : initialBookId;
   const [prompt, setPrompt] = useState(initialPrompt ?? "");
   const [idea, setIdea] = useState<AIRecipeIdea | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +68,7 @@ export function AIRecipeIdeaPanel({ bookId, initialPrompt, autoGenerate }: AIRec
     setPrompt(nextPrompt);
     setError(null);
     startGenerating(async () => {
-      const result = await generateRecipeIdea(trimmed, bookId);
+      const result = await generateRecipeIdea(trimmed, resolvedBookId);
       if (!result.success) {
         setError(result.error);
         return;
@@ -65,12 +81,12 @@ export function AIRecipeIdeaPanel({ bookId, initialPrompt, autoGenerate }: AIRec
     if (!idea) return;
     setError(null);
     startSaving(async () => {
-      const result = await saveRecipeIdea(bookId, idea);
+      const result = await saveRecipeIdea(resolvedBookId, idea);
       if (!result.success) {
         setError(result.error);
         return;
       }
-      router.push(`/app/books/${bookId}/recipes/${result.data.id}`);
+      router.push(`/app/books/${resolvedBookId}/recipes/${result.data.id}`);
     });
   }
 
@@ -126,6 +142,26 @@ export function AIRecipeIdeaPanel({ bookId, initialPrompt, autoGenerate }: AIRec
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
             />
+
+            {assignmentOptions.length > 1 && (
+              <div className="mt-4">
+                <label htmlFor="idea-book" className="mb-2 block text-sm font-semibold text-ink">
+                  Save to cookbook
+                </label>
+                <select
+                  id="idea-book"
+                  value={resolvedBookId}
+                  onChange={(event) => setSelectedBookId(event.target.value)}
+                  className="input-cookbook h-12 w-full text-sm"
+                >
+                  {assignmentOptions.map((book) => (
+                    <option key={book.id} value={book.id}>
+                      {book.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {error && (
               <p className="mt-3 rounded-md border border-danger/20 bg-card-muted px-3 py-2 text-sm font-semibold text-danger">

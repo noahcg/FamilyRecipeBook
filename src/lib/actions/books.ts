@@ -258,6 +258,49 @@ export async function getUserBooks(): Promise<RecipeBook[]> {
   return data ?? [];
 }
 
+export interface CookbookNavItem {
+  id: string;
+  title: string;
+  icon: string;
+  cover_style: string;
+  recipeCount: number;
+}
+
+// Books the user belongs to (each with its recipe count) plus their active
+// (default) cookbook. Powers the cascading "Cookbooks" navigator in the left
+// rail. RLS scopes the queries to the user.
+export async function getCookbookNavData(): Promise<{
+  books: CookbookNavItem[];
+  defaultBookId: string | null;
+}> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const [books, { data: recipeRows }, { data: settings }] = await Promise.all([
+    getUserBooks(),
+    supabase.from("recipes").select("book_id"),
+    supabase.from("user_settings").select("default_book_id").eq("user_id", user.id).maybeSingle(),
+  ]);
+
+  const counts = new Map<string, number>();
+  for (const row of (recipeRows ?? []) as { book_id: string }[]) {
+    counts.set(row.book_id, (counts.get(row.book_id) ?? 0) + 1);
+  }
+
+  const defaultBookId = settings?.default_book_id ?? null;
+  const navBooks: CookbookNavItem[] = books.map((book) => ({
+    id: book.id,
+    title: book.title,
+    icon: book.icon,
+    cover_style: book.cover_style,
+    recipeCount: counts.get(book.id) ?? 0,
+  }));
+
+  return {
+    books: navBooks,
+    defaultBookId: navBooks.some((b) => b.id === defaultBookId) ? defaultBookId : null,
+  };
+}
+
 // High-level summary of a book the user belongs to, used to "peek inside"
 // from the cookbook shelf without switching over to it.
 export async function getBookPreview(bookId: string): Promise<BookPreview | null> {
@@ -339,7 +382,7 @@ export async function deleteBook(bookId: string): Promise<ActionResult> {
   const { error } = await supabase.from("recipe_books").delete().eq("id", bookId);
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/app/cookbooks");
+  revalidatePath("/app");
   return { success: true, data: undefined };
 }
 

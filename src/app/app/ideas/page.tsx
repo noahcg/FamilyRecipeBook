@@ -1,21 +1,28 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { AIRecipeIdeaPanel } from "@/components/recipe/AIRecipeIdeaPanel";
+import { getFirstBookId } from "@/lib/actions/books";
 import { getRecipeAssignmentOptions } from "@/lib/actions/recipes";
 import { canContribute } from "@/lib/permissions";
 
 interface Props {
-  params: Promise<{ bookId: string }>;
   searchParams: Promise<{ prompt?: string; surprise?: string }>;
 }
 
-export default async function RecipeIdeasPage({ params, searchParams }: Props) {
-  const { bookId } = await params;
+export default async function IdeasPage({ searchParams }: Props) {
   const { prompt, surprise } = await searchParams;
-  const bookOptions = await getRecipeAssignmentOptions();
+  // Ideas are account-level; generated recipes save into the active (default)
+  // cookbook. The app layout guarantees the user has at least one book.
+  const [bookId, bookOptions] = await Promise.all([
+    getFirstBookId(),
+    getRecipeAssignmentOptions(),
+  ]);
+  if (!bookId) redirect("/onboarding");
   const contributableBooks = bookOptions.filter((book) => canContribute(book.role));
+  if (contributableBooks.length === 0) redirect("/onboarding");
 
   return (
-    <AppShell bookId={bookId}>
+    <AppShell>
       <AIRecipeIdeaPanel
         bookId={bookId}
         bookOptions={contributableBooks}

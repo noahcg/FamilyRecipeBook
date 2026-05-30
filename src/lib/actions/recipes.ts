@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
-import { resolveCategoryIdForBook } from "@/lib/actions/categories";
+import { listCategories, resolveCategoryIdForBook } from "@/lib/actions/categories";
 import {
   canContribute,
   canEditRecipe,
@@ -25,9 +25,17 @@ import type {
   RecipeTransferTarget,
   RecipeWithRelations,
 } from "@/lib/types";
+import type { BookCategory } from "@/lib/actions/categories";
 
 const RECIPE_SELECT_WITH_CATEGORY =
   "*, category:book_categories!recipes_category_id_fkey(id, name)";
+
+export interface RecipeAssignmentOption {
+  id: string;
+  title: string;
+  role: BookRole;
+  categories: BookCategory[];
+}
 
 async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, bookId: string, userId: string) {
   const { data } = await supabase
@@ -252,6 +260,42 @@ export async function getRecipeTransferTargets(
     targets.push({ id: book.id, title: book.title, role: row.role });
   }
   return targets.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+export async function getRecipeAssignmentOptions(): Promise<RecipeAssignmentOption[]> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("book_members")
+    .select("role, book:recipe_books(id, title)")
+    .eq("user_id", user.id);
+
+  const rows = (data ?? []) as unknown as {
+    role: BookRole;
+    book: { id: string; title: string } | { id: string; title: string }[] | null;
+  }[];
+
+  const books = rows
+    .map((row) => {
+      const book = Array.isArray(row.book) ? row.book[0] : row.book;
+      return book ? { id: book.id, title: book.title, role: row.role } : null;
+    })
+    .filter((book): book is { id: string; title: string; role: BookRole } => Boolean(book))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  const categoriesByBook = await Promise.all(
+    books.map(async (book) => ({
+      bookId: book.id,
+      categories: await listCategories(book.id),
+    }))
+  );
+  const categoryMap = new Map(categoriesByBook.map((entry) => [entry.bookId, entry.categories]));
+
+  return books.map((book) => ({
+    ...book,
+    categories: categoryMap.get(book.id) ?? [],
+  }));
 }
 
 // Duplicate a recipe (and everything attached to it — ingredients,
@@ -574,6 +618,169 @@ export async function getBookRecipes(
     photo_url: row.photo_url,
     category: row.category?.name ?? null,
   }));
+}
+
+// Uncategorized recipes group under this label across global listings, matching
+// the per-book recipes page.
+const UNCATEGORIZED_LABEL = "Family Notes";
+
+export interface CookbookCategoryNav {
+  /** null = the uncategorized ("Family Notes") bucket. */
+  id: string | null;
+  name: string;
+  count: number;
+}
+
+// Categories for one cookbook with recipe counts, plus the total. Second level
+// of the cookbook navigator. Reuses `listCategories` for ordering and appends
+// an uncategorized bucket when present.
+export async function getCookbookCategories(
+  bookId: string
+): Promise<{ total: number; categories: CookbookCategoryNav[] }> {
+  const supabase = await createClient();
+  const [categories, { data: recipeRows }] = await Promise.all([
+    listCategories(bookId),
+    supabase.from("recipes").select("category_id").eq("book_id", bookId),
+  ]);
+
+  const counts = new Map<string, number>();
+  let uncategorized = 0;
+  let total = 0;
+  for (const row of (recipeRows ?? []) as { category_id: string | null }[]) {
+    total += 1;
+    if (row.category_id) counts.set(row.category_id, (counts.get(row.category_id) ?? 0) + 1);
+    else uncategorized += 1;
+  }
+
+  const result: CookbookCategoryNav[] = categories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    count: counts.get(category.id) ?? 0,
+  }));
+  if (uncategorized > 0) {
+    result.push({ id: null, name: UNCATEGORIZED_LABEL, count: uncategorized });
+  }
+
+  return { total, categories: result };
+}
+
+// Recipes within one category of a cookbook. Third level of the navigator.
+// A null categoryId targets the uncategorized bucket.
+export async function getCategoryRecipes(
+  bookId: string,
+  categoryId: string | null
+): Promise<{ id: string; title: string; photo_url: string | null; cook_minutes: number | null }[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("recipes")
+    .select("id, title, photo_url, cook_minutes")
+    .eq("book_id", bookId)
+    .order("title", { ascending: true });
+  query = categoryId ? query.eq("category_id", categoryId) : query.is("category_id", null);
+
+  const { data } = await query;
+  return (data ?? []) as {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    cook_minutes: number | null;
+  }[];
+}
+
+// Every recipe the user can see, across all their cookbooks, tagged with the
+// cookbook it lives in. RLS scopes `recipes` to the user's books. Powers the
+// global My Recipes page, the Home dashboard, and the cross-book meal-plan
+// recipe picker.
+export async function getAllUserRecipes(): Promise<
+  {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    category: string | null;
+    bookId: string;
+    bookTitle: string;
+    created_at: string;
+  }[]
+> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, photo_url, created_at, book_id, category:book_categories!recipes_category_id_fkey(name), book:recipe_books!recipes_book_id_fkey(title)"
+    )
+    .order("title", { ascending: true });
+
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    title: string;
+    photo_url: string | null;
+    created_at: string;
+    book_id: string;
+    category: { name: string } | null;
+    book: { title: string } | { title: string }[] | null;
+  }[];
+
+  return rows.map((row) => {
+    const book = Array.isArray(row.book) ? row.book[0] : row.book;
+    return {
+      id: row.id,
+      title: row.title,
+      photo_url: row.photo_url,
+      category: row.category?.name ?? null,
+      bookId: row.book_id,
+      bookTitle: book?.title ?? "Recipe Book",
+      created_at: row.created_at,
+    };
+  });
+}
+
+// The most recent recipes the signed-in user has personally added, across every
+// cookbook. Powers the global Home dashboard's featured / continue-cooking cards.
+export async function getAccountRecentRecipes(limit = 6): Promise<
+  {
+    id: string;
+    title: string;
+    description: string | null;
+    photo_url: string | null;
+    bookId: string;
+    bookTitle: string;
+    created_at: string;
+  }[]
+> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, description, photo_url, created_at, book_id, book:recipe_books!recipes_book_id_fkey(title)"
+    )
+    .eq("created_by", user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    title: string;
+    description: string | null;
+    photo_url: string | null;
+    created_at: string;
+    book_id: string;
+    book: { title: string } | { title: string }[] | null;
+  }[];
+
+  return rows.map((row) => {
+    const book = Array.isArray(row.book) ? row.book[0] : row.book;
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      photo_url: row.photo_url,
+      bookId: row.book_id,
+      bookTitle: book?.title ?? "Recipe Book",
+      created_at: row.created_at,
+    };
+  });
 }
 
 export async function addRecipeStory(

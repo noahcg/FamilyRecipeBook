@@ -4,11 +4,11 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
-import { getRecipe } from "@/lib/actions/recipes";
+import { getRecipe, getRecipeAssignmentOptions } from "@/lib/actions/recipes";
 import { listCategories } from "@/lib/actions/categories";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { canEditRecipe } from "@/lib/permissions";
+import { canContribute, canEditRecipe, canManageBook } from "@/lib/permissions";
 
 interface Props {
   params: Promise<{ bookId: string; recipeId: string }>;
@@ -19,7 +19,7 @@ export default async function EditRecipePage({ params }: Props) {
   const user = await requireUser();
 
   const supabase = await createClient();
-  const [recipe, memberRes, categories] = await Promise.all([
+  const [recipe, memberRes, categories, bookOptions] = await Promise.all([
     getRecipe(recipeId),
     supabase
       .from("book_members")
@@ -28,12 +28,17 @@ export default async function EditRecipePage({ params }: Props) {
       .eq("user_id", user.id)
       .single(),
     listCategories(bookId),
+    getRecipeAssignmentOptions(),
   ]);
 
   if (!recipe || recipe.book_id !== bookId) notFound();
 
   const userRole = memberRes.data?.role ?? null;
-  if (!canEditRecipe(userRole as import("@/lib/types").BookRole | null, recipe.created_by === user.id)) notFound();
+  const isCreator = recipe.created_by === user.id;
+  if (!canEditRecipe(userRole as import("@/lib/types").BookRole | null, isCreator)) notFound();
+  const assignableBooks = bookOptions.filter((book) =>
+    book.id === bookId || (isCreator ? canContribute(book.role) : canManageBook(book.role))
+  );
 
   return (
     <AppShell bookId={bookId}>
@@ -56,7 +61,12 @@ export default async function EditRecipePage({ params }: Props) {
           </h1>
         </div>
 
-        <RecipeForm bookId={bookId} categories={categories} recipe={recipe} />
+        <RecipeForm
+          bookId={bookId}
+          categories={categories}
+          bookOptions={assignableBooks}
+          recipe={recipe}
+        />
       </div>
     </AppShell>
   );

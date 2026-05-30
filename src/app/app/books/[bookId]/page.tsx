@@ -500,8 +500,8 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                 <div className="mt-4 space-y-1">
                   <QuickAction href={`/app/books/${bookId}/recipes/new`} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />
                   <QuickAction href={`/app/books/${bookId}/ideas`} icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />
-                  <QuickAction href={`/app/books/${bookId}/meal-plan`} icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
-                  <QuickAction href={`/app/books/${bookId}/groceries`} icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
+                  <QuickAction href="/app/meal-plan" icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
+                  <QuickAction href="/app/groceries" icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
                 </div>
               </PageSection>
 
@@ -522,7 +522,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                     return (
                       <Link
                         key={date}
-                        href={`/app/books/${bookId}/meal-plan`}
+                        href="/app/meal-plan"
                         className={`flex aspect-square items-center justify-center rounded-sm text-xs font-bold ${
                           planned
                             ? "bg-green-deep text-ink-inverse"
@@ -536,7 +536,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                 </div>
                 {!hasAnyMealPlanned && (
                   <Link
-                    href={`/app/books/${bookId}/meal-plan`}
+                    href="/app/meal-plan"
                     className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline"
                   >
                     Plan a meal <ChevronRight size={15} />

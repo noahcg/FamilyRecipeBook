@@ -78,7 +78,7 @@ function SignInContent() {
           required
           type={showPassword ? "text" : "password"}
           autoComplete="current-password"
-          placeholder="••••••••"
+          placeholder="Enter your password"
           error={errors.password?.message}
           rightElement={
             <button

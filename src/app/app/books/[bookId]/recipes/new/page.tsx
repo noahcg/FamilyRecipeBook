@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
@@ -5,6 +6,8 @@ import { BookName } from "@/components/book/BookName";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
 import { listCategories } from "@/lib/actions/categories";
+import { getRecipeAssignmentOptions } from "@/lib/actions/recipes";
+import { canContribute } from "@/lib/permissions";
 
 interface Props {
   params: Promise<{ bookId: string }>;
@@ -12,11 +15,14 @@ interface Props {
 
 export default async function NewRecipePage({ params }: Props) {
   const { bookId } = await params;
-  const [aiSettings, categories] = await Promise.all([
+  const [aiSettings, categories, bookOptions] = await Promise.all([
     getAISettings(),
     listCategories(bookId),
+    getRecipeAssignmentOptions(),
   ]);
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
+  const contributableBooks = bookOptions.filter((book) => canContribute(book.role));
+  if (contributableBooks.length === 0) notFound();
 
   return (
     <AppShell bookId={bookId}>
@@ -45,6 +51,7 @@ export default async function NewRecipePage({ params }: Props) {
         <RecipeForm
           bookId={bookId}
           categories={categories}
+          bookOptions={contributableBooks}
           hasOpenAIKey={hasOpenAIKey}
           enablePasteEntry
         />
