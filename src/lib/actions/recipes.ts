@@ -690,6 +690,55 @@ export async function getAllUserRecipes(): Promise<
   });
 }
 
+// The most recent recipes the signed-in user has personally added, across every
+// cookbook. Powers the global Home dashboard's featured / continue-cooking cards.
+export async function getAccountRecentRecipes(limit = 6): Promise<
+  {
+    id: string;
+    title: string;
+    description: string | null;
+    photo_url: string | null;
+    bookId: string;
+    bookTitle: string;
+    created_at: string;
+  }[]
+> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, description, photo_url, created_at, book_id, book:recipe_books!recipes_book_id_fkey(title)"
+    )
+    .eq("created_by", user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  const rows = (data ?? []) as unknown as {
+    id: string;
+    title: string;
+    description: string | null;
+    photo_url: string | null;
+    created_at: string;
+    book_id: string;
+    book: { title: string } | { title: string }[] | null;
+  }[];
+
+  return rows.map((row) => {
+    const book = Array.isArray(row.book) ? row.book[0] : row.book;
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      photo_url: row.photo_url,
+      bookId: row.book_id,
+      bookTitle: book?.title ?? "Recipe Book",
+      created_at: row.created_at,
+    };
+  });
+}
+
 export async function addRecipeStory(
   bookId: string,
   recipeId: string,

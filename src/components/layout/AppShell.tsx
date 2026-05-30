@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Settings,
   ShoppingCart,
+  Sparkles,
   UtensilsCrossed,
   X,
   type LucideIcon,
@@ -59,6 +60,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { id: "groceries", href: "/app/groceries", icon: ShoppingCart, label: "Groceries" },
   { id: "recipes", href: "/app/recipes", icon: UtensilsCrossed, label: "My Recipes" },
   { id: "favorites", href: "/app/favorites", icon: Heart, label: "Favorites" },
+  { id: "ideas", href: "/app/ideas", icon: Sparkles, label: "Ideas" },
 ];
 
 function isActivePath(pathname: string, href: string, exact?: boolean) {
@@ -106,7 +108,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
         </Link>
 
         {!lockNav && (
-          <nav aria-label="Primary navigation" className="min-h-0 flex-1 px-6">
+          <nav aria-label="Primary navigation" className="shrink-0 px-6">
             <div className="space-y-2.5">
               {ACCOUNT_NAV.map(({ id, href, icon: Icon, label, exact }) => {
                 const isActive = isActivePath(pathname, href, exact);
@@ -124,10 +126,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
               })}
             </div>
 
-            <div className="mt-4 border-t border-line-soft pt-4">
-              <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
-                Cookbooks
-              </p>
+            <div className="mt-2.5 border-t border-line-soft pt-2.5">
               <CookbookNavigator
                 currentBookId={currentBookId}
                 mobileOpen={cookbooksMobileOpen}
@@ -137,7 +136,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
           </nav>
         )}
 
-        <div className="mt-6 shrink-0 border-t border-line-soft p-5">
+        <div className="mt-auto shrink-0 border-t border-line-soft p-5">
           {!lockNav && isAdmin && (
             <Link
               href="/app/admin"

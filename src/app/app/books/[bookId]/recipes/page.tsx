@@ -284,12 +284,12 @@ export default function RecipesPage({ params }: Props) {
         <header className="mb-7 border-b border-line-soft pb-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
-              <BookName className="mb-2 block text-sm font-semibold text-ink-muted" />
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Cookbook</p>
               <h1
                 className="text-4xl font-bold leading-tight text-green-deep lg:text-5xl"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
-                Contents
+                <BookName />
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
                 {activeFilterDetails

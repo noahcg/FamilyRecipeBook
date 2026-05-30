@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BookOpen, Heart, Library, Search } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBadge } from "@/components/recipe/CookbookBadge";
@@ -10,6 +11,10 @@ import { createClient } from "@/lib/supabase/client";
 
 interface RecipeReaction {
   type: string;
+}
+
+interface CountRow {
+  id: string;
 }
 
 interface RecipeListItem {
@@ -26,6 +31,8 @@ interface RecipeListItem {
   created_at: string;
   creator: { full_name: string | null } | { full_name: string | null }[] | null;
   reactions: RecipeReaction[] | null;
+  ingredients: CountRow[] | null;
+  instructions: CountRow[] | null;
   loveCount: number;
 }
 
@@ -36,6 +43,28 @@ interface FavoriteRow {
 type SortMode = "chapter" | "recent";
 
 const UNCATEGORIZED = "Family Notes";
+
+const PRACTICAL_FILTERS = {
+  quick: { label: "Quick", description: "Recipes with a cook time of 30 minutes or less." },
+  "few-steps": { label: "Few Steps", description: "Recipes with 5 or fewer instruction steps." },
+  "few-ingredients": { label: "Few Ingredients", description: "Recipes with 8 or fewer ingredients." },
+} as const;
+
+type PracticalFilter = keyof typeof PRACTICAL_FILTERS;
+
+function isPracticalFilter(value: string | null): value is PracticalFilter {
+  return value === "quick" || value === "few-steps" || value === "few-ingredients";
+}
+
+function recipeMatchesPracticalFilter(recipe: RecipeListItem, filter: PracticalFilter) {
+  if (filter === "quick") return recipe.cook_minutes != null && recipe.cook_minutes <= 30;
+  if (filter === "few-steps") {
+    const steps = recipe.instructions?.length ?? 0;
+    return steps > 0 && steps <= 5;
+  }
+  const ingredients = recipe.ingredients?.length ?? 0;
+  return ingredients > 0 && ingredients <= 8;
+}
 
 function chapterId(category: string) {
   return `chapter-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
@@ -69,6 +98,10 @@ function recipeHaystack(recipe: RecipeListItem) {
 }
 
 export default function MyRecipesPage() {
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get("filter");
+  const activeFilter: PracticalFilter | null = isPracticalFilter(filterParam) ? filterParam : null;
+  const activeFilterDetails = activeFilter ? PRACTICAL_FILTERS[activeFilter] : null;
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("chapter");
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
@@ -98,7 +131,7 @@ export default function MyRecipesPage() {
         supabase
           .from("recipes")
           .select(
-            "id, title, description, photo_url, source_name, cook_minutes, servings, created_at, book_id, creator:profiles!created_by(full_name), reactions:recipe_reactions(type), category:book_categories!recipes_category_id_fkey(name), book:recipe_books!recipes_book_id_fkey(title)"
+            "id, title, description, photo_url, source_name, cook_minutes, servings, created_at, book_id, creator:profiles!created_by(full_name), reactions:recipe_reactions(type), ingredients:recipe_ingredients(id), instructions:recipe_instructions(id), category:book_categories!recipes_category_id_fkey(name), book:recipe_books!recipes_book_id_fkey(title)"
           )
           .order("title", { ascending: true }),
         supabase.from("recipe_reactions").select("recipe_id").eq("user_id", user.id).eq("type", "favorite"),
@@ -137,10 +170,13 @@ export default function MyRecipesPage() {
   }, []);
 
   const filtered = useMemo(() => {
+    const base = activeFilter
+      ? recipes.filter((recipe) => recipeMatchesPracticalFilter(recipe, activeFilter))
+      : recipes;
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return recipes;
-    return recipes.filter((recipe) => recipeHaystack(recipe).includes(normalizedQuery));
-  }, [query, recipes]);
+    if (!normalizedQuery) return base;
+    return base.filter((recipe) => recipeHaystack(recipe).includes(normalizedQuery));
+  }, [activeFilter, query, recipes]);
 
   const chapters = useMemo(() => {
     const grouped = new Map<string, RecipeListItem[]>();
@@ -260,8 +296,20 @@ export default function MyRecipesPage() {
                 My Recipes
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-                {`${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${bookCount} ${bookCount === 1 ? "cookbook" : "cookbooks"}`}
+                {activeFilterDetails
+                  ? activeFilterDetails.description
+                  : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${bookCount} ${bookCount === 1 ? "cookbook" : "cookbooks"}`}
               </p>
+              {activeFilterDetails && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-sm bg-accent-honey/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
+                    {activeFilterDetails.label}
+                  </span>
+                  <Link href="/app/recipes" className="text-sm font-bold text-green-deep hover:underline">
+                    View all recipes
+                  </Link>
+                </div>
+              )}
             </div>
 
             <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
