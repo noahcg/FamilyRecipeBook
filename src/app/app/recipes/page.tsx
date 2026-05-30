@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BookOpen, Heart, Library, Search } from "lucide-react";
+import { BookOpen, Heart, Plus, Search } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBadge } from "@/components/recipe/CookbookBadge";
-import { EmptyState } from "@/components/ui";
+import { Button, EmptyState } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
 
 interface RecipeReaction {
@@ -38,6 +38,10 @@ interface RecipeListItem {
 
 interface FavoriteRow {
   recipe_id: string;
+}
+
+interface BookTargetRow {
+  id: string;
 }
 
 type SortMode = "chapter" | "recent";
@@ -106,6 +110,7 @@ export default function MyRecipesPage() {
   const [sort, setSort] = useState<SortMode>("chapter");
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [addRecipeBookId, setAddRecipeBookId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
 
@@ -120,6 +125,7 @@ export default function MyRecipesPage() {
       if (!user) {
         if (active) {
           setRecipes([]);
+          setAddRecipeBookId(null);
           setLoading(false);
         }
         return;
@@ -127,7 +133,7 @@ export default function MyRecipesPage() {
 
       // No book filter — RLS scopes recipes to the user's cookbooks, so this is
       // the account's entire collection. The book join powers the badge.
-      const [recipesRes, favoritesRes] = await Promise.all([
+      const [recipesRes, favoritesRes, settingsRes, booksRes] = await Promise.all([
         supabase
           .from("recipes")
           .select(
@@ -135,6 +141,12 @@ export default function MyRecipesPage() {
           )
           .order("title", { ascending: true }),
         supabase.from("recipe_reactions").select("recipe_id").eq("user_id", user.id).eq("type", "favorite"),
+        supabase.from("user_settings").select("default_book_id").eq("user_id", user.id).maybeSingle(),
+        supabase
+          .from("recipe_books")
+          .select("id, book_members!inner(user_id)")
+          .eq("book_members.user_id", user.id)
+          .order("created_at", { ascending: false }),
       ]);
 
       if (!active) return;
@@ -157,11 +169,21 @@ export default function MyRecipesPage() {
 
       setRecipes(nextRecipes);
       setFavoriteIds(new Set(((favoritesRes.data ?? []) as FavoriteRow[]).map((r) => r.recipe_id)));
+      const books = (booksRes.data ?? []) as unknown as BookTargetRow[];
+      const defaultBookId = settingsRes.data?.default_book_id ?? null;
+      setAddRecipeBookId(
+        books.some((book) => book.id === defaultBookId)
+          ? defaultBookId
+          : books[0]?.id ?? null
+      );
       setLoading(false);
     }
 
     loadRecipes().catch(() => {
-      if (active) setLoading(false);
+      if (active) {
+        setAddRecipeBookId(null);
+        setLoading(false);
+      }
     });
 
     return () => {
@@ -202,6 +224,9 @@ export default function MyRecipesPage() {
   const bookCount = useMemo(() => new Set(recipes.map((r) => r.book_id)).size, [recipes]);
   const newestRecipe = recentList[0] ?? null;
   const showContents = !loading && filtered.length > 0 && sort === "chapter";
+  const addRecipeHref = addRecipeBookId
+    ? `/app/books/${addRecipeBookId}/recipes/new`
+    : "/onboarding/create-book";
 
   function renderRecipeRow(recipe: RecipeListItem) {
     return (
@@ -323,6 +348,17 @@ export default function MyRecipesPage() {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
+              {loading ? (
+                <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 sm:w-auto" loading>
+                  Add Recipe
+                </Button>
+              ) : (
+                <Link href={addRecipeHref}>
+                  <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 sm:w-auto">
+                    <Plus size={17} /> {addRecipeBookId ? "Add Recipe" : "Create Cookbook"}
+                  </Button>
+                </Link>
+              )}
               <select
                 aria-label="Sort recipes"
                 value={sort}
@@ -351,15 +387,17 @@ export default function MyRecipesPage() {
             description={
               query
                 ? "Try another search term."
-                : "Open a cookbook and add your first recipe — everything you add gathers here."
+                : addRecipeBookId
+                ? "Add your first recipe and it will gather here with the rest of your collection."
+                : "Create a cookbook first, then add recipes to your collection."
             }
             action={
               !query ? (
                 <Link
-                  href="/app/cookbooks"
+                  href={addRecipeHref}
                   className="inline-flex h-10 items-center gap-2 rounded-md bg-green-deep px-4 text-sm font-bold text-ink-inverse transition-colors hover:bg-green-forest-dark"
                 >
-                  <Library size={14} /> Go to your cookbooks
+                  <Plus size={14} /> {addRecipeBookId ? "Add your first recipe" : "Create a cookbook"}
                 </Link>
               ) : undefined
             }

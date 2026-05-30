@@ -8,6 +8,8 @@ import {
   Heart,
   Plus,
   Search,
+  UserPlus,
+  Users,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState, Button } from "@/components/ui";
@@ -130,6 +132,7 @@ export default function RecipesPage({ params }: Props) {
   const [query, setQuery] = useState("");
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [canManageMembers, setCanManageMembers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
 
@@ -152,15 +155,25 @@ export default function RecipesPage({ params }: Props) {
 
       const [recipesRes, userRes] = await Promise.all([recipesRequest, userRequest]);
       let favoriteRows: FavoriteRow[] = [];
+      let userRole: string | null = null;
 
       const user = userRes.data.user;
       if (user) {
-        const favoritesRes = await supabase
-          .from("recipe_reactions")
-          .select("recipe_id")
-          .eq("user_id", user.id)
-          .eq("type", "favorite");
+        const [favoritesRes, memberRes] = await Promise.all([
+          supabase
+            .from("recipe_reactions")
+            .select("recipe_id")
+            .eq("user_id", user.id)
+            .eq("type", "favorite"),
+          supabase
+            .from("book_members")
+            .select("role")
+            .eq("book_id", bookId)
+            .eq("user_id", user.id)
+            .single(),
+        ]);
         favoriteRows = (favoritesRes.data ?? []) as FavoriteRow[];
+        userRole = memberRes.data?.role ?? null;
       }
 
       if (!active) return;
@@ -176,11 +189,15 @@ export default function RecipesPage({ params }: Props) {
 
       setRecipes(nextRecipes);
       setFavoriteIds(new Set(favoriteRows.map((row) => row.recipe_id)));
+      setCanManageMembers(userRole === "keeper");
       setLoading(false);
     }
 
     loadRecipes().catch(() => {
-      if (active) setLoading(false);
+      if (active) {
+        setCanManageMembers(false);
+        setLoading(false);
+      }
     });
 
     return () => {
@@ -282,40 +299,45 @@ export default function RecipesPage({ params }: Props) {
     >
       <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-5 lg:px-8">
         <header className="mb-7 border-b border-line-soft pb-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0">
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Cookbook</p>
-              <h1
-                className="text-4xl font-bold leading-tight text-green-deep lg:text-5xl"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                <BookName />
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-                {activeFilterDetails
-                  ? activeFilterDetails.description
-                  : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`}
-              </p>
-              {activeFilterDetails && (
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <span className="rounded-sm bg-green-deep px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-ink-inverse">
-                    {activeFilterDetails.label}
-                  </span>
-                  <Link href={`/app/books/${bookId}/recipes`} className="text-sm font-bold text-green-deep hover:underline">
-                    View all recipes
-                  </Link>
-                </div>
-              )}
-            </div>
+          <div className="min-w-0">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Cookbook</p>
+            <h1
+              className="text-4xl font-bold leading-tight text-green-deep lg:text-5xl"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              <BookName />
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
+              {activeFilterDetails
+                ? activeFilterDetails.description
+                : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`}
+            </p>
+            {activeFilterDetails && (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span className="rounded-sm bg-green-deep px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-ink-inverse">
+                  {activeFilterDetails.label}
+                </span>
+                <Link href={`/app/books/${bookId}/recipes`} className="text-sm font-bold text-green-deep hover:underline">
+                  View all recipes
+                </Link>
+              </div>
+            )}
+          </div>
 
-            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-              <div className="relative min-w-0 flex-1 lg:w-[340px] lg:flex-none">
+          <div
+            className="mt-6 rounded-lg border border-line-soft bg-card/75 p-3 shadow-[var(--shadow-paper)]"
+            role="toolbar"
+            aria-label="Cookbook actions"
+          >
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+              <div className="relative min-w-0 flex-1">
                 <Search
                   size={16}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft"
                   strokeWidth={1.75}
                 />
                 <input
+                  aria-label="Search cookbook contents"
                   className="input-cookbook h-12 w-full text-sm"
                   style={{ paddingLeft: "2.25rem" }}
                   placeholder="Search the contents..."
@@ -323,11 +345,30 @@ export default function RecipesPage({ params }: Props) {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
-              <Link href={`/app/books/${bookId}/recipes/new`}>
-                <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 sm:w-auto">
-                  <Plus size={17} /> Add Recipe
-                </Button>
-              </Link>
+
+              <div className={`${canManageMembers ? "sm:grid-cols-3" : "sm:grid-cols-2"} grid gap-3 lg:flex lg:w-auto lg:shrink-0`}>
+                <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
+                  <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                    <Plus size={17} /> Add Recipe
+                  </Button>
+                </Link>
+                {canManageMembers && (
+                  <Link href={`/app/books/${bookId}/members/add`} className="min-w-0">
+                    <Button
+                      variant="secondary"
+                      size="md"
+                    className="h-12 w-full rounded-md border-accent-cinnamon/35 bg-accent-honey/15 px-5 text-accent-cinnamon hover:bg-accent-honey/25 lg:w-auto"
+                  >
+                      <UserPlus size={17} /> Add Member
+                    </Button>
+                  </Link>
+                )}
+                <Link href={`/app/books/${bookId}/members`} className="min-w-0">
+                  <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                    <Users size={17} /> Manage Members
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </header>

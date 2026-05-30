@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { ArrowLeft, Pencil, Sparkles, Users } from "lucide-react";
+import { Pencil, Sparkles, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CreateBookForm } from "@/components/book/CreateBookForm";
 import { getUserBooks } from "@/lib/actions/books";
@@ -38,7 +37,7 @@ export default async function CreateBookPage() {
     .maybeSingle();
   const defaultBookId = settings?.default_book_id ?? null;
 
-  // The chooser lives outside any single book, so point the shell's nav at the
+  // This page lives outside any single book, so point the shell's nav at the
   // user's current book. A brand-new user with no books gets the bare page.
   const navBookId =
     defaultBookId && books.some((book) => book.id === defaultBookId)
@@ -48,13 +47,6 @@ export default async function CreateBookPage() {
   const content = (
     <div className="px-4 py-8 sm:px-5 lg:px-8">
       <div className="mb-7 border-b border-line-soft pb-6">
-        <Link
-          href={navBookId ? "/app/cookbooks" : "/onboarding"}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
-        >
-          <ArrowLeft size={14} strokeWidth={2} />
-          {navBookId ? "Cookbooks" : "Back"}
-        </Link>
         <h1
           className="text-3xl font-bold leading-tight text-green-deep"
           style={{ fontFamily: "var(--font-playfair)" }}

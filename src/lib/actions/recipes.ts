@@ -25,9 +25,17 @@ import type {
   RecipeTransferTarget,
   RecipeWithRelations,
 } from "@/lib/types";
+import type { BookCategory } from "@/lib/actions/categories";
 
 const RECIPE_SELECT_WITH_CATEGORY =
   "*, category:book_categories!recipes_category_id_fkey(id, name)";
+
+export interface RecipeAssignmentOption {
+  id: string;
+  title: string;
+  role: BookRole;
+  categories: BookCategory[];
+}
 
 async function getBookRole(supabase: Awaited<ReturnType<typeof createClient>>, bookId: string, userId: string) {
   const { data } = await supabase
@@ -252,6 +260,42 @@ export async function getRecipeTransferTargets(
     targets.push({ id: book.id, title: book.title, role: row.role });
   }
   return targets.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+export async function getRecipeAssignmentOptions(): Promise<RecipeAssignmentOption[]> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("book_members")
+    .select("role, book:recipe_books(id, title)")
+    .eq("user_id", user.id);
+
+  const rows = (data ?? []) as unknown as {
+    role: BookRole;
+    book: { id: string; title: string } | { id: string; title: string }[] | null;
+  }[];
+
+  const books = rows
+    .map((row) => {
+      const book = Array.isArray(row.book) ? row.book[0] : row.book;
+      return book ? { id: book.id, title: book.title, role: row.role } : null;
+    })
+    .filter((book): book is { id: string; title: string; role: BookRole } => Boolean(book))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  const categoriesByBook = await Promise.all(
+    books.map(async (book) => ({
+      bookId: book.id,
+      categories: await listCategories(book.id),
+    }))
+  );
+  const categoryMap = new Map(categoriesByBook.map((entry) => [entry.bookId, entry.categories]));
+
+  return books.map((book) => ({
+    ...book,
+    categories: categoryMap.get(book.id) ?? [],
+  }));
 }
 
 // Duplicate a recipe (and everything attached to it — ingredients,

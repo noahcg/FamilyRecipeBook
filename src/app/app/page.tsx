@@ -145,7 +145,7 @@ export default async function AppHomePage() {
     ? `/app/books/${latestRecipe.bookId}/recipes/${latestRecipe.id}`
     : "/app/ideas";
   const featuredImage = latestRecipe?.photo_url ?? "/images/entry/add-first.jpg";
-  const addRecipeHref = firstBookId ? `/app/books/${firstBookId}/recipes/new` : "/app/cookbooks";
+  const addRecipeHref = firstBookId ? `/app/books/${firstBookId}/recipes/new` : "/onboarding/create-book";
 
   // Real meal-plan data for Weekly snapshot + Helpful cues
   const weekStart = getMondayOfCurrentWeek();

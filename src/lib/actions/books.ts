@@ -382,7 +382,7 @@ export async function deleteBook(bookId: string): Promise<ActionResult> {
   const { error } = await supabase.from("recipe_books").delete().eq("id", bookId);
   if (error) return { success: false, error: error.message };
 
-  revalidatePath("/app/cookbooks");
+  revalidatePath("/app");
   return { success: true, data: undefined };
 }
 

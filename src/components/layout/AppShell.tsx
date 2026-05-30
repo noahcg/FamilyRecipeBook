@@ -56,11 +56,11 @@ interface NavItem {
 // Account-level navigation — the same everywhere, never tied to a cookbook.
 const ACCOUNT_NAV: NavItem[] = [
   { id: "home", href: "/app", icon: Home, label: "Home", exact: true },
+  { id: "recipes", href: "/app/recipes", icon: UtensilsCrossed, label: "My Recipes" },
+  { id: "ideas", href: "/app/ideas", icon: Sparkles, label: "Ideas" },
   { id: "meal-plan", href: "/app/meal-plan", icon: CalendarDays, label: "Meal Plan" },
   { id: "groceries", href: "/app/groceries", icon: ShoppingCart, label: "Groceries" },
-  { id: "recipes", href: "/app/recipes", icon: UtensilsCrossed, label: "My Recipes" },
   { id: "favorites", href: "/app/favorites", icon: Heart, label: "Favorites" },
-  { id: "ideas", href: "/app/ideas", icon: Sparkles, label: "Ideas" },
 ];
 
 function isActivePath(pathname: string, href: string, exact?: boolean) {
@@ -265,12 +265,12 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
             <button
               type="button"
               onClick={() => setCookbooksMobileOpen(true)}
-              aria-label="Cookbooks"
+              aria-label="Bookshelf"
               aria-expanded={cookbooksMobileOpen}
               className="relative flex h-full min-w-[64px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 text-ink-inverse transition-[background-color,color,transform] duration-150 active:translate-y-px hover:bg-green-deep hover:text-ink-inverse focus-visible:outline-none"
             >
               <Library size={19} strokeWidth={1.75} />
-              <span className="max-w-[84px] truncate text-[10px] font-bold leading-none">Cookbooks</span>
+              <span className="max-w-[84px] truncate text-[10px] font-bold leading-none">Bookshelf</span>
             </button>
           )}
 

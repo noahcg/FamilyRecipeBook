@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, type RefObject } from "react";
+import { useEffect, useMemo, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -9,7 +9,13 @@ import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
 import { createRecipeSchema, type CreateRecipeInput } from "@/lib/validators/recipe";
-import { createRecipe, createRecipesBatch, updateRecipe } from "@/lib/actions/recipes";
+import {
+  createRecipe,
+  createRecipesBatch,
+  moveRecipeToBook,
+  updateRecipe,
+  type RecipeAssignmentOption,
+} from "@/lib/actions/recipes";
 import { uploadRecipeImage } from "@/lib/upload";
 import {
   importRecipeWithLocalOcr,
@@ -34,6 +40,7 @@ function getArrayErrorMessage(error: unknown) {
 interface RecipeFormProps {
   bookId: string;
   categories: BookCategory[];
+  bookOptions?: RecipeAssignmentOption[];
   recipe?: RecipeWithRelations;
   onSuccessRedirect?: string;
   hasOpenAIKey?: boolean;
@@ -243,6 +250,7 @@ function IngredientKeypad({
 export function RecipeForm({
   bookId,
   categories,
+  bookOptions,
   recipe,
   onSuccessRedirect,
   hasOpenAIKey = false,
@@ -287,6 +295,23 @@ export function RecipeForm({
   const [isSavingImport, setIsSavingImport] = useState(false);
   const [activeIngredientKeypad, setActiveIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
   const [manualIngredientKeypad, setManualIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
+  const assignmentOptions = useMemo<RecipeAssignmentOption[]>(
+    () =>
+      bookOptions?.length
+        ? bookOptions
+        : [{ id: bookId, title: "This cookbook", role: "keeper", categories }],
+    [bookId, bookOptions, categories]
+  );
+  const initialBookId = assignmentOptions.some((book) => book.id === bookId)
+    ? bookId
+    : assignmentOptions[0]?.id ?? bookId;
+  const [selectedBookId, setSelectedBookId] = useState(initialBookId);
+  const resolvedSelectedBookId = assignmentOptions.some((book) => book.id === selectedBookId)
+    ? selectedBookId
+    : initialBookId;
+  const activeBook = assignmentOptions.find((book) => book.id === resolvedSelectedBookId) ?? assignmentOptions[0];
+  const activeCategories = activeBook?.categories.length ? activeBook.categories : categories;
+  const showCookbookPicker = assignmentOptions.length > 1;
 
   const {
     register,
@@ -358,6 +383,16 @@ export function RecipeForm({
   } = useFieldArray({ control, name: "instructions" });
 
   const selectedCategory = useWatch({ control, name: "category" });
+
+  useEffect(() => {
+    if (!resolvedSelectedBookId || activeCategories.length === 0) return;
+    const currentCategory = getValues("category");
+    if (currentCategory && activeCategories.some((category) => category.name === currentCategory)) return;
+    setValue("category", activeCategories.find((category) => category.is_default)?.name ?? activeCategories[0]?.name ?? "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [activeCategories, getValues, resolvedSelectedBookId, setValue]);
 
   useEffect(() => {
     if (!activeIngredientKeypad) return;
@@ -692,7 +727,8 @@ export function RecipeForm({
       payload.push(importedRecipeToInput(recipe, photoUrl));
     }
 
-    const result = await createRecipesBatch(bookId, payload);
+    const targetBookId = resolvedSelectedBookId || bookId;
+    const result = await createRecipesBatch(targetBookId, payload);
     setIsSavingImport(false);
 
     if (!result.success) {
@@ -703,8 +739,8 @@ export function RecipeForm({
     const firstId = result.data.ids[0];
     router.push(
       result.data.ids.length === 1
-        ? `/app/books/${bookId}/recipes/${firstId}`
-        : `/app/books/${bookId}/recipes`
+        ? `/app/books/${targetBookId}/recipes/${firstId}`
+        : `/app/books/${targetBookId}/recipes`
     );
   }
 
@@ -735,29 +771,62 @@ export function RecipeForm({
       import_method: recipeImportedViaUpload ? "image_upload" : data.import_method,
     } satisfies CreateRecipeInput;
 
+    const targetBookId = resolvedSelectedBookId || bookId;
+
     if (isEdit && recipe) {
-      const result = await updateRecipe(bookId, recipe.id, payload);
+      if (targetBookId !== bookId) {
+        const moveResult = await moveRecipeToBook(bookId, recipe.id, targetBookId);
+        if (!moveResult.success) {
+          setServerError(moveResult.error);
+          return;
+        }
+      }
+
+      const result = await updateRecipe(targetBookId, recipe.id, payload);
       if (!result.success) {
         setServerError(result.error);
         return;
       }
       router.push(
-        onSuccessRedirect ?? `/app/books/${bookId}/recipes/${recipe.id}`
+        onSuccessRedirect ?? `/app/books/${targetBookId}/recipes/${recipe.id}`
       );
     } else {
-      const result = await createRecipe(bookId, payload as CreateRecipeInput);
+      const result = await createRecipe(targetBookId, payload as CreateRecipeInput);
       if (!result.success) {
         setServerError(result.error);
         return;
       }
       router.push(
-        onSuccessRedirect ?? `/app/books/${bookId}/recipes/${result.data.id}`
+        onSuccessRedirect ?? `/app/books/${targetBookId}/recipes/${result.data.id}`
       );
     }
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="pb-10">
+      {showCookbookPicker && (
+        <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
+          <label htmlFor="recipe-book" className="block text-sm font-bold text-ink">
+            Cookbook
+          </label>
+          <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+            Choose where this recipe should live.
+          </p>
+          <select
+            id="recipe-book"
+            value={resolvedSelectedBookId}
+            onChange={(event) => setSelectedBookId(event.target.value)}
+            className="input-cookbook mt-3 h-12 w-full text-sm"
+          >
+            {assignmentOptions.map((book) => (
+              <option key={book.id} value={book.id}>
+                {book.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {showPasteEntry && (
         <div className="mb-6 inline-flex rounded-full border border-line bg-paper-soft p-1 shadow-xs">
           {[
@@ -922,7 +991,7 @@ export function RecipeForm({
                 Category
               </label>
               <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => {
+                {activeCategories.map((cat) => {
                   const selected = selectedCategory === cat.name;
                   return (
                     <label key={cat.id} className="flex items-center gap-1.5 cursor-pointer">
