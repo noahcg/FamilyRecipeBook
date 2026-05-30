@@ -8,7 +8,6 @@ import {
   Heart,
   Plus,
   Search,
-  UserPlus,
   Users,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -132,7 +131,7 @@ export default function RecipesPage({ params }: Props) {
   const [query, setQuery] = useState("");
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
-  const [canManageMembers, setCanManageMembers] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
 
@@ -153,27 +152,26 @@ export default function RecipesPage({ params }: Props) {
 
       const userRequest = supabase.auth.getUser();
 
-      const [recipesRes, userRes] = await Promise.all([recipesRequest, userRequest]);
+      const memberCountRequest = supabase
+        .from("book_members")
+        .select("id", { count: "exact", head: true })
+        .eq("book_id", bookId);
+
+      const [recipesRes, userRes, memberCountRes] = await Promise.all([
+        recipesRequest,
+        userRequest,
+        memberCountRequest,
+      ]);
       let favoriteRows: FavoriteRow[] = [];
-      let userRole: string | null = null;
 
       const user = userRes.data.user;
       if (user) {
-        const [favoritesRes, memberRes] = await Promise.all([
-          supabase
-            .from("recipe_reactions")
-            .select("recipe_id")
-            .eq("user_id", user.id)
-            .eq("type", "favorite"),
-          supabase
-            .from("book_members")
-            .select("role")
-            .eq("book_id", bookId)
-            .eq("user_id", user.id)
-            .single(),
-        ]);
+        const favoritesRes = await supabase
+          .from("recipe_reactions")
+          .select("recipe_id")
+          .eq("user_id", user.id)
+          .eq("type", "favorite");
         favoriteRows = (favoritesRes.data ?? []) as FavoriteRow[];
-        userRole = memberRes.data?.role ?? null;
       }
 
       if (!active) return;
@@ -189,13 +187,13 @@ export default function RecipesPage({ params }: Props) {
 
       setRecipes(nextRecipes);
       setFavoriteIds(new Set(favoriteRows.map((row) => row.recipe_id)));
-      setCanManageMembers(userRole === "keeper");
+      setMemberCount(memberCountRes.count ?? 0);
       setLoading(false);
     }
 
     loadRecipes().catch(() => {
       if (active) {
-        setCanManageMembers(false);
+        setMemberCount(0);
         setLoading(false);
       }
     });
@@ -238,6 +236,8 @@ export default function RecipesPage({ params }: Props) {
   const newestRecipe = recipes[0] ?? null;
   const showContents = !loading && filtered.length > 0;
   const activeFilterDetails = activeFilter ? PRACTICAL_FILTERS[activeFilter] : null;
+  const recipeSummary = `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`;
+  const memberSummary = `${memberCount} ${memberCount === 1 ? "member" : "members"}`;
 
   function closeContents() {
     setIsContentsOpen(false);
@@ -308,9 +308,9 @@ export default function RecipesPage({ params }: Props) {
               <BookName />
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-              {activeFilterDetails
-                ? activeFilterDetails.description
-                : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`}
+              {activeFilterDetails ? activeFilterDetails.description : recipeSummary}
+              <span className="mx-2 text-line">|</span>
+              {memberSummary}
             </p>
             {activeFilterDetails && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -346,23 +346,12 @@ export default function RecipesPage({ params }: Props) {
                 />
               </div>
 
-              <div className={`${canManageMembers ? "sm:grid-cols-3" : "sm:grid-cols-2"} grid gap-3 lg:flex lg:w-auto lg:shrink-0`}>
+              <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:w-auto lg:shrink-0">
                 <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
                   <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
                     <Plus size={17} /> Add Recipe
                   </Button>
                 </Link>
-                {canManageMembers && (
-                  <Link href={`/app/books/${bookId}/members/add`} className="min-w-0">
-                    <Button
-                      variant="secondary"
-                      size="md"
-                    className="h-12 w-full rounded-md border-accent-cinnamon/35 bg-accent-honey/15 px-5 text-accent-cinnamon hover:bg-accent-honey/25 lg:w-auto"
-                  >
-                      <UserPlus size={17} /> Add Member
-                    </Button>
-                  </Link>
-                )}
                 <Link href={`/app/books/${bookId}/members`} className="min-w-0">
                   <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
                     <Users size={17} /> Manage Members
