@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookOpen, Database, Search, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
+import { AdminShareProfiles } from "./AdminShareProfiles";
 
 interface AdminSearchParams {
   q?: string;
@@ -69,6 +70,9 @@ export default async function AdminPage({
     { count: recipeCount },
     { data: books },
     { data: profiles },
+    { data: allCookbooks },
+    { data: allMemberships },
+    { data: authUsers },
   ] = await Promise.all([
     admin.from("profiles").select("id", { count: "exact", head: true }),
     admin.from("recipe_books").select("id", { count: "exact", head: true }),
@@ -85,22 +89,45 @@ export default async function AdminPage({
           .select("id,title,description,owner_id,created_at,owner:profiles!owner_id(full_name),members:book_members(id),recipes(id)")
           .order("created_at", { ascending: false })
           .limit(8),
+    // All profiles (search-filtered by name when a query is present).
     query
       ? admin
           .from("profiles")
           .select("id,full_name,avatar_url,created_at")
           .ilike("full_name", `%${query}%`)
           .order("created_at", { ascending: false })
-          .limit(8)
       : admin
           .from("profiles")
           .select("id,full_name,avatar_url,created_at")
-          .order("created_at", { ascending: false })
-          .limit(6),
+          .order("created_at", { ascending: false }),
+    // Every cookbook for the share picker (independent of the search filter).
+    admin.from("recipe_books").select("id,title").order("title", { ascending: true }),
+    // Existing memberships so already-shared people are marked.
+    admin.from("book_members").select("book_id,user_id"),
+    // Emails live in auth.users, not profiles — fetch them to label rows.
+    admin.auth.admin.listUsers({ perPage: 1000 }),
   ]);
 
   const bookRows = (books ?? []) as AdminBookRow[];
   const profileRows = (profiles ?? []) as AdminProfileRow[];
+
+  const emailById = new Map<string, string>();
+  for (const authUser of authUsers?.users ?? []) {
+    if (authUser.email) emailById.set(authUser.id, authUser.email);
+  }
+
+  const shareProfiles = profileRows.map((profile) => ({
+    id: profile.id,
+    name: profile.full_name ?? "",
+    email: emailById.get(profile.id) ?? null,
+  }));
+  const shareCookbooks = (allCookbooks ?? []).map((book) => ({
+    id: book.id,
+    title: book.title,
+  }));
+  const membershipKeys = (allMemberships ?? []).map(
+    (member) => `${member.book_id}:${member.user_id}`
+  );
 
   return (
     <div className="app-paper-bg paper-texture min-h-screen px-5 py-8">
@@ -117,7 +144,7 @@ export default async function AdminPage({
               Support Console
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-              Read-only operational view for finding users, cookbooks, and support context.
+              Find users and cookbooks, and share a cookbook with any member directly.
             </p>
           </div>
 
@@ -144,13 +171,13 @@ export default async function AdminPage({
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-          <div className="recipe-card overflow-hidden">
-            <div className="border-b border-line-soft px-5 py-4">
+          <div className="recipe-card flex max-h-[34rem] flex-col overflow-hidden">
+            <div className="shrink-0 border-b border-line-soft px-5 py-4">
               <h2 className="text-base font-black text-ink">
                 {query ? "Matching cookbooks" : "Recent cookbooks"}
               </h2>
             </div>
-            <div className="divide-y divide-line-soft">
+            <div className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
               {bookRows.length === 0 ? (
                 <p className="px-5 py-8 text-sm text-ink-muted">No cookbooks found.</p>
               ) : (
@@ -175,27 +202,11 @@ export default async function AdminPage({
             </div>
           </div>
 
-          <div className="recipe-card overflow-hidden">
-            <div className="border-b border-line-soft px-5 py-4">
-              <h2 className="text-base font-black text-ink">
-                {query ? "Matching profiles" : "Recent profiles"}
-              </h2>
-            </div>
-            <div className="divide-y divide-line-soft">
-              {profileRows.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-ink-muted">No profiles found.</p>
-              ) : (
-                profileRows.map((profile) => (
-                  <div key={profile.id} className="px-5 py-4">
-                    <p className="truncate text-sm font-black text-ink">
-                      {profile.full_name ?? "Unnamed profile"}
-                    </p>
-                    <p className="mt-1 truncate text-xs text-ink-muted">{profile.id}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <AdminShareProfiles
+            profiles={shareProfiles}
+            cookbooks={shareCookbooks}
+            memberships={membershipKeys}
+          />
         </section>
       </main>
     </div>
