@@ -43,6 +43,13 @@ interface AdminInviteRow {
   created_at: string | null;
 }
 
+// PostgREST returns a to-one embed (a member's profile, a recipe's creator) as a
+// single object, so reading it with [0] always misses. Normalize either shape.
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
 function formatDate(value: string | null) {
   if (!value) return "Unknown";
   return new Intl.DateTimeFormat("en", {
@@ -149,11 +156,15 @@ export default async function AdminBookDetailPage({ params }: Props) {
             </div>
             <div className="divide-y divide-line-soft">
               {members.map((member) => (
-                <div key={member.id} className="px-5 py-4">
+                <Link
+                  key={member.id}
+                  href={`/app/admin/users/${member.user_id}`}
+                  className="block px-5 py-4 transition-colors hover:bg-green-pale/70"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-black text-ink">
-                        {member.profile?.[0]?.full_name ?? "Unnamed member"}
+                        {one(member.profile)?.full_name ?? "Unnamed member"}
                       </p>
                       <p className="mt-1 truncate text-xs text-ink-muted">{member.user_id}</p>
                     </div>
@@ -161,7 +172,7 @@ export default async function AdminBookDetailPage({ params }: Props) {
                       {member.role}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -180,7 +191,7 @@ export default async function AdminBookDetailPage({ params }: Props) {
                   <div key={recipe.id} className="px-5 py-4">
                     <p className="truncate text-sm font-black text-ink">{recipe.title}</p>
                     <p className="mt-1 text-xs text-ink-muted">
-                      {recipe.creator?.[0]?.full_name ?? "Unknown"} · {recipe.category?.name ?? "Uncategorized"} · {formatDate(recipe.created_at)}
+                      {one(recipe.creator)?.full_name ?? "Unknown"} · {recipe.category?.name ?? "Uncategorized"} · {formatDate(recipe.created_at)}
                     </p>
                   </div>
                 ))

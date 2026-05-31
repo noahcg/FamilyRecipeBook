@@ -10,6 +10,8 @@ import {
   getDefaultLogoUrl,
   sendEmail,
 } from "@/lib/email/sendEmail";
+import { notifyAdminOfError } from "@/lib/admin-error";
+import { notifyAdminOfNewSignup } from "@/lib/push/sendAdminPush";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,6 +47,7 @@ function buildConfirmationUrl(
 function fail(stage: string, error: unknown, status = 500) {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`[send-email-hook] ${stage} failed:`, message);
+  notifyAdminOfError(`send-email-hook:${stage}`, error);
   return NextResponse.json(
     { error: `${stage} failed`, detail: message },
     { status }
@@ -131,6 +134,7 @@ export async function POST(request: NextRequest) {
         logoUrl,
       });
       await sendEmail({ to: user.email, subject, html, text });
+      await notifyAdminOfNewSignup({ email: user.email, fullName }).catch(() => {});
       return NextResponse.json({ ok: true });
     }
 
