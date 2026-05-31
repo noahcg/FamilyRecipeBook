@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { getUser, requireUser } from "@/lib/auth";
+import { notifyAdminOfError } from "@/lib/admin-error";
 import { createMemberInviteEmail } from "@/lib/email/memberInviteTemplate";
 import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEmail";
 import { canManageMembers } from "@/lib/permissions";
@@ -122,6 +123,10 @@ export async function inviteMember(
     .single();
 
   if (error || !invitation) {
+    notifyAdminOfError("inviteMember:createInvitation", error ?? "Missing created invitation", {
+      bookId,
+      inviterId: user.id,
+    });
     return { success: false, error: error?.message ?? "Could not create invitation" };
   }
 
@@ -144,6 +149,10 @@ export async function inviteMember(
       text: email.text,
     });
   } catch (emailError) {
+    notifyAdminOfError("inviteMember:sendEmail", emailError, {
+      bookId,
+      inviterId: user.id,
+    });
     return {
       success: false,
       error: emailError instanceof Error

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
+import { notifyAdminOfError } from "@/lib/admin-error";
 import { canManageBook } from "@/lib/permissions";
 import {
   createBookSchema,
@@ -118,6 +119,9 @@ export async function createBook(
   }
 
   if (error || !book) {
+    notifyAdminOfError("createBook", error ?? "Missing created book", {
+      userId: user.id,
+    });
     return { success: false, error: error?.message ?? "Could not create book" };
   }
 

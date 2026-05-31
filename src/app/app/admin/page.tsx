@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookOpen, Database, ScrollText, Search, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
+import { PushSubscriptionToggle } from "@/components/admin/PushSubscriptionToggle";
 import { AdminShareProfiles } from "./AdminShareProfiles";
 
 // PostgREST returns a to-one embed (e.g. a book's owner) as a single object, so
@@ -219,6 +220,10 @@ export default async function AdminPage({
           <StatCard label="Profiles" value={profileCount ?? 0} icon={<Users size={21} />} />
           <StatCard label="Cookbooks" value={bookCount ?? 0} icon={<BookOpen size={21} />} />
           <StatCard label="Recipes" value={recipeCount ?? 0} icon={<Database size={21} />} />
+        </section>
+
+        <section className="mt-4">
+          <PushSubscriptionToggle />
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">

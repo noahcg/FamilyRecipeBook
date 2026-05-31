@@ -1,4 +1,4 @@
-const CACHE_NAME = "home-cooked-static-v3";
+const CACHE_NAME = "home-cooked-static-v4";
 const PRECACHE_URLS = ["/manifest.webmanifest", "/offline.html", "/logo.png"];
 
 self.addEventListener("install", (event) => {
@@ -121,5 +121,44 @@ self.addEventListener("fetch", (event) => {
     request.destination === "script" || request.destination === "style"
       ? networkFirst(request)
       : cacheFirst(request)
+  );
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+
+  const title = payload.title || "Home Cooked";
+  const options = {
+    body: payload.body || "You have a new admin alert.",
+    icon: "/logo.png",
+    badge: "/logo.png",
+    data: {
+      url: payload.url || "/app/admin",
+    },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const targetUrl = new URL(event.notification.data?.url || "/app/admin", self.location.origin);
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        const clientUrl = new URL(client.url);
+        if (clientUrl.origin === targetUrl.origin && clientUrl.pathname === targetUrl.pathname) {
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(targetUrl.href);
+    })
   );
 });
