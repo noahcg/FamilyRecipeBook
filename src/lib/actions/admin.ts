@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
 import { createMemberInviteEmail } from "@/lib/email/memberInviteTemplate";
 import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEmail";
 import type { ActionResult } from "@/lib/types";
@@ -193,5 +194,46 @@ export async function inviteUserToBook(
 
   revalidatePath("/app/admin");
   revalidatePath(`/app/books/${bookId}/members`);
+  return { success: true, data: undefined };
+}
+
+/**
+ * Admin-only: send a password-reset email to a user, for "I can't log in"
+ * support. Reuses the app's normal reset pipeline (Supabase recovery email), so
+ * only the user themselves can act on the link. Audit-logged.
+ */
+export async function sendPasswordResetForUser(
+  userId: string
+): Promise<ActionResult> {
+  const adminUser = await requireAdmin();
+  if (!userId) {
+    return { success: false, error: "Missing user." };
+  }
+
+  const service = createServiceClient();
+  const { data: targetUser, error: userError } =
+    await service.auth.admin.getUserById(userId);
+  const email = targetUser?.user?.email;
+  if (userError || !email) {
+    return { success: false, error: "Could not find that person's email address." };
+  }
+
+  const supabase = await createClient();
+  const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${getAppBaseUrl()}/reset-password`,
+  });
+  if (resetError) {
+    return { success: false, error: resetError.message };
+  }
+
+  await logAdminAction(service, {
+    actorId: adminUser.id,
+    action: "send_password_reset",
+    targetType: "user",
+    targetId: userId,
+    summary: `Sent a password reset email to ${email}`,
+    metadata: { userId, email },
+  });
+
   return { success: true, data: undefined };
 }

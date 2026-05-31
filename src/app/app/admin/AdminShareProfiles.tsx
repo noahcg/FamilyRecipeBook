@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Check, Clock, Loader2, Search, Send, UserPlus, X } from "lucide-react";
 import { inviteUserToBook } from "@/lib/actions/admin";
@@ -68,12 +69,17 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships, pendingIn
               className="flex items-center justify-between gap-3 px-5 py-3.5"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-black text-ink">
-                  {profile.name || "Unnamed profile"}
-                </p>
-                <p className="mt-0.5 truncate text-xs text-ink-muted">
-                  {profile.email ?? profile.id}
-                </p>
+                <Link
+                  href={`/app/admin/users/${profile.id}`}
+                  className="block min-w-0 hover:underline"
+                >
+                  <p className="truncate text-sm font-black text-ink">
+                    {profile.name || "Unnamed profile"}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-ink-muted">
+                    {profile.email ?? profile.id}
+                  </p>
+                </Link>
                 {lastInvited[profile.id] ? (
                   <p className="mt-1 flex items-center gap-1 text-xs font-bold text-green-deep">
                     <Check size={13} />

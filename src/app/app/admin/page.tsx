@@ -4,6 +4,13 @@ import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { AdminShareProfiles } from "./AdminShareProfiles";
 
+// PostgREST returns a to-one embed (e.g. a book's owner) as a single object, so
+// reading it with [0] always misses. Normalize either shape.
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
 function formatDateTime(value: string | null) {
   if (!value) return "Unknown time";
   return new Intl.DateTimeFormat("en", {
@@ -235,7 +242,7 @@ export default async function AdminPage({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-ink">{book.title}</p>
                         <p className="mt-1 text-xs text-ink-muted">
-                          Owner: {book.owner?.[0]?.full_name ?? "Unknown"} · {book.members?.length ?? 0} members · {book.recipes?.length ?? 0} recipes
+                          Owner: {one(book.owner)?.full_name ?? "Unknown"} · {book.members?.length ?? 0} members · {book.recipes?.length ?? 0} recipes
                         </p>
                       </div>
                       <span className="shrink-0 text-xs font-bold text-green-deep">View</span>
