@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, Loader2, Search, Share2, X } from "lucide-react";
-import { shareBookWithUser } from "@/lib/actions/admin";
+import { Check, Clock, Loader2, Search, Send, UserPlus, X } from "lucide-react";
+import { inviteUserToBook } from "@/lib/actions/admin";
 
 export interface AdminProfileOption {
   id: string;
@@ -20,6 +20,8 @@ interface Props {
   cookbooks: AdminCookbookOption[];
   /** `${bookId}:${userId}` for every existing membership (includes owners). */
   memberships: string[];
+  /** `${bookId}:${email}` for every pending (unaccepted) invitation. */
+  pendingInvites: string[];
 }
 
 type ShareRole = "family" | "contributor";
@@ -29,17 +31,22 @@ const ROLES: { value: ShareRole; label: string; hint: string }[] = [
   { value: "contributor", label: "Contributor", hint: "Can edit" },
 ];
 
-export function AdminShareProfiles({ profiles, cookbooks, memberships }: Props) {
+type BookStatus = "member" | "invited" | null;
+
+export function AdminShareProfiles({ profiles, cookbooks, memberships, pendingInvites }: Props) {
   const [activeProfile, setActiveProfile] = useState<AdminProfileOption | null>(null);
-  // Membership keys created during this session, so the modal reflects new shares.
-  const [sharedNow, setSharedNow] = useState<Set<string>>(new Set());
-  const [lastShared, setLastShared] = useState<Record<string, string>>({});
+  // Invitations sent during this session, so the modal reflects them immediately.
+  const [invitedNow, setInvitedNow] = useState<Set<string>>(new Set());
+  const [lastInvited, setLastInvited] = useState<Record<string, string>>({});
 
-  const existing = useMemo(() => new Set(memberships), [memberships]);
+  const members = useMemo(() => new Set(memberships), [memberships]);
+  const pending = useMemo(() => new Set(pendingInvites), [pendingInvites]);
 
-  function isShared(bookId: string, userId: string) {
-    const key = `${bookId}:${userId}`;
-    return existing.has(key) || sharedNow.has(key);
+  function bookStatus(bookId: string, profile: AdminProfileOption): BookStatus {
+    if (members.has(`${bookId}:${profile.id}`)) return "member";
+    if (invitedNow.has(`${bookId}:${profile.id}`)) return "invited";
+    if (profile.email && pending.has(`${bookId}:${profile.email.toLowerCase()}`)) return "invited";
+    return null;
   }
 
   return (
@@ -47,7 +54,7 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships }: Props) 
       <div className="shrink-0 border-b border-line-soft px-5 py-4">
         <h2 className="text-base font-black text-ink">Profiles</h2>
         <p className="mt-1 text-xs text-ink-muted">
-          Click Share to add someone to a cookbook of your choosing.
+          Invite anyone to a cookbook — they choose to accept before it joins their shelf.
         </p>
       </div>
 
@@ -67,10 +74,10 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships }: Props) 
                 <p className="mt-0.5 truncate text-xs text-ink-muted">
                   {profile.email ?? profile.id}
                 </p>
-                {lastShared[profile.id] ? (
+                {lastInvited[profile.id] ? (
                   <p className="mt-1 flex items-center gap-1 text-xs font-bold text-green-deep">
                     <Check size={13} />
-                    {lastShared[profile.id]}
+                    {lastInvited[profile.id]}
                   </p>
                 ) : null}
               </div>
@@ -79,8 +86,8 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships }: Props) 
                 onClick={() => setActiveProfile(profile)}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-green-deep/30 bg-green-pale px-3 py-1.5 text-xs font-extrabold text-green-deep transition-colors hover:bg-green-deep hover:text-white"
               >
-                <Share2 size={14} />
-                Share
+                <UserPlus size={14} />
+                Invite
               </button>
             </div>
           ))
@@ -88,16 +95,16 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships }: Props) 
       </div>
 
       {activeProfile ? (
-        <ShareDialog
+        <InviteDialog
           profile={activeProfile}
           cookbooks={cookbooks}
-          isShared={(bookId) => isShared(bookId, activeProfile.id)}
+          statusFor={(bookId) => bookStatus(bookId, activeProfile)}
           onClose={() => setActiveProfile(null)}
-          onShared={(bookId, bookTitle) => {
-            setSharedNow((prev) => new Set(prev).add(`${bookId}:${activeProfile.id}`));
-            setLastShared((prev) => ({
+          onInvited={(bookId, bookTitle) => {
+            setInvitedNow((prev) => new Set(prev).add(`${bookId}:${activeProfile.id}`));
+            setLastInvited((prev) => ({
               ...prev,
-              [activeProfile.id]: `Shared into ${bookTitle}`,
+              [activeProfile.id]: `Invited to ${bookTitle}`,
             }));
           }}
         />
@@ -106,15 +113,15 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships }: Props) 
   );
 }
 
-interface ShareDialogProps {
+interface InviteDialogProps {
   profile: AdminProfileOption;
   cookbooks: AdminCookbookOption[];
-  isShared: (bookId: string) => boolean;
+  statusFor: (bookId: string) => BookStatus;
   onClose: () => void;
-  onShared: (bookId: string, bookTitle: string) => void;
+  onInvited: (bookId: string, bookTitle: string) => void;
 }
 
-function ShareDialog({ profile, cookbooks, isShared, onClose, onShared }: ShareDialogProps) {
+function InviteDialog({ profile, cookbooks, statusFor, onClose, onInvited }: InviteDialogProps) {
   const [search, setSearch] = useState("");
   const [selectedBookId, setSelectedBookId] = useState("");
   const [role, setRole] = useState<ShareRole | null>(null); // asked each time, no default
@@ -136,18 +143,18 @@ function ShareDialog({ profile, cookbooks, isShared, onClose, onShared }: ShareD
   }, [cookbooks, search]);
 
   const selectedBook = cookbooks.find((book) => book.id === selectedBookId) ?? null;
-  const canShare = Boolean(selectedBookId && role) && !isShared(selectedBookId);
+  const canInvite = Boolean(selectedBookId && role) && statusFor(selectedBookId) === null;
 
-  function handleShare() {
+  function handleInvite() {
     if (!selectedBook || !role) return;
     setError(null);
     startTransition(() => {
-      shareBookWithUser({ bookId: selectedBook.id, userId: profile.id, role }).then((res) => {
+      inviteUserToBook({ bookId: selectedBook.id, userId: profile.id, role }).then((res) => {
         if (res.success) {
-          onShared(selectedBook.id, selectedBook.title);
+          onInvited(selectedBook.id, selectedBook.title);
           onClose();
         } else {
-          setError(res.error ?? "Could not share.");
+          setError(res.error ?? "Could not send invite.");
         }
       });
     });
@@ -167,7 +174,7 @@ function ShareDialog({ profile, cookbooks, isShared, onClose, onShared }: ShareD
         <div className="flex items-start justify-between gap-3 border-b border-line-soft px-5 py-4">
           <div className="min-w-0">
             <h3 className="text-base font-black text-ink">
-              Share with {profile.name || "this person"}
+              Invite {profile.name || "this person"}
             </h3>
             <p className="mt-0.5 truncate text-xs text-ink-muted">
               {profile.email ?? profile.id}
@@ -201,24 +208,29 @@ function ShareDialog({ profile, cookbooks, isShared, onClose, onShared }: ShareD
             ) : (
               <ul className="divide-y divide-line-soft">
                 {filtered.map((book) => {
-                  const already = isShared(book.id);
+                  const status = statusFor(book.id);
+                  const unavailable = status !== null;
                   const selected = book.id === selectedBookId;
                   return (
                     <li key={book.id}>
                       <button
                         type="button"
-                        disabled={already}
+                        disabled={unavailable}
                         onClick={() => setSelectedBookId(book.id)}
                         className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
                           selected
                             ? "bg-green-pale font-black text-green-deep"
                             : "text-ink hover:bg-green-pale/60"
-                        } ${already ? "opacity-60" : ""}`}
+                        } ${unavailable ? "opacity-60" : ""}`}
                       >
                         <span className="truncate">{book.title}</span>
-                        {already ? (
+                        {status === "member" ? (
                           <span className="inline-flex shrink-0 items-center gap-1 text-xs font-extrabold text-green-deep">
-                            <Check size={13} /> Shared
+                            <Check size={13} /> Member
+                          </span>
+                        ) : status === "invited" ? (
+                          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-extrabold text-accent-cinnamon">
+                            <Clock size={13} /> Invited
                           </span>
                         ) : selected ? (
                           <Check size={15} className="shrink-0 text-green-deep" />
@@ -266,12 +278,12 @@ function ShareDialog({ profile, cookbooks, isShared, onClose, onShared }: ShareD
           </button>
           <button
             type="button"
-            onClick={handleShare}
-            disabled={!canShare || isPending}
+            onClick={handleInvite}
+            disabled={!canInvite || isPending}
             className="inline-flex items-center gap-1.5 rounded-full bg-green-deep px-4 py-2 text-sm font-extrabold text-white transition-colors hover:bg-green-deep/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isPending ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
-            Share
+            {isPending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+            Send invite
           </button>
         </div>
       </div>
