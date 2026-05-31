@@ -72,6 +72,7 @@ export default async function AdminPage({
     { data: profiles },
     { data: allCookbooks },
     { data: allMemberships },
+    { data: pendingInviteRows },
     { data: authUsers },
   ] = await Promise.all([
     admin.from("profiles").select("id", { count: "exact", head: true }),
@@ -102,8 +103,14 @@ export default async function AdminPage({
           .order("created_at", { ascending: false }),
     // Every cookbook for the share picker (independent of the search filter).
     admin.from("recipe_books").select("id,title").order("title", { ascending: true }),
-    // Existing memberships so already-shared people are marked.
+    // Existing memberships so current members can't be re-invited.
     admin.from("book_members").select("book_id,user_id"),
+    // Pending invitations so already-invited people are marked.
+    admin
+      .from("book_invitations")
+      .select("book_id,email")
+      .is("accepted_at", null)
+      .gte("expires_at", new Date().toISOString()),
     // Emails live in auth.users, not profiles — fetch them to label rows.
     admin.auth.admin.listUsers({ perPage: 1000 }),
   ]);
@@ -128,6 +135,9 @@ export default async function AdminPage({
   const membershipKeys = (allMemberships ?? []).map(
     (member) => `${member.book_id}:${member.user_id}`
   );
+  const pendingInviteKeys = (pendingInviteRows ?? []).map(
+    (invite) => `${invite.book_id}:${invite.email.toLowerCase()}`
+  );
 
   return (
     <div className="app-paper-bg paper-texture min-h-screen px-5 py-8">
@@ -144,7 +154,7 @@ export default async function AdminPage({
               Support Console
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-              Find users and cookbooks, and share a cookbook with any member directly.
+              Find users and cookbooks, and invite anyone to a cookbook of your choosing.
             </p>
           </div>
 
@@ -206,6 +216,7 @@ export default async function AdminPage({
             profiles={shareProfiles}
             cookbooks={shareCookbooks}
             memberships={membershipKeys}
+            pendingInvites={pendingInviteKeys}
           />
         </section>
       </main>
