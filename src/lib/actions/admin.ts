@@ -23,6 +23,37 @@ function inviterFirstName(fullName?: string | null) {
   return trimmed.split(/\s+/)[0] ?? null;
 }
 
+interface AdminActionLogEntry {
+  actorId: string;
+  action: string;
+  targetType?: string | null;
+  targetId?: string | null;
+  summary: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Append a row to the admin_actions audit log. Best-effort: the service-role
+ * client bypasses RLS to write here, and a logging failure must never break the
+ * underlying admin action. Never pass secrets (tokens, raw recipe content).
+ */
+export async function logAdminAction(
+  service: ReturnType<typeof createServiceClient>,
+  entry: AdminActionLogEntry
+): Promise<void> {
+  const { error } = await service.from("admin_actions").insert({
+    actor_id: entry.actorId,
+    action: entry.action,
+    target_type: entry.targetType ?? null,
+    target_id: entry.targetId ?? null,
+    summary: entry.summary,
+    metadata: entry.metadata ?? {},
+  });
+  if (error) {
+    console.error("Failed to write admin_actions log:", error.message);
+  }
+}
+
 /**
  * Admin-only: invite an existing user to a cookbook from the admin panel.
  *
@@ -59,6 +90,23 @@ export async function inviteUserToBook(
   }
   if (book.owner_id === userId) {
     return { success: false, error: "That person already owns this cookbook." };
+  }
+
+  // Being a platform admin does not grant the right to share someone else's
+  // private cookbook. You can only invite people to books you own or keep.
+  if (book.owner_id !== adminUser.id) {
+    const { data: adminMembership } = await service
+      .from("book_members")
+      .select("role")
+      .eq("book_id", bookId)
+      .eq("user_id", adminUser.id)
+      .maybeSingle();
+    if (adminMembership?.role !== "keeper") {
+      return {
+        success: false,
+        error: "You can only invite people to cookbooks you own or keep.",
+      };
+    }
   }
 
   const { data: existingMember } = await service
@@ -133,6 +181,15 @@ export async function inviteUserToBook(
           : "Invitation was created, but the email could not be sent.",
     };
   }
+
+  await logAdminAction(service, {
+    actorId: adminUser.id,
+    action: "invite_user_to_book",
+    targetType: "book_invitation",
+    targetId: bookId,
+    summary: `Invited ${targetEmail} to "${book.title ?? "a cookbook"}" as ${role}`,
+    metadata: { bookId, invitedUserId: userId, role, email: targetEmail },
+  });
 
   revalidatePath("/app/admin");
   revalidatePath(`/app/books/${bookId}/members`);

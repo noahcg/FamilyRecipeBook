@@ -1,8 +1,18 @@
 import Link from "next/link";
-import { BookOpen, Database, Search, Users } from "lucide-react";
+import { BookOpen, Database, ScrollText, Search, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { AdminShareProfiles } from "./AdminShareProfiles";
+
+function formatDateTime(value: string | null) {
+  if (!value) return "Unknown time";
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
 
 interface AdminSearchParams {
   q?: string;
@@ -59,7 +69,7 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<AdminSearchParams>;
 }) {
-  await requireAdmin();
+  const adminUser = await requireAdmin();
   const { q = "" } = await searchParams;
   const query = q.trim();
   const admin = createServiceClient();
@@ -74,6 +84,7 @@ export default async function AdminPage({
     { data: allMemberships },
     { data: pendingInviteRows },
     { data: authUsers },
+    { data: auditRows },
   ] = await Promise.all([
     admin.from("profiles").select("id", { count: "exact", head: true }),
     admin.from("recipe_books").select("id", { count: "exact", head: true }),
@@ -101,8 +112,13 @@ export default async function AdminPage({
           .from("profiles")
           .select("id,full_name,avatar_url,created_at")
           .order("created_at", { ascending: false }),
-    // Every cookbook for the share picker (independent of the search filter).
-    admin.from("recipe_books").select("id,title").order("title", { ascending: true }),
+    // Only cookbooks the admin personally keeps — being an admin does not grant
+    // the right to share other users' private books.
+    admin
+      .from("book_members")
+      .select("role, recipe_books(id, title)")
+      .eq("user_id", adminUser.id)
+      .eq("role", "keeper"),
     // Existing memberships so current members can't be re-invited.
     admin.from("book_members").select("book_id,user_id"),
     // Pending invitations so already-invited people are marked.
@@ -113,6 +129,12 @@ export default async function AdminPage({
       .gte("expires_at", new Date().toISOString()),
     // Emails live in auth.users, not profiles — fetch them to label rows.
     admin.auth.admin.listUsers({ perPage: 1000 }),
+    // Recent privileged actions for the audit log feed.
+    admin
+      .from("admin_actions")
+      .select("id, action, summary, created_at, actor:profiles!actor_id(full_name)")
+      .order("created_at", { ascending: false })
+      .limit(25),
   ]);
 
   const bookRows = (books ?? []) as AdminBookRow[];
@@ -128,16 +150,28 @@ export default async function AdminPage({
     name: profile.full_name ?? "",
     email: emailById.get(profile.id) ?? null,
   }));
-  const shareCookbooks = (allCookbooks ?? []).map((book) => ({
-    id: book.id,
-    title: book.title,
-  }));
+  const shareCookbooks = (allCookbooks ?? [])
+    .map((row) => {
+      const book = Array.isArray(row.recipe_books)
+        ? row.recipe_books[0]
+        : row.recipe_books;
+      return book ? { id: book.id as string, title: book.title as string } : null;
+    })
+    .filter((book): book is { id: string; title: string } => book !== null)
+    .sort((a, b) => a.title.localeCompare(b.title));
   const membershipKeys = (allMemberships ?? []).map(
     (member) => `${member.book_id}:${member.user_id}`
   );
   const pendingInviteKeys = (pendingInviteRows ?? []).map(
     (invite) => `${invite.book_id}:${invite.email.toLowerCase()}`
   );
+  const auditEntries = (auditRows ?? []) as Array<{
+    id: string;
+    action: string;
+    summary: string;
+    created_at: string | null;
+    actor: { full_name: string | null }[] | null;
+  }>;
 
   return (
     <div className="app-paper-bg paper-texture min-h-screen px-5 py-8">
@@ -154,7 +188,7 @@ export default async function AdminPage({
               Support Console
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-              Find users and cookbooks, and invite anyone to a cookbook of your choosing.
+              Find users and cookbooks for support, and invite people to cookbooks you keep.
             </p>
           </div>
 
@@ -218,6 +252,39 @@ export default async function AdminPage({
             memberships={membershipKeys}
             pendingInvites={pendingInviteKeys}
           />
+        </section>
+
+        <section className="mt-8">
+          <div className="recipe-card flex max-h-[34rem] flex-col overflow-hidden">
+            <div className="shrink-0 border-b border-line-soft px-5 py-4">
+              <h2 className="text-base font-black text-ink">Admin activity</h2>
+              <p className="mt-1 text-xs text-ink-muted">
+                Audit log of privileged actions taken from this panel.
+              </p>
+            </div>
+            <div className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
+              {auditEntries.length === 0 ? (
+                <p className="px-5 py-8 text-sm text-ink-muted">
+                  No admin actions recorded yet.
+                </p>
+              ) : (
+                auditEntries.map((entry) => (
+                  <div key={entry.id} className="flex items-start gap-3 px-5 py-3.5">
+                    <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm bg-green-pale text-green-deep">
+                      <ScrollText size={16} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-ink">{entry.summary}</p>
+                      <p className="mt-0.5 text-xs text-ink-muted">
+                        {entry.actor?.[0]?.full_name ?? "Admin"} ·{" "}
+                        {formatDateTime(entry.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </section>
       </main>
     </div>

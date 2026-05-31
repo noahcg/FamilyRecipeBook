@@ -54,7 +54,7 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships, pendingIn
       <div className="shrink-0 border-b border-line-soft px-5 py-4">
         <h2 className="text-base font-black text-ink">Profiles</h2>
         <p className="mt-1 text-xs text-ink-muted">
-          Invite anyone to a cookbook — they choose to accept before it joins their shelf.
+          Invite people to a cookbook you keep — they choose to accept before it joins their shelf.
         </p>
       </div>
 
