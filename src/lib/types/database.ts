@@ -83,6 +83,7 @@ export interface RecipeIngredient {
   unit: string | null;
   item: string;
   note: string | null;
+  group_label: string | null;
   created_at: string;
 }
 

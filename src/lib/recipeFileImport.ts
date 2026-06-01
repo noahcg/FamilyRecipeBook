@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import Papa from "papaparse";
-import { parseIngredientLine, parsePastedRecipe } from "@/lib/recipeTextImport";
+import { cleanGroupLabel, isIngredientGroupHeading, parseIngredientLine, parsePastedRecipe } from "@/lib/recipeTextImport";
 import type { IngredientInput, InstructionInput } from "@/lib/validators/recipe";
 
 export type ImportRecipeImage = {
@@ -105,7 +105,20 @@ function instructionInputs(value: unknown): InstructionInput[] {
 
 function ingredientInputs(value: unknown): IngredientInput[] {
   const values = Array.isArray(value) ? value : stringValue(value).split(/\n+|\r+/);
-  return values.map(stringValue).filter(Boolean).map(parseIngredientLine);
+  const lines = values.map(stringValue).filter(Boolean);
+
+  const ingredients: IngredientInput[] = [];
+  let currentGroup: string | undefined;
+  for (const line of lines) {
+    if (isIngredientGroupHeading(line)) {
+      currentGroup = cleanGroupLabel(line) || undefined;
+      continue;
+    }
+    const ingredient = parseIngredientLine(line);
+    if (!ingredient.item?.trim()) continue;
+    ingredients.push(currentGroup ? { ...ingredient, group_label: currentGroup } : ingredient);
+  }
+  return ingredients;
 }
 
 function recipeId(fileName: string, index: number) {

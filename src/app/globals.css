@@ -662,6 +662,21 @@ select.input-cookbook:disabled {
   margin-top: 0.1rem;
 }
 
+.recipe-print-ingredient-group {
+  display: block;
+  grid-column: 1 / -1;
+  margin: 0.65rem 0 0.3rem;
+  color: var(--color-accent-cinnamon);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.recipe-print-ingredient-group:first-child {
+  margin-top: 0;
+}
+
 @media print {
   @page {
     margin: 0.55in;
@@ -783,5 +798,20 @@ select.input-cookbook:disabled {
     font-size: 9pt;
     font-style: normal;
     margin-top: 0.02in;
+  }
+
+  .recipe-print-ingredient-group {
+    color: #8D5E34;
+    font-family: Arial, sans-serif;
+    font-size: 9.5pt;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0.12in 0 0.05in;
+    break-after: avoid;
+  }
+
+  .recipe-print-ingredient-group:first-child {
+    margin-top: 0;
   }
 }

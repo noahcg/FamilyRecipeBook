@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
 import type { RecipeWithRelations } from "@/lib/types";
 
@@ -20,6 +21,17 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
     formatMinutes("Cook", recipe.cook_minutes),
     recipe.category?.name,
   ].filter(Boolean);
+
+  // Collapse ingredients into contiguous group runs (null label = ungrouped).
+  const ingredientGroups = recipe.ingredients.reduce<
+    { label: string | null; items: RecipeWithRelations["ingredients"] }[]
+  >((groups, ingredient) => {
+    const label = ingredient.group_label?.trim() ? ingredient.group_label.trim() : null;
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(ingredient);
+    else groups.push({ label, items: [ingredient] });
+    return groups;
+  }, []);
 
   return (
     <section className="recipe-print-sheet">
@@ -45,22 +57,29 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
           <section>
             <h2>Ingredients</h2>
             <ul className="recipe-print-ingredients">
-              {recipe.ingredients.map((ingredient) => (
-                <li key={ingredient.id}>
-                  <span className="recipe-print-checkbox" aria-hidden="true" />
-                  <span className="recipe-print-ingredient-text">
-                    <span>
-                      {[
-                        scaleIngredientQuantity(ingredient.quantity, servingScale),
-                        ingredient.unit,
-                        ingredient.item,
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    </span>
-                    {ingredient.note && <em>{ingredient.note}</em>}
-                  </span>
-                </li>
+              {ingredientGroups.map((group, groupIndex) => (
+                <Fragment key={group.label ?? `ungrouped-${groupIndex}`}>
+                  {group.label && (
+                    <li className="recipe-print-ingredient-group">{group.label}</li>
+                  )}
+                  {group.items.map((ingredient) => (
+                    <li key={ingredient.id}>
+                      <span className="recipe-print-checkbox" aria-hidden="true" />
+                      <span className="recipe-print-ingredient-text">
+                        <span>
+                          {[
+                            scaleIngredientQuantity(ingredient.quantity, servingScale),
+                            ingredient.unit,
+                            ingredient.item,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </span>
+                        {ingredient.note && <em>{ingredient.note}</em>}
+                      </span>
+                    </li>
+                  ))}
+                </Fragment>
               ))}
             </ul>
           </section>

@@ -10,7 +10,7 @@ interface CookbookBadgeProps {
 }
 
 const BADGE_CLASS =
-  "inline-flex max-w-full items-center gap-1 rounded-sm bg-green-pale px-2 py-0.5 text-xs font-bold text-green-deep";
+  "inline-flex max-w-full items-center gap-1 rounded-sm border border-green-sage/40 bg-green-soft px-2 py-0.5 text-xs font-bold text-green-deep";
 
 /**
  * Small pill identifying which cookbook a recipe belongs to. Used across the
@@ -31,7 +31,7 @@ export function CookbookBadge({ title, href, className }: CookbookBadgeProps) {
     return (
       <Link
         href={href}
-        className={clsx(BADGE_CLASS, "transition-colors hover:bg-green-soft", className)}
+        className={clsx(BADGE_CLASS, "transition-colors hover:border-green-sage/60 hover:bg-green-sage/35", className)}
       >
         {content}
       </Link>

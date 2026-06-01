@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, type RefObject } from "react";
+import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, Plus, Trash2, GripVertical, ImagePlus, WandSparkles, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
@@ -114,8 +114,9 @@ function importedRecipeToInput(recipe: NormalizedImportedRecipe, photoUrl?: stri
           unit: truncateImportValue(ingredient.unit, 30) ?? "",
           item: truncateImportValue(ingredient.item, 200) ?? "Imported ingredient",
           note: truncateImportValue(ingredient.note, 200) ?? "",
+          group_label: truncateImportValue(ingredient.group_label ?? undefined, 100) ?? null,
         }))
-      : [{ quantity: "", unit: "", item: "Imported recipe", note: "" }],
+      : [{ quantity: "", unit: "", item: "Imported recipe", note: "", group_label: null }],
     instructions: recipe.instructions.length
       ? recipe.instructions.map((instruction) => ({
           body: truncateImportValue(instruction.body, 2000) ?? "Review imported instructions.",
@@ -345,8 +346,9 @@ export function RecipeForm({
                 unit: i.unit ?? "",
                 item: i.item,
                 note: i.note ?? "",
+                group_label: i.group_label ?? null,
               }))
-            : [{ quantity: "", unit: "", item: "", note: "" }],
+            : [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
           instructions: recipe.instructions?.length
             ? recipe.instructions.map((i) => ({ body: i.body }))
             : [{ body: "" }],
@@ -363,7 +365,7 @@ export function RecipeForm({
           import_source: "",
           import_metadata: {},
           nutrition: {},
-          ingredients: [{ quantity: "", unit: "", item: "", note: "" }],
+          ingredients: [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
           instructions: [{ body: "" }],
         },
   });
@@ -371,6 +373,7 @@ export function RecipeForm({
   const {
     fields: ingredients,
     append: addIngredient,
+    insert: insertIngredient,
     remove: removeIngredient,
     replace: replaceIngredients,
   } = useFieldArray({ control, name: "ingredients" });
@@ -383,6 +386,40 @@ export function RecipeForm({
   } = useFieldArray({ control, name: "instructions" });
 
   const selectedCategory = useWatch({ control, name: "category" });
+  const watchedIngredients = useWatch({ control, name: "ingredients" });
+
+  // Ingredient headings are derived from each ingredient's group_label: a
+  // contiguous run sharing a label sits under one heading. Editing a heading
+  // rewrites that whole run.
+  function setIngredientHeadingRun(startIndex: number, nextLabel: string | null) {
+    const list = getValues("ingredients") ?? [];
+    const previousLabel = list[startIndex]?.group_label ?? null;
+    for (let index = startIndex; index < list.length; index += 1) {
+      if ((list[index]?.group_label ?? null) !== previousLabel) break;
+      setValue(`ingredients.${index}.group_label`, nextLabel, { shouldDirty: true });
+    }
+  }
+
+  function addIngredientHeading() {
+    setActiveIngredientKeypad(null);
+    setManualIngredientKeypad(null);
+    const newIndex = getValues("ingredients")?.length ?? 0;
+    addIngredient({ quantity: "", unit: "", item: "", note: "", group_label: "" });
+    window.setTimeout(() => {
+      document.getElementById(`ingredient-heading-${newIndex}`)?.focus();
+    }, 0);
+  }
+
+  // Add an ingredient to a specific section: insert right after the section's
+  // last row, carrying that section's heading so it joins the right group.
+  function addIngredientToSection(afterIndex: number, label: string | null) {
+    setActiveIngredientKeypad(null);
+    setManualIngredientKeypad(null);
+    insertIngredient(afterIndex + 1, { quantity: "", unit: "", item: "", note: "", group_label: label });
+    window.setTimeout(() => {
+      document.getElementById(`ingredient-${afterIndex + 1}-item`)?.focus();
+    }, 0);
+  }
 
   useEffect(() => {
     if (!resolvedSelectedBookId || activeCategories.length === 0) return;
@@ -1044,8 +1081,42 @@ export function RecipeForm({
               )}
             </p>
             <div className="space-y-2">
-              {ingredients.map((field, index) => (
-                <div key={field.id} className="relative flex gap-2 items-start">
+              {ingredients.map((field, index) => {
+                const headingLabel = watchedIngredients?.[index]?.group_label ?? null;
+                const previousHeadingLabel =
+                  index > 0 ? watchedIngredients?.[index - 1]?.group_label ?? null : null;
+                const nextHeadingLabel =
+                  index < ingredients.length - 1
+                    ? watchedIngredients?.[index + 1]?.group_label ?? null
+                    : null;
+                const startsHeading =
+                  headingLabel != null && (index === 0 || previousHeadingLabel !== headingLabel);
+                const isLastInSection =
+                  index === ingredients.length - 1 || nextHeadingLabel !== headingLabel;
+
+                return (
+                <Fragment key={field.id}>
+                {startsHeading && (
+                  <div className="flex items-center gap-2 pt-3">
+                    <input
+                      id={`ingredient-heading-${index}`}
+                      value={headingLabel ?? ""}
+                      onChange={(event) => setIngredientHeadingRun(index, event.target.value)}
+                      placeholder="Ingredient heading, e.g. For the sauce"
+                      aria-label={`Ingredient heading for the section starting at ingredient ${index + 1}`}
+                      className="input-cookbook h-9 flex-1 text-sm font-bold text-green-deep"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIngredientHeadingRun(index, null)}
+                      className="text-ink-soft transition-colors hover:text-danger"
+                      aria-label="Remove ingredient heading"
+                    >
+                      <X size={15} strokeWidth={2} />
+                    </button>
+                  </div>
+                )}
+                <div className="relative flex gap-2 items-start">
                   <GripVertical size={16} className="text-ink-soft mt-3.5 shrink-0 opacity-40" />
                   <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:grid-cols-[5rem_7rem_1fr]">
                     <input
@@ -1122,19 +1193,28 @@ export function RecipeForm({
                     />
                   )}
                 </div>
-              ))}
+                {isLastInSection && (
+                  <button
+                    type="button"
+                    onClick={() => addIngredientToSection(index, headingLabel)}
+                    className="ml-6 flex items-center gap-1.5 text-sm font-semibold text-green-deep hover:underline"
+                  >
+                    <Plus size={14} /> Add ingredient
+                  </button>
+                )}
+                </Fragment>
+                );
+              })}
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveIngredientKeypad(null);
-                setManualIngredientKeypad(null);
-                addIngredient({ quantity: "", unit: "", item: "", note: "" });
-              }}
-              className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
-            >
-              <Plus size={14} /> Add ingredient
-            </button>
+            <div className="mt-3 border-t border-line-soft pt-3">
+              <button
+                type="button"
+                onClick={addIngredientHeading}
+                className="flex items-center gap-1.5 text-sm font-semibold text-green-deep hover:underline"
+              >
+                <Plus size={14} /> Add ingredient heading
+              </button>
+            </div>
           </div>
 
           {/* Instructions */}
@@ -1212,7 +1292,7 @@ export function RecipeForm({
       </div>
       ) : entryMode === "paste" ? (
         <div className={entryGridClassName}>
-          <div className="space-y-6">
+          <div className="space-y-6 lg:order-2">
             <section className={entryCardClassName}>
               <div className={entryCardHeaderClassName}>
                 <span className={entryCardIconClassName}>
@@ -1221,57 +1301,39 @@ export function RecipeForm({
                 <div>
                   <p className="text-sm font-bold text-ink">Copy/paste a recipe</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Paste a full recipe, parse it into structured fields, then
-                    review or save. The original manual form stays unchanged.
+                    Paste the whole recipe into one field. We&apos;ll pull out the
+                    title, times, servings, ingredients, and steps automatically — you
+                    just pick a category.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-5 space-y-4">
-                <Input
-                  label="Recipe title"
-                  required
-                  placeholder="e.g. Grandma's Apple Pie"
-                  error={errors.title?.message}
-                  {...register("title")}
-                />
-                <div className="grid grid-cols-1 gap-3 min-[520px]:grid-cols-3">
-                  <Input
-                    label="Prep (min)"
-                    type="number"
-                    min={0}
-                    placeholder="15"
-                    error={errors.prep_minutes?.message}
-                    {...register("prep_minutes")}
-                  />
-                  <Input
-                    label="Cook (min)"
-                    type="number"
-                    min={0}
-                    placeholder="45"
-                    error={errors.cook_minutes?.message}
-                    {...register("cook_minutes")}
-                  />
-                  <Input
-                    label="Servings"
-                    type="number"
-                    min={1}
-                    placeholder="4"
-                    error={errors.servings?.message}
-                    {...register("servings")}
-                  />
-                </div>
-                <Input
-                  label="Who is this from?"
-                  placeholder="e.g. Grandma Rose"
-                  error={errors.source_name?.message}
-                  {...register("source_name")}
-                />
-              </div>
+              <ol className="mt-5 space-y-2.5 text-sm text-ink-muted">
+                <li className="flex gap-2">
+                  <span className="font-bold text-green-deep">1.</span>
+                  <span>Paste the full recipe — title and all — on the left.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-green-deep">2.</span>
+                  <span>Choose a category below.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-green-deep">3.</span>
+                  <span>Parse, give it a quick review, and save.</span>
+                </li>
+              </ol>
             </section>
 
             <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
-              <p className="text-sm font-semibold text-ink mb-3">Category</p>
+              <p className="text-sm font-semibold text-ink mb-1">
+                Category{" "}
+                <span className="ml-1 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+                  Required
+                </span>
+              </p>
+              <p className="mb-3 text-xs text-ink-muted">
+                Pick where this recipe belongs in your book.
+              </p>
               <div className="flex flex-wrap gap-2">
                 {categories.map((cat) => {
                   const selected = selectedCategory === cat.name;
@@ -1308,11 +1370,11 @@ export function RecipeForm({
             </section>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5 lg:order-1">
             <Textarea
               label="Paste recipe"
-              placeholder={"Grandma's Apple Pie\n\nIngredients\n6 cups sliced apples\n3/4 cup sugar\n1 tsp cinnamon\n\nInstructions\n1. Preheat oven to 375°F.\n2. Toss apples with sugar and cinnamon.\n3. Bake until golden."}
-              hint="Paste the full recipe. For best results, include Ingredients and Instructions headings."
+              placeholder={"Grandma's Apple Pie\n\nPrep: 20 min\nCook: 45 min\nServes: 8\n\nIngredients\n6 cups sliced apples\n3/4 cup sugar\n1 tsp cinnamon\n\nInstructions\n1. Preheat oven to 375°F.\n2. Toss apples with sugar and cinnamon.\n3. Bake until golden."}
+              hint="Start with the title, then prep/cook times and servings (e.g. “Prep: 20 min”, “Serves: 8”), followed by the ingredients and steps. Ingredients and Instructions headings give the best results."
               value={pastedRecipe}
               onChange={(event) => {
                 setPastedRecipe(event.target.value);
@@ -1337,19 +1399,24 @@ export function RecipeForm({
                   <div>
                     <p className="text-sm font-bold text-green-deep">{pasteSummary}</p>
                     <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                      You can save now or review the generated fields in Manual entry.
+                      Confirm the title, then save. You can fine-tune everything later in Manual entry.
                     </p>
                   </div>
                 </div>
-                {Object.values(pasteDetails).some(Boolean) && (
+                <div className="mt-3 rounded-md border border-green-sage/25 bg-white-soft/70 p-3">
+                  <Input
+                    label="Recipe title"
+                    required
+                    placeholder="e.g. Grandma's Apple Pie"
+                    hint="We pulled this from your paste — edit it if needed."
+                    error={errors.title?.message}
+                    {...register("title")}
+                  />
+                </div>
+                {Boolean(pasteDetails.prep_minutes || pasteDetails.cook_minutes || pasteDetails.servings) && (
                   <div className="mt-3 rounded-md border border-green-sage/25 bg-white-soft/60 p-3">
                     <p className="mb-2 text-xs font-bold text-ink">Details</p>
                     <div className="grid gap-2 text-xs text-ink-muted sm:grid-cols-2">
-                      {pasteDetails.title && (
-                        <p className="truncate">
-                          <span className="font-bold text-ink">Title:</span> {pasteDetails.title}
-                        </p>
-                      )}
                       {pasteDetails.prep_minutes && (
                         <p>
                           <span className="font-bold text-ink">Prep:</span> {formatMinutes(pasteDetails.prep_minutes)}
