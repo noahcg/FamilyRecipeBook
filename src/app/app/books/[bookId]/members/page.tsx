@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Crown, Lock, Plus, Settings, UserPlus, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { BookName } from "@/components/book/BookName";
 import { Button, EmptyState } from "@/components/ui";
 import { MemberProfileCard } from "@/components/members/MemberProfileCard";
@@ -87,6 +88,7 @@ export default async function MembersPage({ params }: Props) {
     <AppShell bookId={bookId}>
       <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-5 lg:px-8">
         <header className="mb-7 border-b border-line-soft pb-6">
+          <CookbookBackLink bookId={bookId} className="mb-4" />
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <p className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">

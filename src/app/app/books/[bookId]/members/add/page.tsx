@@ -1,7 +1,8 @@
-import { ArrowLeft, BookOpen, Crown, Lock, Mail, Settings, Users } from "lucide-react";
+import { BookOpen, Crown, Lock, Mail, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { AddMemberForm } from "@/components/book/AddMemberForm";
+import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { getBook } from "@/lib/actions/books";
 import { Button, EmptyState } from "@/components/ui";
 
@@ -35,13 +36,7 @@ export default async function AddMemberPage({ params }: Props) {
     <AppShell bookId={bookId}>
       <div className="px-4 py-8 sm:px-5 lg:px-8">
         <div className="mb-7 border-b border-line-soft pb-6">
-          <Link
-            href={`/app/books/${bookId}/members`}
-            className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
-          >
-            <ArrowLeft size={14} strokeWidth={2} />
-            Members
-          </Link>
+          <CookbookBackLink bookId={bookId} href={`/app/books/${bookId}/members`} label="Members" className="mb-4" />
           <h1
             className="text-3xl font-bold leading-tight text-green-deep"
             style={{ fontFamily: "var(--font-playfair)" }}

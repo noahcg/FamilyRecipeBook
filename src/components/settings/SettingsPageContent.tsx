@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { BookCategoriesManager } from "@/components/book/BookCategoriesManager";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
 import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
@@ -243,6 +244,7 @@ export function BookSettingsPageContent({
     <AppShell bookId={bookId} bookTitle={bookTitle}>
       <div className="max-w-[940px] px-4 py-8 sm:px-5 lg:px-8">
         <header className="mb-7 border-b border-line-soft pb-6">
+          <CookbookBackLink bookId={bookId} className="mb-4" />
           <div className="min-w-0">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
               {bookTitle}

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import {
   CalendarDays,
+  Download,
   Heart,
   Home,
   Library,
@@ -23,6 +24,11 @@ import { CookbookNavigator } from "@/components/layout/CookbookNavigator";
 import { APP_VERSION } from "@/lib/version";
 import { signOut } from "@/lib/actions/auth";
 import { useAccount } from "@/lib/context/AccountContext";
+import { useUser } from "@/lib/hooks/useUser";
+import {
+  listOfflineRecipes,
+  OFFLINE_RECIPES_CHANGED_EVENT,
+} from "@/lib/offlineRecipes";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -63,6 +69,13 @@ const ACCOUNT_NAV: NavItem[] = [
   { id: "favorites", href: "/app/favorites", icon: Heart, label: "Favorites" },
 ];
 
+const OFFLINE_NAV: NavItem = {
+  id: "offline",
+  href: "/app/offline",
+  icon: Download,
+  label: "Offline",
+};
+
 function isActivePath(pathname: string, href: string, exact?: boolean) {
   if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -81,12 +94,33 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
   const mobileNavRef = useRef<HTMLDivElement>(null);
   const mobileNavItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [cookbooksMobileOpen, setCookbooksMobileOpen] = useState(false);
+  const [offlineCount, setOfflineCount] = useState(0);
   const { isAdmin } = useAccount();
+  const { userId } = useUser();
   // The active cookbook on book routes comes straight from the URL.
   const currentBookId = pathname.match(/^\/app\/books\/([^/]+)/)?.[1] ?? null;
+  const offlineActive = isActivePath(pathname, "/app/offline");
+  const navItems = offlineCount > 0 || offlineActive ? [...ACCOUNT_NAV, OFFLINE_NAV] : ACCOUNT_NAV;
 
   const settingsActive = isActivePath(pathname, "/app/settings");
-  const activeMobileId = ACCOUNT_NAV.find((item) => isActivePath(pathname, item.href, item.exact))?.id;
+  const activeMobileId = navItems.find((item) => isActivePath(pathname, item.href, item.exact))?.id;
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+
+    async function refreshOfflineCount() {
+      const records = await listOfflineRecipes(userId!);
+      if (active) setOfflineCount(records.length);
+    }
+
+    void refreshOfflineCount().catch(() => {});
+    window.addEventListener(OFFLINE_RECIPES_CHANGED_EVENT, refreshOfflineCount);
+    return () => {
+      active = false;
+      window.removeEventListener(OFFLINE_RECIPES_CHANGED_EVENT, refreshOfflineCount);
+    };
+  }, [userId]);
 
   useEffect(() => {
     if (!activeMobileId) return;
@@ -110,7 +144,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
         {!lockNav && (
           <nav aria-label="Primary navigation" className="shrink-0 px-6">
             <div className="space-y-2.5">
-              {ACCOUNT_NAV.map(({ id, href, icon: Icon, label, exact }) => {
+              {navItems.map(({ id, href, icon: Icon, label, exact }) => {
                 const isActive = isActivePath(pathname, href, exact);
                 return (
                   <Link
@@ -237,7 +271,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {!lockNav &&
-            ACCOUNT_NAV.map(({ id, href, icon: Icon, label, exact }) => {
+            navItems.map(({ id, href, icon: Icon, label, exact }) => {
               const isActive = isActivePath(pathname, href, exact);
               return (
                 <Link

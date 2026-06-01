@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
+import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
 import { listCategories } from "@/lib/actions/categories";
@@ -27,13 +26,7 @@ export default async function NewRecipePage({ params }: Props) {
   return (
     <AppShell bookId={bookId}>
       <div className="px-5 py-8 lg:px-10">
-        <Link
-          href={`/app/books/${bookId}`}
-          className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft transition-colors hover:text-ink"
-        >
-          <ArrowLeft size={14} strokeWidth={2} />
-          Back to book
-        </Link>
+        <CookbookBackLink bookId={bookId} className="mb-5" />
 
         <div className="mb-6 border-b border-line-soft pb-6">
           <BookName className="mb-2 block text-sm font-semibold text-ink-muted" />
