@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BookOpen, Download, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { Button, EmptyState } from "@/components/ui";
 import {
   listOfflineRecipes,
@@ -13,7 +14,7 @@ import {
 import { useUser } from "@/lib/hooks/useUser";
 
 interface OfflineRecipesPageContentProps {
-  bookId: string;
+  bookId?: string;
 }
 
 function formatSavedDate(value: string) {
@@ -68,13 +69,14 @@ export function OfflineRecipesPageContent({ bookId }: OfflineRecipesPageContentP
     <AppShell bookId={bookId}>
       <div className="mx-auto max-w-[1040px] px-4 py-8 sm:px-5 lg:px-8">
         <header className="mb-7 border-b border-line-soft pb-6">
+          {bookId ? <CookbookBackLink bookId={bookId} className="mb-4" /> : null}
           <div className="flex items-start gap-4">
             <span className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-pale text-green-deep">
               <Download size={19} strokeWidth={1.9} />
             </span>
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
-                Offline
+                {bookId ? "Offline" : "Saved on this device"}
               </p>
               <h1
                 className="mt-1 text-4xl font-bold leading-tight text-green-deep lg:text-5xl"
@@ -101,7 +103,7 @@ export function OfflineRecipesPageContent({ bookId }: OfflineRecipesPageContentP
             description="Open a recipe and use Save offline to keep it available on this device."
             icon={<BookOpen size={32} />}
             action={
-              <Link href={`/app/books/${bookId}/recipes`}>
+              <Link href={bookId ? `/app/books/${bookId}/recipes` : "/app/recipes"}>
                 <Button variant="primary" size="sm">
                   Browse recipes
                 </Button>
@@ -112,7 +114,14 @@ export function OfflineRecipesPageContent({ bookId }: OfflineRecipesPageContentP
           <ol className="divide-y divide-line-soft rounded-xl border border-line bg-card px-5 shadow-xs">
             {records.map((record) => (
               <li key={record.key} className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                <Link href={`/app/books/${bookId}/offline/${record.recipeId}`} className="group min-w-0">
+                <Link
+                  href={
+                    bookId
+                      ? `/app/books/${bookId}/offline/${record.recipeId}`
+                      : `/app/offline/${record.recipeId}`
+                  }
+                  className="group min-w-0"
+                >
                   <p
                     className="truncate text-xl font-bold text-ink transition-colors group-hover:text-green-deep"
                     style={{ fontFamily: "var(--font-playfair)" }}

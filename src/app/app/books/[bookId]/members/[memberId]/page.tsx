@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { RecipeCard, EmptyState, CookbookIcon } from "@/components/ui";
 import { MemberProfileCard } from "@/components/members/MemberProfileCard";
 import { RemoveMemberButton } from "@/components/members/RemoveMemberButton";
@@ -110,13 +110,7 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
   return (
     <AppShell bookId={bookId}>
       <div className="px-5 pt-5 pb-6">
-        <Link
-          href={`/app/books/${bookId}/members`}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink mb-4"
-        >
-          <ArrowLeft size={14} strokeWidth={2} />
-          Members
-        </Link>
+        <CookbookBackLink bookId={bookId} href={`/app/books/${bookId}/members`} label="Members" className="mb-4" />
 
         <MemberProfileCard
           member={member}

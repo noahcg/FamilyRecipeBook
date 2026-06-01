@@ -17,7 +17,7 @@ import {
 import { useUser } from "@/lib/hooks/useUser";
 
 interface OfflineRecipeDetailProps {
-  bookId: string;
+  bookId?: string;
   recipeId: string;
 }
 
@@ -97,7 +97,7 @@ export function OfflineRecipeDetail({ bookId, recipeId }: OfflineRecipeDetailPro
             description="Open the online recipe and save it for offline viewing on this device."
             icon={<Download size={32} />}
             action={
-              <Link href={`/app/books/${bookId}/offline`}>
+              <Link href={bookId ? `/app/books/${bookId}/offline` : "/app/offline"}>
                 <Button variant="primary" size="sm">
                   Offline recipes
                 </Button>
@@ -110,12 +110,14 @@ export function OfflineRecipeDetail({ bookId, recipeId }: OfflineRecipeDetailPro
   }
 
   const recipe = record.recipe;
+  const shellBookId = bookId ?? record.bookId;
+  const offlineHref = bookId ? `/app/books/${bookId}/offline` : "/app/offline";
   const sourceName = firstNonEmpty(recipe.source_name, recipe.creator?.full_name) ?? "Family";
   const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
   const displayedServings = recipe.servings ? recipe.servings * servingScale : recipe.servings;
 
   return (
-    <AppShell bookId={bookId}>
+    <AppShell bookId={shellBookId}>
       <article>
         <header className="relative h-[310px] overflow-hidden bg-green-pale sm:h-[360px] lg:h-[390px] lg:rounded-tr-xl">
           <div className="absolute inset-0">
@@ -132,7 +134,7 @@ export function OfflineRecipeDetail({ bookId, recipeId }: OfflineRecipeDetailPro
           <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-14 pt-4 sm:pt-5">
             <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-8">
               <Link
-                href={`/app/books/${bookId}/offline`}
+                href={offlineHref}
                 className="inline-flex h-10 items-center gap-2 rounded-full border border-white/35 bg-white-soft/88 px-3 text-sm font-extrabold text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
               >
                 <ArrowLeft size={17} strokeWidth={2} />

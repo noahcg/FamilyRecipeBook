@@ -14,12 +14,14 @@ import {
   saveRecipeIdea,
   type AIRecipeIdea,
 } from "@/lib/actions/aiRecipes";
+import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 
 interface AIRecipeIdeaPanelProps {
   bookId: string;
   bookOptions?: { id: string; title: string }[];
   initialPrompt?: string;
   autoGenerate?: boolean;
+  showCookbookBackLink?: boolean;
 }
 
 // Open-ended prompts for the "Get Inspired" / surprise entry point. One is
@@ -44,6 +46,7 @@ export function AIRecipeIdeaPanel({
   bookOptions,
   initialPrompt,
   autoGenerate,
+  showCookbookBackLink = false,
 }: AIRecipeIdeaPanelProps) {
   const router = useRouter();
   const assignmentOptions = bookOptions?.length
@@ -109,6 +112,9 @@ export function AIRecipeIdeaPanel({
     <div className="min-h-dvh px-4 py-8 sm:px-5 lg:px-8">
       <div className="mx-auto max-w-[1240px]">
         <header className="mb-8 border-b border-line-soft pb-7">
+          {showCookbookBackLink ? (
+            <CookbookBackLink bookId={bookId} className="mb-4" />
+          ) : null}
           <p className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
             <Sparkles size={15} />
             Recipe ideas
