@@ -1212,7 +1212,7 @@ export function RecipeForm({
       </div>
       ) : entryMode === "paste" ? (
         <div className={entryGridClassName}>
-          <div className="space-y-6">
+          <div className="space-y-6 lg:order-2">
             <section className={entryCardClassName}>
               <div className={entryCardHeaderClassName}>
                 <span className={entryCardIconClassName}>
@@ -1221,57 +1221,39 @@ export function RecipeForm({
                 <div>
                   <p className="text-sm font-bold text-ink">Copy/paste a recipe</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Paste a full recipe, parse it into structured fields, then
-                    review or save. The original manual form stays unchanged.
+                    Paste the whole recipe into one field. We&apos;ll pull out the
+                    title, times, servings, ingredients, and steps automatically — you
+                    just pick a category.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-5 space-y-4">
-                <Input
-                  label="Recipe title"
-                  required
-                  placeholder="e.g. Grandma's Apple Pie"
-                  error={errors.title?.message}
-                  {...register("title")}
-                />
-                <div className="grid grid-cols-1 gap-3 min-[520px]:grid-cols-3">
-                  <Input
-                    label="Prep (min)"
-                    type="number"
-                    min={0}
-                    placeholder="15"
-                    error={errors.prep_minutes?.message}
-                    {...register("prep_minutes")}
-                  />
-                  <Input
-                    label="Cook (min)"
-                    type="number"
-                    min={0}
-                    placeholder="45"
-                    error={errors.cook_minutes?.message}
-                    {...register("cook_minutes")}
-                  />
-                  <Input
-                    label="Servings"
-                    type="number"
-                    min={1}
-                    placeholder="4"
-                    error={errors.servings?.message}
-                    {...register("servings")}
-                  />
-                </div>
-                <Input
-                  label="Who is this from?"
-                  placeholder="e.g. Grandma Rose"
-                  error={errors.source_name?.message}
-                  {...register("source_name")}
-                />
-              </div>
+              <ol className="mt-5 space-y-2.5 text-sm text-ink-muted">
+                <li className="flex gap-2">
+                  <span className="font-bold text-green-deep">1.</span>
+                  <span>Paste the full recipe — title and all — on the left.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-green-deep">2.</span>
+                  <span>Choose a category below.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="font-bold text-green-deep">3.</span>
+                  <span>Parse, give it a quick review, and save.</span>
+                </li>
+              </ol>
             </section>
 
             <section className="rounded-xl border border-line bg-card p-5 shadow-xs">
-              <p className="text-sm font-semibold text-ink mb-3">Category</p>
+              <p className="text-sm font-semibold text-ink mb-1">
+                Category{" "}
+                <span className="ml-1 rounded-sm bg-card-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-accent-cinnamon">
+                  Required
+                </span>
+              </p>
+              <p className="mb-3 text-xs text-ink-muted">
+                Pick where this recipe belongs in your book.
+              </p>
               <div className="flex flex-wrap gap-2">
                 {categories.map((cat) => {
                   const selected = selectedCategory === cat.name;
@@ -1308,11 +1290,11 @@ export function RecipeForm({
             </section>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-5 lg:order-1">
             <Textarea
               label="Paste recipe"
-              placeholder={"Grandma's Apple Pie\n\nIngredients\n6 cups sliced apples\n3/4 cup sugar\n1 tsp cinnamon\n\nInstructions\n1. Preheat oven to 375°F.\n2. Toss apples with sugar and cinnamon.\n3. Bake until golden."}
-              hint="Paste the full recipe. For best results, include Ingredients and Instructions headings."
+              placeholder={"Grandma's Apple Pie\n\nPrep: 20 min\nCook: 45 min\nServes: 8\n\nIngredients\n6 cups sliced apples\n3/4 cup sugar\n1 tsp cinnamon\n\nInstructions\n1. Preheat oven to 375°F.\n2. Toss apples with sugar and cinnamon.\n3. Bake until golden."}
+              hint="Start with the title, then prep/cook times and servings (e.g. “Prep: 20 min”, “Serves: 8”), followed by the ingredients and steps. Ingredients and Instructions headings give the best results."
               value={pastedRecipe}
               onChange={(event) => {
                 setPastedRecipe(event.target.value);
@@ -1337,19 +1319,24 @@ export function RecipeForm({
                   <div>
                     <p className="text-sm font-bold text-green-deep">{pasteSummary}</p>
                     <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                      You can save now or review the generated fields in Manual entry.
+                      Confirm the title, then save. You can fine-tune everything later in Manual entry.
                     </p>
                   </div>
                 </div>
-                {Object.values(pasteDetails).some(Boolean) && (
+                <div className="mt-3 rounded-md border border-green-sage/25 bg-white-soft/70 p-3">
+                  <Input
+                    label="Recipe title"
+                    required
+                    placeholder="e.g. Grandma's Apple Pie"
+                    hint="We pulled this from your paste — edit it if needed."
+                    error={errors.title?.message}
+                    {...register("title")}
+                  />
+                </div>
+                {Boolean(pasteDetails.prep_minutes || pasteDetails.cook_minutes || pasteDetails.servings) && (
                   <div className="mt-3 rounded-md border border-green-sage/25 bg-white-soft/60 p-3">
                     <p className="mb-2 text-xs font-bold text-ink">Details</p>
                     <div className="grid gap-2 text-xs text-ink-muted sm:grid-cols-2">
-                      {pasteDetails.title && (
-                        <p className="truncate">
-                          <span className="font-bold text-ink">Title:</span> {pasteDetails.title}
-                        </p>
-                      )}
                       {pasteDetails.prep_minutes && (
                         <p>
                           <span className="font-bold text-ink">Prep:</span> {formatMinutes(pasteDetails.prep_minutes)}
