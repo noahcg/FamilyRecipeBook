@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { getFirstBookId } from "@/lib/actions/books";
 import { isAdminEmail } from "@/lib/admin";
 import { AccountProvider } from "@/lib/context/AccountContext";
+import { RouteHistoryTracker } from "@/components/layout/RouteHistoryTracker";
 
 export default async function AppLayout({
   children,
@@ -19,5 +20,10 @@ export default async function AppLayout({
   }
   // Admin status is account-level, so it must be available on the global pages
   // (Home, My Recipes, …) that have no per-book context.
-  return <AccountProvider isAdmin={isAdminEmail(user.email)}>{children}</AccountProvider>;
+  return (
+    <AccountProvider isAdmin={isAdminEmail(user.email)}>
+      <RouteHistoryTracker />
+      {children}
+    </AccountProvider>
+  );
 }
