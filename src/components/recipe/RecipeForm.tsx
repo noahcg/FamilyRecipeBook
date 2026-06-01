@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef, type RefObject } from "react";
+import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, Plus, Trash2, GripVertical, ImagePlus, WandSparkles } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, Plus, Trash2, GripVertical, ImagePlus, WandSparkles, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
@@ -114,8 +114,9 @@ function importedRecipeToInput(recipe: NormalizedImportedRecipe, photoUrl?: stri
           unit: truncateImportValue(ingredient.unit, 30) ?? "",
           item: truncateImportValue(ingredient.item, 200) ?? "Imported ingredient",
           note: truncateImportValue(ingredient.note, 200) ?? "",
+          group_label: truncateImportValue(ingredient.group_label ?? undefined, 100) ?? null,
         }))
-      : [{ quantity: "", unit: "", item: "Imported recipe", note: "" }],
+      : [{ quantity: "", unit: "", item: "Imported recipe", note: "", group_label: null }],
     instructions: recipe.instructions.length
       ? recipe.instructions.map((instruction) => ({
           body: truncateImportValue(instruction.body, 2000) ?? "Review imported instructions.",
@@ -345,8 +346,9 @@ export function RecipeForm({
                 unit: i.unit ?? "",
                 item: i.item,
                 note: i.note ?? "",
+                group_label: i.group_label ?? null,
               }))
-            : [{ quantity: "", unit: "", item: "", note: "" }],
+            : [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
           instructions: recipe.instructions?.length
             ? recipe.instructions.map((i) => ({ body: i.body }))
             : [{ body: "" }],
@@ -363,7 +365,7 @@ export function RecipeForm({
           import_source: "",
           import_metadata: {},
           nutrition: {},
-          ingredients: [{ quantity: "", unit: "", item: "", note: "" }],
+          ingredients: [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
           instructions: [{ body: "" }],
         },
   });
@@ -371,6 +373,7 @@ export function RecipeForm({
   const {
     fields: ingredients,
     append: addIngredient,
+    insert: insertIngredient,
     remove: removeIngredient,
     replace: replaceIngredients,
   } = useFieldArray({ control, name: "ingredients" });
@@ -383,6 +386,40 @@ export function RecipeForm({
   } = useFieldArray({ control, name: "instructions" });
 
   const selectedCategory = useWatch({ control, name: "category" });
+  const watchedIngredients = useWatch({ control, name: "ingredients" });
+
+  // Ingredient headings are derived from each ingredient's group_label: a
+  // contiguous run sharing a label sits under one heading. Editing a heading
+  // rewrites that whole run.
+  function setIngredientHeadingRun(startIndex: number, nextLabel: string | null) {
+    const list = getValues("ingredients") ?? [];
+    const previousLabel = list[startIndex]?.group_label ?? null;
+    for (let index = startIndex; index < list.length; index += 1) {
+      if ((list[index]?.group_label ?? null) !== previousLabel) break;
+      setValue(`ingredients.${index}.group_label`, nextLabel, { shouldDirty: true });
+    }
+  }
+
+  function addIngredientHeading() {
+    setActiveIngredientKeypad(null);
+    setManualIngredientKeypad(null);
+    const newIndex = getValues("ingredients")?.length ?? 0;
+    addIngredient({ quantity: "", unit: "", item: "", note: "", group_label: "" });
+    window.setTimeout(() => {
+      document.getElementById(`ingredient-heading-${newIndex}`)?.focus();
+    }, 0);
+  }
+
+  // Add an ingredient to a specific section: insert right after the section's
+  // last row, carrying that section's heading so it joins the right group.
+  function addIngredientToSection(afterIndex: number, label: string | null) {
+    setActiveIngredientKeypad(null);
+    setManualIngredientKeypad(null);
+    insertIngredient(afterIndex + 1, { quantity: "", unit: "", item: "", note: "", group_label: label });
+    window.setTimeout(() => {
+      document.getElementById(`ingredient-${afterIndex + 1}-item`)?.focus();
+    }, 0);
+  }
 
   useEffect(() => {
     if (!resolvedSelectedBookId || activeCategories.length === 0) return;
@@ -1044,8 +1081,42 @@ export function RecipeForm({
               )}
             </p>
             <div className="space-y-2">
-              {ingredients.map((field, index) => (
-                <div key={field.id} className="relative flex gap-2 items-start">
+              {ingredients.map((field, index) => {
+                const headingLabel = watchedIngredients?.[index]?.group_label ?? null;
+                const previousHeadingLabel =
+                  index > 0 ? watchedIngredients?.[index - 1]?.group_label ?? null : null;
+                const nextHeadingLabel =
+                  index < ingredients.length - 1
+                    ? watchedIngredients?.[index + 1]?.group_label ?? null
+                    : null;
+                const startsHeading =
+                  headingLabel != null && (index === 0 || previousHeadingLabel !== headingLabel);
+                const isLastInSection =
+                  index === ingredients.length - 1 || nextHeadingLabel !== headingLabel;
+
+                return (
+                <Fragment key={field.id}>
+                {startsHeading && (
+                  <div className="flex items-center gap-2 pt-3">
+                    <input
+                      id={`ingredient-heading-${index}`}
+                      value={headingLabel ?? ""}
+                      onChange={(event) => setIngredientHeadingRun(index, event.target.value)}
+                      placeholder="Ingredient heading, e.g. For the sauce"
+                      aria-label={`Ingredient heading for the section starting at ingredient ${index + 1}`}
+                      className="input-cookbook h-9 flex-1 text-sm font-bold text-green-deep"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIngredientHeadingRun(index, null)}
+                      className="text-ink-soft transition-colors hover:text-danger"
+                      aria-label="Remove ingredient heading"
+                    >
+                      <X size={15} strokeWidth={2} />
+                    </button>
+                  </div>
+                )}
+                <div className="relative flex gap-2 items-start">
                   <GripVertical size={16} className="text-ink-soft mt-3.5 shrink-0 opacity-40" />
                   <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:grid-cols-[5rem_7rem_1fr]">
                     <input
@@ -1122,19 +1193,28 @@ export function RecipeForm({
                     />
                   )}
                 </div>
-              ))}
+                {isLastInSection && (
+                  <button
+                    type="button"
+                    onClick={() => addIngredientToSection(index, headingLabel)}
+                    className="ml-6 flex items-center gap-1.5 text-sm font-semibold text-green-deep hover:underline"
+                  >
+                    <Plus size={14} /> Add ingredient
+                  </button>
+                )}
+                </Fragment>
+                );
+              })}
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveIngredientKeypad(null);
-                setManualIngredientKeypad(null);
-                addIngredient({ quantity: "", unit: "", item: "", note: "" });
-              }}
-              className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
-            >
-              <Plus size={14} /> Add ingredient
-            </button>
+            <div className="mt-3 border-t border-line-soft pt-3">
+              <button
+                type="button"
+                onClick={addIngredientHeading}
+                className="flex items-center gap-1.5 text-sm font-semibold text-green-deep hover:underline"
+              >
+                <Plus size={14} /> Add ingredient heading
+              </button>
+            </div>
           </div>
 
           {/* Instructions */}

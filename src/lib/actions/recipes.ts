@@ -349,7 +349,7 @@ export async function copyRecipeToBook(
   ] = await Promise.all([
     supabase
       .from("recipe_ingredients")
-      .select("position, quantity, unit, item, note")
+      .select("position, quantity, unit, item, note, group_label")
       .eq("recipe_id", recipeId)
       .order("position", { ascending: true }),
     supabase

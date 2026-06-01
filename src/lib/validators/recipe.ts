@@ -5,6 +5,12 @@ const ingredientSchema = z.object({
   unit: z.string().max(30).optional(),
   item: z.string().min(1, "Ingredient name is required").max(200),
   note: z.string().max(200).optional(),
+  // Optional sub-group label (e.g. "For the sauce"). Whitespace-only is
+  // normalized to null so ungrouped ingredients stay ungrouped.
+  group_label: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    z.string().max(100).nullish()
+  ),
 });
 
 const instructionSchema = z.object({

@@ -229,6 +229,53 @@ function looksLikeIngredient(line: string, fromExplicitSection = false) {
   return fromExplicitSection ? score >= 1 && !looksLikeProse(line) : score >= 3;
 }
 
+// A standalone sub-group word ("Sauce", "Topping") only counts as a heading
+// when the whole line is exactly that word — so "Worcestershire sauce" stays an
+// ingredient, while "Sauce" or "For the sauce" become group labels.
+const GROUP_HEADING_WORD = /^(sauce|topping|toppings|crust|filling|dough|batter|frosting|icing|glaze|dressing|marinade|garnish|streusel|crumble|assembly|base|cake|custard|coating|rub)$/i;
+
+export function isIngredientGroupHeading(line: string) {
+  const cleaned = stripIngredientMarker(line).trim();
+  if (!cleaned) return false;
+  if (hasQuantityCue(line) || hasUnitCue(line)) return false;
+  if (looksLikeInstruction(cleaned)) return false;
+  if (cleaned.split(/\s+/).filter(Boolean).length > 6) return false;
+
+  const withoutColon = cleaned.replace(/:\s*$/, "").trim();
+  return /:\s*$/.test(cleaned) || /^for\s+the\b/i.test(cleaned) || GROUP_HEADING_WORD.test(withoutColon);
+}
+
+export function cleanGroupLabel(line: string) {
+  const label = stripIngredientMarker(line)
+    .replace(/:\s*$/, "")
+    .replace(/^for\s+the\s+/i, "")
+    .trim()
+    .slice(0, 100);
+  return label ? label.charAt(0).toUpperCase() + label.slice(1) : "";
+}
+
+// Walk ingredient lines, tracking the current sub-group heading and tagging
+// each parsed ingredient with its group_label (undefined when ungrouped).
+function buildGroupedIngredients(lines: string[], hasIngredientHeading: boolean): IngredientInput[] {
+  const result: IngredientInput[] = [];
+  let currentGroup: string | undefined;
+
+  for (const line of lines) {
+    if (isSectionHeading(line, ["ingredients", "ingredient"])) continue;
+    if (looksLikeMetadata(line)) continue;
+    if (isIngredientGroupHeading(line)) {
+      currentGroup = cleanGroupLabel(line) || undefined;
+      continue;
+    }
+    if (!looksLikeIngredient(line, hasIngredientHeading)) continue;
+    const ingredient = parseIngredientLine(line);
+    if (!ingredient.item?.trim()) continue;
+    result.push(currentGroup ? { ...ingredient, group_label: currentGroup } : ingredient);
+  }
+
+  return result.slice(0, 80);
+}
+
 function findSectionIndex(lines: string[], headings: string[]) {
   return lines.findIndex((line) => isSectionHeading(line, headings));
 }
@@ -363,11 +410,10 @@ function parseServings(lines: string[]) {
 }
 
 export function parsePastedIngredients(text: string): IngredientInput[] {
-  return toCleanLines(text)
-    .filter((line) => !/^(ingredients?|notes?)$/i.test(line))
-    .map(parseIngredientLine)
-    .filter((ingredient) => ingredient.item?.trim())
-    .slice(0, 80);
+  return buildGroupedIngredients(
+    toCleanLines(text).filter((line) => !/^notes?$/i.test(line)),
+    true
+  );
 }
 
 export function parsePastedInstructions(text: string): InstructionInput[] {
@@ -432,13 +478,7 @@ export function parsePastedRecipe(text: string): PastedRecipeParseResult {
   const prepMinutes = parseMinutes(lines, ["prep", "preparation"]);
   const cookMinutes = parseMinutes(lines, ["cook", "bake", "baking"]);
   const servings = parseServings(lines);
-  const ingredients = ingredientLines
-    .filter((line) => !isSectionHeading(line, ["ingredients", "ingredient"]))
-    .filter((line) => !looksLikeMetadata(line))
-    .filter((line) => looksLikeIngredient(line, hasIngredientHeading))
-    .map(parseIngredientLine)
-    .filter((ingredient) => ingredient.item?.trim())
-    .slice(0, 80);
+  const ingredients = buildGroupedIngredients(ingredientLines, hasIngredientHeading);
 
   const instructions = parsePastedInstructions(
     instructionLines
