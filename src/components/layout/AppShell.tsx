@@ -216,7 +216,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
           aria-label={mobileSideDrawer.ariaLabel}
           aria-expanded={mobileSideDrawer.isOpen}
           onClick={mobileSideDrawer.onOpen}
-          className="fixed right-0 top-[38dvh] z-30 flex h-[92px] w-8 flex-col items-center justify-center gap-1 rounded-l-[12px] border border-r-0 border-green-sage/35 bg-card/95 text-green-deep shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-green-pale active:translate-x-0.5 lg:hidden min-[360px]:h-[98px] min-[360px]:w-9 min-[425px]:top-[29dvh] min-[425px]:h-[104px] min-[425px]:w-10"
+          className="fixed right-0 top-[38dvh] z-30 flex h-[92px] w-8 flex-col items-center justify-center gap-1 rounded-l-md border border-r-0 border-green-sage/35 bg-card/95 text-green-deep shadow-[-4px_8px_18px_rgba(75,53,31,0.10)] backdrop-blur-md transition-[background-color,color,transform] duration-150 hover:bg-green-pale active:translate-x-0.5 lg:hidden min-[360px]:h-[98px] min-[360px]:w-9 min-[425px]:top-[29dvh] min-[425px]:h-[104px] min-[425px]:w-10"
         >
           {mobileSideDrawer.icon}
           <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-extrabold leading-none">

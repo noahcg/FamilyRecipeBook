@@ -81,7 +81,7 @@ export function createMemberInviteEmail({
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4E7D9;">
       <tr>
         <td align="center" style="padding:36px 18px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#FBF5E8;border:1px solid #E8DBC8;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(47,79,63,0.10);">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#FBF5E8;border:1px solid #E8DBC8;border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(47,79,63,0.10);">
             <tr>
               <td style="padding:34px 36px 8px;background:#FBF5E8;">
                 <table role="presentation" cellpadding="0" cellspacing="0">
@@ -100,7 +100,7 @@ export function createMemberInviteEmail({
 
             <tr>
               <td style="padding:24px 36px 0;background:#FBF5E8;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4E2C3;border-radius:16px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4E2C3;border-radius:8px;">
                   <tr>
                     <td style="padding:18px 20px;">
                       <div style="font-size:13px;line-height:1.4;letter-spacing:0.08em;text-transform:uppercase;color:#8D5E34;font-weight:700;">Cookbook</div>
