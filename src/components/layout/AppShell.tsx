@@ -81,6 +81,29 @@ function isActivePath(pathname: string, href: string, exact?: boolean) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+// Selector for elements that can hold keyboard focus, used so the skip link
+// lands on the first interactive control inside main rather than the <main>
+// container itself.
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function handleSkipToMain(event: React.MouseEvent<HTMLAnchorElement>) {
+  const main = document.getElementById("main-content");
+  if (!main) return;
+  event.preventDefault();
+  // Find the first focusable control that is actually rendered — skip
+  // responsive-hidden elements (display:none), since .focus() is a no-op on
+  // them and would leave focus stuck on the skip link.
+  const target = Array.from(
+    main.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+  ).find(
+    (el) =>
+      el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0
+  );
+  // Fall back to the main container if it has no focusable children yet.
+  (target ?? main).focus();
+}
+
 const railItemClass = (isActive: boolean) =>
   clsx(
     "flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
@@ -136,8 +159,11 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
+      <a href="#main-content" className="skip-link" onClick={handleSkipToMain}>
+        Skip to main content
+      </a>
       <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[280px] overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
-        <Link href="/app" className="shrink-0 px-7 pb-7 pt-7">
+        <Link href="/app" className="brand-logo-link shrink-0 m-5 p-2">
           <BrandLockup compact />
         </Link>
 
@@ -206,7 +232,11 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
         </div>
       </aside>
 
-      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] focus:shadow-none focus:outline-none focus-visible:shadow-none focus-visible:outline-none lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0"
+      >
         {children}
       </main>
 
