@@ -554,7 +554,7 @@ export function RecipeDetail({
         </section>
 
       <div className="grid gap-10 py-8 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
-        <main className="min-w-0">
+        <div className="min-w-0">
           {recipe.instructions && recipe.instructions.length > 0 && (
             <section id="instructions" className="max-w-[820px]">
               <div className="mb-6 flex flex-col gap-3 border-b border-line-soft pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
@@ -576,7 +576,7 @@ export function RecipeDetail({
               <InstructionList instructions={recipe.instructions} />
             </section>
           )}
-        </main>
+        </div>
 
         <aside className="space-y-8 border-line-soft lg:sticky lg:top-8 lg:self-start lg:border-l lg:pl-8">
           {recipe.ingredients && recipe.ingredients.length > 0 && (
@@ -734,7 +734,7 @@ export function RecipeDetail({
         }
       >
         {copiedTo ? (
-          <div className="space-y-6 pt-5">
+          <div className="space-y-6 pt-5" role="status" aria-live="polite">
             <p className="text-sm leading-relaxed text-ink-muted">
               <span className="font-semibold text-ink">{recipe.title}</span> was
               copied — memories, reactions, and ratings included.

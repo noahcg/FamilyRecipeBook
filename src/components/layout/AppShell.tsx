@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { CookbookNavigator } from "@/components/layout/CookbookNavigator";
+import { getVisibleFocusable } from "@/lib/a11y";
+import { useModalFocus } from "@/lib/hooks/useModalFocus";
 import { APP_VERSION } from "@/lib/version";
 import { signOut } from "@/lib/actions/auth";
 import { useAccount } from "@/lib/context/AccountContext";
@@ -81,26 +83,13 @@ function isActivePath(pathname: string, href: string, exact?: boolean) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-// Selector for elements that can hold keyboard focus, used so the skip link
-// lands on the first interactive control inside main rather than the <main>
-// container itself.
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 function handleSkipToMain(event: React.MouseEvent<HTMLAnchorElement>) {
   const main = document.getElementById("main-content");
   if (!main) return;
   event.preventDefault();
-  // Find the first focusable control that is actually rendered — skip
-  // responsive-hidden elements (display:none), since .focus() is a no-op on
-  // them and would leave focus stuck on the skip link.
-  const target = Array.from(
-    main.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
-  ).find(
-    (el) =>
-      el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0
-  );
-  // Fall back to the main container if it has no focusable children yet.
+  // Land on the first rendered focusable control; fall back to the main
+  // container if it has no focusable children yet.
+  const [target] = getVisibleFocusable(main);
   (target ?? main).focus();
 }
 
@@ -116,6 +105,9 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLDivElement>(null);
   const mobileNavItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const sideDrawerRef = useRef<HTMLElement>(null);
+  const sideDrawerTitleId = useId();
+  useModalFocus({ containerRef: sideDrawerRef, open: mobileSideDrawer?.isOpen ?? false });
   const [cookbooksMobileOpen, setCookbooksMobileOpen] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
   const { isAdmin } = useAccount();
@@ -263,13 +255,20 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
             className="absolute inset-0 animate-in fade-in duration-150 bg-ink/18"
             onClick={mobileSideDrawer.onClose}
           />
-          <section className="relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]">
+          <section
+            ref={sideDrawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={sideDrawerTitleId}
+            className="relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]"
+          >
             <div className="mb-5 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
                   {mobileSideDrawer.eyebrow}
                 </p>
                 <h2
+                  id={sideDrawerTitleId}
                   className="mt-1 truncate text-2xl font-bold leading-tight text-green-deep"
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >

@@ -150,7 +150,7 @@ export default async function MembersPage({ params }: Props) {
           />
         ) : (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
-            <main className="min-w-0 space-y-10">
+            <div className="min-w-0 space-y-10">
               {userRole === "keeper" && pendingInvites.length > 0 && (
                 <PendingInvitationsList bookId={bookId} invitations={pendingInvites} />
               )}
@@ -187,7 +187,7 @@ export default async function MembersPage({ params }: Props) {
                   </section>
                 );
               })}
-            </main>
+            </div>
 
             <aside className="hidden lg:sticky lg:top-8 lg:block lg:self-start">
               <div className="rounded-lg border border-line bg-card p-5 shadow-[var(--shadow-paper)]">

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
+import { useModalFocus } from "@/lib/hooks/useModalFocus";
 
 interface DrawerProps {
   open: boolean;
@@ -22,6 +23,10 @@ export function Drawer({
   children,
   className,
 }: DrawerProps) {
+  const panelRef = useRef<HTMLElement>(null);
+  const titleId = useId();
+  useModalFocus({ containerRef: panelRef, open });
+
   useEffect(() => {
     if (!open) return;
     document.body.style.overflow = "hidden";
@@ -46,6 +51,10 @@ export function Drawer({
         onClick={onClose}
       />
       <section
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={clsx(
           "drawer-panel-anim relative ml-auto flex h-full w-[min(86vw,360px)] flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]",
           className
@@ -59,6 +68,7 @@ export function Drawer({
               </p>
             )}
             <h2
+              id={titleId}
               className="mt-1 truncate text-2xl font-bold leading-tight text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
             >

@@ -431,7 +431,7 @@ export default function RecipesPage({ params }: Props) {
           />
         ) : (
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
-            <main className="min-w-0">
+            <div className="min-w-0">
               <div className="space-y-10">
                 {chapters.map((chapter) => (
                   <section
@@ -498,7 +498,7 @@ export default function RecipesPage({ params }: Props) {
                   </section>
                 ))}
               </div>
-            </main>
+            </div>
 
             <aside className="hidden lg:sticky lg:top-8 lg:block lg:self-start">
               <div className="overflow-hidden rounded-xl border border-line bg-card shadow-[var(--shadow-paper)]">
