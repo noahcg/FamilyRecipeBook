@@ -878,7 +878,8 @@ export function RecipeForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="pb-10">
-      {showCookbookPicker && (
+      {/* Manual mode shows this inside the right column; paste/import keep it up top. */}
+      {showCookbookPicker && showPasteEntry && entryMode !== "manual" && (
         <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
           <label htmlFor="recipe-book" className="block text-sm font-bold text-ink">
             Cookbook
@@ -935,6 +936,27 @@ export function RecipeForm({
 
         {/* ── Right column (40%): photo + details ── */}
         <div className="space-y-6 lg:order-2">
+
+        {/* ── Save to cookbook ── */}
+        {showCookbookPicker && (
+          <section className={sectionCardClassName}>
+            <label htmlFor="recipe-book" className={clsx(sectionHeadingClassName, "block")}>
+              Save to cookbook
+            </label>
+            <select
+              id="recipe-book"
+              value={resolvedSelectedBookId}
+              onChange={(event) => setSelectedBookId(event.target.value)}
+              className="input-cookbook h-11 w-full text-sm"
+            >
+              {assignmentOptions.map((book) => (
+                <option key={book.id} value={book.id}>
+                  {book.title}
+                </option>
+              ))}
+            </select>
+          </section>
+        )}
 
         {/* ── Photo ── */}
         <section className={sectionCardClassName}>
