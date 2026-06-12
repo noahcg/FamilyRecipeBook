@@ -12,7 +12,9 @@ function formatMinutes(label: string, minutes: number | null) {
 }
 
 export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipeProps) {
-  const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
+  // Only a real, human-written story prints in the handwriting style; a plain
+  // description prints as normal text below it.
+  const story = recipe.story ?? recipe.stories?.[0]?.body ?? null;
   const servings = recipe.servings ? recipe.servings * servingScale : null;
   const details = [
     servings ? `Serves ${servings}` : null,
@@ -51,6 +53,10 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
           <blockquote className="recipe-print-story">
             {story}
           </blockquote>
+        )}
+
+        {recipe.description && recipe.description !== story && (
+          <p className="recipe-print-description">{recipe.description}</p>
         )}
 
         <div className="recipe-print-grid">

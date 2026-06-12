@@ -23,6 +23,7 @@ import {
   type ImportedRecipe,
 } from "@/lib/imageImport";
 import { selectRecipeImage } from "@/lib/actions/pexels";
+import { generateRecipeDescription } from "@/lib/actions/recipeDescription";
 import { parsePastedRecipe } from "@/lib/recipeTextImport";
 import { importRecipeFiles, type NormalizedImportedRecipe } from "@/lib/recipeFileImport";
 import { useUser } from "@/lib/hooks/useUser";
@@ -832,15 +833,26 @@ export function RecipeForm({
       photoUrl = uploaded.url;
     }
 
-    // Auto-select from Pexels when creating a new recipe without a photo
+    // Auto-fill from AI so the recipe page never renders empty placeholder
+    // areas. The photo is only picked for new recipes, but a missing
+    // description is filled on every save — including existing recipes — so
+    // older recipes can be backfilled just by opening Edit and saving.
+    let description = data.description;
+    const ingredientNames = data.ingredients.map((i) => i.item).filter(Boolean);
+
     if (!photoUrl && !isEdit) {
-      const ingredientNames = data.ingredients.map((i) => i.item).filter(Boolean);
       const auto = await selectRecipeImage(data.title, ingredientNames);
       if (auto) photoUrl = auto;
     }
 
+    if (!description?.trim()) {
+      const generated = await generateRecipeDescription(data.title, ingredientNames);
+      if (generated) description = generated;
+    }
+
     const payload = {
       ...data,
+      description,
       photo_url: photoUrl,
       import_method: recipeImportedViaUpload ? "image_upload" : data.import_method,
     } satisfies CreateRecipeInput;
@@ -1130,9 +1142,10 @@ export function RecipeForm({
               error={errors.story?.message}
               {...register("story")}
             />
-            <Input
+            <Textarea
               label="Short description (optional)"
-              placeholder="A one-line description of the dish"
+              placeholder="A short paragraph about the dish"
+              hint="Left blank? We'll write a short description for you when you save."
               error={errors.description?.message}
               {...register("description")}
             />

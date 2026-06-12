@@ -113,7 +113,9 @@ export function OfflineRecipeDetail({ bookId, recipeId }: OfflineRecipeDetailPro
   const shellBookId = bookId ?? record.bookId;
   const offlineHref = bookId ? `/app/books/${bookId}/offline` : "/app/offline";
   const sourceName = firstNonEmpty(recipe.source_name, recipe.creator?.full_name) ?? "Family";
-  const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
+  // Only a real, human-written story gets the handwriting treatment; a plain
+  // description renders as normal text below.
+  const story = recipe.story ?? recipe.stories?.[0]?.body ?? null;
   const displayedServings = recipe.servings ? recipe.servings * servingScale : recipe.servings;
 
   return (
@@ -187,8 +189,8 @@ export function OfflineRecipeDetail({ bookId, recipeId }: OfflineRecipeDetailPro
           <section className="grid gap-8 border-b border-line-soft py-7 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="max-w-[820px]">
               {story && (
-                <blockquote className="border-l-2 border-accent-honey pl-5 text-xl leading-relaxed text-accent-cinnamon">
-                  <p style={{ fontFamily: "var(--font-caveat)" }}>{story}</p>
+                <blockquote className="border-l-2 border-accent-honey pl-5 text-lg leading-relaxed text-accent-cinnamon">
+                  <p style={{ fontFamily: "var(--font-hand)" }}>{story}</p>
                 </blockquote>
               )}
               {recipe.description && recipe.description !== story && (

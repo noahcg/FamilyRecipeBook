@@ -20,7 +20,7 @@ function RecipeStoryNote({ story, author, className }: RecipeStoryNoteProps) {
       {author && (
         <p
           className="mt-2 text-sm opacity-70"
-          style={{ fontFamily: "var(--font-caveat)" }}
+          style={{ fontFamily: "var(--font-hand)" }}
         >
           — {author}
         </p>

@@ -150,9 +150,13 @@ export async function updateRecipe(
   const supabase = await createClient();
   const role = await getBookRole(supabase, bookId, user.id);
 
+  // Capture the pre-edit fingerprint so we can find this recipe's copies in
+  // other cookbooks before the edit changes any of those fields.
   const { data: existing } = await supabase
     .from("recipes")
-    .select("created_by")
+    .select(
+      "created_by, title, photo_url, source_name, prep_minutes, cook_minutes, servings"
+    )
     .eq("id", recipeId)
     .single();
 
@@ -204,8 +208,140 @@ export async function updateRecipe(
     }
   }
 
+  // A recipe copied into several cookbooks is stored as independent rows that
+  // the "My Recipes" list merges by content. Mirror this edit onto those copies
+  // (in cookbooks the user can edit) so they stay in sync and keep merging into
+  // a single badged entry instead of splitting apart.
+  if (existing) {
+    try {
+      await syncEditAcrossCopies({
+        supabase,
+        userId: user.id,
+        editedRecipeId: recipeId,
+        preEdit: {
+          title: existing.title,
+          photo_url: existing.photo_url,
+          source_name: existing.source_name,
+          prep_minutes: existing.prep_minutes,
+          cook_minutes: existing.cook_minutes,
+          servings: existing.servings,
+        },
+        recipeFields,
+        category,
+        ingredients,
+        instructions,
+      });
+    } catch {
+      // Best effort: the primary edit already succeeded, so never fail the
+      // user's save because a copy in another cookbook couldn't be synced.
+    }
+  }
+
   revalidatePath(`/app/books/${bookId}/recipes/${recipeId}`);
   return { success: true, data: recipe };
+}
+
+// Propagate an edit to a recipe's content-identical copies in other cookbooks.
+// Copies are matched on the pre-edit fingerprint (title plus the fields a copy
+// shares verbatim, ignoring description so already-diverged copies still re-
+// converge). Only copies the user has permission to edit are touched; writes go
+// through the service client to cover copies authored by other members.
+async function syncEditAcrossCopies(params: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  editedRecipeId: string;
+  preEdit: {
+    title: string;
+    photo_url: string | null;
+    source_name: string | null;
+    prep_minutes: number | null;
+    cook_minutes: number | null;
+    servings: number | null;
+  };
+  recipeFields: Record<string, unknown>;
+  category: string | undefined;
+  ingredients?: { item: string; [key: string]: unknown }[];
+  instructions?: { body: string }[];
+}): Promise<void> {
+  const { supabase, userId, editedRecipeId, preEdit, recipeFields, category } = params;
+
+  const norm = (v: unknown) => v ?? null;
+
+  // Title is the cheap server-side filter; the rest of the fingerprint is
+  // matched in JS to sidestep null-comparison quirks.
+  const { data: candidates } = await supabase
+    .from("recipes")
+    .select(
+      "id, book_id, created_by, photo_url, source_name, prep_minutes, cook_minutes, servings"
+    )
+    .eq("title", preEdit.title)
+    .neq("id", editedRecipeId);
+
+  const siblings = (candidates ?? []).filter(
+    (c) =>
+      norm(c.photo_url) === norm(preEdit.photo_url) &&
+      norm(c.source_name) === norm(preEdit.source_name) &&
+      norm(c.prep_minutes) === norm(preEdit.prep_minutes) &&
+      norm(c.cook_minutes) === norm(preEdit.cook_minutes) &&
+      norm(c.servings) === norm(preEdit.servings)
+  );
+  if (siblings.length === 0) return;
+
+  const { data: memberships } = await supabase
+    .from("book_members")
+    .select("book_id, role")
+    .eq("user_id", userId);
+  const roleByBook = new Map(
+    (memberships ?? []).map((m) => [m.book_id, m.role as BookRole])
+  );
+
+  const editable = siblings.filter((c) =>
+    canEditRecipe(roleByBook.get(c.book_id) ?? null, c.created_by === userId)
+  );
+  if (editable.length === 0) return;
+
+  const service = createServiceClient();
+
+  for (const sibling of editable) {
+    const payload: Record<string, unknown> = {
+      ...recipeFields,
+      updated_at: new Date().toISOString(),
+    };
+    if (category !== undefined) {
+      payload.category_id = await resolveCategoryIdForBook(sibling.book_id, category);
+    }
+
+    const { error: updateError } = await service
+      .from("recipes")
+      .update(payload)
+      .eq("id", sibling.id);
+    if (updateError) continue;
+
+    if (params.ingredients) {
+      await service.from("recipe_ingredients").delete().eq("recipe_id", sibling.id);
+      if (params.ingredients.length) {
+        await service.from("recipe_ingredients").insert(
+          params.ingredients.map((ing, i) => ({
+            ...ing,
+            recipe_id: sibling.id,
+            position: i + 1,
+          }))
+        );
+      }
+    }
+    if (params.instructions) {
+      await service.from("recipe_instructions").delete().eq("recipe_id", sibling.id);
+      if (params.instructions.length) {
+        await service.from("recipe_instructions").insert(
+          params.instructions.map((ins, i) => ({
+            body: ins.body,
+            recipe_id: sibling.id,
+            position: i + 1,
+          }))
+        );
+      }
+    }
+  }
 }
 
 export async function deleteRecipe(

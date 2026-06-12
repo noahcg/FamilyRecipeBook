@@ -22,7 +22,7 @@ async function callCloudflareText(
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN;
   const model =
-    process.env.CLOUDFLARE_WORKERS_AI_MODEL ?? "@cf/meta/llama-3.1-8b-instruct";
+    process.env.CLOUDFLARE_WORKERS_AI_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
 
   if (!accountId || !apiToken) return null;
 
@@ -49,9 +49,15 @@ async function callCloudflareText(
     if (!response.ok) return null;
 
     const json = (await response.json()) as {
-      result?: { response?: unknown };
+      result?: {
+        response?: unknown;
+        choices?: { message?: { content?: unknown } }[];
+      };
     };
-    const output = json.result?.response;
+    // Newer Workers AI models return OpenAI chat-completion shape
+    // (result.choices[].message.content); older ones use result.response.
+    const output =
+      json.result?.response ?? json.result?.choices?.[0]?.message?.content;
     return typeof output === "string" ? output.trim() : null;
   } catch {
     return null;

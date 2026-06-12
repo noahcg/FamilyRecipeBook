@@ -165,7 +165,7 @@ export function AddMemberForm({
       {bookTitle && (
         <p
           className="text-xs text-ink-soft italic text-center"
-          style={{ fontFamily: "var(--font-caveat)", fontSize: "1rem" }}
+          style={{ fontFamily: "var(--font-hand)", fontSize: "0.95rem" }}
         >
           They&rsquo;ll see the recipes you&rsquo;ve already added to &ldquo;{bookTitle}&rdquo;
         </p>

@@ -107,8 +107,8 @@ export function EntryShell({
                 </div>
                 <div className="absolute -bottom-1 right-5 rotate-[4deg] rounded-lg border border-line bg-paper px-4 py-3 shadow-[0_12px_28px_rgba(57,45,25,0.10)]">
                   <p
-                    className="max-w-[190px] text-xl leading-tight text-accent-cinnamon"
-                    style={{ fontFamily: "var(--font-caveat)" }}
+                    className="max-w-[190px] text-lg leading-tight text-accent-cinnamon"
+                    style={{ fontFamily: "var(--font-hand)" }}
                   >
                     {sideNote}
                   </p>
