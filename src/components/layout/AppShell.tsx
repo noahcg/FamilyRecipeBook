@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { CookbookNavigator } from "@/components/layout/CookbookNavigator";
+import { getVisibleFocusable } from "@/lib/a11y";
+import { useModalFocus } from "@/lib/hooks/useModalFocus";
 import { APP_VERSION } from "@/lib/version";
 import { signOut } from "@/lib/actions/auth";
 import { useAccount } from "@/lib/context/AccountContext";
@@ -81,6 +83,16 @@ function isActivePath(pathname: string, href: string, exact?: boolean) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function handleSkipToMain(event: React.MouseEvent<HTMLAnchorElement>) {
+  const main = document.getElementById("main-content");
+  if (!main) return;
+  event.preventDefault();
+  // Land on the first rendered focusable control; fall back to the main
+  // container if it has no focusable children yet.
+  const [target] = getVisibleFocusable(main);
+  (target ?? main).focus();
+}
+
 const railItemClass = (isActive: boolean) =>
   clsx(
     "flex h-11 items-center gap-3 rounded-md px-3 text-sm font-semibold transition-colors",
@@ -93,6 +105,9 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLDivElement>(null);
   const mobileNavItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const sideDrawerRef = useRef<HTMLElement>(null);
+  const sideDrawerTitleId = useId();
+  useModalFocus({ containerRef: sideDrawerRef, open: mobileSideDrawer?.isOpen ?? false });
   const [cookbooksMobileOpen, setCookbooksMobileOpen] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
   const { isAdmin } = useAccount();
@@ -136,8 +151,11 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
 
   return (
     <div className="app-paper-bg paper-texture min-h-dvh">
+      <a href="#main-content" className="skip-link" onClick={handleSkipToMain}>
+        Skip to main content
+      </a>
       <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[280px] overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
-        <Link href="/app" className="shrink-0 px-7 pb-7 pt-7">
+        <Link href="/app" className="brand-logo-link shrink-0 m-5 p-2">
           <BrandLockup compact />
         </Link>
 
@@ -206,7 +224,11 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
         </div>
       </aside>
 
-      <main className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] focus:shadow-none focus:outline-none focus-visible:shadow-none focus-visible:outline-none lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0"
+      >
         {children}
       </main>
 
@@ -233,13 +255,20 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
             className="absolute inset-0 animate-in fade-in duration-150 bg-ink/18"
             onClick={mobileSideDrawer.onClose}
           />
-          <section className="relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]">
+          <section
+            ref={sideDrawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={sideDrawerTitleId}
+            className="relative ml-auto flex h-full w-[min(86vw,360px)] animate-in slide-in-from-right-5 duration-200 flex-col border-l border-line-soft bg-card px-4 py-5 shadow-[-18px_0_48px_rgba(75,53,31,0.14)]"
+          >
             <div className="mb-5 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
                   {mobileSideDrawer.eyebrow}
                 </p>
                 <h2
+                  id={sideDrawerTitleId}
                   className="mt-1 truncate text-2xl font-bold leading-tight text-green-deep"
                   style={{ fontFamily: "var(--font-playfair)" }}
                 >

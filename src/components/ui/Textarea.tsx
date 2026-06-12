@@ -46,6 +46,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {error && (
           <p
             id={`${inputId}-error`}
+            role="alert"
             className="text-xs text-danger font-medium"
           >
             {error}

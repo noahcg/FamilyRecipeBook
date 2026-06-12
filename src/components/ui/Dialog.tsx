@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
+import { useModalFocus } from "@/lib/hooks/useModalFocus";
 
 interface DialogProps {
   open: boolean;
   onClose: () => void;
   title?: string;
+  /** Required for screen readers when no visible `title` is provided. */
+  ariaLabel?: string;
   children: React.ReactNode;
   className?: string;
 }
@@ -17,10 +20,14 @@ export function Dialog({
   open,
   onClose,
   title,
+  ariaLabel,
   children,
   className,
 }: DialogProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  useModalFocus({ containerRef: panelRef, open });
 
   useEffect(() => {
     if (!open) return;
@@ -41,8 +48,6 @@ export function Dialog({
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
@@ -50,6 +55,11 @@ export function Dialog({
       <div className="absolute inset-0 bg-ink/45 backdrop-blur-md" />
 
       <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : ariaLabel}
         className={clsx(
           "relative w-full sm:max-w-lg",
           "rounded-t-2xl sm:rounded-2xl shadow-lg",
@@ -61,12 +71,14 @@ export function Dialog({
         {title && (
           <div className="flex items-center justify-between gap-3 border-b border-line-soft px-4 pb-3 pt-5 sm:px-5">
             <h2
+              id={titleId}
               className="text-lg font-bold text-green-deep"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
               {title}
             </h2>
             <button
+              type="button"
               onClick={onClose}
               className="flex h-8 w-8 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-line-soft"
               aria-label="Close"
