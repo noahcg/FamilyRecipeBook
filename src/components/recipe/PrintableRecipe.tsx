@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
+import { formatDuration } from "@/lib/formatDuration";
 import type { RecipeWithRelations } from "@/lib/types";
 
 interface PrintableRecipeProps {
@@ -8,7 +9,7 @@ interface PrintableRecipeProps {
 }
 
 function formatMinutes(label: string, minutes: number | null) {
-  return minutes ? `${label}: ${minutes} min` : null;
+  return minutes ? `${label}: ${formatDuration(minutes)}` : null;
 }
 
 export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipeProps) {

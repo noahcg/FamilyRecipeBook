@@ -12,6 +12,7 @@ import {
   type OfflineRecipeRecord,
 } from "@/lib/offlineRecipes";
 import { useUser } from "@/lib/hooks/useUser";
+import { formatDuration } from "@/lib/formatDuration";
 
 interface OfflineRecipesPageContentProps {
   bookId?: string;
@@ -30,7 +31,7 @@ function recipeMeta(record: OfflineRecipeRecord) {
   const attribution = recipe.source_name?.trim() || recipe.creator?.full_name?.trim();
   return [
     attribution,
-    recipe.cook_minutes ? `${recipe.cook_minutes} min` : null,
+    recipe.cook_minutes ? formatDuration(recipe.cook_minutes) : null,
     recipe.servings ? `Serves ${recipe.servings}` : null,
   ]
     .filter(Boolean)

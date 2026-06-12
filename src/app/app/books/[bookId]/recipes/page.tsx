@@ -15,6 +15,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState, Button } from "@/components/ui";
 import { BookName } from "@/components/book/BookName";
 import { createClient } from "@/lib/supabase/client";
+import { formatDuration } from "@/lib/formatDuration";
 import { canContribute, canManageBook, canManageMembers } from "@/lib/permissions";
 import type { BookRole } from "@/lib/types";
 
@@ -86,7 +87,7 @@ function recipeMeta(recipe: RecipeListItem) {
   const attribution = recipe.source_name?.trim() || creator?.full_name?.trim();
   const items = [
     attribution,
-    recipe.cook_minutes ? `${recipe.cook_minutes} min` : null,
+    recipe.cook_minutes ? formatDuration(recipe.cook_minutes) : null,
     recipe.servings ? `Serves ${recipe.servings}` : null,
   ];
 

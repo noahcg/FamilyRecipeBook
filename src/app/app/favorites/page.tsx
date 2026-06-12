@@ -4,6 +4,7 @@ import { CookbookBadge } from "@/components/recipe/CookbookBadge";
 import { RecipeCard, EmptyState } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
+import { formatDuration } from "@/lib/formatDuration";
 
 interface FavoriteRecipe {
   id: string;
@@ -78,7 +79,7 @@ export default async function FavoritesPage() {
                     description={recipe.description ?? undefined}
                     imageUrl={recipe.photo_url ?? undefined}
                     fromPerson={getRecipeAttribution(recipe)}
-                    cookTime={recipe.cook_minutes ? `${recipe.cook_minutes} min` : undefined}
+                    cookTime={recipe.cook_minutes ? formatDuration(recipe.cook_minutes) : undefined}
                     servings={recipe.servings ?? undefined}
                     category={recipe.category?.name ?? undefined}
                     isFavorited

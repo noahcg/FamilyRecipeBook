@@ -15,6 +15,7 @@ import {
   saveRecipeIdea,
   type AIRecipeIdea,
 } from "@/lib/actions/aiRecipes";
+import { formatDuration } from "@/lib/formatDuration";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { IdeaCookView } from "@/components/recipe/IdeaCookView";
 
@@ -257,7 +258,7 @@ export function AIRecipeIdeaPanel({
                   <span>Serves {idea.servings}</span>
                   <span className="inline-flex items-center gap-1.5">
                     <Clock size={15} />
-                    {idea.prep_minutes + idea.cook_minutes} min
+                    {formatDuration(idea.prep_minutes + idea.cook_minutes)}
                   </span>
                   <span>{idea.category}</span>
                 </div>

@@ -24,6 +24,7 @@ import {
 } from "@/lib/imageImport";
 import { selectRecipeImage } from "@/lib/actions/pexels";
 import { generateRecipeDescription } from "@/lib/actions/recipeDescription";
+import { formatDuration } from "@/lib/formatDuration";
 import { parsePastedRecipe } from "@/lib/recipeTextImport";
 import { importRecipeFiles, type NormalizedImportedRecipe } from "@/lib/recipeFileImport";
 import { useUser } from "@/lib/hooks/useUser";
@@ -133,13 +134,6 @@ function hasFieldValue(value: unknown) {
   return value !== undefined && value !== null && String(value).trim() !== "";
 }
 
-function formatMinutes(minutes?: number) {
-  if (!minutes) return "";
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return remainingMinutes ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`;
-}
 
 function ingredientKeypadTargetKey(target: IngredientKeypadTarget | null) {
   return target ? `${target.index}-${target.field}` : "";
@@ -1546,12 +1540,12 @@ export function RecipeForm({
                     <div className="grid gap-2 text-xs text-ink-muted sm:grid-cols-2">
                       {pasteDetails.prep_minutes && (
                         <p>
-                          <span className="font-bold text-ink">Prep:</span> {formatMinutes(pasteDetails.prep_minutes)}
+                          <span className="font-bold text-ink">Prep:</span> {formatDuration(pasteDetails.prep_minutes)}
                         </p>
                       )}
                       {pasteDetails.cook_minutes && (
                         <p>
-                          <span className="font-bold text-ink">Cook:</span> {formatMinutes(pasteDetails.cook_minutes)}
+                          <span className="font-bold text-ink">Cook:</span> {formatDuration(pasteDetails.cook_minutes)}
                         </p>
                       )}
                       {pasteDetails.servings && (
@@ -1963,8 +1957,8 @@ export function RecipeForm({
                         <div className="space-y-3">
                           {recipe.description && <p className="text-ink-soft">{recipe.description}</p>}
                           <div className="grid grid-cols-3 gap-2 text-xs">
-                            <p><span className="font-bold text-ink">Prep:</span> {formatMinutes(recipe.prep_minutes) || "-"}</p>
-                            <p><span className="font-bold text-ink">Cook:</span> {formatMinutes(recipe.cook_minutes) || "-"}</p>
+                            <p><span className="font-bold text-ink">Prep:</span> {formatDuration(recipe.prep_minutes) || "-"}</p>
+                            <p><span className="font-bold text-ink">Cook:</span> {formatDuration(recipe.cook_minutes) || "-"}</p>
                             <p><span className="font-bold text-ink">Serves:</span> {recipe.servings ?? "-"}</p>
                           </div>
                           {recipe.source_url && (

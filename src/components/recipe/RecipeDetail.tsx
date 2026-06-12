@@ -35,6 +35,7 @@ import {
   copyRecipeToBook,
   moveRecipeToBook,
 } from "@/lib/actions/recipes";
+import { formatDuration } from "@/lib/formatDuration";
 import { addRecipeIngredientsToGrocery } from "@/lib/actions/grocery";
 import { setRecipeRating, toggleReaction } from "@/lib/actions/reactions";
 import type {
@@ -500,7 +501,7 @@ export function RecipeDetail({
                 {recipe.cook_minutes != null && (
                   <span className="inline-flex items-center gap-1.5">
                     <Clock size={15} />
-                    {recipe.cook_minutes} min
+                    {formatDuration(recipe.cook_minutes)}
                   </span>
                 )}
               </div>
@@ -532,11 +533,11 @@ export function RecipeDetail({
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Cook</dt>
-              <dd className="mt-1 font-bold text-green-deep">{recipe.cook_minutes ? `${recipe.cook_minutes} min` : "Anytime"}</dd>
+              <dd className="mt-1 font-bold text-green-deep">{recipe.cook_minutes ? formatDuration(recipe.cook_minutes) : "Anytime"}</dd>
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Prep</dt>
-              <dd className="mt-1 font-bold text-green-deep">{recipe.prep_minutes ? `${recipe.prep_minutes} min` : "Anytime"}</dd>
+              <dd className="mt-1 font-bold text-green-deep">{recipe.prep_minutes ? formatDuration(recipe.prep_minutes) : "Anytime"}</dd>
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Scale</dt>

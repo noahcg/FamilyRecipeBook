@@ -8,6 +8,7 @@ import { InstructionList } from "./InstructionList";
 import { ServingScaler } from "./ServingScaler";
 import type { AIRecipeIdea } from "@/lib/actions/aiRecipes";
 import type { RecipeIngredient, RecipeInstruction } from "@/lib/types";
+import { formatDuration } from "@/lib/formatDuration";
 
 interface IdeaCookViewProps {
   idea: AIRecipeIdea;
@@ -115,7 +116,7 @@ export function IdeaCookView({ idea, onClose, onSave, isSaving, error }: IdeaCoo
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Clock size={15} />
-                  {totalMinutes} min
+                  {formatDuration(totalMinutes)}
                 </span>
               </div>
             </div>
@@ -141,13 +142,13 @@ export function IdeaCookView({ idea, onClose, onSave, isSaving, error }: IdeaCoo
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Cook</dt>
               <dd className="mt-1 font-bold text-green-deep">
-                {idea.cook_minutes ? `${idea.cook_minutes} min` : "Anytime"}
+                {idea.cook_minutes ? formatDuration(idea.cook_minutes) : "Anytime"}
               </dd>
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Prep</dt>
               <dd className="mt-1 font-bold text-green-deep">
-                {idea.prep_minutes ? `${idea.prep_minutes} min` : "Anytime"}
+                {idea.prep_minutes ? formatDuration(idea.prep_minutes) : "Anytime"}
               </dd>
             </div>
             <div>
