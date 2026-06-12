@@ -64,6 +64,9 @@ type IngredientKeypadTarget = {
 const INGREDIENT_KEYPAD_UNITS = ["tsp", "Tbsp", "oz", "lb", "can", "cup"];
 const entryGridClassName = "grid gap-8 lg:grid-cols-2 lg:gap-12";
 const entryCardClassName = "rounded-xl border border-line bg-card p-5 shadow-xs";
+// Manual editor sections: one centered column of distinct cards.
+const sectionCardClassName = "rounded-xl border border-line bg-card p-5 shadow-xs sm:p-6";
+const sectionHeadingClassName = "text-sm font-semibold text-ink mb-3";
 const entryCardHeaderClassName = "flex items-start gap-3";
 const entryCardIconClassName =
   "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-pale text-green-deep";
@@ -296,6 +299,8 @@ export function RecipeForm({
   const [isSavingImport, setIsSavingImport] = useState(false);
   const [activeIngredientKeypad, setActiveIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
   const [manualIngredientKeypad, setManualIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
+  const [draggingIngredientIndex, setDraggingIngredientIndex] = useState<number | null>(null);
+  const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState<number | null>(null);
   const assignmentOptions = useMemo<RecipeAssignmentOption[]>(
     () =>
       bookOptions?.length
@@ -375,6 +380,7 @@ export function RecipeForm({
     append: addIngredient,
     insert: insertIngredient,
     remove: removeIngredient,
+    move: moveIngredient,
     replace: replaceIngredients,
   } = useFieldArray({ control, name: "ingredients" });
 
@@ -419,6 +425,37 @@ export function RecipeForm({
     window.setTimeout(() => {
       document.getElementById(`ingredient-${afterIndex + 1}-item`)?.focus();
     }, 0);
+  }
+
+  // Drag-to-reorder: the GripVertical handle starts the drag. On drop we move the
+  // row to its new index and have it adopt the section (group_label) it lands in,
+  // so heading runs stay contiguous.
+  function handleIngredientDragStart(index: number) {
+    setActiveIngredientKeypad(null);
+    setManualIngredientKeypad(null);
+    setDraggingIngredientIndex(index);
+  }
+
+  function handleIngredientDragEnter(index: number) {
+    if (draggingIngredientIndex === null || draggingIngredientIndex === index) return;
+    setDragOverIngredientIndex(index);
+  }
+
+  function handleIngredientDrop(targetIndex: number) {
+    const from = draggingIngredientIndex;
+    setDraggingIngredientIndex(null);
+    setDragOverIngredientIndex(null);
+    if (from === null || from === targetIndex) return;
+    moveIngredient(from, targetIndex);
+    // After the move the row sits at targetIndex; join the section above it.
+    const adoptedLabel =
+      targetIndex === 0 ? null : getValues(`ingredients.${targetIndex - 1}.group_label`) ?? null;
+    setValue(`ingredients.${targetIndex}.group_label`, adoptedLabel, { shouldDirty: true });
+  }
+
+  function handleIngredientDragEnd() {
+    setDraggingIngredientIndex(null);
+    setDragOverIngredientIndex(null);
   }
 
   useEffect(() => {
@@ -841,7 +878,8 @@ export function RecipeForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="pb-10">
-      {showCookbookPicker && (
+      {/* Manual mode shows this inside the right column; paste/import keep it up top. */}
+      {showCookbookPicker && showPasteEntry && entryMode !== "manual" && (
         <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
           <label htmlFor="recipe-book" className="block text-sm font-bold text-ink">
             Cookbook
@@ -893,10 +931,36 @@ export function RecipeForm({
       )}
 
       {(!showPasteEntry || entryMode === "manual") ? (
-      <div className={entryGridClassName}>
+      <div className="space-y-6">
+        <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-start">
 
-        {/* ── Left column: photo + about + details ── */}
-        <div className="space-y-6">
+        {/* ── Right column (40%): photo + details ── */}
+        <div className="space-y-6 lg:order-2">
+
+        {/* ── Save to cookbook ── */}
+        {showCookbookPicker && (
+          <section className={sectionCardClassName}>
+            <label htmlFor="recipe-book" className={clsx(sectionHeadingClassName, "block")}>
+              Save to cookbook
+            </label>
+            <select
+              id="recipe-book"
+              value={resolvedSelectedBookId}
+              onChange={(event) => setSelectedBookId(event.target.value)}
+              className="input-cookbook h-11 w-full text-sm"
+            >
+              {assignmentOptions.map((book) => (
+                <option key={book.id} value={book.id}>
+                  {book.title}
+                </option>
+              ))}
+            </select>
+          </section>
+        )}
+
+        {/* ── Photo ── */}
+        <section className={sectionCardClassName}>
+          <p className={sectionHeadingClassName}>Photo</p>
           {/* Photo upload */}
           <div>
             <button
@@ -909,7 +973,7 @@ export function RecipeForm({
                 photoPreview
                   ? "border-transparent p-0 overflow-hidden"
                   : "border-line text-ink-soft",
-                "aspect-[4/3] lg:aspect-[3/2]"
+                "aspect-[4/3] sm:aspect-[3/2] sm:max-w-sm"
               )}
               style={{ background: photoPreview ? undefined : "var(--color-paper-warm)" }}
             >
@@ -962,38 +1026,10 @@ export function RecipeForm({
               />
             </div>
           </div>
+        </section>
 
-          {/* Core fields */}
-          <div className="space-y-4">
-            <Input
-              label="Recipe title"
-              required
-              placeholder="e.g. Grandma's Apple Pie"
-              error={errors.title?.message}
-              {...register("title")}
-            />
-            <Input
-              label="Who is this from?"
-              placeholder="e.g. Grandma Rose"
-              hint="The person this recipe is known for."
-              error={errors.source_name?.message}
-              {...register("source_name")}
-            />
-            <Textarea
-              label="The story behind this recipe"
-              placeholder="Add a note or memory…"
-              hint="This will appear near the top of the recipe page."
-              error={errors.story?.message}
-              {...register("story")}
-            />
-            <Input
-              label="Short description (optional)"
-              placeholder="A one-line description of the dish"
-              error={errors.description?.message}
-              {...register("description")}
-            />
-          </div>
-
+        {/* ── Details ── */}
+        <section className={sectionCardClassName}>
           {/* Timing + servings + category */}
           <div>
             <p className="text-sm font-semibold text-ink mb-3">Details</p>
@@ -1062,11 +1098,49 @@ export function RecipeForm({
               </div>
             </div>
           </div>
+        </section>
         </div>
 
-        {/* ── Right column: ingredients + steps + actions ── */}
-        <div className="space-y-8">
+        {/* ── Left column (60%): about + ingredients + steps ── */}
+        <div className="space-y-6 lg:order-1">
 
+        {/* ── About ── */}
+        <section className={sectionCardClassName}>
+          <p className={sectionHeadingClassName}>About this recipe</p>
+          {/* Core fields */}
+          <div className="space-y-4">
+            <Input
+              label="Recipe title"
+              required
+              placeholder="e.g. Grandma's Apple Pie"
+              error={errors.title?.message}
+              {...register("title")}
+            />
+            <Input
+              label="Who is this from?"
+              placeholder="e.g. Grandma Rose"
+              hint="The person this recipe is known for."
+              error={errors.source_name?.message}
+              {...register("source_name")}
+            />
+            <Textarea
+              label="The story behind this recipe"
+              placeholder="Add a note or memory…"
+              hint="This will appear near the top of the recipe page."
+              error={errors.story?.message}
+              {...register("story")}
+            />
+            <Input
+              label="Short description (optional)"
+              placeholder="A one-line description of the dish"
+              error={errors.description?.message}
+              {...register("description")}
+            />
+          </div>
+        </section>
+
+        {/* ── Ingredients ── */}
+        <section className={sectionCardClassName}>
           {/* Ingredients */}
           <div>
             <p className="text-sm font-semibold text-ink mb-3">
@@ -1116,8 +1190,43 @@ export function RecipeForm({
                     </button>
                   </div>
                 )}
-                <div className="relative flex gap-2 items-start">
-                  <GripVertical size={16} className="text-ink-soft mt-3.5 shrink-0 opacity-40" />
+                <div
+                  data-ingredient-row
+                  className={clsx(
+                    "relative flex gap-2 items-start rounded-md transition-colors",
+                    draggingIngredientIndex === index && "opacity-50",
+                    dragOverIngredientIndex === index &&
+                      draggingIngredientIndex !== index &&
+                      "ring-2 ring-green-sage ring-offset-2 ring-offset-card"
+                  )}
+                  onDragOver={(event) => {
+                    if (draggingIngredientIndex === null) return;
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = "move";
+                  }}
+                  onDragEnter={() => handleIngredientDragEnter(index)}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    handleIngredientDrop(index);
+                  }}
+                >
+                  <span
+                    draggable
+                    aria-hidden="true"
+                    title="Drag to reorder"
+                    className="mt-2.5 -ml-1 inline-flex shrink-0 cursor-grab touch-none rounded p-1 text-ink-soft opacity-40 transition-opacity hover:opacity-70 active:cursor-grabbing"
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = "move";
+                      const row = event.currentTarget.closest("[data-ingredient-row]");
+                      if (row instanceof HTMLElement) {
+                        event.dataTransfer.setDragImage(row, 12, 12);
+                      }
+                      handleIngredientDragStart(index);
+                    }}
+                    onDragEnd={handleIngredientDragEnd}
+                  >
+                    <GripVertical size={16} />
+                  </span>
                   <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:grid-cols-[5rem_7rem_1fr]">
                     <input
                       id={`ingredient-${index}-quantity`}
@@ -1216,7 +1325,10 @@ export function RecipeForm({
               </button>
             </div>
           </div>
+        </section>
 
+        {/* ── Steps ── */}
+        <section className={sectionCardClassName}>
           {/* Instructions */}
           <div>
             <p className="text-sm font-semibold text-ink mb-3">
@@ -1275,19 +1387,21 @@ export function RecipeForm({
               <Plus size={14} /> Add step
             </button>
           </div>
+        </section>
 
-          {serverError && (
-            <p className="text-sm text-danger font-medium">{serverError}</p>
-          )}
+        {serverError && (
+          <p className="text-sm text-danger font-medium">{serverError}</p>
+        )}
 
-          <div className="flex gap-3">
-            <Button type="button" variant="secondary" onClick={() => router.back()}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" loading={isSubmitting} className="flex-1">
-              {isEdit ? "Save changes" : "Add to this book"}
-            </Button>
-          </div>
+        <div className="flex gap-3">
+          <Button type="button" variant="secondary" onClick={() => router.back()}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="primary" loading={isSubmitting} className="flex-1">
+            {isEdit ? "Save changes" : "Add to this book"}
+          </Button>
+        </div>
+        </div>
         </div>
       </div>
       ) : entryMode === "paste" ? (
