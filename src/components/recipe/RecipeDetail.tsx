@@ -177,7 +177,9 @@ export function RecipeDetail({
   const wasAddedViaUpload = recipe.import_method === "image_upload";
   const addedByName = wasAddedViaUpload ? recipe.creator?.full_name ?? "Family" : sourceName;
   const addedByLabel = `${addedByName}${wasAddedViaUpload ? " (via upload)" : ""}`;
-  const story = recipe.story ?? recipe.stories?.[0]?.body ?? recipe.description;
+  // Only a real, human-written story gets the handwriting treatment. A plain
+  // (often AI-generated) description renders as normal description text below.
+  const story = recipe.story ?? recipe.stories?.[0]?.body ?? null;
   const noteCount = (recipe.stories?.length ?? 0) + (recipe.story ? 1 : 0);
   const displayedServings = recipe.servings ? recipe.servings * servingScale : recipe.servings;
   const addedDate = new Date(recipe.created_at).toLocaleDateString("en-US", {
@@ -511,8 +513,8 @@ export function RecipeDetail({
         <section className="grid gap-8 border-b border-line-soft py-7 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="max-w-[820px]">
           {story && (
-            <blockquote className="border-l-2 border-accent-honey pl-5 text-xl leading-relaxed text-accent-cinnamon">
-              <p style={{ fontFamily: "var(--font-caveat)" }}>{story}</p>
+            <blockquote className="border-l-2 border-accent-honey pl-5 text-lg leading-relaxed text-accent-cinnamon">
+              <p style={{ fontFamily: "var(--font-hand)" }}>{story}</p>
             </blockquote>
           )}
 

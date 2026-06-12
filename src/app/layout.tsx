@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Fraunces, Inter, Nunito, Playfair_Display } from "next/font/google";
+import { Fraunces, Inter, Kalam, Nunito, Playfair_Display } from "next/font/google";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
 import "./globals.css";
 
@@ -16,10 +16,12 @@ const nunito = Nunito({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const caveat = Caveat({
-  variable: "--font-caveat",
+// Neat, legible handwriting for recipe stories — replaces the harder-to-read
+// Caveat script while keeping the personal, hand-written feel.
+const handwriting = Kalam({
+  variable: "--font-handwriting",
   subsets: ["latin"],
-  weight: ["400", "600"],
+  weight: ["400", "700"],
 });
 
 const fraunces = Fraunces({
@@ -89,7 +91,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${nunito.variable} ${caveat.variable} ${fraunces.variable} ${inter.variable} h-full`}
+      className={`${playfair.variable} ${nunito.variable} ${handwriting.variable} ${fraunces.variable} ${inter.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">
         <ServiceWorkerRegistration />

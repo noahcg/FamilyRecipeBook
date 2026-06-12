@@ -167,7 +167,8 @@ async function generateWithCloudflare(
 ): Promise<ActionResult<AIRecipeIdea> | null> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN;
-  const model = process.env.CLOUDFLARE_WORKERS_AI_MODEL ?? "@cf/meta/llama-3.1-8b-instruct";
+  const model =
+    process.env.CLOUDFLARE_WORKERS_AI_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
 
   if (!accountId || !apiToken) return null;
 
@@ -229,7 +230,10 @@ async function generateWithCloudflare(
   const json = (await response.json()) as {
     success?: boolean;
     errors?: { message?: string }[];
-    result?: { response?: unknown };
+    result?: {
+      response?: unknown;
+      choices?: { message?: { content?: unknown } }[];
+    };
   };
 
   if (json.success === false) {
@@ -239,7 +243,10 @@ async function generateWithCloudflare(
     };
   }
 
-  const output = json.result?.response;
+  // Newer Workers AI models return OpenAI chat-completion shape
+  // (result.choices[].message.content); older ones use result.response.
+  const output =
+    json.result?.response ?? json.result?.choices?.[0]?.message?.content;
   if (!output) {
     return {
       success: false,
@@ -271,9 +278,13 @@ async function generateWithCloudflare(
   }
 
   const retryJson = (await retryResponse.json()) as {
-    result?: { response?: unknown };
+    result?: {
+      response?: unknown;
+      choices?: { message?: { content?: unknown } }[];
+    };
   };
-  const retryOutput = retryJson.result?.response;
+  const retryOutput =
+    retryJson.result?.response ?? retryJson.result?.choices?.[0]?.message?.content;
 
   try {
     const parsedJson =
