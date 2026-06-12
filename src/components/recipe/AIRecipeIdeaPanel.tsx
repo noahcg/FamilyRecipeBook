@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Check,
+  ChefHat,
   Clock,
   Loader2,
   Sparkles,
@@ -15,6 +16,7 @@ import {
   type AIRecipeIdea,
 } from "@/lib/actions/aiRecipes";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
+import { IdeaCookView } from "@/components/recipe/IdeaCookView";
 
 interface AIRecipeIdeaPanelProps {
   bookId: string;
@@ -64,12 +66,15 @@ export function AIRecipeIdeaPanel({
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, startGenerating] = useTransition();
   const [isSaving, startSaving] = useTransition();
+  const [cookOpen, setCookOpen] = useState(false);
   const didAutoGenerate = useRef(false);
 
   function handleGenerate(nextPrompt = prompt) {
     const trimmed = nextPrompt.trim();
     setPrompt(nextPrompt);
     setError(null);
+    // A fresh idea replaces whatever was open in the cook view.
+    setCookOpen(false);
     startGenerating(async () => {
       const result = await generateRecipeIdea(trimmed, resolvedBookId);
       if (!result.success) {
@@ -107,6 +112,20 @@ export function AIRecipeIdeaPanel({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoGenerate, initialPrompt]);
+
+  // "Make it now" swaps the whole panel for a recipe-page-style cook view, in
+  // normal page flow (not an overlay) so it sits in the shell like a real recipe.
+  if (idea && cookOpen) {
+    return (
+      <IdeaCookView
+        idea={idea}
+        onClose={() => setCookOpen(false)}
+        onSave={handleSave}
+        isSaving={isSaving}
+        error={error}
+      />
+    );
+  }
 
   return (
     <div className="min-h-dvh px-4 py-8 sm:px-5 lg:px-8">
@@ -288,6 +307,17 @@ export function AIRecipeIdeaPanel({
                     variant="primary"
                     size="md"
                     className="rounded-md"
+                    onClick={() => setCookOpen(true)}
+                    disabled={isSaving}
+                  >
+                    <ChefHat size={16} />
+                    Make it now
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="md"
+                    className="rounded-md"
                     onClick={handleSave}
                     disabled={isSaving}
                   >
@@ -295,7 +325,7 @@ export function AIRecipeIdeaPanel({
                     Save to Cookbook
                   </Button>
                   <p className="text-xs text-ink-soft">
-                    You can edit details and the image after saving.
+                    Cook it right away, or save it to edit details and the image.
                   </p>
                 </div>
               </div>
