@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Database, ScrollText, Search, Users } from "lucide-react";
+import { BookOpen, Database, Megaphone, ScrollText, Search, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PushSubscriptionToggle } from "@/components/admin/PushSubscriptionToggle";
@@ -222,8 +222,25 @@ export default async function AdminPage({
           <StatCard label="Recipes" value={recipeCount ?? 0} icon={<Database size={21} />} />
         </section>
 
-        <section className="mt-4">
+        <section className="mt-4 grid gap-4 md:grid-cols-2">
           <PushSubscriptionToggle />
+          <Link
+            href="/app/admin/broadcasts"
+            className="flex items-center justify-between gap-4 rounded-md border border-line-soft bg-white-soft/70 p-4 transition-colors hover:bg-green-pale/70"
+          >
+            <div className="min-w-0">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink-soft">
+                Announcements
+              </p>
+              <p className="mt-1 text-sm font-bold text-ink">Send a broadcast</p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                Email everyone with a confirmed, opted-in account about features, updates, or pricing.
+              </p>
+            </div>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-sm bg-green-pale text-green-deep">
+              <Megaphone size={21} />
+            </span>
+          </Link>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
