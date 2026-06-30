@@ -148,22 +148,32 @@ export function GuidesLayer() {
     );
   }
 
-  // ── Showing a beacon ──────────────────────────────────────────
-  // One at a time: the first eligible, unseen guide whose first anchor is on
-  // screen. Sequencing keeps the UI from sprouting a swarm of dots.
+  // ── Showing beacons ───────────────────────────────────────────
+  // One beacon per eligible guide whose first anchor is on screen, so a screen
+  // with two guides (e.g. recipes: invite + add-recipe) shows both dots rather
+  // than masking one behind the other. A guide is eligible when it's unseen, on
+  // a matching route, all its prerequisites are seen (progressive reveal), and
+  // its anchor is present.
   void tick;
-  for (const guide of GUIDES) {
-    if (isSeen(guide.id) || !guide.routeMatch(pathname)) continue;
-    const firstAnchor = findVisibleAnchor(guide.steps[0].anchorId);
-    if (!firstAnchor) continue;
-    return (
-      <GuideBeacon
-        anchorEl={firstAnchor}
-        label={guide.beaconLabel}
-        onStart={() => setActiveRun({ guideId: guide.id, stepIndex: 0 })}
-      />
-    );
-  }
+  const beacons = GUIDES.filter(
+    (guide) =>
+      !isSeen(guide.id) &&
+      (guide.prerequisites?.every(isSeen) ?? true) &&
+      guide.routeMatch(pathname) &&
+      findVisibleAnchor(guide.steps[0].anchorId)
+  );
+  if (beacons.length === 0) return null;
 
-  return null;
+  return (
+    <>
+      {beacons.map((guide) => (
+        <GuideBeacon
+          key={guide.id}
+          anchorEl={findVisibleAnchor(guide.steps[0].anchorId)!}
+          label={guide.beaconLabel}
+          onStart={() => setActiveRun({ guideId: guide.id, stepIndex: 0 })}
+        />
+      ))}
+    </>
+  );
 }

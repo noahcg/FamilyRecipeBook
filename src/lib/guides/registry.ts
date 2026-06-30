@@ -11,7 +11,7 @@
 // checklist of screenshots to (re)shoot when the relevant UI changes.
 
 export interface GuideStepImage {
-  /** Path under /public, e.g. "/guides/invite-members-1.svg". */
+  /** Path under /public, e.g. "/guides/invite-members-1.webp". */
   src: string;
   /**
    * Conveys the instruction for screen-reader users, since the highlight in the
@@ -40,6 +40,12 @@ export interface Guide {
   beaconLabel: string;
   /** Only consider this guide on routes where this returns true. */
   routeMatch: (pathname: string) => boolean;
+  /**
+   * Guide ids that must be seen before this guide's beacon appears. Lets a guide
+   * reveal progressively instead of all at once — e.g. the Meal Plan hint waits
+   * until the user has been through the add-a-recipe guide.
+   */
+  prerequisites?: string[];
   steps: GuideStep[];
 }
 
@@ -64,7 +70,7 @@ export const GUIDES: Guide[] = [
         title: "Invite your family",
         body: "Cooking with others? Open Manage Members to share this cookbook so everyone can add recipes, notes, and memories.",
         image: {
-          src: "/guides/invite-members-1.svg",
+          src: "/guides/invite-members-1.webp",
           alt: "The cookbook toolbar with the Manage Members button highlighted.",
         },
         nextHref: ({ bookId }) => `/app/books/${bookId}/members`,
@@ -74,7 +80,7 @@ export const GUIDES: Guide[] = [
         title: "Add someone by email",
         body: "Tap Add Someone, enter their email, and pick a role — Contributor (can add and edit recipes) or Family (can view, react, and add notes). They get an email invite.",
         image: {
-          src: "/guides/invite-members-2.svg",
+          src: "/guides/invite-members-2.webp",
           alt: "The Members page with the Add Someone button highlighted.",
         },
       },
@@ -83,14 +89,16 @@ export const GUIDES: Guide[] = [
   {
     id: "add-recipe",
     beaconLabel: "Tip: how to add a recipe",
-    routeMatch: (p) => /^\/app\/books\/[^/]+\/recipes/.test(p),
+    // The account-level My Recipes page and any cookbook's recipes page both
+    // carry an "Add Recipe" button (data-guide-anchor="add-recipe").
+    routeMatch: (p) => p === "/app/recipes" || /^\/app\/books\/[^/]+\/recipes/.test(p),
     steps: [
       {
         anchorId: "add-recipe",
         title: "Add your first recipe",
         body: "Add a recipe by hand, snap a photo of a recipe card, or paste text and we'll format it for you.",
         image: {
-          src: "/guides/add-recipe-1.svg",
+          src: "/guides/add-recipe-1.webp",
           alt: "The cookbook toolbar with the Add Recipe button highlighted.",
         },
       },
@@ -106,7 +114,7 @@ export const GUIDES: Guide[] = [
         title: "Your cookbooks live here",
         body: "Open the Bookshelf to switch between cookbooks or start a new one. Everything else — recipes, meal plan, groceries, favorites — is in the main menu.",
         image: {
-          src: "/guides/nav-orientation-1.svg",
+          src: "/guides/nav-orientation-1.webp",
           alt: "The navigation with the Bookshelf entry highlighted.",
         },
       },
@@ -115,14 +123,18 @@ export const GUIDES: Guide[] = [
   {
     id: "plan-and-shop",
     beaconLabel: "Tip: plan meals and build a grocery list",
-    routeMatch: (p) => p.startsWith("/app/meal-plan") || p.startsWith("/app/groceries"),
+    // Anchored to the global Meal Plan / Groceries nav items, so the hint is
+    // discoverable from anywhere — not only once the user is already on the
+    // Meal Plan page. Gated below so it only reveals after add-a-recipe.
+    routeMatch: (p) => p.startsWith("/app"),
+    prerequisites: ["add-recipe"],
     steps: [
       {
         anchorId: "nav-meal-plan",
         title: "Plan your week",
         body: "Add recipes to days in your Meal Plan to map out the week.",
         image: {
-          src: "/guides/plan-and-shop-1.svg",
+          src: "/guides/plan-and-shop-1.webp",
           alt: "The navigation with the Meal Plan entry highlighted.",
         },
       },
@@ -131,7 +143,7 @@ export const GUIDES: Guide[] = [
         title: "Your grocery list builds itself",
         body: "Groceries gathers the ingredients from everything you planned, so your shopping list is ready without retyping.",
         image: {
-          src: "/guides/plan-and-shop-2.svg",
+          src: "/guides/plan-and-shop-2.webp",
           alt: "The navigation with the Groceries entry highlighted.",
         },
       },
