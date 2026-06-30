@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { CookbookNavigator } from "@/components/layout/CookbookNavigator";
+import { GuidesLayer } from "@/components/guides/GuidesLayer";
 import { getVisibleFocusable } from "@/lib/a11y";
 import { useModalFocus } from "@/lib/hooks/useModalFocus";
 import { APP_VERSION } from "@/lib/version";
@@ -76,6 +77,12 @@ const OFFLINE_NAV: NavItem = {
   href: "/app/offline",
   icon: Download,
   label: "Offline",
+};
+
+// Nav items that anchor a contextual mini-guide beacon.
+const NAV_GUIDE_ANCHOR: Record<string, string> = {
+  "meal-plan": "nav-meal-plan",
+  groceries: "nav-groceries",
 };
 
 function isActivePath(pathname: string, href: string, exact?: boolean) {
@@ -169,6 +176,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
                     key={id}
                     href={href}
                     aria-current={isActive ? "page" : undefined}
+                    data-guide-anchor={NAV_GUIDE_ANCHOR[id]}
                     className={railItemClass(isActive)}
                   >
                     <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
@@ -311,6 +319,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
                   href={href}
                   aria-label={label}
                   aria-current={isActive ? "page" : undefined}
+                  data-guide-anchor={NAV_GUIDE_ANCHOR[id]}
                   className={clsx(
                     "relative flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-[background-color,color,transform] duration-150 active:translate-y-px focus-visible:outline-none",
                     isActive
@@ -330,6 +339,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
               onClick={() => setCookbooksMobileOpen(true)}
               aria-label="Bookshelf"
               aria-expanded={cookbooksMobileOpen}
+              data-guide-anchor="nav-bookshelf"
               className="relative flex h-full min-w-[64px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 text-ink-inverse transition-[background-color,color,transform] duration-150 active:translate-y-px hover:bg-green-deep hover:text-ink-inverse focus-visible:outline-none"
             >
               <Library size={19} strokeWidth={1.75} />
@@ -366,6 +376,8 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
           </form>
         </div>
       </nav>
+
+      {!lockNav && <GuidesLayer />}
     </div>
   );
 }

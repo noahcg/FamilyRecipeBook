@@ -141,6 +141,7 @@ export function CookbookNavigator({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
+        data-guide-anchor="nav-bookshelf"
         className="flex h-11 w-full items-center gap-3 rounded-md px-3 text-sm font-semibold text-ink transition-colors hover:bg-green-soft/55 hover:text-green-deep"
       >
         <Library size={18} strokeWidth={1.75} />
