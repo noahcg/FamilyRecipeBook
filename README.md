@@ -1,6 +1,6 @@
 # Home Cooked
 
-A private, collaborative recipe book for families — preserve recipes, share memories, and invite the whole family to contribute.
+A private, collaborative recipe book where people can — preserve recipes, share memories, and invite others to contribute.
 
 ## Stack
 

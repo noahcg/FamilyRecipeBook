@@ -8,6 +8,7 @@ import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
+import { GuidesPreference } from "@/components/settings/GuidesPreference";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
@@ -183,6 +184,22 @@ export function GlobalSettingsPageContent({
                 />
               </div>
             </div>
+          </section>
+
+          <section className="scroll-mt-6 border-b border-line-soft pb-8">
+            <div className="mb-4 flex items-baseline gap-4">
+              <h2
+                className="text-2xl font-bold leading-tight text-green-deep"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Tips &amp; Guides
+              </h2>
+              <span className="h-px flex-1 bg-line-soft" />
+            </div>
+            <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+              The short walkthrough hints that appear around the app to help you get started.
+            </p>
+            <GuidesPreference />
           </section>
 
           {isAdmin && (

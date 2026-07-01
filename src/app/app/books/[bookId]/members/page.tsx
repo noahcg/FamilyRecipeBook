@@ -110,7 +110,7 @@ export default async function MembersPage({ params }: Props) {
             </div>
 
             {userRole === "keeper" && sharingEnabled && (
-              <Link href={`/app/books/${bookId}/members/add`} className="shrink-0">
+              <Link href={`/app/books/${bookId}/members/add`} className="shrink-0" data-guide-anchor="add-someone">
                 <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 sm:w-auto">
                   <Plus size={17} /> Add Someone
                 </Button>
