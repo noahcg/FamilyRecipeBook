@@ -136,8 +136,8 @@ export function GuidePopover({
           "absolute flex w-full flex-col overflow-hidden rounded-2xl border border-line-soft shadow-lg",
           "animate-in fade-in duration-200",
           position.sheet
-            ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] left-2 right-2 mx-auto max-w-[420px] slide-in-from-bottom-4 sm:bottom-4"
-            : "slide-in-from-top-1"
+            ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] left-2 right-2 mx-auto max-h-[calc(100dvh-6rem-env(safe-area-inset-bottom,0px))] max-w-[420px] slide-in-from-bottom-4 sm:bottom-4"
+            : "max-h-[calc(100dvh-2rem)] slide-in-from-top-1"
         )}
         style={{
           background: "var(--color-paper-soft)",
@@ -161,8 +161,12 @@ export function GuidePopover({
           </div>
         )}
 
-        <div className="flex flex-col gap-2 px-5 pb-4 pt-4">
-          <div className="flex items-center justify-between">
+        {/* Header, body, and footer are separate flex rows so that when the
+            viewport is too short (small phones with the mobile browser chrome
+            showing) the body scrolls on its own while the header and the
+            Next/Got it controls stay pinned and reachable. */}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex shrink-0 items-center justify-between px-5 pb-1 pt-4">
             <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
               {stepCount > 1 ? `Step ${stepIndex + 1} of ${stepCount}` : "Tip"}
             </span>
@@ -176,16 +180,18 @@ export function GuidePopover({
             </button>
           </div>
 
-          <h2
-            id={titleId}
-            className="text-lg font-bold leading-tight text-green-deep"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            {step.title}
-          </h2>
-          <p className="text-sm leading-relaxed text-ink-muted">{step.body}</p>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5">
+            <h2
+              id={titleId}
+              className="text-lg font-bold leading-tight text-green-deep"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              {step.title}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">{step.body}</p>
+          </div>
 
-          <div className="mt-2 flex items-center justify-between gap-3">
+          <div className="flex shrink-0 items-center justify-between gap-3 px-5 pb-4 pt-3">
             <button
               type="button"
               onClick={onSkip}

@@ -27,6 +27,7 @@ const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 const SHOTS = [
   { name: "invite-members-1", screen: "members" },
   { name: "invite-members-2", screen: "add-member" },
+  { name: "my-recipes-1", screen: "my-recipes" },
   { name: "add-recipe-1", screen: "new-recipe" },
   { name: "nav-orientation-1", screen: "bookshelf" },
   { name: "plan-and-shop-1", screen: "meal-plan" },

@@ -81,6 +81,7 @@ const OFFLINE_NAV: NavItem = {
 
 // Nav items that anchor a contextual mini-guide beacon.
 const NAV_GUIDE_ANCHOR: Record<string, string> = {
+  recipes: "nav-my-recipes",
   "meal-plan": "nav-meal-plan",
   groceries: "nav-groceries",
 };

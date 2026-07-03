@@ -61,42 +61,28 @@ export function getGuideContext(pathname: string): GuideContext {
 
 export const GUIDES: Guide[] = [
   {
-    id: "invite-members",
-    beaconLabel: "Tip: how to invite family to this cookbook",
-    routeMatch: (p) => /^\/app\/books\/[^/]+/.test(p),
-    steps: [
-      {
-        anchorId: "manage-members",
-        title: "Invite your family",
-        body: "Cooking with others? Open Manage Members to share this cookbook so everyone can add recipes, notes, and memories.",
-        image: {
-          src: "/guides/invite-members-1.webp",
-          alt: "The cookbook toolbar with the Manage Members button highlighted.",
-        },
-        nextHref: ({ bookId }) => `/app/books/${bookId}/members`,
-      },
-      {
-        anchorId: "add-someone",
-        title: "Add someone by email",
-        body: "Tap Add Someone, enter their email, and pick a role — Contributor (can add and edit recipes) or Family (can view, react, and add notes). They get an email invite.",
-        image: {
-          src: "/guides/invite-members-2.webp",
-          alt: "The Members page with the Add Someone button highlighted.",
-        },
-      },
-    ],
-  },
-  {
     id: "add-recipe",
-    beaconLabel: "Tip: how to add a recipe",
-    // The account-level My Recipes page and any cookbook's recipes page both
-    // carry an "Add Recipe" button (data-guide-anchor="add-recipe").
-    routeMatch: (p) => p === "/app/recipes" || /^\/app\/books\/[^/]+\/recipes/.test(p),
+    beaconLabel: "Tip: find and add your recipes",
+    // Anchored to the global My Recipes nav item (data-guide-anchor="nav-my-recipes")
+    // so this is the first beacon a new user meets — visible from anywhere on
+    // both desktop and mobile. Both steps stay put on the nav item (no
+    // navigation on "Next"); the images preview the My Recipes and New Recipe
+    // screens the user will reach once they open it.
+    routeMatch: (p) => p.startsWith("/app"),
     steps: [
       {
-        anchorId: "add-recipe",
+        anchorId: "nav-my-recipes",
+        title: "Find all your recipes here",
+        body: "My Recipes gathers everything you've added across your cookbooks in one place. Open it to see your collection.",
+        image: {
+          src: "/guides/my-recipes-1.webp",
+          alt: "The My Recipes page listing recipes grouped into chapters.",
+        },
+      },
+      {
+        anchorId: "nav-my-recipes",
         title: "Add your first recipe",
-        body: "Add a recipe by hand, snap a photo of a recipe card, or paste text and we'll format it for you.",
+        body: "In My Recipes, tap Add Recipe to add one by hand, snap a photo of a recipe card, or paste text and we'll format it for you.",
         image: {
           src: "/guides/add-recipe-1.webp",
           alt: "The cookbook toolbar with the Add Recipe button highlighted.",
@@ -106,8 +92,16 @@ export const GUIDES: Guide[] = [
   },
   {
     id: "nav-orientation",
-    beaconLabel: "Tip: finding your way around",
+    beaconLabel: "Tip: cookbooks and sharing with family",
     routeMatch: (p) => p === "/app",
+    // Second in the onboarding chain: reveal the Bookshelf dot only after the
+    // user has met the My Recipes beacon, so the home screen shows one dot at a
+    // time rather than My Recipes and Bookshelf competing at once.
+    prerequisites: ["add-recipe"],
+    // Multi-step: orient the user to cookbooks, then fold in the family-invite
+    // walkthrough (previously its own beacon on the Manage Members button, since
+    // removed). Every step stays on the Bookshelf nav item — no navigation on
+    // "Next"; the images preview the screens each action leads to.
     steps: [
       {
         anchorId: "nav-bookshelf",
@@ -118,6 +112,24 @@ export const GUIDES: Guide[] = [
           alt: "The navigation with the Bookshelf entry highlighted.",
         },
       },
+      {
+        anchorId: "nav-bookshelf",
+        title: "Invite your family",
+        body: "Cooking with others? Open a cookbook and use Manage Members to share it, so everyone can add recipes, notes, and memories.",
+        image: {
+          src: "/guides/invite-members-1.webp",
+          alt: "The cookbook toolbar with the Manage Members button highlighted.",
+        },
+      },
+      {
+        anchorId: "nav-bookshelf",
+        title: "Add someone by email",
+        body: "Inside Manage Members, tap Add Someone, enter their email, and pick a role — Contributor (can add and edit recipes) or Family (can view, react, and add notes). They get an email invite.",
+        image: {
+          src: "/guides/invite-members-2.webp",
+          alt: "The Members page with the Add Someone button highlighted.",
+        },
+      },
     ],
   },
   {
@@ -125,9 +137,10 @@ export const GUIDES: Guide[] = [
     beaconLabel: "Tip: plan meals and build a grocery list",
     // Anchored to the global Meal Plan / Groceries nav items, so the hint is
     // discoverable from anywhere — not only once the user is already on the
-    // Meal Plan page. Gated below so it only reveals after add-a-recipe.
+    // Meal Plan page. Last in the chain: reveals after nav-orientation (which
+    // itself waits on add-recipe), so the dots surface one at a time.
     routeMatch: (p) => p.startsWith("/app"),
-    prerequisites: ["add-recipe"],
+    prerequisites: ["nav-orientation"],
     steps: [
       {
         anchorId: "nav-meal-plan",

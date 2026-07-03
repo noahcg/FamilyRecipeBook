@@ -251,6 +251,93 @@ function Groceries() {
   );
 }
 
+const RECIPE_CHAPTERS = [
+  {
+    number: "01",
+    category: "Mains",
+    recipes: [
+      { title: "Sunday Roast Chicken", book: "The Family Table", meta: "Grandma Rosa · 1 hr · Serves 4" },
+      { title: "Beef & Bean Chili", book: "Weeknight Dinners", meta: "45 min · Serves 6" },
+    ],
+  },
+  {
+    number: "02",
+    category: "Sweets",
+    recipes: [
+      { title: "Brown Butter Chocolate Chip Cookies", book: "Grandma's Classics", meta: "Aunt Lucy · 25 min" },
+    ],
+  },
+];
+
+function CookbookPill({ title }: { title: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-sm border border-green-sage/40 bg-green-soft px-2 py-0.5 text-xs font-bold text-green-deep">
+      <BookOpen size={11} strokeWidth={2} className="shrink-0" />
+      {title}
+    </span>
+  );
+}
+
+function MyRecipes() {
+  return (
+    <div className="grid h-full grid-cols-[minmax(0,1fr)_260px] gap-6">
+      <div className="min-w-0 space-y-6">
+        {RECIPE_CHAPTERS.map((chapter) => (
+          <section key={chapter.category}>
+            <div className="mb-3 flex items-baseline gap-3">
+              <span className="text-xs font-bold text-accent-cinnamon">{chapter.number}</span>
+              <h3 className="text-xl font-bold leading-tight text-green-deep" style={PLAYFAIR}>
+                {chapter.category}
+              </h3>
+              <span className="h-px flex-1 bg-line-soft" />
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+                {chapter.recipes.length}
+              </span>
+            </div>
+            <ol className="divide-y divide-line-soft/60">
+              {chapter.recipes.map((recipe) => (
+                <li key={recipe.title} className="py-3">
+                  <span className="mb-2 flex">
+                    <CookbookPill title={recipe.book} />
+                  </span>
+                  <p className="text-base font-semibold leading-snug text-ink" style={PLAYFAIR}>
+                    {recipe.title}
+                  </p>
+                  <p className="mt-1 text-sm text-ink-muted">{recipe.meta}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ))}
+      </div>
+      <aside className="overflow-hidden rounded-xl border border-line bg-card shadow-xs">
+        <div className="border-b border-line-soft bg-paper-warm px-4 py-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Across your books</p>
+          <h3 className="mt-0.5 text-lg font-bold leading-tight text-green-deep" style={PLAYFAIR}>
+            Chapter Index
+          </h3>
+        </div>
+        <nav className="px-4 py-2">
+          {RECIPE_CHAPTERS.map((chapter) => (
+            <span
+              key={chapter.category}
+              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line-soft py-2.5 last:border-b-0"
+            >
+              <span className="text-xs font-bold text-accent-cinnamon">{chapter.number}</span>
+              <span className="truncate text-sm font-semibold text-ink" style={PLAYFAIR}>
+                {chapter.category}
+              </span>
+              <span className="rounded-sm bg-paper-warm px-2 py-0.5 text-xs font-bold text-ink-soft">
+                {chapter.recipes.length}
+              </span>
+            </span>
+          ))}
+        </nav>
+      </aside>
+    </div>
+  );
+}
+
 const MEMBERS = [
   { initials: "YO", name: "You", role: "Keeper", color: "#2f4a3a" },
   { initials: "MR", name: "Maria Rivera", role: "Contributor", color: "#c0703f" },
@@ -339,6 +426,15 @@ export default async function GuideShotHarness({
                 <RoleGuide />
               </div>
             </>
+          )}
+
+          {screen === "my-recipes" && (
+            <div className="flex h-full flex-col">
+              <FrameHeader eyebrow="Your collection" title="My Recipes" />
+              <div className="min-h-0 flex-1">
+                <MyRecipes />
+              </div>
+            </div>
           )}
 
           {screen === "new-recipe" && (

@@ -10,8 +10,10 @@ interface GuideBeaconProps {
 }
 
 /**
- * A small pulsing dot pinned to the top-right corner of an anchored control.
- * Opt-in: tapping it starts that guide. Honors prefers-reduced-motion.
+ * A small pulsing dot pinned to the top-left corner of an anchored control —
+ * sitting by the icon at the start of a desktop nav row rather than trailing off
+ * its right edge. Opt-in: tapping it starts that guide. Honors
+ * prefers-reduced-motion.
  */
 export function GuideBeacon({ anchorEl, label, onStart }: GuideBeaconProps) {
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -37,7 +39,7 @@ export function GuideBeacon({ anchorEl, label, onStart }: GuideBeaconProps) {
       onClick={onStart}
       aria-label={label}
       className="group fixed z-[110] flex h-6 w-6 items-center justify-center"
-      style={{ top: rect.top - 8, left: rect.right - 16 }}
+      style={{ top: rect.top - 8, left: rect.left - 8 }}
     >
       <span className="absolute inline-flex h-4 w-4 rounded-full bg-accent-terracotta/60 motion-safe:animate-ping" />
       <span className="relative inline-flex h-3.5 w-3.5 rounded-full border-2 border-cream bg-accent-terracotta shadow-sm transition-transform group-hover:scale-110" />
