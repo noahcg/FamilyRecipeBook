@@ -1,30 +1,28 @@
 import { notFound } from "next/navigation";
 import {
   BookOpen,
-  Camera,
   CalendarDays,
   Check,
   Crown,
-  FileText,
-  PencilLine,
   Plus,
   ShoppingCart,
   UserPlus,
   Users,
+  UtensilsCrossed,
 } from "lucide-react";
-import { Input, BookCoverArt } from "@/components/ui";
+import { BookCoverArt } from "@/components/ui";
 import { AddMemberForm } from "@/components/book/AddMemberForm";
 import { resolveCoverColor } from "@/lib/bookCovers";
 
-// Dev-only harness for capturing the onboarding-guide hero screenshots.
+// Dev-only harness for capturing the welcome-tour hero screenshots.
 //
-// Each guide step's hero shows the SCREEN THE USER LANDS ON after tapping the
-// highlighted control (not the control itself — the in-app beacon already marks
-// that). The data-driven destinations (Members list, Meal Plan, Groceries, new
-// recipe) can't render here unauthenticated — their components fetch on mount
-// and would redirect to /sign-in — so those are faithful reproductions built
-// from the real design system + sample data. The Add Member form and cookbook
-// cover art are the REAL components.
+// Each tour step's hero shows the SCREEN THE USER LANDS ON after tapping the
+// highlighted control (not the control itself — the tour spotlight already marks
+// that). The data-driven destinations (Members list, Meal Plan, Groceries) can't
+// render here unauthenticated — their components fetch on mount and would
+// redirect to /sign-in — so those are faithful reproductions built from the real
+// design system + sample data. The Add Member form and cookbook cover art are the
+// REAL components.
 //
 // Everything renders inside #shot-frame (a fixed 16:10 box) which the capture
 // script (scripts/capture-guides.mjs, `npm run capture:guides`) screenshots
@@ -124,43 +122,6 @@ function Bookshelf() {
   );
 }
 
-const RECIPE_METHODS = [
-  { icon: PencilLine, label: "Type it in", desc: "Enter the recipe by hand." },
-  { icon: Camera, label: "From a photo", desc: "Snap a recipe card and we read it." },
-  { icon: FileText, label: "Paste text", desc: "Paste it and we'll format it." },
-];
-
-function NewRecipe() {
-  return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-3 gap-3">
-        {RECIPE_METHODS.map(({ icon: Icon, label, desc }, i) => (
-          <div
-            key={label}
-            className={`rounded-xl border-2 p-4 ${
-              i === 0 ? "border-green-deep bg-green-soft/60" : "border-line bg-paper-soft"
-            }`}
-          >
-            <span
-              className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg"
-              style={{ background: "var(--color-sage-soft)" }}
-            >
-              <Icon size={17} strokeWidth={1.8} className="text-green-deep" />
-            </span>
-            <p className="text-sm font-bold text-ink">{label}</p>
-            <p className="mt-0.5 text-xs leading-snug text-ink-muted">{desc}</p>
-          </div>
-        ))}
-      </div>
-      <Input label="Recipe title" placeholder="Sunday Roast Chicken" />
-      <div className="grid grid-cols-2 gap-3">
-        <Input label="Prep time" placeholder="20 min" />
-        <Input label="Cook time" placeholder="1 hr" />
-      </div>
-    </div>
-  );
-}
-
 const WEEK = [
   { day: "Mon", meal: "Roast Chicken" },
   { day: "Tue", meal: null },
@@ -251,6 +212,61 @@ function Groceries() {
   );
 }
 
+const HOME_TILES = [
+  { icon: CalendarDays, label: "This week", value: "3 meals planned" },
+  { icon: BookOpen, label: "My Recipes", value: "24 recipes" },
+  { icon: ShoppingCart, label: "Groceries", value: "5 items" },
+];
+
+// Generic home-dashboard reproduction for the welcome-modal hero.
+function AppHome() {
+  return (
+    <div className="flex flex-col justify-center gap-5">
+      <div>
+        <p className={EYEBROW}>Your kitchen</p>
+        <h2 className={`mt-1 ${H2}`} style={PLAYFAIR}>
+          Good evening, Rosa
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-[minmax(0,1fr)_38%] overflow-hidden rounded-xl border border-line bg-card shadow-[0_18px_50px_rgba(31,58,45,0.12)]">
+        <div className="flex flex-col justify-between p-5">
+          <div>
+            <p className={EYEBROW}>Recipe pick</p>
+            <h3 className="mt-1 text-2xl font-bold leading-tight text-green-deep" style={PLAYFAIR}>
+              Sunday Roast Chicken
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+              Pick up right where you left off, adjust what you need, and keep moving.
+            </p>
+          </div>
+          <span className="mt-4 inline-flex w-fit items-center gap-2 rounded-md bg-green-deep px-4 py-2 text-sm font-bold text-ink-inverse">
+            <UtensilsCrossed size={16} /> Start cooking
+          </span>
+        </div>
+        <div className="flex items-center justify-center bg-green-pale">
+          <UtensilsCrossed size={46} strokeWidth={1} className="text-green-sage" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {HOME_TILES.map(({ icon: Icon, label, value }) => (
+          <div key={label} className="rounded-xl border border-line-soft bg-card/70 p-4">
+            <span
+              className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg"
+              style={{ background: "var(--color-sage-soft)" }}
+            >
+              <Icon size={17} strokeWidth={1.8} className="text-green-deep" />
+            </span>
+            <p className="text-sm font-bold text-ink">{label}</p>
+            <p className="mt-0.5 text-xs leading-snug text-ink-muted">{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const MEMBERS = [
   { initials: "YO", name: "You", role: "Keeper", color: "#2f4a3a" },
   { initials: "MR", name: "Maria Rivera", role: "Contributor", color: "#c0703f" },
@@ -322,6 +338,8 @@ export default async function GuideShotHarness({
         style={{ width: 960, height: 600 }}
       >
         <div className="flex h-full flex-col justify-center overflow-hidden p-8">
+          {screen === "app-home" && <AppHome />}
+
           {screen === "members" && (
             <>
               <FrameHeader eyebrow="The Family Table" title="Members" />
@@ -338,13 +356,6 @@ export default async function GuideShotHarness({
                 </div>
                 <RoleGuide />
               </div>
-            </>
-          )}
-
-          {screen === "new-recipe" && (
-            <>
-              <FrameHeader eyebrow="The Family Table" title="New recipe" />
-              <NewRecipe />
             </>
           )}
 

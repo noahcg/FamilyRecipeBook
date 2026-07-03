@@ -25,9 +25,9 @@ const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 
 // name = output file; screen = which destination the harness renders.
 const SHOTS = [
+  { name: "welcome-home", screen: "app-home" },
   { name: "invite-members-1", screen: "members" },
   { name: "invite-members-2", screen: "add-member" },
-  { name: "add-recipe-1", screen: "new-recipe" },
   { name: "nav-orientation-1", screen: "bookshelf" },
   { name: "plan-and-shop-1", screen: "meal-plan" },
   { name: "plan-and-shop-2", screen: "groceries" },

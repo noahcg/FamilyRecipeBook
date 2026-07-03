@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 import { CookbookNavigator } from "@/components/layout/CookbookNavigator";
-import { GuidesLayer } from "@/components/guides/GuidesLayer";
 import { getVisibleFocusable } from "@/lib/a11y";
 import { useModalFocus } from "@/lib/hooks/useModalFocus";
 import { APP_VERSION } from "@/lib/version";
@@ -79,7 +78,7 @@ const OFFLINE_NAV: NavItem = {
   label: "Offline",
 };
 
-// Nav items that anchor a contextual mini-guide beacon.
+// Nav items the welcome tour spotlights (matched via data-guide-anchor).
 const NAV_GUIDE_ANCHOR: Record<string, string> = {
   "meal-plan": "nav-meal-plan",
   groceries: "nav-groceries",
@@ -376,8 +375,6 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
           </form>
         </div>
       </nav>
-
-      {!lockNav && <GuidesLayer />}
     </div>
   );
 }

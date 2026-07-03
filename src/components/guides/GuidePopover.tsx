@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { clsx } from "clsx";
-import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useModalFocus } from "@/lib/hooks/useModalFocus";
+import { GuideCard } from "./GuideCard";
 import type { GuideStep } from "@/lib/guides/registry";
 
 interface GuidePopoverProps {
@@ -17,45 +17,79 @@ interface GuidePopoverProps {
   isLast: boolean;
   onBack: () => void;
   onNext: () => void;
-  /** "Skip" — the user is done with this guide; mark it seen. */
+  /** "Skip" — the user is done with the tour; mark it seen. */
   onSkip: () => void;
-  /** Esc / click-away — pause without marking seen (beacon stays). */
+  /** Esc / click-away — close the tour. */
   onDismiss: () => void;
 }
 
 const CARD_WIDTH = 360;
-const GAP = 12;
-const MARGIN = 16;
+const GAP = 10; // space between the anchor and the caret tip
+const MARGIN = 16; // keep-away from the viewport edges
+const CARET = 12; // caret square side (pre-rotation)
+// The app nav is a left sidebar at ≥lg and a bottom bar below it (see AppShell).
+// Above the breakpoint we sit the card to the right of the nav row; below it we
+// float above the bottom bar. Matching the nav's own breakpoint keeps the card
+// pointed at whichever nav is actually on screen.
+const SIDEBAR_MIN = 1024;
+
+type Placement = "right" | "top" | "center";
 
 interface Position {
   top: number;
   left: number;
-  /** When true the card is pinned to the bottom (mobile bottom-sheet). */
-  sheet: boolean;
+  width: number;
+  height: number;
+  maxHeight: number;
+  placement: Placement;
+  /** Offset of the caret along the card edge (from top for "right", left for "top"). */
+  caret: number;
 }
 
-function computePosition(anchor: DOMRect | null): Position {
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(v, hi));
+
+function computePosition(anchor: DOMRect | null, cardH: number): Position {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const isMobile = vw < 640;
 
-  if (isMobile || !anchor) {
-    return { top: 0, left: 0, sheet: true };
+  // No anchor → centered card, no caret.
+  if (!anchor) {
+    const width = Math.min(CARD_WIDTH, vw - MARGIN * 2);
+    const maxHeight = vh - MARGIN * 2;
+    const height = Math.min(cardH, maxHeight);
+    return {
+      top: clamp((vh - height) / 2, MARGIN, vh - MARGIN - height),
+      left: (vw - width) / 2,
+      width,
+      height,
+      maxHeight,
+      placement: "center",
+      caret: 0,
+    };
   }
 
-  // Prefer below the anchor; flip above when there isn't room.
+  const cx = anchor.left + anchor.width / 2;
+  const cy = anchor.top + anchor.height / 2;
+
+  // Desktop sidebar: to the RIGHT of the nav row, caret pointing left.
+  if (vw >= SIDEBAR_MIN) {
+    const width = CARD_WIDTH;
+    const maxHeight = vh - MARGIN * 2;
+    const height = Math.min(cardH, maxHeight);
+    const left = anchor.right + GAP + CARET;
+    const top = clamp(cy - height / 2, MARGIN, vh - MARGIN - height);
+    const caret = clamp(cy - top, CARET, height - CARET);
+    return { top, left, width, height, maxHeight, placement: "right", caret };
+  }
+
+  // Bottom bar (mobile / tablet): ABOVE the nav item, caret pointing down.
   const width = Math.min(CARD_WIDTH, vw - MARGIN * 2);
-  let left = anchor.left + anchor.width / 2 - width / 2;
-  left = Math.max(MARGIN, Math.min(left, vw - width - MARGIN));
-
-  const estimatedHeight = 380; // generous; clamped into the viewport below.
-  const below = anchor.bottom + GAP;
-  const fitsBelow = below + estimatedHeight <= vh - MARGIN;
-  const top = fitsBelow
-    ? below
-    : Math.max(MARGIN, anchor.top - GAP - estimatedHeight);
-
-  return { top, left, sheet: false };
+  const maxHeight = Math.max(140, anchor.top - GAP - CARET - MARGIN);
+  const height = Math.min(cardH, maxHeight);
+  const left = clamp(cx - width / 2, MARGIN, vw - width - MARGIN);
+  const top = Math.max(MARGIN, anchor.top - GAP - CARET - height);
+  const caret = clamp(cx - left, CARET, width - CARET);
+  return { top, left, width, height, maxHeight, placement: "top", caret };
 }
 
 export function GuidePopover({
@@ -72,27 +106,38 @@ export function GuidePopover({
 }: GuidePopoverProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
-  const [position, setPosition] = useState<Position>({ top: 0, left: 0, sheet: true });
+  const [position, setPosition] = useState<Position | null>(null);
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
   useModalFocus({ containerRef: cardRef, open: true });
 
-  // Measure the anchor and reposition on mount, scroll, resize, and step change.
+  // Measure the anchor + card and (re)position on mount, scroll, resize, card
+  // resize (image load), and step change. A ResizeObserver gives us the card's
+  // real height so vertical centering and the caret line up.
   useLayoutEffect(() => {
+    const card = cardRef.current;
     function measure() {
       const rect = anchorEl?.getBoundingClientRect() ?? null;
       setAnchorRect(rect);
-      setPosition(computePosition(rect));
+      setPosition(computePosition(rect, card?.offsetHeight ?? 380));
+    }
+    // On the bottom bar the target item may be scrolled out of the horizontal
+    // strip — bring it into view so the caret has something to point at.
+    if (anchorEl && window.innerWidth < SIDEBAR_MIN) {
+      anchorEl.scrollIntoView({ inline: "center", block: "nearest" });
     }
     measure();
+    const ro = card ? new ResizeObserver(measure) : null;
+    ro?.observe(card!);
     window.addEventListener("scroll", measure, true);
     window.addEventListener("resize", measure);
     return () => {
+      ro?.disconnect();
       window.removeEventListener("scroll", measure, true);
       window.removeEventListener("resize", measure);
     };
   }, [anchorEl, stepIndex]);
 
-  // Esc pauses the guide without marking it seen.
+  // Esc closes the tour.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onDismiss();
@@ -103,9 +148,27 @@ export function GuidePopover({
 
   if (typeof document === "undefined") return null;
 
+  const caretStyle: CSSProperties | null =
+    position && position.placement === "right"
+      ? {
+          left: position.left - CARET / 2,
+          top: position.top + position.caret - CARET / 2,
+          borderLeft: "1px solid var(--color-line-soft)",
+          borderBottom: "1px solid var(--color-line-soft)",
+        }
+      : position && position.placement === "top"
+        ? {
+            left: position.left + position.caret - CARET / 2,
+            top: position.top + position.height - CARET / 2,
+            borderRight: "1px solid var(--color-line-soft)",
+            borderBottom: "1px solid var(--color-line-soft)",
+          }
+        : null;
+
   return createPortal(
     <div className="fixed inset-0 z-[120]">
-      {/* Dimmer — clicking away pauses the guide. */}
+      {/* Dimmer — clicking away closes the tour. No blur: the tour points at the
+          nav, so keep what's behind crisp. */}
       <button
         type="button"
         aria-label="Dismiss tip"
@@ -113,8 +176,8 @@ export function GuidePopover({
         onClick={onDismiss}
       />
 
-      {/* Spotlight ring around the anchored control. */}
-      {anchorRect && !position.sheet && (
+      {/* Spotlight ring around the anchored nav item. */}
+      {anchorRect && position && position.placement !== "center" && (
         <div
           aria-hidden
           className="pointer-events-none absolute rounded-lg ring-2 ring-accent-terracotta ring-offset-2 ring-offset-cream transition-all"
@@ -127,65 +190,24 @@ export function GuidePopover({
         />
       )}
 
-      <div
+      <GuideCard
         ref={cardRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className={clsx(
-          "absolute flex w-full flex-col overflow-hidden rounded-2xl border border-line-soft shadow-lg",
-          "animate-in fade-in duration-200",
-          position.sheet
-            ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] left-2 right-2 mx-auto max-w-[420px] slide-in-from-bottom-4 sm:bottom-4"
-            : "slide-in-from-top-1"
-        )}
+        eyebrow={stepCount > 1 ? `Step ${stepIndex + 1} of ${stepCount}` : "Tip"}
+        title={step.title}
+        titleId={titleId}
+        body={step.body}
+        image={step.image}
+        onDismiss={onDismiss}
+        className="absolute animate-in fade-in zoom-in-95 duration-200"
         style={{
-          background: "var(--color-paper-soft)",
-          ...(position.sheet
-            ? {}
-            : { top: position.top, left: position.left, width: CARD_WIDTH }),
+          top: position?.top ?? 0,
+          left: position?.left ?? 0,
+          width: position?.width ?? CARD_WIDTH,
+          maxHeight: position?.maxHeight,
+          visibility: position ? "visible" : "hidden",
         }}
-      >
-        {step.image && (
-          <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-green-soft/50">
-            {/* Plain img (small local static asset) keeps the aspect ratio
-                reserved so there's no layout shift; swap the file in /public to
-                update the screenshot. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={step.image.src}
-              alt={step.image.alt}
-              loading="lazy"
-              className="h-full w-full object-cover"
-            />
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2 px-5 pb-4 pt-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
-              {stepCount > 1 ? `Step ${stepIndex + 1} of ${stepCount}` : "Tip"}
-            </span>
-            <button
-              type="button"
-              onClick={onDismiss}
-              aria-label="Dismiss tip"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-ink-soft transition-colors hover:bg-line-soft"
-            >
-              <X size={16} strokeWidth={1.75} />
-            </button>
-          </div>
-
-          <h2
-            id={titleId}
-            className="text-lg font-bold leading-tight text-green-deep"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            {step.title}
-          </h2>
-          <p className="text-sm leading-relaxed text-ink-muted">{step.body}</p>
-
-          <div className="mt-2 flex items-center justify-between gap-3">
+        footer={
+          <>
             <button
               type="button"
               onClick={onSkip}
@@ -220,9 +242,19 @@ export function GuidePopover({
                 )}
               </button>
             </div>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
+
+      {/* Caret — a rotated square sibling of the card (the card clips overflow),
+          its two outer edges continuing the card border toward the nav item. */}
+      {caretStyle && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute h-3 w-3 rotate-45"
+          style={{ background: "var(--color-paper-soft)", ...caretStyle }}
+        />
+      )}
     </div>,
     document.body
   );

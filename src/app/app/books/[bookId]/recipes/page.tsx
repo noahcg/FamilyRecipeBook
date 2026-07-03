@@ -377,14 +377,14 @@ export default function RecipesPage({ params }: Props) {
                   ].join(" ")}
                 >
                   {canAddRecipes && (
-                    <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0" data-guide-anchor="add-recipe">
+                    <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
                       <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
                         <Plus size={17} /> Add Recipe
                       </Button>
                     </Link>
                   )}
                   {canManageBookMembers && (
-                    <Link href={`/app/books/${bookId}/members`} className="min-w-0" data-guide-anchor="manage-members">
+                    <Link href={`/app/books/${bookId}/members`} className="min-w-0">
                       <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
                         <Users size={17} /> Manage Members
                       </Button>
