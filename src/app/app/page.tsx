@@ -11,6 +11,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { TimeOfDayHeadline } from "@/components/home/TimeOfDayHeadline";
+import { WelcomeTour } from "@/components/guides/WelcomeTour";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBadge } from "@/components/recipe/CookbookBadge";
 import { Button } from "@/components/ui";
@@ -258,6 +259,7 @@ export default async function AppHomePage() {
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
             <div className="space-y-6">
+              <WelcomeTour />
               <DashboardCard className="overflow-hidden">
                 <div className="grid lg:min-h-[320px] lg:grid-cols-[minmax(0,1fr)_38%]">
                   <div className="flex flex-col justify-between p-3.5 min-[425px]:p-4 sm:p-6">
