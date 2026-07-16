@@ -101,15 +101,28 @@ function SignUpContent() {
       sideDescription="Capture the dish everyone asks about, then add the stories and people that make it feel like home."
       sideNote="A place for the meals worth remembering."
       footer={
-        <p className="text-center text-sm text-ink-muted mt-5">
-          Already have an account?{" "}
-          <Link
-            href={signInHref}
-            className="text-green-deep font-semibold hover:underline"
-          >
-            Sign in
-          </Link>
-        </p>
+        <div className="mt-5 space-y-2 text-center">
+          <p className="text-sm text-ink-muted">
+            Already have an account?{" "}
+            <Link
+              href={signInHref}
+              className="text-green-deep font-semibold hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
+          <p className="text-xs text-ink-soft">
+            By continuing you agree to our{" "}
+            <Link href="/terms" className="font-semibold text-green-deep hover:underline">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="font-semibold text-green-deep hover:underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
       }
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

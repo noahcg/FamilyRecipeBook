@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, ChefHat, ShoppingCart, Sparkles } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 
 function FeatureCopy({
   icon: Icon,
@@ -265,6 +266,8 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }
