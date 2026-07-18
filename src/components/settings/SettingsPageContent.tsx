@@ -9,6 +9,7 @@ import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
 import { GuidesPreference } from "@/components/settings/GuidesPreference";
+import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
@@ -233,6 +234,22 @@ export function GlobalSettingsPageContent({
               </Link>
             </section>
           )}
+
+          <section className="scroll-mt-6">
+            <div className="mb-4 flex items-baseline gap-4">
+              <h2
+                className="text-2xl font-bold leading-tight text-danger"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Danger zone
+              </h2>
+              <span className="h-px flex-1 bg-line-soft" />
+            </div>
+            <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+              Irreversible actions that affect your entire account.
+            </p>
+            <DeleteAccountSection />
+          </section>
 
         </div>
       </div>
