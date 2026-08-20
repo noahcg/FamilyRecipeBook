@@ -1,3 +1,5 @@
+import { renderCodeBlockHtml, renderCodeBlockText } from "./codeBlock";
+
 export type AuthActionType =
   | "recovery"
   | "magiclink"
@@ -11,6 +13,8 @@ export type AuthActionType =
 interface AuthActionTemplateInput {
   actionType: AuthActionType;
   actionUrl: string;
+  /** The numeric OTP, when the action has one. Rendered above the button. */
+  code?: string;
   email?: string;
   newEmail?: string;
   logoUrl?: string;
@@ -54,12 +58,12 @@ function copyFor(actionType: AuthActionType, newEmail?: string): Copy {
     case "magiclink":
     case "login":
       return {
-        subject: "Your Home Cooked sign-in link",
+        subject: "Your Home Cooked sign-in code",
         eyebrow: "Sign in",
         title: "Welcome back to the kitchen.",
-        body: "Open the link below to finish signing in to Home Cooked. The link only works once and expires soon.",
-        cta: "Sign in",
-        closing: "If you did not request this link, you can ignore this email.",
+        body: "Enter this code to finish signing in to Home Cooked. It expires in 10 minutes and only works once.",
+        cta: "Or tap here to sign in",
+        closing: "If you did not request this code, you can ignore this email.",
       };
     case "invite":
       return {
@@ -113,11 +117,13 @@ function copyFor(actionType: AuthActionType, newEmail?: string): Copy {
 export function createAuthActionEmail({
   actionType,
   actionUrl,
+  code,
   email,
   newEmail,
   logoUrl,
 }: AuthActionTemplateInput): EmailTemplate {
   const copy = copyFor(actionType, newEmail);
+  const codeBlock = code ? renderCodeBlockHtml(code) : "";
   const safeActionUrl = escapeHtml(actionUrl);
   const safeEmail = email ? escapeHtml(email) : "";
   const safeNewEmail = newEmail ? escapeHtml(newEmail) : "";
@@ -173,7 +179,7 @@ export function createAuthActionEmail({
                 </p>
               </td>
             </tr>
-${detailsRow}
+${detailsRow}${codeBlock}
             <tr>
               <td align="center" style="padding:30px 36px 8px;background:#FBF5E8;">
                 <a href="${safeActionUrl}" style="display:inline-block;background:#1F3A2D;color:#FFF9EE;text-decoration:none;border-radius:999px;padding:15px 24px;font-size:16px;line-height:1;font-weight:800;">${escapeHtml(copy.cta)}</a>
@@ -200,6 +206,7 @@ ${detailsRow}
     copy.title,
     "",
     copy.body,
+    ...(code ? ["", renderCodeBlockText(code)] : []),
     "",
     `${copy.cta}: ${actionUrl}`,
     "",

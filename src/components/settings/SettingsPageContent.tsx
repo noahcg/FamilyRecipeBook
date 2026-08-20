@@ -10,6 +10,7 @@ import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
 import { GuidesPreference } from "@/components/settings/GuidesPreference";
 import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
+import { NameCaptureForm } from "@/components/onboarding/NameCaptureForm";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
@@ -119,6 +120,18 @@ export function GlobalSettingsPageContent({
                   )}
                 </div>
               </div>
+
+              {/* Signing in by email code collects no name, and anyone who
+                  joined straight from an invite never passes through
+                  /onboarding — so this is their only chance to set one. */}
+              {!profile.full_name?.trim() && (
+                <div className="mt-5 border-t border-line-soft pt-5">
+                  <p className="mb-4 text-sm leading-relaxed text-ink-muted">
+                    Add your name so family members can tell who added a recipe.
+                  </p>
+                  <NameCaptureForm />
+                </div>
+              )}
             </div>
           </section>
 

@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages
-  if (user && (pathname === "/sign-in" || pathname === "/sign-up")) {
+  if (user && pathname === "/sign-in") {
     const url = request.nextUrl.clone();
     const nextPath = request.nextUrl.searchParams.get("next");
     url.pathname = nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/app";

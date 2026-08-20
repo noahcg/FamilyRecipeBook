@@ -1,31 +1,19 @@
 import { z } from "zod";
+import { OTP_MAX_LENGTH, OTP_MIN_LENGTH } from "@/lib/otp";
 
-export const signInSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(1, "Enter your password"),
+export const emailEntrySchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email address"),
 });
 
-export const signUpSchema = z.object({
-  full_name: z.string().min(1, "Enter your name").max(100),
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+export const otpCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(
+      new RegExp(`^\\d{${OTP_MIN_LENGTH},${OTP_MAX_LENGTH}}$`),
+      "Enter the code from your email"
+    ),
 });
 
-export const forgotPasswordSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-});
-
-export const resetPasswordSchema = z
-  .object({
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirm: z.string(),
-  })
-  .refine((data) => data.password === data.confirm, {
-    message: "Passwords do not match",
-    path: ["confirm"],
-  });
-
-export type SignInInput = z.infer<typeof signInSchema>;
-export type SignUpInput = z.infer<typeof signUpSchema>;
-export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
-export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type EmailEntryInput = z.infer<typeof emailEntrySchema>;
+export type OtpCodeInput = z.infer<typeof otpCodeSchema>;
