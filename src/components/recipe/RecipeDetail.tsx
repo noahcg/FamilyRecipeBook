@@ -505,6 +505,28 @@ export function RecipeDetail({
                   </span>
                 )}
               </div>
+              {recipe.photo_author && recipe.photo_source_url && (
+                <p className="mt-3 text-xs text-white/78">
+                  Photo by{" "}
+                  <a
+                    href={recipe.photo_author_url ?? recipe.photo_source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-white underline"
+                  >
+                    {recipe.photo_author}
+                  </a>{" "}
+                  on{" "}
+                  <a
+                    href={recipe.photo_source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-white underline"
+                  >
+                    {recipe.photo_source ?? "Pexels"}
+                  </a>
+                </p>
+              )}
             </div>
           </div>
         </div>

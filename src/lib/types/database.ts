@@ -52,6 +52,10 @@ export interface Recipe {
   title: string;
   description: string | null;
   photo_url: string | null;
+  photo_source: string | null;
+  photo_author: string | null;
+  photo_author_url: string | null;
+  photo_source_url: string | null;
   source_name: string | null;
   story: string | null;
   prep_minutes: number | null;
