@@ -24,6 +24,16 @@ export const createRecipeSchema = z.object({
     (value) => value === "" ? null : value,
     z.string().url("Enter a valid image URL").nullable().optional()
   ),
+  photo_source: z.string().max(50).nullable().optional(),
+  photo_author: z.string().max(200).nullable().optional(),
+  photo_author_url: z.preprocess(
+    (value) => value === "" ? null : value,
+    z.string().url("Enter a valid photo author URL").nullable().optional()
+  ),
+  photo_source_url: z.preprocess(
+    (value) => value === "" ? null : value,
+    z.string().url("Enter a valid photo source URL").nullable().optional()
+  ),
   source_name: z.string().max(100).optional(),
   story: z.string().max(2000).optional(),
   prep_minutes: z.coerce.number().int().min(0).max(10080).optional(),

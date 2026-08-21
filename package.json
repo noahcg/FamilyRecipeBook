@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:pexels": "node --test tests/pexelsSearch.test.mjs",
     "capture:guides": "node scripts/capture-guides.mjs",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
