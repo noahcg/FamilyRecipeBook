@@ -263,14 +263,14 @@ function CodeStep({ email, nextPath }: { email: string; nextPath: string | null 
 
   return (
     <EntryShell
-      eyebrow="Check your email"
-      title="Enter your code"
-      description={`We sent a sign-in code to ${email}. It expires in 10 minutes.`}
+      eyebrow="Almost there"
+      title="Check your email"
+      description={`We sent a sign-in email to ${email}. Open the link in that email, or enter the code here if one is shown.`}
       maxWidth="md"
       sideImageSrc="/images/entry/email.jpg"
       sideImageAlt="Laptop and coffee on a kitchen table"
       sideTitle="One quick code, then your cookbook is ready."
-      sideDescription="Type the code from your email and you're in. No password to set up or remember."
+      sideDescription="Use the email link or type the code from your email and you're in. No password to set up or remember."
       sideNote="Almost ready to start cooking."
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -286,6 +286,7 @@ function CodeStep({ email, nextPath }: { email: string; nextPath: string | null 
           enterKeyHint="go"
           autoFocus
           className="text-center font-mono text-2xl tracking-[0.3em]"
+          hint="If your email only has a sign-in button, use that button instead."
           error={errors.code?.message}
           {...register("code")}
         />

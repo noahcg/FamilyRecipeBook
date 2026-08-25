@@ -10,6 +10,7 @@ import {
   type RequestOtpResult,
   type VerifyOtpResult,
 } from "@/lib/otp";
+import { emailEntrySchema, otpCodeSchema } from "@/lib/validators/auth";
 
 /**
  * Never return `error.message` verbatim from the send step. GoTrue's wording
@@ -78,6 +79,17 @@ export async function requestEmailOtp(
   redirectTo?: string | null
 ): Promise<RequestOtpResult> {
   const supabase = await createClient();
+  const parsed = emailEntrySchema.safeParse({ email });
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0].message,
+      rateLimited: false,
+    };
+  }
+
+  const normalizedEmail = parsed.data.email;
   const nextPath = getSafeRedirectPath(redirectTo, "/app");
 
   // The same email also carries a magic link as a fallback; point it at the
@@ -85,7 +97,7 @@ export async function requestEmailOtp(
   const emailRedirectTo = `${getAppBaseUrl()}/auth/confirm?redirect_to=${encodeURIComponent(nextPath)}`;
 
   const { error } = await supabase.auth.signInWithOtp({
-    email,
+    email: normalizedEmail,
     options: { shouldCreateUser: true, emailRedirectTo },
   });
 
@@ -107,7 +119,29 @@ export async function verifyEmailOtp(
   redirectTo?: string | null
 ): Promise<VerifyOtpResult> {
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
+  const parsedEmail = emailEntrySchema.safeParse({ email });
+  if (!parsedEmail.success) {
+    return {
+      success: false,
+      error: parsedEmail.error.issues[0].message,
+      expired: false,
+    };
+  }
+
+  const parsedToken = otpCodeSchema.safeParse({ code: token });
+  if (!parsedToken.success) {
+    return {
+      success: false,
+      error: parsedToken.error.issues[0].message,
+      expired: false,
+    };
+  }
+
+  const { error } = await supabase.auth.verifyOtp({
+    email: parsedEmail.data.email,
+    token: parsedToken.data.code,
+    type: "email",
+  });
   if (error) return { success: false, ...describeVerifyError(error) };
   redirect(getSafeRedirectPath(redirectTo, "/app"));
 }
