@@ -1,95 +1,154 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import type { AuthError } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import type { ActionResult } from "@/lib/types";
+import { getAppBaseUrl } from "@/lib/appUrl";
+import { getSafeRedirectPath } from "@/lib/safeRedirect";
+import {
+  OTP_RESEND_COOLDOWN_SECONDS,
+  type RequestOtpResult,
+  type VerifyOtpResult,
+} from "@/lib/otp";
+import { emailEntrySchema, otpCodeSchema } from "@/lib/validators/auth";
 
-function getSafeRedirectPath(value?: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/app";
-  return value;
-}
+/**
+ * Never return `error.message` verbatim from the send step. GoTrue's wording
+ * differs between "user exists" and "user created", which would turn this
+ * form into an account-enumeration oracle.
+ */
+function describeSendError(error: AuthError): { error: string; rateLimited: boolean } {
+  // Saying the existing code still works matters: otherwise someone who
+  // double-taps resend reads this as "nothing was sent" and gives up.
+  const rateLimitedCopy = {
+    error: `You already have a code — check your email. You can request a new one in ${OTP_RESEND_COOLDOWN_SECONDS} seconds.`,
+    rateLimited: true,
+  };
 
-export async function signIn(
-  email: string,
-  password: string,
-  redirectTo?: string | null
-): Promise<ActionResult> {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { success: false, error: error.message };
-  redirect(getSafeRedirectPath(redirectTo));
-}
-
-export async function signUp(
-  fullName: string,
-  email: string,
-  password: string,
-  redirectTo?: string | null
-): Promise<ActionResult<{ needsConfirmation: boolean }>> {
-  const supabase = await createClient();
-  const nextPath = getSafeRedirectPath(redirectTo);
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: fullName },
-      emailRedirectTo: `${origin}${nextPath}`,
-    },
-  });
-  if (error) return { success: false, error: error.message };
-  // When email confirmation is required, session is null
-  if (!data.session) {
-    return { success: true, data: { needsConfirmation: true } };
+  switch (error.code) {
+    case "over_email_send_rate_limit":
+    case "over_request_rate_limit":
+      return rateLimitedCopy;
+    case "email_address_invalid":
+      return {
+        error: "That email address doesn't look right. Check it and try again.",
+        rateLimited: false,
+      };
+    case "signup_disabled":
+      return { error: "New accounts are paused right now. Try again later.", rateLimited: false };
+    case "user_banned":
+      return {
+        error: "This account isn't available. Get in touch if you think that's a mistake.",
+        rateLimited: false,
+      };
+    default:
+      if (error.status === 429) return rateLimitedCopy;
+      return {
+        error: "We couldn't send your code just now. Try again in a moment.",
+        rateLimited: false,
+      };
   }
-  redirect(nextPath);
 }
 
-export async function requestPasswordReset(
-  email: string
-): Promise<ActionResult> {
-  const supabase = await createClient();
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/reset-password`,
-  });
-  // Don't leak whether the email exists — return success either way unless
-  // it's a clear server-side failure.
-  if (error && error.status && error.status >= 500) {
-    return { success: false, error: error.message };
+function describeVerifyError(error: AuthError): { error: string; expired: boolean } {
+  switch (error.code) {
+    case "otp_expired":
+      return { error: "That code has expired. Send a new one.", expired: true };
+    case "over_request_rate_limit":
+      return { error: "Too many attempts. Wait a minute, then try again.", expired: false };
+    default:
+      return {
+        error: "That code isn't right. Double-check it against your email and try again.",
+        expired: false,
+      };
   }
-  return { success: true, data: undefined };
 }
 
-export async function updatePassword(
-  password: string
-): Promise<ActionResult> {
+/**
+ * Emails a sign-in code, creating the account if the address is new.
+ *
+ * Deliberately does not redirect and does not reveal whether the account
+ * already existed — the caller advances to the code step either way.
+ *
+ * `shouldCreateUser` must stay `true`: flipping it to `false` makes GoTrue
+ * answer `otp_disabled` for unknown addresses, which is a clean enumeration
+ * oracle.
+ */
+export async function requestEmailOtp(
+  email: string,
+  redirectTo?: string | null
+): Promise<RequestOtpResult> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+  const parsed = emailEntrySchema.safeParse({ email });
+
+  if (!parsed.success) {
     return {
       success: false,
-      error: "Your reset link is no longer valid. Request a new one and try again.",
+      error: parsed.error.issues[0].message,
+      rateLimited: false,
     };
   }
-  const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { success: false, error: error.message };
+
+  const normalizedEmail = parsed.data.email;
+  const nextPath = getSafeRedirectPath(redirectTo, "/app");
+
+  // The same email also carries a magic link as a fallback; point it at the
+  // confirm route so it honours `next` too.
+  const emailRedirectTo = `${getAppBaseUrl()}/auth/confirm?redirect_to=${encodeURIComponent(nextPath)}`;
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: normalizedEmail,
+    options: { shouldCreateUser: true, emailRedirectTo },
+  });
+
+  if (error) return { success: false, ...describeSendError(error) };
   return { success: true, data: undefined };
+}
+
+/**
+ * Redeems a sign-in code and starts the session.
+ *
+ * `type: "email"` covers codes issued for both sign-up and sign-in — the
+ * `signup` and `magiclink` verify types are deprecated. Do not retry with a
+ * different type on failure: the token is single-use, so the first attempt
+ * consumes it and the retry fails for the wrong reason.
+ */
+export async function verifyEmailOtp(
+  email: string,
+  token: string,
+  redirectTo?: string | null
+): Promise<VerifyOtpResult> {
+  const supabase = await createClient();
+  const parsedEmail = emailEntrySchema.safeParse({ email });
+  if (!parsedEmail.success) {
+    return {
+      success: false,
+      error: parsedEmail.error.issues[0].message,
+      expired: false,
+    };
+  }
+
+  const parsedToken = otpCodeSchema.safeParse({ code: token });
+  if (!parsedToken.success) {
+    return {
+      success: false,
+      error: parsedToken.error.issues[0].message,
+      expired: false,
+    };
+  }
+
+  const { error } = await supabase.auth.verifyOtp({
+    email: parsedEmail.data.email,
+    token: parsedToken.data.code,
+    type: "email",
+  });
+  if (error) return { success: false, ...describeVerifyError(error) };
+  redirect(getSafeRedirectPath(redirectTo, "/app"));
 }
 
 export async function signOut(formData?: FormData): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   const value = formData?.get("redirect_to");
-  const path =
-    typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
-      ? value
-      : "/";
-  redirect(path);
+  redirect(getSafeRedirectPath(typeof value === "string" ? value : null, "/"));
 }

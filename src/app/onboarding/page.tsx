@@ -3,8 +3,9 @@ import { Plus, Sparkles, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { JoinInvitationButton } from "@/components/book/JoinInvitationButton";
+import { NameCaptureForm } from "@/components/onboarding/NameCaptureForm";
 import { getPendingInvitationsForCurrentUser } from "@/lib/actions/members";
-import { requireUser } from "@/lib/auth";
+import { getProfile, requireUser } from "@/lib/auth";
 
 const ROLE_LABELS: Record<string, string> = {
   contributor: "contributor",
@@ -30,12 +31,14 @@ const TIPS = [
 ];
 
 export default async function OnboardingPage() {
-  const [user, invitations] = await Promise.all([
+  const [user, invitations, profile] = await Promise.all([
     requireUser(),
     getPendingInvitationsForCurrentUser(),
+    getProfile(),
   ]);
 
   const hasInvites = invitations.length > 0;
+  const needsName = !profile?.full_name?.trim();
 
   return (
     <AppShell lockNav>
@@ -55,6 +58,19 @@ export default async function OnboardingPage() {
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-8">
           <div className="space-y-6">
+            {needsName && (
+              <section className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
+                <h2 className="text-sm font-bold text-ink">
+                  What should we call you?
+                </h2>
+                <p className="mt-1 mb-4 text-sm leading-relaxed text-ink-muted">
+                  This is the name family members see on the recipes you add. You
+                  can change it later.
+                </p>
+                <NameCaptureForm />
+              </section>
+            )}
+
             <section className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
               <h2 className="text-sm font-bold text-ink">
                 Join an existing cookbook

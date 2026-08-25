@@ -112,7 +112,7 @@ export function SignedOutCta({
     <EntryShell
       eyebrow="You have been invited"
       title="Pull up a chair."
-      description={`Join ${invitation.cookbook_title} as a ${roleLabel}. Create an account or sign in with ${invitation.email} to accept.`}
+      description={`Join ${invitation.cookbook_title} as a ${roleLabel}. We'll email a code to ${invitation.email} to get you in.`}
       maxWidth="md"
       sideImageSrc="/images/entry/add-family.jpg"
       sideImageAlt="Family-style dinner table"
@@ -134,21 +134,15 @@ export function SignedOutCta({
           Sent to <strong>{invitation.email}</strong>
         </p>
 
-        <div className="space-y-3">
-          <Link href={`/sign-up?next=${nextParam}&email=${emailParam}`} className="block">
-            <Button variant="primary" fullWidth>
-              Create account &amp; accept
-            </Button>
-          </Link>
-          <Link href={`/sign-in?next=${nextParam}&email=${emailParam}`} className="block">
-            <Button variant="secondary" fullWidth>
-              I already have an account
-            </Button>
-          </Link>
-        </div>
+        <Link href={`/sign-in?next=${nextParam}&email=${emailParam}`} className="block">
+          <Button variant="primary" fullWidth>
+            Continue to accept
+          </Button>
+        </Link>
 
         <p className="mt-5 text-center text-xs text-ink-soft">
-          We will add you to the cookbook automatically once you sign in.
+          No account needed first &mdash; we will add you to the cookbook
+          automatically once you sign in.
         </p>
       </div>
     </EntryShell>

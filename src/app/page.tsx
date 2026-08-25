@@ -101,20 +101,17 @@ export default function LandingPage() {
                 bring everyone into the story.
               </p>
 
-              <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+              <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
                 <Link
-                  href="/sign-up"
+                  href="/sign-in"
                   className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-base font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"
                 >
                   <BookOpen aria-hidden="true" size={18} strokeWidth={2} />
                   Start your recipe book
                 </Link>
-                <Link
-                  href="/sign-in"
-                  className="inline-flex min-h-13 items-center justify-center rounded-full border border-line bg-card px-6 text-base font-extrabold text-green-deep shadow-soft transition hover:bg-white-soft"
-                >
-                  Sign in
-                </Link>
+                <p className="text-sm text-ink-muted sm:ml-1">
+                  New or returning &mdash; same door, no password.
+                </p>
               </div>
             </div>
           </div>
@@ -248,20 +245,17 @@ export default function LandingPage() {
             It only takes a minute. Save the recipes that matter — and the
             moments behind them.
           </p>
-          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col items-center justify-center gap-3">
             <Link
-              href="/sign-up"
+              href="/sign-in"
               className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-base font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"
             >
               <BookOpen aria-hidden="true" size={18} strokeWidth={2} />
               Start your recipe book
             </Link>
-            <Link
-              href="/sign-in"
-              className="inline-flex min-h-13 items-center justify-center rounded-full border border-line bg-card px-6 text-base font-extrabold text-green-deep shadow-soft transition hover:bg-white-soft"
-            >
-              Sign in
-            </Link>
+            <p className="text-sm text-ink-muted">
+              New or returning &mdash; same door, no password.
+            </p>
           </div>
         </section>
       </main>
