@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronRight, FileText, Lock, Mail, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { BookCategoriesManager } from "@/components/book/BookCategoriesManager";
@@ -11,6 +11,7 @@ import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferences
 import { GuidesPreference } from "@/components/settings/GuidesPreference";
 import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import { NameCaptureForm } from "@/components/onboarding/NameCaptureForm";
+import { supportMailto } from "@/lib/support";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
@@ -214,6 +215,72 @@ export function GlobalSettingsPageContent({
               The short walkthrough hints that appear around the app to help you get started.
             </p>
             <GuidesPreference />
+          </section>
+
+          <section className="scroll-mt-6 border-b border-line-soft pb-8 last:border-b-0">
+            <div className="mb-4 flex items-baseline gap-4">
+              <h2
+                className="text-2xl font-bold leading-tight text-green-deep"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Legal
+              </h2>
+              <span className="h-px flex-1 bg-line-soft" />
+            </div>
+            <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+              The terms you agreed to and how your data is handled.
+            </p>
+            <div className="grid gap-3 lg:grid-cols-3">
+              <Link
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="recipe-card recipe-card--interactive flex items-center gap-3 p-5 transition-colors hover:bg-green-pale/40"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-green-soft/70 text-green-deep">
+                  <FileText size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-green-deep">Terms of Service</span>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-ink-muted">
+                    The rules for using Home Cooked.
+                  </span>
+                </span>
+                <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+              </Link>
+              <Link
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="recipe-card recipe-card--interactive flex items-center gap-3 p-5 transition-colors hover:bg-green-pale/40"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-green-soft/70 text-green-deep">
+                  <Lock size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-green-deep">Privacy Policy</span>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-ink-muted">
+                    What we collect and how it&rsquo;s used.
+                  </span>
+                </span>
+                <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+              </Link>
+              <a
+                href={supportMailto}
+                className="recipe-card recipe-card--interactive flex items-center gap-3 p-5 transition-colors hover:bg-green-pale/40"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-green-soft/70 text-green-deep">
+                  <Mail size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-green-deep">Contact Support</span>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-ink-muted">
+                    Get help with your account or cookbook.
+                  </span>
+                </span>
+                <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+              </a>
+            </div>
           </section>
 
           {isAdmin && (

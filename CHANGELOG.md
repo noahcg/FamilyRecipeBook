@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.1] - 2026-08-25
+
+### Contact channels
+- Added product support and privacy contact addresses to the legal pages.
+- Added contact links to the public footer and account Settings legal section.
+
+## [0.12.0] - 2026-08-25
+
+### Release tracking and legal pages
+- Added package-based app version tracking so the public footer and app shell display update from `package.json`.
+- Added `npm run version:check` to verify semver, lockfile version alignment, and changelog coverage.
+- Updated the public Terms of Service and Privacy Policy pages with Home Cooked-specific plain-English copy, current metadata, and shared legal-page layout.
+
 ## 2026-08-05
 
 ### Passwordless sign-in

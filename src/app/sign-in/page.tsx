@@ -135,9 +135,22 @@ function EmailStep({
       sideDescription="Open the cookbook, find the recipe you meant to make, and keep adding the notes that make it yours."
       sideNote="Back to the recipes everyone asks for."
       footer={
-        <p className="mt-5 text-center text-sm text-ink-muted">
-          New here? Same box &mdash; we&rsquo;ll set you up automatically.
-        </p>
+        <div className="mt-5 space-y-2 text-center">
+          <p className="text-sm text-ink-muted">
+            New here? Same box &mdash; we&rsquo;ll set you up automatically.
+          </p>
+          <p className="text-xs text-ink-soft">
+            By continuing you agree to our{" "}
+            <Link href="/terms" className="font-semibold text-green-deep hover:underline">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="font-semibold text-green-deep hover:underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
       }
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
