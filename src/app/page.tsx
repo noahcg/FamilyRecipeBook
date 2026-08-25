@@ -107,10 +107,10 @@ export default function LandingPage() {
                   className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-base font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"
                 >
                   <BookOpen aria-hidden="true" size={18} strokeWidth={2} />
-                  Start your recipe book
+                  Sign in
                 </Link>
-                <p className="text-sm text-ink-muted sm:ml-1">
-                  New or returning &mdash; same door, no password.
+                <p className="text-sm leading-relaxed text-ink-muted sm:ml-1">
+                  New here? We'll help you start your book.
                 </p>
               </div>
             </div>
@@ -251,10 +251,10 @@ export default function LandingPage() {
               className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-base font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"
             >
               <BookOpen aria-hidden="true" size={18} strokeWidth={2} />
-              Start your recipe book
+              Sign in
             </Link>
-            <p className="text-sm text-ink-muted">
-              New or returning &mdash; same door, no password.
+            <p className="text-sm leading-relaxed text-ink-muted">
+              New here? We'll help you start your book.
             </p>
           </div>
         </section>
