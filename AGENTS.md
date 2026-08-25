@@ -31,6 +31,7 @@ Home Cooked is a production-oriented private family recipe platform. Treat user 
 - Dev server: `npm run dev`
 - Lint: `npm run lint`
 - Production build: `npm run build`
+- Version tracking: `npm run version:check`
 - Patch/minor/major package version: `npm run version:patch`, `npm run version:minor`, `npm run version:major`
 
 Before considering a code task complete, run the narrowest relevant check. For broad changes, run `npm run lint` and `npm run build`.
@@ -94,3 +95,10 @@ Before considering a code task complete, run the narrowest relevant check. For b
   - `supabase-rls` for schema, migrations, RLS, storage policies, and server data access.
   - `vercel-release` for deployment, environment, build, and release readiness.
   - `qa-review` for regression review, checks, and acceptance coverage.
+
+## Release Tracking
+
+- Treat `package.json` as the source of truth for the app version; `src/lib/version.ts` exposes that value in the UI.
+- Before finishing any user-requested app update, decide whether the change should bump the version. User-visible features, behavior changes, schema changes, production fixes, and release prep should update the version and `CHANGELOG.md`.
+- Keep versions below `1.0.0` until launch is explicitly intentional.
+- After changing the version or changelog, run `npm run version:check`.

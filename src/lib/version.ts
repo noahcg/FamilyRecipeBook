@@ -1,1 +1,4 @@
-export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.9.0";
+import packageJson from "../../package.json";
+
+export const appVersion = packageJson.version;
+export const APP_VERSION = appVersion;

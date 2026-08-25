@@ -1,213 +1,152 @@
 import type { Metadata } from "next";
-import { LegalPage, LegalSection } from "@/components/layout/LegalPage";
+import { BrandName, LegalPage, LegalSection } from "@/components/layout/LegalPage";
+import { privacyEmail, privacyMailto } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "How Home Cooked collects, uses, and protects your data.",
 };
 
+const privacySections = [
+  {
+    title: "Information We Collect",
+    body: (
+      <>
+        <p>
+          We collect account details such as your name, email address, sign-in
+          activity, and profile preferences. We also collect the recipes,
+          cookbook names, photos, notes, family stories, ratings, favorites, meal
+          plans, grocery items, invitations, and settings that you add to{" "}
+          <BrandName />.
+        </p>
+        <p>
+          Some features collect information only when you use them. Recipe idea
+          prompts, recipe photos for import, optional AI provider settings, image
+          search terms, and nearby grocery-store searches are processed so those
+          features can work. Location is used only when you ask to find nearby
+          stores or type a location for that search.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "How Information Is Used",
+    body: (
+      <p>
+        We use your information to operate the app, keep you signed in, sync your
+        cookbooks, send invitation and account emails, power recipe imports and
+        AI idea features, build grocery and meal-planning views, improve
+        reliability, prevent abuse, and comply with legal obligations. We do not
+        sell your personal information.
+      </p>
+    ),
+  },
+  {
+    title: "How Information Is Shared",
+    body: (
+      <>
+        <p>
+          Your cookbook content is shared with the people who have access to that
+          cookbook. Outside your invited members, we share information with
+          service providers that help run the app, such as authentication,
+          database, storage, email, hosting, AI, image search, and location-search
+          providers. They receive the information needed to perform their
+          services.
+        </p>
+        <p>
+          We may also disclose information if required by law, to protect the
+          service, or to respond to security, fraud, or safety issues.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "Cookies, Analytics, and Local Storage",
+    body: (
+      <p>
+        <BrandName /> uses necessary cookies and local storage to keep you signed
+        in, remember app state, support offline recipes, and make core features
+        work. Hosting and infrastructure providers may create standard server
+        logs for security and reliability. We do not use advertising tracking
+        cookies.
+      </p>
+    ),
+  },
+  {
+    title: "Uploaded Content",
+    body: (
+      <p>
+        Recipe photos, cookbook covers, imported files, and other uploaded
+        content are stored so the app can display and process them. Avoid
+        uploading images or documents that include private details you do not
+        want visible to cookbook members. Some stored files may be accessible to
+        anyone who has the direct file link.
+      </p>
+    ),
+  },
+  {
+    title: "Data Retention",
+    body: (
+      <p>
+        We keep account and cookbook information while your account is active or
+        as needed to provide the service. You can delete recipes, cookbooks, and
+        some settings in the app. Some records may remain for a limited time in
+        backups, logs, security records, or where retention is needed for legal
+        or operational reasons.
+      </p>
+    ),
+  },
+  {
+    title: "Security",
+    body: (
+      <p>
+        We use reasonable technical and organizational measures to protect your
+        information, including authentication, access controls, and provider
+        security features. No online service can promise perfect security, so use
+        care with invitations, shared devices, and the email account you use to
+        sign in.
+      </p>
+    ),
+  },
+  {
+    title: "Children's Privacy",
+    body: (
+      <p>
+        <BrandName /> is intended for adults and household organizers, not for
+        children creating accounts on their own. If you believe a child provided
+        personal information without appropriate permission, contact us through
+        the support channel in the app so we can review and delete it if needed.
+      </p>
+    ),
+  },
+  {
+    title: "Changes and Contact",
+    body: (
+      <p>
+        We may update this Privacy Policy as the app, providers, or legal
+        requirements change. We will update the date above when we do. Questions
+        or privacy requests can be sent to{" "}
+        <a href={privacyMailto}>{privacyEmail}</a>. This plain-English page is
+        practical product information and should not be treated as
+        attorney-drafted legal advice.
+      </p>
+    ),
+  },
+];
+
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="TODO — set on publish">
+    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="August 25, 2026">
       <p>
-        Home Cooked is a private space for families to keep and share their
-        recipes. This Privacy Policy explains what information we collect, how we
-        use it, who we share it with, and the choices you have. It applies to the
-        Home Cooked website and app operated by{" "}
-        <strong>[TODO: legal entity name]</strong> (&ldquo;Home Cooked,&rdquo;
-        &ldquo;we,&rdquo; &ldquo;us&rdquo;).
-      </p>
-      <p>
-        <em>
-          This copy is a working draft prepared for legal review. It is not yet
-          the final, binding policy.
-        </em>
+        This Privacy Policy explains what <BrandName /> collects, how that
+        information is used, and when it is shared. The app is designed for
+        private household recipe books, so recipes, photos, family notes, and
+        invitations are treated as personal content.
       </p>
 
-      <LegalSection heading="1. Information we collect">
-        <p>We collect the following categories of information.</p>
-        <p>
-          <strong>Account details.</strong> When you create an account we collect
-          your name, email address, and a password (which is stored in a hashed
-          form we cannot read).
-        </p>
-        <p>
-          <strong>Content you add.</strong> The recipes, photos, cookbooks,
-          chapters, ingredient lists, cooking steps, source attributions
-          (&ldquo;who is this from?&rdquo;), stories, notes and memories, ratings,
-          favorites, meal-plan entries, and grocery-list items that you create or
-          upload. Recipe photos and cookbook covers are stored as files.
-        </p>
-        <p>
-          <strong>Family and sharing information.</strong> When you invite someone
-          to a cookbook we collect the email address you provide for them and the
-          role you assign, and we record who has joined which cookbooks.
-        </p>
-        <p>
-          <strong>Recipe-idea prompts.</strong> When you use the AI recipe-idea
-          feature, we process the text you enter (for example, what is in your
-          pantry, timing, dietary needs, or who you are cooking for). When you
-          import a recipe from a photo, we process that photo to read the recipe.
-        </p>
-        <p>
-          <strong>Settings.</strong> Your preferences, and — if you choose to
-          connect your own AI provider — the provider you select and the API key
-          you enter.
-        </p>
-        <p>
-          <strong>Location, only when you ask for it.</strong> If you use the
-          &ldquo;find grocery stores near me&rdquo; feature, we use your device
-          location or a location you type in to search for nearby stores. We do
-          not track your location in the background.
-        </p>
-        <p>
-          <strong>Information collected automatically.</strong> To keep you signed
-          in we use strictly necessary authentication cookies. Our hosting and
-          infrastructure providers generate standard server logs (such as IP
-          address and request metadata) for security and reliability. We do{" "}
-          <strong>not</strong> use advertising or analytics tracking cookies.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="2. How we use your information">
-        <p>We use the information above to:</p>
-        <ul>
-          <li>operate Home Cooked and sync your cookbooks across your devices;</li>
-          <li>
-            let you share cookbooks with the family members you invite, and send
-            the related invitation, confirmation, and account emails;
-          </li>
-          <li>
-            generate recipe ideas, read recipes you import from photos, suggest
-            recipe images, and find nearby grocery stores when you request it;
-          </li>
-          <li>keep accounts secure, prevent abuse, and troubleshoot problems;</li>
-          <li>comply with our legal obligations.</li>
-        </ul>
-        <p>
-          We do not use your recipes, photos, or family content to train our own
-          advertising or profiling systems, and we do not sell your personal
-          information.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="3. Third-party services">
-        <p>
-          We rely on a small number of service providers to run Home Cooked. Each
-          receives only the data needed for its function, and each has its own
-          privacy policy.
-        </p>
-        <ul>
-          <li>
-            <strong>Supabase</strong> — authentication, database, and photo
-            storage. Holds your account details and the content you add.{" "}
-            <a href="https://supabase.com/privacy">Privacy policy</a>.
-          </li>
-          <li>
-            <strong>Resend</strong> — sends invitation and account emails; receives
-            the recipient email address and name.{" "}
-            <a href="https://resend.com/legal/privacy-policy">Privacy policy</a>.
-          </li>
-          <li>
-            <strong>Cloudflare Workers AI</strong> — powers recipe-idea
-            suggestions by default; receives your prompt text and cookbook
-            category names.{" "}
-            <a href="https://www.cloudflare.com/privacypolicy/">Privacy policy</a>.
-          </li>
-          <li>
-            <strong>OpenAI</strong> and <strong>Anthropic</strong> — optional AI
-            providers used when configured; receive your prompt text and, for
-            photo recipe import, the recipe photo you upload.{" "}
-            <a href="https://openai.com/policies/privacy-policy">OpenAI</a>
-            {" · "}
-            <a href="https://www.anthropic.com/legal/privacy">Anthropic</a>.
-          </li>
-          <li>
-            <strong>Pexels</strong> — supplies stock recipe images; receives a
-            short search phrase (used only when you have not uploaded your own
-            photo).{" "}
-            <a href="https://www.pexels.com/privacy-policy/">Privacy policy</a>.
-          </li>
-          <li>
-            <strong>Google Places</strong> — finds nearby grocery stores; receives
-            your device location or typed location when you use that feature.{" "}
-            <a href="https://policies.google.com/privacy">Privacy policy</a>.
-          </li>
-          <li>
-            <strong>Vercel</strong> — hosts the application and generates standard
-            server logs.{" "}
-            <a href="https://vercel.com/legal/privacy-policy">Privacy policy</a>.
-          </li>
-        </ul>
-        <p>
-          If you connect your own AI provider, your prompts are sent to that
-          provider under your own account and their terms.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="4. How your information is shared">
-        <p>
-          Your recipes and cookbook content are private to you and are shared only
-          with the family members you invite to a cookbook, according to the role
-          you give them. We share personal information with the service providers
-          listed above so they can perform their functions, and we may disclose
-          information if required by law or to protect the safety and rights of
-          our users. <strong>We do not sell your personal information.</strong>
-        </p>
-        <p>
-          Please note that recipe photos and cookbook covers are stored so that
-          anyone with the direct file link can view the image. Avoid uploading
-          images that contain information you do not want shared this way.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="5. Data retention">
-        <p>
-          We keep your information for as long as your account is active. You can
-          delete individual recipes and cookbooks at any time from within the app;
-          deleting them removes that content. To close your account and delete
-          your associated data, contact us at{" "}
-          <strong>TODO: privacy@your-domain</strong> and we will process the
-          request. Some records may be retained for a limited period where needed
-          for security, backups, or legal compliance.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="6. Your rights and choices">
-        <p>
-          Depending on where you live, you may have the right to access, correct,
-          export, or delete your personal information, and to object to or restrict
-          certain processing. Residents of the EEA/UK (GDPR) and California (CCPA)
-          have specific rights, including the right not to be discriminated against
-          for exercising them. To make a request, contact us at{" "}
-          <strong>TODO: privacy@your-domain</strong>. You can update most of your
-          content directly in the app at any time.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="7. Children's privacy">
-        <p>
-          Home Cooked is intended for adults and is not directed to children under{" "}
-          <strong>[TODO: minimum age, e.g. 13]</strong>. We do not knowingly
-          collect personal information from children under that age. If you believe
-          a child has provided us information, contact us and we will delete it.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="8. Changes to this policy">
-        <p>
-          We may update this Privacy Policy from time to time. When we make
-          material changes we will update the &ldquo;Last updated&rdquo; date above
-          and, where appropriate, notify you.
-        </p>
-      </LegalSection>
-
-      <LegalSection heading="9. Contact">
-        <p>
-          Questions about your privacy? Contact us at{" "}
-          <strong>TODO: privacy@your-domain</strong>.
-        </p>
-      </LegalSection>
+      {privacySections.map((section) => (
+        <LegalSection key={section.title} title={section.title} body={section.body} />
+      ))}
     </LegalPage>
   );
 }

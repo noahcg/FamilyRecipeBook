@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "0.11.0",
+  "version": "0.12.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test:pexels": "node --test tests/pexelsSearch.test.mjs",
     "capture:guides": "node scripts/capture-guides.mjs",
+    "version:check": "node scripts/check-version-tracking.js",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
     "version:major": "npm version major --no-git-tag-version"
