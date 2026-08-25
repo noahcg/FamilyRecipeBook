@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Clock, Crown, Mail, ScrollText } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
-import { SendResetButton } from "./SendResetButton";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -127,18 +126,6 @@ export default async function AdminUserDetailPage({ params }: Props) {
           <SupportStat label="Cookbooks" value={memberships.length} icon={<BookOpen size={20} />} />
           <SupportStat label="Recipes authored" value={recipeCount ?? 0} icon={<ScrollText size={20} />} />
           <SupportStat label="Joined" value={formatDate(profile.created_at)} icon={<Clock size={20} />} />
-        </section>
-
-        <section className="mt-6 recipe-card overflow-hidden">
-          <div className="border-b border-line-soft px-5 py-4">
-            <h2 className="text-base font-black text-ink">Account support</h2>
-            <p className="mt-1 text-xs text-ink-muted">
-              Send a password reset email to help this person regain access. Only they can use the link.
-            </p>
-          </div>
-          <div className="px-5 py-4">
-            <SendResetButton userId={id} email={email} />
-          </div>
         </section>
 
         <section className="mt-6 grid gap-6 lg:grid-cols-2">

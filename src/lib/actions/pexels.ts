@@ -1,19 +1,25 @@
 "use server";
 
-interface PexelsPhoto {
-  alt: string | null;
-  src: {
-    large: string;
-    large2x?: string;
-    landscape?: string;
-    medium?: string;
-  };
-  photographer: string;
-  photographer_url: string;
-  url: string;
+import {
+  searchRecipeImageCandidates,
+  selectDefaultImageUrl,
+  type PexelsPhoto,
+  type RecipeImageCandidate,
+} from "@/lib/pexelsSearch";
+
+function isAiImagePickerEnabled() {
+  return process.env.ENABLE_AI_IMAGE_PICKER === "true";
 }
 
-// Shared helper — same fetch pattern as aiRecipes.ts
+function hasCloudflareConfig() {
+  return Boolean(
+    process.env.CLOUDFLARE_ACCOUNT_ID &&
+      process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN
+  );
+}
+
+// Shared helper - same fetch pattern as aiRecipes.ts, but gated by
+// ENABLE_AI_IMAGE_PICKER so Pexels-only search remains the primary path.
 async function callCloudflareText(
   systemPrompt: string,
   userPrompt: string,
@@ -24,7 +30,7 @@ async function callCloudflareText(
   const model =
     process.env.CLOUDFLARE_WORKERS_AI_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
 
-  if (!accountId || !apiToken) return null;
+  if (!isAiImagePickerEnabled() || !accountId || !apiToken) return null;
 
   try {
     const response = await fetch(
@@ -36,6 +42,7 @@ async function callCloudflareText(
           "content-type": "application/json",
         },
         cache: "no-store",
+        signal: AbortSignal.timeout(2500),
         body: JSON.stringify({
           messages: [
             { role: "system", content: systemPrompt },
@@ -54,8 +61,6 @@ async function callCloudflareText(
         choices?: { message?: { content?: unknown } }[];
       };
     };
-    // Newer Workers AI models return OpenAI chat-completion shape
-    // (result.choices[].message.content); older ones use result.response.
     const output =
       json.result?.response ?? json.result?.choices?.[0]?.message?.content;
     return typeof output === "string" ? output.trim() : null;
@@ -64,25 +69,24 @@ async function callCloudflareText(
   }
 }
 
-// Step 1 - Turn a recipe into a good Pexels search phrase
-async function buildSearchQuery(title: string, ingredients: string[]): Promise<string> {
-  const sample = ingredients.slice(0, 5).join(", ");
+async function improveSearchQuery(
+  title: string,
+  ingredients: string[]
+): Promise<string | null> {
+  if (!hasCloudflareConfig()) return null;
 
+  const sample = ingredients.slice(0, 5).join(", ");
   const raw = await callCloudflareText(
-    "You convert recipe names into short stock photo search queries. Return ONLY a 3-5 word phrase. Focus on: homemade, rustic, warm lighting, natural presentation. No quotes, no punctuation, no explanation.",
+    "You convert recipe names into short stock photo search queries. Return ONLY a 3-5 word phrase. Focus on homemade food and natural presentation. No quotes, no punctuation, no explanation.",
     `Recipe: ${title}${sample ? `\nKey ingredients: ${sample}` : ""}`,
     40
   );
 
-  if (!raw) return `homemade ${title.toLowerCase()} rustic`;
-
-  // Take only the first line; strip quotes and leading/trailing noise
-  const cleaned = raw.split("\n")[0].replace(/['"*]/g, "").trim().slice(0, 80);
-  return cleaned || `homemade ${title.toLowerCase()} rustic`;
+  const cleaned = raw?.split("\n")[0].replace(/['"*]/g, "").trim().slice(0, 80);
+  return cleaned || null;
 }
 
-// Step 2 - Fetch candidate images from Pexels
-async function fetchCandidates(query: string): Promise<PexelsPhoto[]> {
+async function fetchPexelsCandidates(query: string): Promise<PexelsPhoto[]> {
   const apiKey = process.env.PEXELS_API_KEY;
   if (!apiKey) return [];
 
@@ -108,72 +112,58 @@ async function fetchCandidates(query: string): Promise<PexelsPhoto[]> {
   }
 }
 
-// Step 3 - Rank candidates with AI; return 0-based index of best pick
-async function pickBestImage(
+async function rankWithCloudflare(
   title: string,
   query: string,
-  candidates: PexelsPhoto[]
-): Promise<number> {
-  if (candidates.length <= 1) return 0;
+  candidates: RecipeImageCandidate[]
+): Promise<RecipeImageCandidate[] | null> {
+  if (!hasCloudflareConfig() || candidates.length <= 1) return null;
 
   const list = candidates
-    .map((p, i) => `${i + 1}. ${p.alt ?? "(no description)"}`)
+    .map((candidate, index) => `${index + 1}. ${candidate.alt}`)
     .join("\n");
 
   const raw = await callCloudflareText(
-    "You pick the best food photo for a warm family cookbook. Prefer: homemade look, natural lighting, simple plating, appetizing but not over-styled. Avoid: restaurant, studio. Return ONLY the number of the best image.",
+    "You pick the best food photo for a warm family cookbook. Prefer homemade look, natural lighting, simple plating, and appetizing but not over-styled food. Avoid restaurant or studio photos. Return ONLY the number of the best image.",
     `Recipe: ${title}\nSearch: ${query}\n\nImages:\n${list}`,
     20
   );
 
-  if (!raw) return 0;
+  if (!raw) return null;
 
-  const num = parseInt(raw.replace(/\D/g, ""), 10);
-  if (!isNaN(num) && num >= 1 && num <= candidates.length) return num - 1;
-  return 0;
+  const selected = parseInt(raw.replace(/\D/g, ""), 10);
+  if (Number.isNaN(selected) || selected < 1 || selected > candidates.length) {
+    return null;
+  }
+
+  const best = candidates[selected - 1];
+  return [best, ...candidates.filter((candidate) => candidate !== best)];
 }
 
-// Append sizing params to a Pexels URL, preserving existing query string
-function sizedUrl(base: string, width: number, quality = 80): string {
-  try {
-    const u = new URL(base);
-    u.searchParams.set("auto", "compress");
-    u.searchParams.set("cs", "tinysrgb");
-    u.searchParams.set("w", String(width));
-    u.searchParams.set("q", String(quality));
-    return u.toString();
-  } catch {
-    return base;
-  }
+export async function searchRecipeImages(
+  title: string,
+  ingredients: string[]
+): Promise<RecipeImageCandidate[]> {
+  return searchRecipeImageCandidates({
+    title,
+    ingredients,
+    fetchCandidates: fetchPexelsCandidates,
+    improveQuery: isAiImagePickerEnabled() ? improveSearchQuery : undefined,
+    rankCandidates: isAiImagePickerEnabled() ? rankWithCloudflare : undefined,
+    limit: 8,
+  });
 }
 
 /**
- * Automatically selects the most appropriate Pexels image for a recipe.
- * Returns the image URL, or null if Pexels is not configured or no
- * suitable image is found.
- *
- * Called only when the user has not uploaded their own photo.
+ * Compatibility wrapper for existing create flows. Returns the best/default
+ * image URL, or null if Pexels is not configured or no suitable image is found.
  */
 export async function selectRecipeImage(
   title: string,
   ingredients: string[]
 ): Promise<string | null> {
   try {
-    const query = await buildSearchQuery(title, ingredients);
-
-    let candidates = await fetchCandidates(query);
-
-    // Fallback to a generic cozy-food query if specific one returns nothing
-    if (candidates.length === 0) {
-      candidates = await fetchCandidates("homemade meal warm rustic kitchen");
-    }
-
-    if (candidates.length === 0) return null;
-
-    const bestIdx = await pickBestImage(title, query, candidates);
-    const photo = candidates[bestIdx] ?? candidates[0];
-
-    return sizedUrl(photo.src.large2x ?? photo.src.large ?? photo.src.landscape ?? photo.src.medium, 900);
+    return selectDefaultImageUrl(await searchRecipeImages(title, ingredients));
   } catch {
     return null;
   }

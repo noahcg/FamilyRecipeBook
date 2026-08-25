@@ -4,7 +4,7 @@ import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, Plus, Trash2, GripVertical, ImagePlus, WandSparkles, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, GripVertical, ImagePlus, Plus, Search, Trash2, WandSparkles, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
@@ -22,7 +22,7 @@ import {
   prepareRecipeImportImage,
   type ImportedRecipe,
 } from "@/lib/imageImport";
-import { selectRecipeImage } from "@/lib/actions/pexels";
+import { searchRecipeImages } from "@/lib/actions/pexels";
 import { generateRecipeDescription } from "@/lib/actions/recipeDescription";
 import { formatDuration } from "@/lib/formatDuration";
 import { parsePastedRecipe } from "@/lib/recipeTextImport";
@@ -30,6 +30,7 @@ import { importRecipeFiles, type NormalizedImportedRecipe } from "@/lib/recipeFi
 import { useUser } from "@/lib/hooks/useUser";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { RecipeWithRelations } from "@/lib/types";
+import type { RecipeImageCandidate } from "@/lib/pexelsSearch";
 
 function getArrayErrorMessage(error: unknown) {
   if (error && typeof error === "object" && "message" in error) {
@@ -276,6 +277,10 @@ export function RecipeForm({
     recipe?.import_method === "image_upload"
   );
   const [serverError, setServerError] = useState<string | null>(null);
+  const [photoCandidates, setPhotoCandidates] = useState<RecipeImageCandidate[]>([]);
+  const [selectedPhotoCandidate, setSelectedPhotoCandidate] = useState<RecipeImageCandidate | null>(null);
+  const [photoSearchError, setPhotoSearchError] = useState<string | null>(null);
+  const [isSearchingPhotos, setIsSearchingPhotos] = useState(false);
   const isEdit = !!recipe;
   const showPasteEntry = enablePasteEntry && !isEdit;
   const [entryMode, setEntryMode] = useState<"manual" | "paste" | "import">("manual");
@@ -328,6 +333,10 @@ export function RecipeForm({
           title: recipe.title,
           description: recipe.description ?? "",
           photo_url: recipe.photo_url ?? "",
+          photo_source: recipe.photo_source ?? null,
+          photo_author: recipe.photo_author ?? null,
+          photo_author_url: recipe.photo_author_url ?? null,
+          photo_source_url: recipe.photo_source_url ?? null,
           source_name: recipe.source_name ?? "",
           story: recipe.story ?? "",
           prep_minutes: recipe.prep_minutes ?? undefined,
@@ -357,6 +366,10 @@ export function RecipeForm({
           title: "",
           description: "",
           photo_url: "",
+          photo_source: null,
+          photo_author: null,
+          photo_author_url: null,
+          photo_source_url: null,
           source_name: "",
           story: "",
           tags: [],
@@ -387,7 +400,13 @@ export function RecipeForm({
   } = useFieldArray({ control, name: "instructions" });
 
   const selectedCategory = useWatch({ control, name: "category" });
+  const watchedTitle = useWatch({ control, name: "title" });
   const watchedIngredients = useWatch({ control, name: "ingredients" });
+  const ingredientNamesForPhotoSearch = useMemo(
+    () => (watchedIngredients ?? []).map((ingredient) => ingredient.item).filter(Boolean),
+    [watchedIngredients]
+  );
+  const canSearchPhotos = Boolean(watchedTitle?.trim() && ingredientNamesForPhotoSearch.length);
 
   // Ingredient headings are derived from each ingredient's group_label: a
   // contiguous run sharing a label sits under one heading. Editing a heading
@@ -575,14 +594,62 @@ export function RecipeForm({
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoFile(file);
+    setSelectedPhotoCandidate(null);
     setValue("photo_url", "", { shouldDirty: true });
+    setValue("photo_source", null, { shouldDirty: true });
+    setValue("photo_author", null, { shouldDirty: true });
+    setValue("photo_author_url", null, { shouldDirty: true });
+    setValue("photo_source_url", null, { shouldDirty: true });
     setPhotoPreview(URL.createObjectURL(file));
   }
 
   function handlePhotoUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value.trim();
     setPhotoFile(null);
+    setSelectedPhotoCandidate(null);
+    setValue("photo_source", null, { shouldDirty: true });
+    setValue("photo_author", null, { shouldDirty: true });
+    setValue("photo_author_url", null, { shouldDirty: true });
+    setValue("photo_source_url", null, { shouldDirty: true });
     setPhotoPreview(value || null);
+  }
+
+  async function handleSearchRecipePhotos() {
+    const title = getValues("title")?.trim();
+    const ingredientNames = (getValues("ingredients") ?? [])
+      .map((ingredient) => ingredient.item)
+      .filter(Boolean);
+
+    if (!title || ingredientNames.length === 0) {
+      setPhotoSearchError("Add a title and at least one ingredient first.");
+      return;
+    }
+
+    setPhotoSearchError(null);
+    setIsSearchingPhotos(true);
+    try {
+      const candidates = await searchRecipeImages(title, ingredientNames);
+      setPhotoCandidates(candidates);
+      if (!candidates.length) {
+        setPhotoSearchError("No matching photos found. You can still save without one.");
+      }
+    } catch {
+      setPhotoCandidates([]);
+      setPhotoSearchError("Photo search is unavailable right now. You can still save without one.");
+    } finally {
+      setIsSearchingPhotos(false);
+    }
+  }
+
+  function selectPhotoCandidate(candidate: RecipeImageCandidate) {
+    setPhotoFile(null);
+    setSelectedPhotoCandidate(candidate);
+    setPhotoPreview(candidate.image_url);
+    setValue("photo_url", candidate.image_url, { shouldDirty: true, shouldValidate: true });
+    setValue("photo_source", "Pexels", { shouldDirty: true });
+    setValue("photo_author", candidate.photographer, { shouldDirty: true });
+    setValue("photo_author_url", candidate.photographer_url, { shouldDirty: true });
+    setValue("photo_source_url", candidate.source_url, { shouldDirty: true });
   }
 
   async function importRecipePhoto(file: File) {
@@ -827,16 +894,32 @@ export function RecipeForm({
       photoUrl = uploaded.url;
     }
 
-    // Auto-fill from AI so the recipe page never renders empty placeholder
+    // Auto-fill from Pexels so the recipe page never renders empty placeholder
     // areas. The photo is only picked for new recipes, but a missing
     // description is filled on every save — including existing recipes — so
     // older recipes can be backfilled just by opening Edit and saving.
     let description = data.description;
+    const photoAttribution: Pick<
+      CreateRecipeInput,
+      "photo_source" | "photo_author" | "photo_author_url" | "photo_source_url"
+    > = {
+      photo_source: data.photo_source,
+      photo_author: data.photo_author,
+      photo_author_url: data.photo_author_url,
+      photo_source_url: data.photo_source_url,
+    };
     const ingredientNames = data.ingredients.map((i) => i.item).filter(Boolean);
 
     if (!photoUrl && !isEdit) {
-      const auto = await selectRecipeImage(data.title, ingredientNames);
-      if (auto) photoUrl = auto;
+      const candidates = await searchRecipeImages(data.title, ingredientNames);
+      const auto = candidates[0];
+      if (auto) {
+        photoUrl = auto.image_url;
+        photoAttribution.photo_source = "Pexels";
+        photoAttribution.photo_author = auto.photographer;
+        photoAttribution.photo_author_url = auto.photographer_url;
+        photoAttribution.photo_source_url = auto.source_url;
+      }
     }
 
     if (!description?.trim()) {
@@ -846,6 +929,7 @@ export function RecipeForm({
 
     const payload = {
       ...data,
+      ...photoAttribution,
       description,
       photo_url: photoUrl,
       import_method: recipeImportedViaUpload ? "image_upload" : data.import_method,
@@ -1011,13 +1095,41 @@ export function RecipeForm({
                 onClick={() => {
                   setPhotoPreview(null);
                   setPhotoFile(null);
+                  setSelectedPhotoCandidate(null);
                   setValue("photo_url", "", { shouldDirty: true });
+                  setValue("photo_source", null, { shouldDirty: true });
+                  setValue("photo_author", null, { shouldDirty: true });
+                  setValue("photo_author_url", null, { shouldDirty: true });
+                  setValue("photo_source_url", null, { shouldDirty: true });
                   if (fileRef.current) fileRef.current.value = "";
                 }}
                 className="text-xs text-ink-soft underline mt-1"
               >
                 Remove photo
               </button>
+            )}
+            {selectedPhotoCandidate && (
+              <p className="mt-2 text-xs leading-relaxed text-ink-muted">
+                Photo by{" "}
+                <a
+                  href={selectedPhotoCandidate.photographer_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-green-deep underline"
+                >
+                  {selectedPhotoCandidate.photographer}
+                </a>{" "}
+                on{" "}
+                <a
+                  href={selectedPhotoCandidate.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-green-deep underline"
+                >
+                  Pexels
+                </a>
+                .
+              </p>
             )}
             <div className="mt-3">
               <Input
@@ -1030,6 +1142,60 @@ export function RecipeForm({
                   onChange: handlePhotoUrlChange,
                 })}
               />
+            </div>
+            <div className="mt-4 border-t border-line-soft pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-ink">Choose photo</p>
+                  <p className="text-xs leading-relaxed text-ink-muted">
+                    Search free Pexels photos from the title and ingredients.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSearchRecipePhotos}
+                  loading={isSearchingPhotos}
+                  disabled={!canSearchPhotos}
+                >
+                  <Search size={16} aria-hidden="true" />
+                  Search photos
+                </Button>
+              </div>
+              {photoSearchError && (
+                <p className="mt-2 text-xs text-danger">{photoSearchError}</p>
+              )}
+              {photoCandidates.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {photoCandidates.map((candidate) => {
+                    const selected = candidate.image_url === getValues("photo_url");
+                    return (
+                      <button
+                        key={`${candidate.source_url}-${candidate.image_url}`}
+                        type="button"
+                        onClick={() => selectPhotoCandidate(candidate)}
+                        className={clsx(
+                          "group overflow-hidden rounded-md border bg-paper-soft text-left transition-colors",
+                          selected
+                            ? "border-green-deep ring-2 ring-green-deep/30"
+                            : "border-line hover:border-green-sage"
+                        )}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={candidate.image_url}
+                          alt={candidate.alt}
+                          className="aspect-[4/3] w-full object-cover"
+                        />
+                        <span className="block truncate px-2 py-1.5 text-[11px] font-semibold text-ink-muted">
+                          {candidate.photographer}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </section>

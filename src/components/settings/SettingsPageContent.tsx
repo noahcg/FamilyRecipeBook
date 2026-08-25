@@ -9,6 +9,8 @@ import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
 import { GuidesPreference } from "@/components/settings/GuidesPreference";
+import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
+import { NameCaptureForm } from "@/components/onboarding/NameCaptureForm";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
@@ -118,6 +120,18 @@ export function GlobalSettingsPageContent({
                   )}
                 </div>
               </div>
+
+              {/* Signing in by email code collects no name, and anyone who
+                  joined straight from an invite never passes through
+                  /onboarding — so this is their only chance to set one. */}
+              {!profile.full_name?.trim() && (
+                <div className="mt-5 border-t border-line-soft pt-5">
+                  <p className="mb-4 text-sm leading-relaxed text-ink-muted">
+                    Add your name so family members can tell who added a recipe.
+                  </p>
+                  <NameCaptureForm />
+                </div>
+              )}
             </div>
           </section>
 
@@ -284,6 +298,22 @@ export function GlobalSettingsPageContent({
               </Link>
             </section>
           )}
+
+          <section className="scroll-mt-6">
+            <div className="mb-4 flex items-baseline gap-4">
+              <h2
+                className="text-2xl font-bold leading-tight text-danger"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Danger zone
+              </h2>
+              <span className="h-px flex-1 bg-line-soft" />
+            </div>
+            <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+              Irreversible actions that affect your entire account.
+            </p>
+            <DeleteAccountSection />
+          </section>
 
         </div>
       </div>

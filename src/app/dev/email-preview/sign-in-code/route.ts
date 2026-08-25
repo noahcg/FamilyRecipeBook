@@ -1,4 +1,4 @@
-import { createSignupWelcomeEmail } from "@/lib/email/signupWelcomeTemplate";
+import { createAuthActionEmail } from "@/lib/email/authActionTemplate";
 
 export async function GET(request: Request) {
   if (process.env.NODE_ENV === "production") {
@@ -7,10 +7,10 @@ export async function GET(request: Request) {
 
   const origin = new URL(request.url).origin;
 
-  const { html } = createSignupWelcomeEmail({
-    confirmationUrl: `${origin}/auth/confirm?token_hash=sample-home-cooked-token&type=signup`,
+  const { html } = createAuthActionEmail({
+    actionType: "magiclink",
+    actionUrl: `${origin}/auth/confirm?token_hash=sample-home-cooked-token&type=magiclink`,
     code: "123456",
-    fullName: "Noah",
     email: "noah@example.com",
     logoUrl: `${origin}/images/homecooked.png`,
   });

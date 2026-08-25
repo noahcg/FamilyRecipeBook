@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-05
+
+### Passwordless sign-in
+- **Sign-up and sign-in are now one screen.** Enter an email at `/sign-in`, get a 6-digit code, type it in. New and returning users take the identical path — the account is created on first use — so there is no longer a "do I have an account?" decision to get wrong.
+- **Passwords are gone.** `/sign-up`, `/forgot-password`, and `/reset-password` are deleted and now 308-redirect to `/sign-in` (query strings carry over, so old `?next=` and `?email=` links still work). Existing accounts need no migration: the same email address just gets a code instead.
+- **Added "Continue with Google"** on the entry screen, with a new `/auth/callback` route doing the PKCE exchange.
+- The code step keeps its state in the URL and its resend cooldown in `sessionStorage`, so switching to the mail app and coming back to a reloaded tab doesn't lose the address or reset the timer.
+- Auth emails now carry the 6-digit code above the button, in both the new-user and returning-user templates. The magic link still works as a fallback.
+- **Name is now collected on `/onboarding`** instead of at sign-up, and in Settings for anyone who joined straight from an invite and never passed through onboarding.
+- Removed the admin "send password reset" tool. Existing `admin_actions` history is untouched.
+- Migration `021_profile_name_from_provider.sql` teaches `handle_new_user()` to accept a provider name under either `full_name` or `name`. No new tables, so no Data API grants are required.
+- **Note:** removing passwords from the app does not disable password grants at the Supabase API layer — existing hashes remain redeemable via `POST /auth/v1/token?grant_type=password`. Scrambling them needs a one-off service-role script.
+
 ## 2026-05-28
 
 ### Grocery list from the meal plan

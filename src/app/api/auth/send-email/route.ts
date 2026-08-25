@@ -129,6 +129,7 @@ export async function POST(request: NextRequest) {
       );
       const { subject, html, text } = createSignupWelcomeEmail({
         confirmationUrl,
+        code: email_data.token,
         fullName,
         email: user.email,
         logoUrl,
@@ -152,6 +153,8 @@ export async function POST(request: NextRequest) {
     const { subject, html, text } = createAuthActionEmail({
       actionType: actionType as AuthActionType,
       actionUrl,
+      // `email_change_new` verifies the new address, so it carries its own token.
+      code: useNewToken ? email_data.token_new ?? email_data.token : email_data.token,
       email: user.email,
       logoUrl,
     });

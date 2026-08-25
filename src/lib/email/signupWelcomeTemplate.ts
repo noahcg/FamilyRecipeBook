@@ -1,5 +1,9 @@
+import { renderCodeBlockHtml, renderCodeBlockText } from "./codeBlock";
+
 interface SignupWelcomeTemplateInput {
   confirmationUrl: string;
+  /** The numeric OTP. Rendered above the button as the primary path in. */
+  code?: string;
   fullName?: string | null;
   email?: string;
   logoUrl?: string;
@@ -22,6 +26,7 @@ function escapeHtml(value: string) {
 
 export function createSignupWelcomeEmail({
   confirmationUrl,
+  code,
   fullName,
   email,
   logoUrl,
@@ -30,7 +35,8 @@ export function createSignupWelcomeEmail({
   const safeFirstName = escapeHtml(firstName);
   const safeEmail = email ? escapeHtml(email) : "";
   const safeConfirmationUrl = escapeHtml(confirmationUrl);
-  const subject = "Welcome to Home Cooked";
+  const codeBlock = code ? renderCodeBlockHtml(code) : "";
+  const subject = code ? "Your Home Cooked sign-in code" : "Welcome to Home Cooked";
 
   const logoMarkup = logoUrl
     ? `<img src="${escapeHtml(logoUrl)}" width="220" alt="Home Cooked" style="display:block;border:0;width:220px;max-width:60%;height:auto;" />`
@@ -59,7 +65,11 @@ export function createSignupWelcomeEmail({
                 <div style="margin-top:30px;font-size:12px;line-height:1.4;letter-spacing:0.16em;text-transform:uppercase;color:#8D5E34;font-weight:700;">Welcome to your kitchen</div>
                 <h1 style="margin:12px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:44px;line-height:0.98;color:#2F4F3F;font-weight:700;">Let&apos;s get cooking.</h1>
                 <p style="margin:20px 0 0;max-width:520px;font-size:17px;line-height:1.65;color:#756F64;">
-                  Hi ${safeFirstName}, confirm your email to start building a cookbook for the recipes, weeknight wins, and kitchen notes worth keeping.
+                  ${
+                    code
+                      ? `Hi ${safeFirstName}, enter this code to finish setting up your cookbook — a place for the recipes, weeknight wins, and kitchen notes worth keeping.`
+                      : `Hi ${safeFirstName}, confirm your email to start building a cookbook for the recipes, weeknight wins, and kitchen notes worth keeping.`
+                  }
                 </p>
               </td>
             </tr>
@@ -71,7 +81,7 @@ export function createSignupWelcomeEmail({
                     <td style="padding:18px 20px;">
                       <div style="font-size:13px;line-height:1.4;letter-spacing:0.08em;text-transform:uppercase;color:#8D5E34;font-weight:700;">First steps</div>
                       <div style="margin-top:10px;font-size:15px;line-height:1.65;color:#243128;">
-                        <strong style="color:#2F4F3F;">1.</strong> Confirm your email<br />
+                        <strong style="color:#2F4F3F;">1.</strong> ${code ? "Enter your code" : "Confirm your email"}<br />
                         <strong style="color:#2F4F3F;">2.</strong> Name your first cookbook<br />
                         <strong style="color:#2F4F3F;">3.</strong> Invite the family or keep it private
                       </div>
@@ -81,16 +91,16 @@ export function createSignupWelcomeEmail({
                 </table>
               </td>
             </tr>
-
+${codeBlock}
             <tr>
               <td align="center" style="padding:30px 36px 8px;background:#FBF5E8;">
-                <a href="${safeConfirmationUrl}" style="display:inline-block;background:#1F3A2D;color:#FFF9EE;text-decoration:none;border-radius:999px;padding:15px 24px;font-size:16px;line-height:1;font-weight:800;">Confirm email</a>
+                <a href="${safeConfirmationUrl}" style="display:inline-block;background:#1F3A2D;color:#FFF9EE;text-decoration:none;border-radius:999px;padding:15px 24px;font-size:16px;line-height:1;font-weight:800;">${code ? "Or tap here to sign in" : "Confirm email"}</a>
               </td>
             </tr>
 
             <tr>
               <td style="padding:18px 36px 34px;background:#FBF5E8;">
-                <p style="margin:0;text-align:center;font-size:13px;line-height:1.6;color:#8B7F70;">This confirmation link helps keep your cookbook private.</p>
+                <p style="margin:0;text-align:center;font-size:13px;line-height:1.6;color:#8B7F70;">This keeps your cookbook private to you.</p>
                 <p style="margin:18px 0 0;text-align:center;font-size:12px;line-height:1.6;color:#8B7F70;">
                   If the button does not work, copy and paste this link into your browser:<br />
                   <a href="${safeConfirmationUrl}" style="color:#B95A40;word-break:break-all;">${safeConfirmationUrl}</a>
@@ -107,9 +117,12 @@ export function createSignupWelcomeEmail({
   const text = [
     `Welcome to Home Cooked, ${firstName}.`,
     "",
-    "Confirm your email to start building a cookbook for the recipes, weeknight wins, and kitchen notes worth keeping.",
+    code
+      ? "Enter this code to finish setting up your cookbook — a place for the recipes, weeknight wins, and kitchen notes worth keeping."
+      : "Confirm your email to start building a cookbook for the recipes, weeknight wins, and kitchen notes worth keeping.",
+    ...(code ? ["", renderCodeBlockText(code)] : []),
     "",
-    `Confirm email: ${confirmationUrl}`,
+    `${code ? "Or sign in here" : "Confirm email"}: ${confirmationUrl}`,
   ].join("\n");
 
   return { subject, html, text };
