@@ -16,7 +16,7 @@ import { EmptyState, Button } from "@/components/ui";
 import { BookName } from "@/components/book/BookName";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/formatDuration";
-import { canContribute, canManageBook, canManageMembers } from "@/lib/permissions";
+import { canContribute, canManageMembers, canView } from "@/lib/permissions";
 import type { BookRole } from "@/lib/types";
 
 interface Props {
@@ -257,7 +257,7 @@ export default function RecipesPage({ params }: Props) {
   const memberSummary = `${memberCount} ${memberCount === 1 ? "member" : "members"}`;
   const canAddRecipes = canContribute(userRole);
   const canManageBookMembers = canManageMembers(userRole);
-  const canOpenBookSettings = canManageBook(userRole) || canContribute(userRole);
+  const canOpenBookSettings = canView(userRole);
   const toolbarActionCount = [canAddRecipes, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
 
   function closeContents() {
