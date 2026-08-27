@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -264,6 +264,38 @@ export default function RecipesPage({ params }: Props) {
     setIsContentsOpen(false);
   }
 
+  function scrollToChapter(category: string) {
+    const id = chapterId(category);
+    const target = document.getElementById(id);
+    if (!target) {
+      window.history.pushState(null, "", `#${id}`);
+      return;
+    }
+
+    window.history.pushState(null, "", `#${id}`);
+    target.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+      block: "start",
+    });
+  }
+
+  function handleChapterIndexClick(
+    event: MouseEvent<HTMLAnchorElement>,
+    category: string,
+    closeDrawer = false
+  ) {
+    event.preventDefault();
+    if (closeDrawer) {
+      closeContents();
+      window.requestAnimationFrame(() => scrollToChapter(category));
+      return;
+    }
+
+    scrollToChapter(category);
+  }
+
   return (
     <AppShell
       bookId={bookId}
@@ -285,7 +317,7 @@ export default function RecipesPage({ params }: Props) {
                       <a
                         key={chapter.category}
                         href={`#${chapterId(chapter.category)}`}
-                        onClick={closeContents}
+                        onClick={(event) => handleChapterIndexClick(event, chapter.category, true)}
                         className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line-soft py-3 last:border-b-0"
                       >
                         <span className="text-xs font-bold text-accent-cinnamon">{chapter.number}</span>
@@ -520,6 +552,7 @@ export default function RecipesPage({ params }: Props) {
                     <a
                       key={chapter.category}
                       href={`#${chapterId(chapter.category)}`}
+                      onClick={(event) => handleChapterIndexClick(event, chapter.category)}
                       className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line-soft py-3 last:border-b-0"
                     >
                       <span className="text-xs font-bold text-accent-cinnamon">{chapter.number}</span>

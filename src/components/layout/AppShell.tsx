@@ -185,7 +185,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
               })}
             </div>
 
-            <div className="mt-2.5 border-t border-line-soft pt-2.5">
+            <div className="mt-2.5 border-y border-line-soft py-2.5">
               <CookbookNavigator
                 currentBookId={currentBookId}
                 mobileOpen={cookbooksMobileOpen}
@@ -195,7 +195,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
           </nav>
         )}
 
-        <div className="mt-auto shrink-0 border-t border-line-soft p-5">
+        <div className="mt-auto shrink-0 p-5">
           {!lockNav && isAdmin && (
             <Link
               href="/app/admin"
