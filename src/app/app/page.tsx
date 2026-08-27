@@ -258,7 +258,7 @@ export default async function AppHomePage() {
           </header>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
-            <div className="space-y-6">
+            <div className="space-y-6 xl:-mt-20">
               <WelcomeTour />
               <DashboardCard className="overflow-hidden">
                 <div className="grid lg:min-h-[320px] lg:grid-cols-[minmax(0,1fr)_38%]">
