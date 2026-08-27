@@ -383,10 +383,56 @@ export async function deleteBook(bookId: string): Promise<ActionResult> {
     return { success: false, error: "Only the cookbook keeper can delete it." };
   }
 
+  await supabase
+    .from("user_settings")
+    .update({ default_book_id: null })
+    .eq("user_id", user.id)
+    .eq("default_book_id", bookId);
+
   const { error } = await supabase.from("recipe_books").delete().eq("id", bookId);
   if (error) return { success: false, error: error.message };
 
   revalidatePath("/app");
+  revalidatePath("/app/books/[bookId]", "layout");
+  return { success: true, data: undefined };
+}
+
+export async function leaveBook(bookId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  const { data: member } = await supabase
+    .from("book_members")
+    .select("role")
+    .eq("book_id", bookId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!member) {
+    return { success: false, error: "This cookbook is not on your bookshelf." };
+  }
+  if (canManageBook((member.role ?? null) as BookRole | null)) {
+    return { success: false, error: "Keepers can delete the cookbook instead of leaving it." };
+  }
+
+  const admin = createServiceClient();
+  const { error } = await admin
+    .from("book_members")
+    .delete()
+    .eq("book_id", bookId)
+    .eq("user_id", user.id);
+
+  if (error) return { success: false, error: error.message };
+
+  await supabase
+    .from("user_settings")
+    .update({ default_book_id: null })
+    .eq("user_id", user.id)
+    .eq("default_book_id", bookId);
+
+  revalidatePath("/app");
+  revalidatePath("/app/books/[bookId]", "layout");
+  revalidatePath(`/app/books/${bookId}/settings`);
   return { success: true, data: undefined };
 }
 

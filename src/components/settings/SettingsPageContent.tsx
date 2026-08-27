@@ -3,6 +3,7 @@ import { ChevronRight, FileText, Lock, Mail, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { BookCategoriesManager } from "@/components/book/BookCategoriesManager";
+import { BookDangerZone } from "@/components/book/BookDangerZone";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
 import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
@@ -455,9 +456,27 @@ export function BookSettingsPageContent({
             </section>
           )}
 
+          <section className="scroll-mt-6 border-b border-line-soft pb-8 last:border-b-0">
+            <div className="mb-4 flex items-baseline gap-4">
+              <h2
+                className="text-2xl font-bold leading-tight text-danger"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Danger zone
+              </h2>
+              <span className="h-px flex-1 bg-line-soft" />
+            </div>
+            <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
+              {isKeeper
+                ? "Irreversible actions that affect this cookbook and everyone with access."
+                : "Remove a shared cookbook from your own bookshelf."}
+            </p>
+            <BookDangerZone bookId={bookId} bookTitle={bookTitle} isKeeper={isKeeper} />
+          </section>
+
           {!isKeeper && !canManageCategories && (
             <div className="recipe-card p-5">
-              <p className="text-sm font-bold text-green-deep">No cookbook settings available</p>
+              <p className="text-sm font-bold text-green-deep">Shared cookbook settings</p>
               <p className="mt-1 text-sm leading-relaxed text-ink-muted">
                 Ask the cookbook keeper to change book or chapter settings.
               </p>
