@@ -93,8 +93,10 @@ export function CookbookIcon({
   );
 }
 
-export const cookbookIconOptions = [
+/** Every supported icon name, including icons retained for legacy cookbooks. */
+export const cookbookIconCatalog = [
   { id: "book", label: "Book" },
+  { id: "bowl", label: "Bowl" },
   { id: "holiday", label: "Holiday" },
   { id: "quick", label: "Quick" },
   { id: "dinner", label: "Dinner" },
@@ -102,6 +104,17 @@ export const cookbookIconOptions = [
   { id: "weeknight", label: "Weeknight" },
   { id: "salad", label: "Fresh" },
   { id: "dessert", label: "Dessert" },
+  { id: "comfort", label: "Comfort" },
   { id: "cooking", label: "Cooking" },
   { id: "breakfast", label: "Breakfast" },
-];
+  { id: "leaf", label: "Leaf" },
+  { id: "home", label: "Home" },
+  { id: "wheat", label: "Wheat" },
+  { id: "note", label: "Note" },
+  { id: "favorite", label: "Favorite" },
+] as const;
+
+/** Icons offered to people when they create or edit a cookbook. */
+export const cookbookIconOptions = cookbookIconCatalog.filter((icon) =>
+  ["book", "holiday", "quick", "dinner", "grandma", "weeknight", "salad", "dessert", "cooking", "breakfast"].includes(icon.id)
+);

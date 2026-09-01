@@ -68,6 +68,8 @@ Before considering a code task complete, run the narrowest relevant check. For b
 - Mobile Safari is a first-class target.
 - Every primary flow needs loading, empty, error, and success states.
 - Use existing component primitives from `src/components/` before adding new ones.
+- **UI library contract:** Read `src/components/ui/README.md` and inspect `src/components/ui/registry.ts` before creating or changing product UI. Import available primitives from `@/components/ui`, compose them before creating new primitives, and use semantic design tokens from `src/app/globals.css` rather than one-off values.
+- The living visual catalog is `/dev/ui` in development (intentionally not available in production). Update its inventory and examples whenever a shared primitive changes.
 - Use `lucide-react` icons where icons are appropriate.
 - Avoid hidden desktop-only actions for core workflows.
 
