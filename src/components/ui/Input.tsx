@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,7 +10,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, hint, className, id, required, rightElement, ...props }, ref) => {
-    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+    const generatedId = useId();
+    const inputId = id ?? `input-${generatedId}`;
 
     return (
       <div className="flex flex-col gap-1.5">

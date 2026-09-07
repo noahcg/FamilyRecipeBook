@@ -7,6 +7,9 @@ export type { InputProps } from "./Input";
 export { Textarea } from "./Textarea";
 export type { TextareaProps } from "./Textarea";
 
+export { Select } from "./Select";
+export type { SelectProps } from "./Select";
+
 export { Card, CardHeader, CardBody } from "./Card";
 export type { CardProps } from "./Card";
 
@@ -21,7 +24,9 @@ export type { ReactionPillProps, ReactionType } from "./ReactionPill";
 
 export { BookCoverArt } from "./BookCoverArt";
 export type { BookCoverArtProps } from "./BookCoverArt";
-export { CookbookIcon, cookbookIconOptions, normalizeCookbookIcon } from "./CookbookIcon";
+export { CookbookIcon, cookbookIconCatalog, cookbookIconOptions, normalizeCookbookIcon } from "./CookbookIcon";
+
+export { BrandLockup } from "./BrandLockup";
 
 export { BottomNav } from "./BottomNav";
 export type { BottomNavProps, NavTab } from "./BottomNav";

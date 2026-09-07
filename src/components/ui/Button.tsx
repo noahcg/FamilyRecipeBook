@@ -70,10 +70,12 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={disabled || loading}
+        aria-busy={loading || undefined}
         {...props}
       >
         {loading && (
           <svg
+            aria-hidden="true"
             className="animate-spin h-4 w-4 shrink-0"
             viewBox="0 0 24 24"
             fill="none"

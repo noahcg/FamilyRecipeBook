@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { Button, Dialog, Input } from "@/components/ui";
+import { Button, Dialog, Input, Select } from "@/components/ui";
 import {
   createCategory,
   deleteCategory,
@@ -281,25 +281,22 @@ export function BookCategoriesManager({ bookId, initialCategories }: BookCategor
               chapter to move {reassign.recipeCount === 1 ? "it" : "them"} into, then we&apos;ll
               delete this chapter.
             </p>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
-                Move recipes into
-              </span>
-              <select
-                value={reassignTargetId}
-                onChange={(e) => setReassignTargetId(e.target.value)}
-                className="min-h-11 rounded-sm border border-line bg-card px-3 text-sm text-ink focus:outline-none focus-visible:[box-shadow:var(--focus-ring)]"
-              >
-                <option value="" disabled>
-                  Choose a chapter…
+            <Select
+              label="Move recipes into"
+              labelClassName="text-xs font-bold uppercase tracking-wide text-ink-soft"
+              value={reassignTargetId}
+              onChange={(e) => setReassignTargetId(e.target.value)}
+              className="min-h-11 rounded-sm border-line bg-card text-sm text-ink"
+            >
+              <option value="" disabled>
+                Choose a chapter…
+              </option>
+              {reassignChoices.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
                 </option>
-                {reassignChoices.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              ))}
+            </Select>
             <div className="flex flex-col gap-2 sm:flex-row-reverse">
               <Button
                 type="button"

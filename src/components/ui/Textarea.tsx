@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 
 interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -10,7 +10,8 @@ interface TextareaProps
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, hint, className, id, required, ...props }, ref) => {
-    const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
+    const generatedId = useId();
+    const inputId = id ?? `textarea-${generatedId}`;
 
     return (
       <div className="flex flex-col gap-1.5">

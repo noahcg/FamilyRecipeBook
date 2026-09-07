@@ -9,7 +9,7 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button, Select } from "@/components/ui";
 import {
   generateRecipeIdea,
   saveRecipeIdea,
@@ -171,21 +171,19 @@ export function AIRecipeIdeaPanel({
 
             {assignmentOptions.length > 1 && (
               <div className="mt-4">
-                <label htmlFor="idea-book" className="mb-2 block text-sm font-semibold text-ink">
-                  Save to cookbook
-                </label>
-                <select
+                <Select
                   id="idea-book"
+                  label="Save to cookbook"
                   value={resolvedBookId}
                   onChange={(event) => setSelectedBookId(event.target.value)}
-                  className="input-cookbook h-12 w-full text-sm"
+                  className="h-12 text-sm"
                 >
                   {assignmentOptions.map((book) => (
                     <option key={book.id} value={book.id}>
                       {book.title}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             )}
 

@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, GripVertical, ImagePlus, Plus, Search, Trash2, WandSparkles, X } from "lucide-react";
 import { clsx } from "clsx";
-import { Button, Input, Textarea } from "@/components/ui";
+import { Button, Input, Select, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
 import { createRecipeSchema, type CreateRecipeInput } from "@/lib/validators/recipe";
 import {
@@ -971,24 +971,20 @@ export function RecipeForm({
       {/* Manual mode shows this inside the right column; paste/import keep it up top. */}
       {showCookbookPicker && showPasteEntry && entryMode !== "manual" && (
         <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
-          <label htmlFor="recipe-book" className="block text-sm font-bold text-ink">
-            Cookbook
-          </label>
-          <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-            Choose where this recipe should live.
-          </p>
-          <select
+          <Select
             id="recipe-book"
+            label="Cookbook"
+            hint="Choose where this recipe should live."
             value={resolvedSelectedBookId}
             onChange={(event) => setSelectedBookId(event.target.value)}
-            className="input-cookbook mt-3 h-12 w-full text-sm"
+            className="h-12 text-sm"
           >
             {assignmentOptions.map((book) => (
               <option key={book.id} value={book.id}>
                 {book.title}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
 
@@ -1030,21 +1026,19 @@ export function RecipeForm({
         {/* ── Save to cookbook ── */}
         {showCookbookPicker && (
           <section className={sectionCardClassName}>
-            <label htmlFor="recipe-book" className={clsx(sectionHeadingClassName, "block")}>
-              Save to cookbook
-            </label>
-            <select
+            <Select
               id="recipe-book"
+              label="Save to cookbook"
               value={resolvedSelectedBookId}
               onChange={(event) => setSelectedBookId(event.target.value)}
-              className="input-cookbook h-11 w-full text-sm"
+              className="h-11 text-sm"
             >
               {assignmentOptions.map((book) => (
                 <option key={book.id} value={book.id}>
                   {book.title}
                 </option>
               ))}
-            </select>
+            </Select>
           </section>
         )}
 
