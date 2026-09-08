@@ -1755,27 +1755,41 @@ export function RecipeForm({
               <p className="text-sm text-danger font-medium">{serverError}</p>
             )}
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button type="button" variant="secondary" onClick={() => router.back()}>
-                Cancel
-              </Button>
-              <Button type="button" variant="secondary" onClick={handleParsePastedRecipe}>
-                Parse recipe
-              </Button>
-              {pasteSummary && (
-                <Button type="button" variant="secondary" onClick={() => setEntryMode("manual")}>
-                  Review in manual entry
+            <div className="@container space-y-3 border-t border-line pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Button type="button" variant="ghost" onClick={() => router.back()}>
+                  Cancel
                 </Button>
-              )}
-              <Button
-                type="submit"
-                variant="primary"
-                loading={isSubmitting}
-                className="flex-1"
-                disabled={!pasteSummary}
-              >
-                Add to this book
-              </Button>
+                <Button
+                  type="button"
+                  variant={pasteSummary ? "ghost" : "secondary"}
+                  onClick={handleParsePastedRecipe}
+                  className="shrink-0 whitespace-nowrap"
+                >
+                  {pasteSummary ? "Parse again" : "Parse recipe"}
+                </Button>
+              </div>
+              <div className={clsx("grid gap-3", pasteSummary && "@md:grid-cols-2")}>
+                {pasteSummary && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setEntryMode("manual")}
+                    className="whitespace-nowrap"
+                  >
+                    Review &amp; edit
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  loading={isSubmitting}
+                  className="whitespace-nowrap"
+                  disabled={!pasteSummary}
+                >
+                  Add to this book
+                </Button>
+              </div>
             </div>
           </div>
         </div>
