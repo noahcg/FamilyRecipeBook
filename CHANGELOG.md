@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.3] - 2026-09-08
+
+### Recipe paste actions
+
+- Separated cancel and re-parse actions from review and save, with shorter review copy and responsive button sizing that prevents awkward label wrapping.
+
 ## [0.12.2] - 2026-09-07
 
 ### Local PDF recipe imports
