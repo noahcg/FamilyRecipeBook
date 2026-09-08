@@ -1965,8 +1965,9 @@ export function RecipeForm({
                 <div>
                   <p className="text-sm font-bold text-ink">Import recipe files</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Choose Paprika, Plan to Eat, HTML, JSON, TXT, CSV, or ZIP exports. Review
-                    everything before saving.
+                    Choose Paprika, Plan to Eat, HTML, JSON, TXT, CSV, ZIP, or PDF recipe files.
+                    PDFs are read privately in your browser, with local OCR for scanned pages, and
+                    must be 8 MB or smaller. Review everything before saving.
                   </p>
                 </div>
               </div>
@@ -1993,7 +1994,7 @@ export function RecipeForm({
                 ref={fileImportRef}
                 type="file"
                 multiple
-                accept=".paprikarecipes,.html,.htm,.json,.jsonld,.zip,.csv,.txt,text/html,application/json,application/zip,text/csv,text/plain"
+                accept=".paprikarecipes,.html,.htm,.json,.jsonld,.zip,.csv,.txt,.pdf,text/html,application/json,application/zip,text/csv,text/plain,application/pdf"
                 onChange={(event) => void parseRecipeFiles(Array.from(event.target.files ?? []))}
                 className="sr-only"
               />

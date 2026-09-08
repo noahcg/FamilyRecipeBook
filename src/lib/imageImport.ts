@@ -492,16 +492,25 @@ export function parseRecipeText(text: string): ImportedRecipe {
   };
 }
 
-export async function importRecipeWithLocalOcr(
-  imageDataUrl: string,
+export async function extractRecipeTextWithLocalOcr(
+  imageDataUrls: string[],
   onProgress?: (progress: OcrProgress) => void
 ) {
+  if (!imageDataUrls.length) {
+    throw new Error("No recipe pages were provided for OCR.");
+  }
+
+  let currentPage = 0;
   const { createWorker, PSM } = await import("tesseract.js");
   const worker = await createWorker("eng", 1, {
     logger: (message) => {
+      const pageProgress = message.progress ?? 0;
       onProgress?.({
-        status: message.status,
-        progress: Math.round((message.progress ?? 0) * 100),
+        status:
+          imageDataUrls.length > 1
+            ? `Reading page ${currentPage + 1} of ${imageDataUrls.length}`
+            : message.status,
+        progress: Math.round(((currentPage + pageProgress) / imageDataUrls.length) * 100),
       });
     },
   });
@@ -511,13 +520,26 @@ export async function importRecipeWithLocalOcr(
       tessedit_pageseg_mode: PSM.AUTO,
       preserve_interword_spaces: "1",
     });
-    const result = await worker.recognize(imageDataUrl);
-    const text = result.data.text.trim();
+    const pages: string[] = [];
+    for (const imageDataUrl of imageDataUrls) {
+      const result = await worker.recognize(imageDataUrl);
+      const text = result.data.text.trim();
+      if (text) pages.push(text);
+      currentPage += 1;
+    }
+    const text = pages.join("\n\n");
     if (!text) {
       throw new Error("No readable recipe text was found. Try a brighter, closer photo.");
     }
-    return parseRecipeText(text);
+    return text;
   } finally {
     await worker.terminate();
   }
+}
+
+export async function importRecipeWithLocalOcr(
+  imageDataUrl: string,
+  onProgress?: (progress: OcrProgress) => void
+) {
+  return parseRecipeText(await extractRecipeTextWithLocalOcr([imageDataUrl], onProgress));
 }
