@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.2] - 2026-09-07
+
+### Local PDF recipe imports
+
+- Added PDF to the recipe-file importer. Selectable text is extracted in the browser, with the existing local OCR used for scanned pages; nothing is sent to an AI provider by default.
+- PDFs are limited to 8 MB and are added to the same review queue as other file imports before saving.
+
 ## [0.12.1] - 2026-08-25
 
 ### Contact channels

@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import Papa from "papaparse";
+import { extractRecipeTextWithLocalOcr, parseRecipeText } from "@/lib/imageImport";
 import { cleanGroupLabel, isIngredientGroupHeading, parseIngredientLine, parsePastedRecipe } from "@/lib/recipeTextImport";
 import type { IngredientInput, InstructionInput } from "@/lib/validators/recipe";
 
@@ -45,6 +46,7 @@ type JsonValue = Record<string, unknown> | unknown[];
 
 const IMAGE_EXTENSIONS = /\.(jpe?g|png|webp|heic)$/i;
 const HTML_EXTENSIONS = /\.(html?|xhtml)$/i;
+const PDF_MAX_IMPORT_BYTES = 8 * 1024 * 1024;
 
 function compact(value: unknown): string {
   return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
@@ -247,8 +249,99 @@ function parseCsv(text: string, fileName: string) {
     .filter((recipe): recipe is NormalizedImportedRecipe => Boolean(recipe));
 }
 
+function hasCompleteRecipe(recipe: ReturnType<typeof parseRecipeText>) {
+  return recipe.ingredients.some((ingredient) => ingredient.item.trim()) &&
+    recipe.instructions.some((instruction) => instruction.body.trim());
+}
+
+function normalizedPdfRecipe(
+  recipe: ReturnType<typeof parseRecipeText>,
+  fileName: string,
+  extraction: "text" | "OCR"
+): NormalizedImportedRecipe | null {
+  if (!hasCompleteRecipe(recipe)) return null;
+
+  return {
+    id: recipeId(fileName, 0),
+    title: recipe.title || fileName.replace(/\.[^.]+$/, ""),
+    description: recipe.description,
+    source_name: recipe.source_name,
+    story: recipe.story,
+    prep_minutes: recipe.prep_minutes,
+    cook_minutes: recipe.cook_minutes,
+    servings: recipe.servings,
+    category: recipe.category,
+    tags: recipe.tags,
+    ingredients: recipe.ingredients
+      .filter((ingredient) => ingredient.item.trim())
+      .map((ingredient) => ({ ...ingredient, group_label: null })),
+    instructions: recipe.instructions.filter((instruction) => instruction.body.trim()),
+    nutrition: {},
+    import_source: extraction === "OCR" ? "PDF OCR" : "PDF text",
+    import_metadata: { fileName, extraction: `Local PDF ${extraction}` },
+    warnings: recipe.warnings,
+  };
+}
+
+async function pdfPageText(pdf: Awaited<ReturnType<typeof loadPdf>>) {
+  const pages: string[] = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const text = content.items
+      .map((item) => "str" in item ? `${item.str}${item.hasEOL ? "\n" : " "}` : "")
+      .join("")
+      .trim();
+    if (text) pages.push(text);
+  }
+  return pages.join("\n\n");
+}
+
+async function pdfPageImages(pdf: Awaited<ReturnType<typeof loadPdf>>) {
+  const images: string[] = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    await page.render({ canvas, viewport }).promise;
+    images.push(canvas.toDataURL("image/jpeg", 0.85));
+  }
+  return images;
+}
+
+async function loadPdf(file: File) {
+  const pdfjs = await import("pdfjs-dist");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.mjs",
+    import.meta.url
+  ).toString();
+  return pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+}
+
+async function parsePdf(file: File): Promise<NormalizedImportedRecipe[]> {
+  if (file.size > PDF_MAX_IMPORT_BYTES) {
+    throw new Error("PDFs must be smaller than 8 MB.");
+  }
+
+  const pdf = await loadPdf(file);
+  try {
+    const extractedText = await pdfPageText(pdf);
+    const textRecipe = normalizedPdfRecipe(parseRecipeText(extractedText), file.name, "text");
+    if (textRecipe) return [textRecipe];
+
+    const ocrText = await extractRecipeTextWithLocalOcr(await pdfPageImages(pdf));
+    const ocrRecipe = normalizedPdfRecipe(parseRecipeText(ocrText), file.name, "OCR");
+    return ocrRecipe ? [ocrRecipe] : [];
+  } finally {
+    await pdf.destroy();
+  }
+}
+
 async function parseSingleFile(file: File): Promise<NormalizedImportedRecipe[]> {
   const fileName = file.name;
+  if (/\.pdf$/i.test(fileName) || file.type === "application/pdf") return parsePdf(file);
   const text = await file.text();
   if (fileName.endsWith(".csv")) return parseCsv(text, fileName);
   if (fileName.endsWith(".txt")) return parseText(text, fileName);
