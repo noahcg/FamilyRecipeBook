@@ -61,7 +61,7 @@ export const GuideCard = forwardRef<HTMLDivElement, GuideCardProps>(function Gui
 
       <div className="flex min-h-0 flex-1 flex-col">
         {(eyebrow || onDismiss) && (
-          <div className="flex shrink-0 items-center justify-between px-5 pb-1 pt-4">
+          <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-4">
             {eyebrow ? (
               <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
                 {eyebrow}

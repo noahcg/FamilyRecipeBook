@@ -11,6 +11,16 @@ type OcrProgress = {
   progress: number;
 };
 
+type OcrBlock = {
+  text: string;
+  bbox: {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  };
+};
+
 function loadImage(dataUrl: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
@@ -107,6 +117,82 @@ function normalizeOcrText(text: string) {
     .filter(Boolean);
 }
 
+function isLikelyRecipeTitleBlock(block: OcrBlock) {
+  const firstLine = block.text.trim().split("\n")[0]?.trim() ?? "";
+  const letters = firstLine.match(/[a-z]/gi) ?? [];
+  const uppercaseLetters = firstLine.match(/[A-Z]/g) ?? [];
+  const wordCount = firstLine.split(/\s+/).filter(Boolean).length;
+
+  return (
+    wordCount >= 1 &&
+    wordCount <= 7 &&
+    letters.length >= 4 &&
+    uppercaseLetters.length / letters.length >= 0.8
+  );
+}
+
+function recipeTitleFromBlock(block: OcrBlock) {
+  const text = block.text.trim().replace(/\s+/g, " ");
+  // Cookbook title blocks often include a parenthetical image caption and,
+  // after OCR, the opening description sentence. Keep the all-caps title only.
+  const uppercaseTitle = text.match(/^([A-Z0-9][A-Z0-9 '&.-]*(?:\s+[A-Z0-9][A-Z0-9 '&.-]*)*)/);
+  return (uppercaseTitle?.[1] ?? text.split(/\s*\(/)[0] ?? text).trim();
+}
+
+/**
+ * Split only spreads containing two independently titled recipes. This is
+ * intentionally stricter than detecting two text columns: a recipe such as
+ * Brunch Casserole has one centered title with ingredients and directions in
+ * columns and must remain a single import.
+ */
+function splitIndependentlyTitledRecipeColumns(blocks: OcrBlock[] | null) {
+  if (!blocks?.length) return null;
+
+  const readableBlocks = blocks
+    .map((block) => ({ ...block, text: block.text.trim() }))
+    .filter((block) => block.text && block.bbox.x1 > block.bbox.x0 && block.bbox.y1 > block.bbox.y0);
+  if (readableBlocks.length < 4) return null;
+
+  const leftEdge = Math.min(...readableBlocks.map((block) => block.bbox.x0));
+  const rightEdge = Math.max(...readableBlocks.map((block) => block.bbox.x1));
+  const topEdge = Math.min(...readableBlocks.map((block) => block.bbox.y0));
+  const bottomEdge = Math.max(...readableBlocks.map((block) => block.bbox.y1));
+  const pageWidth = rightEdge - leftEdge;
+  const pageHeight = bottomEdge - topEdge;
+  if (pageWidth <= 0 || pageHeight <= 0) return null;
+
+  const midpoint = leftEdge + pageWidth / 2;
+  const titleLimit = topEdge + pageHeight * 0.3;
+  const titleBlocks = readableBlocks.filter(
+    (block) => block.bbox.y0 <= titleLimit && isLikelyRecipeTitleBlock(block)
+  );
+  const leftTitle = titleBlocks
+    .filter((block) => (block.bbox.x0 + block.bbox.x1) / 2 < midpoint)
+    .sort((a, b) => a.bbox.y0 - b.bbox.y0)[0];
+  const rightTitle = titleBlocks
+    .filter((block) => (block.bbox.x0 + block.bbox.x1) / 2 > midpoint)
+    .sort((a, b) => a.bbox.y0 - b.bbox.y0)[0];
+
+  if (!leftTitle || !rightTitle || Math.abs(leftTitle.bbox.y0 - rightTitle.bbox.y0) > pageHeight * 0.08) {
+    return null;
+  }
+
+  const sortTopToBottom = (a: OcrBlock, b: OcrBlock) => a.bbox.y0 - b.bbox.y0 || a.bbox.x0 - b.bbox.x0;
+  const titleTop = Math.min(leftTitle.bbox.y0, rightTitle.bbox.y0) - 8;
+  const leftText = readableBlocks
+    .filter((block) => block.bbox.y0 >= titleTop && (block.bbox.x0 + block.bbox.x1) / 2 < midpoint)
+    .sort(sortTopToBottom)
+    .map((block) => (block === leftTitle ? recipeTitleFromBlock(block) : block.text))
+    .join("\n\n");
+  const rightText = readableBlocks
+    .filter((block) => block.bbox.y0 >= titleTop && (block.bbox.x0 + block.bbox.x1) / 2 > midpoint)
+    .sort(sortTopToBottom)
+    .map((block) => (block === rightTitle ? recipeTitleFromBlock(block) : block.text))
+    .join("\n\n");
+
+  return leftText.length >= 100 && rightText.length >= 100 ? [leftText, rightText] : null;
+}
+
 function isSectionHeading(line: string, headings: string[]) {
   const normalized = line.toLowerCase().replace(/[^a-z\s]/g, "").trim();
   return headings.some((heading) => normalized === heading || normalized.startsWith(`${heading} `));
@@ -114,8 +200,8 @@ function isSectionHeading(line: string, headings: string[]) {
 
 function isStepLine(line: string) {
   const cleaned = line.trim();
-  if (/^(step\s+\d+|\d+[\).:-])\s+/i.test(cleaned) || /^\d{1,2}$/.test(cleaned)) return true;
-  return /^(bake|beat|blend|boil|combine|cook|cover|fold|heat|mix|place|pour|preheat|reduce|remove|serve|simmer|stir|whisk)\b/i.test(cleaned);
+  if (/^(step\s+\d+|\d+[\).:-])\s+/i.test(cleaned) || isStandaloneInstructionMarker(cleaned)) return true;
+  return /^(add|bake|beat|blend|boil|bring|chill|combine|cook|cover|dissolve|fold|heat|mix|place|pour|preheat|reduce|remove|serve|simmer|stir|whisk)\b/i.test(cleaned);
 }
 
 function hasInstructionMarker(line: string) {
@@ -123,7 +209,9 @@ function hasInstructionMarker(line: string) {
 }
 
 function isStandaloneInstructionMarker(line: string) {
-  return /^\d{1,2}$/.test(line.trim());
+  // Tesseract commonly puts a list number and its punctuation on its own line
+  // before the instruction paragraph ("1." rather than "1. Mix …").
+  return /^\d{1,2}[.)]?$/.test(line.trim());
 }
 
 function stripInstructionMarker(line: string) {
@@ -217,7 +305,7 @@ function parseIngredientLine(line: string): ImportedRecipe["ingredients"][number
   );
 
   if (!match?.[1]) {
-    return { quantity: "", unit: "", item: cleaned, note: "" };
+    return { quantity: "", unit: "", item: cleaned, note: "", group_label: null };
   }
 
   const possibleUnit = match[2]?.replace(/\.$/, "") ?? "";
@@ -229,6 +317,7 @@ function parseIngredientLine(line: string): ImportedRecipe["ingredients"][number
       unit: "",
       item: [possibleUnit, item].filter(Boolean).join(" ").trim() || cleaned,
       note: "",
+      group_label: null,
     };
   }
 
@@ -237,6 +326,7 @@ function parseIngredientLine(line: string): ImportedRecipe["ingredients"][number
     unit: possibleUnit,
     item: item || cleaned,
     note: "",
+    group_label: null,
   };
 }
 
@@ -340,6 +430,47 @@ function looksLikeIngredient(line: string, fromExplicitSection = false) {
   return fromExplicitSection ? score >= 1 && !looksLikeProse(line) : score >= 3;
 }
 
+// Cookbook recipes commonly divide a single ingredient list into components.
+// Keep this deliberately conservative so an ingredient such as "pasta sauce"
+// is never mistaken for a heading.
+const GROUP_HEADING_WORD = /^(sauce|topping|toppings|crust|filling|dough|batter|frosting|icing|glaze|dressing|marinade|garnish|streusel|crumble|assembly|base|cake|custard|coating|rub)$/i;
+
+function isIngredientGroupHeading(line: string) {
+  const cleaned = stripIngredientMarker(line).trim();
+  if (!cleaned || hasQuantityCue(line) || hasUnitCue(line) || looksLikeInstruction(cleaned)) return false;
+  if (cleaned.split(/\s+/).filter(Boolean).length > 6) return false;
+
+  const withoutColon = cleaned.replace(/:\s*$/, "").trim();
+  return /:\s*$/.test(cleaned) || /^for\s+the\b/i.test(cleaned) || GROUP_HEADING_WORD.test(withoutColon);
+}
+
+function cleanGroupLabel(line: string) {
+  const label = stripIngredientMarker(line)
+    .replace(/:\s*$/, "")
+    .replace(/^for\s+the\s+/i, "")
+    .trim()
+    .slice(0, 100);
+  return label ? label.charAt(0).toUpperCase() + label.slice(1) : "";
+}
+
+function buildGroupedIngredients(lines: string[], fromExplicitSection: boolean) {
+  const ingredients: ImportedRecipe["ingredients"] = [];
+  let currentGroup: string | null = null;
+
+  for (const line of lines) {
+    if (isSectionHeading(line, ["ingredients", "ingredient"]) || looksLikeMetadata(line)) continue;
+    if (isIngredientGroupHeading(line)) {
+      currentGroup = cleanGroupLabel(line) || null;
+      continue;
+    }
+    if (!looksLikeIngredient(line, fromExplicitSection)) continue;
+    const ingredient = parseIngredientLine(line);
+    if (ingredient.item) ingredients.push({ ...ingredient, group_label: currentGroup });
+  }
+
+  return ingredients.slice(0, 80);
+}
+
 function findIngredientRunStart(lines: string[]) {
   for (let index = 1; index < lines.length; index += 1) {
     if (!looksLikeIngredient(lines[index])) continue;
@@ -376,24 +507,30 @@ function splitRecipeLines(lines: string[]) {
     "procedure",
   ]);
 
-  const title = lines[0] ?? "Imported recipe";
+  const title = parseRecipeTitle(lines);
+  const titleLineCount = recipeTitleLineCount(lines);
 
   if (ingredientIndex >= 0 && instructionIndex > ingredientIndex) {
     return {
       title,
-      descriptionLines: lines.slice(1, ingredientIndex).filter((line) => !looksLikeMetadata(line)),
+      descriptionLines: lines.slice(titleLineCount, ingredientIndex).filter((line) => !looksLikeMetadata(line)),
       ingredientLines: lines.slice(ingredientIndex + 1, instructionIndex),
       instructionLines: lines.slice(instructionIndex + 1),
       hasIngredientHeading: true,
     };
   }
 
-  const ingredientStart = ingredientIndex >= 0 ? ingredientIndex + 1 : findIngredientRunStart(lines);
+  let ingredientStart = ingredientIndex >= 0 ? ingredientIndex + 1 : findIngredientRunStart(lines);
+  // The first quantified item follows a component heading in many cookbooks.
+  // Include that heading so its group label is applied to the first items too.
+  if (ingredientIndex < 0 && ingredientStart > 0 && isIngredientGroupHeading(lines[ingredientStart - 1])) {
+    ingredientStart -= 1;
+  }
   const instructionStart = ingredientStart >= 0 ? findInstructionStart(lines, ingredientStart) : -1;
   if (ingredientStart > 0 && instructionStart > ingredientStart) {
     return {
       title,
-      descriptionLines: lines.slice(1, ingredientIndex >= 0 ? ingredientIndex : ingredientStart).filter((line) => !looksLikeMetadata(line)),
+      descriptionLines: lines.slice(titleLineCount, ingredientIndex >= 0 ? ingredientIndex : ingredientStart).filter((line) => !looksLikeMetadata(line)),
       ingredientLines: lines.slice(ingredientStart, instructionStart),
       instructionLines: lines.slice(instructionStart + (isSectionHeading(lines[instructionStart], [
         "instructions",
@@ -406,14 +543,49 @@ function splitRecipeLines(lines: string[]) {
     };
   }
 
+  // A photographed ingredient page often has its method on the facing or next
+  // page. Once an ingredient run is confidently found, it is safer to keep the
+  // remainder than to discard half the page at an arbitrary midpoint.
+  if (ingredientStart > 0) {
+    return {
+      title,
+      descriptionLines: lines.slice(titleLineCount, ingredientIndex >= 0 ? ingredientIndex : ingredientStart).filter((line) => !looksLikeMetadata(line)),
+      ingredientLines: lines.slice(ingredientStart),
+      instructionLines: [],
+      hasIngredientHeading: ingredientIndex >= 0,
+    };
+  }
+
   const midpoint = Math.max(2, Math.floor(lines.length / 2));
   return {
     title,
-    descriptionLines: lines.slice(1, midpoint).filter((line) => !looksLikeMetadata(line) && looksLikeProse(line)),
-    ingredientLines: lines.slice(1, midpoint),
+    descriptionLines: lines.slice(titleLineCount, midpoint).filter((line) => !looksLikeMetadata(line) && looksLikeProse(line)),
+    ingredientLines: lines.slice(titleLineCount, midpoint),
     instructionLines: lines.slice(midpoint),
     hasIngredientHeading: false,
   };
+}
+
+function parseRecipeTitle(lines: string[]) {
+  const titleLineCount = recipeTitleLineCount(lines);
+  return lines.slice(0, titleLineCount).join(" ").trim().slice(0, 200) || "Imported recipe";
+}
+
+function recipeTitleLineCount(lines: string[]) {
+  let count = 0;
+  for (const line of lines) {
+    if (
+      looksLikeMetadata(line) ||
+      isSectionHeading(line, ["ingredients", "ingredient", "instructions", "directions", "method", "preparation", "procedure"]) ||
+      isIngredientGroupHeading(line) ||
+      looksLikeIngredient(line) ||
+      looksLikeProse(line)
+    ) {
+      break;
+    }
+    count += 1;
+  }
+  return count;
 }
 
 function parseMinutes(lines: string[], labels: string[]) {
@@ -458,12 +630,7 @@ export function parseRecipeText(text: string): ImportedRecipe {
   }
 
   const { title, descriptionLines, ingredientLines, instructionLines, hasIngredientHeading } = splitRecipeLines(lines);
-  const ingredients = ingredientLines
-    .filter((line) => !isSectionHeading(line, ["ingredients", "ingredient"]))
-    .filter((line) => !looksLikeMetadata(line))
-    .filter((line) => looksLikeIngredient(line, hasIngredientHeading))
-    .map(parseIngredientLine)
-    .filter((ingredient) => ingredient.item);
+  const ingredients = buildGroupedIngredients(ingredientLines, hasIngredientHeading);
 
   const instructions = joinInstructionLines(
     instructionLines
@@ -485,7 +652,7 @@ export function parseRecipeText(text: string): ImportedRecipe {
     servings: parseServings(lines),
     category: "",
     tags: [],
-    ingredients: ingredients.length ? ingredients.slice(0, 80) : [{ quantity: "", unit: "", item: "", note: "" }],
+    ingredients: ingredients.length ? ingredients : [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
     instructions: instructions.length ? instructions.slice(0, 80) : [{ body: "" }],
     confidence: warnings.length ? "medium" : "high",
     warnings,
@@ -500,17 +667,20 @@ export async function extractRecipeTextWithLocalOcr(
     throw new Error("No recipe pages were provided for OCR.");
   }
 
-  let currentPage = 0;
+  // Preserve each selected page exactly as supplied. Layout splitting is too
+  // ambiguous for ingredient columns, centered titles, and recipe spreads.
+  const ocrSections = imageDataUrls;
+  let currentSection = 0;
   const { createWorker, PSM } = await import("tesseract.js");
   const worker = await createWorker("eng", 1, {
     logger: (message) => {
       const pageProgress = message.progress ?? 0;
       onProgress?.({
         status:
-          imageDataUrls.length > 1
-            ? `Reading page ${currentPage + 1} of ${imageDataUrls.length}`
+          ocrSections.length > 1
+            ? `Reading recipe section ${currentSection + 1} of ${ocrSections.length}`
             : message.status,
-        progress: Math.round(((currentPage + pageProgress) / imageDataUrls.length) * 100),
+        progress: Math.round(((currentSection + pageProgress) / ocrSections.length) * 100),
       });
     },
   });
@@ -521,11 +691,11 @@ export async function extractRecipeTextWithLocalOcr(
       preserve_interword_spaces: "1",
     });
     const pages: string[] = [];
-    for (const imageDataUrl of imageDataUrls) {
-      const result = await worker.recognize(imageDataUrl);
+    for (const imageDataUrl of ocrSections) {
+      const result = await worker.recognize(imageDataUrl, {}, { blocks: true });
       const text = result.data.text.trim();
       if (text) pages.push(text);
-      currentPage += 1;
+      currentSection += 1;
     }
     const text = pages.join("\n\n");
     if (!text) {
@@ -538,8 +708,42 @@ export async function extractRecipeTextWithLocalOcr(
 }
 
 export async function importRecipeWithLocalOcr(
-  imageDataUrl: string,
+  imageDataUrls: string[],
   onProgress?: (progress: OcrProgress) => void
 ) {
-  return parseRecipeText(await extractRecipeTextWithLocalOcr([imageDataUrl], onProgress));
+  return parseRecipeText(await extractRecipeTextWithLocalOcr(imageDataUrls, onProgress));
+}
+
+export async function importRecipesWithLocalOcr(
+  imageDataUrls: string[],
+  onProgress?: (progress: OcrProgress) => void
+) {
+  if (imageDataUrls.length !== 1) {
+    return [await importRecipeWithLocalOcr(imageDataUrls, onProgress)];
+  }
+
+  const { createWorker, PSM } = await import("tesseract.js");
+  const worker = await createWorker("eng", 1, {
+    logger: (message) => {
+      onProgress?.({ status: message.status, progress: Math.round((message.progress ?? 0) * 100) });
+    },
+  });
+
+  try {
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.AUTO,
+      preserve_interword_spaces: "1",
+    });
+    const result = await worker.recognize(imageDataUrls[0], {}, { blocks: true });
+    const splitColumns = splitIndependentlyTitledRecipeColumns(result.data.blocks);
+    if (!splitColumns) return [parseRecipeText(result.data.text)];
+
+    const recipes = splitColumns.map(parseRecipeText);
+    const completeRecipes = recipes.filter(
+      (recipe) => recipe.ingredients.some((ingredient) => ingredient.item) && recipe.instructions.some((step) => step.body)
+    );
+    return completeRecipes.length === 2 ? completeRecipes : [parseRecipeText(result.data.text)];
+  } finally {
+    await worker.terminate();
+  }
 }

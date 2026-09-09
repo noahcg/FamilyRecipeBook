@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.12.9] - 2026-09-09
+
+### Photo recipe imports
+
+- Made multi-recipe import choices compact and readable, stripping OCR image captions and description text from detected cookbook titles.
+
+## [0.12.8] - 2026-09-09
+
+### Photo recipe imports
+
+- Restored two-recipe cookbook-spread imports when older recipes begin their directions with verbs such as “Dissolve” or “Bring.”
+
+## [0.12.7] - 2026-09-09
+
+### Photo recipe imports
+
+- Restored the recipe chooser for one-page cookbook spreads that clearly contain two independently titled side-by-side recipes, without splitting a single centered-title recipe's ingredient and direction columns.
+
+## [0.12.6] - 2026-09-09
+
+### Photo recipe imports
+
+- Preserved multi-line recipe titles and complete ingredient pages during local OCR, including labeled sections such as Dough, Filling, and Frosting.
+- Recognize standalone numbered markers so recipe instruction text is not split at ordinary sentence periods.
+
+## [0.12.5] - 2026-09-09
+
+### Photo recipe imports
+
+- Fixed the replacement confirmation appearing on a new recipe because its automatically selected default category was being treated as entered form content.
+
+## [0.12.4] - 2026-09-09
+
+### Photo recipe imports
+
+- Made the photo-import handoff explicit: “Review & save recipe” now opens Manual entry with a confirmation that the extracted fields are ready to review and have not yet been saved.
+- Updated replacement confirmation copy to explain that imported fields will open in Manual entry for review before saving.
+
 ## [0.12.3] - 2026-09-08
 
 ### Recipe paste actions

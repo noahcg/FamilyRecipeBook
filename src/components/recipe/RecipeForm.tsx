@@ -18,7 +18,7 @@ import {
 } from "@/lib/actions/recipes";
 import { uploadRecipeImage } from "@/lib/upload";
 import {
-  importRecipeWithLocalOcr,
+  importRecipesWithLocalOcr,
   prepareRecipeImportImage,
   type ImportedRecipe,
 } from "@/lib/imageImport";
@@ -86,6 +86,11 @@ function duplicateImportKeys(recipes: NormalizedImportedRecipe[]) {
 function truncateImportValue(value: string | undefined, max: number) {
   if (!value) return undefined;
   return value.length > max ? value.slice(0, max).trim() : value;
+}
+
+function recipeChoiceLabel(title: string, index: number) {
+  const withoutCaption = title.replace(/\s*\([^)]*\).*/, "").trim();
+  return withoutCaption || `Recipe ${index + 1}`;
 }
 
 function validImportUrl(value: string | undefined) {
@@ -264,9 +269,12 @@ export function RecipeForm({
   const [photoPreview, setPhotoPreview] = useState<string | null>(recipe?.photo_url ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
-  const [importedRecipe, setImportedRecipe] = useState<ImportedRecipe | null>(null);
+  const [importedRecipes, setImportedRecipes] = useState<ImportedRecipe[]>([]);
+  const [activeImportedRecipeIndex, setActiveImportedRecipeIndex] = useState(0);
+  const [confirmImportReplace, setConfirmImportReplace] = useState(false);
+  const [photoImportReviewNotice, setPhotoImportReviewNotice] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
-  const [preparedImportImage, setPreparedImportImage] = useState<string | null>(null);
+  const [preparedImportImages, setPreparedImportImages] = useState<string[]>([]);
   const [importProgress, setImportProgress] = useState(0);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -301,6 +309,7 @@ export function RecipeForm({
   const [manualIngredientKeypad, setManualIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
   const [draggingIngredientIndex, setDraggingIngredientIndex] = useState<number | null>(null);
   const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState<number | null>(null);
+  const importedRecipe = importedRecipes[activeImportedRecipeIndex] ?? null;
   const assignmentOptions = useMemo<RecipeAssignmentOption[]>(
     () =>
       bookOptions?.length
@@ -652,26 +661,29 @@ export function RecipeForm({
     setValue("photo_source_url", candidate.source_url, { shouldDirty: true });
   }
 
-  async function importRecipePhoto(file: File) {
-    if (!file) return;
+  async function importRecipePhotos(files: File[]) {
+    if (!files.length) return;
 
-    setImportFileName(file.name);
-    setImportedRecipe(null);
+    setImportFileName(files.map((file) => file.name).join(", "));
+    setImportedRecipes([]);
+    setActiveImportedRecipeIndex(0);
+    setConfirmImportReplace(false);
+    setPhotoImportReviewNotice(null);
     setImportError(null);
-    setPreparedImportImage(null);
+    setPreparedImportImages([]);
     setImportSource(null);
     setImportProgress(0);
     setImportStatus("Preparing photo");
     setIsImporting(true);
 
     try {
-      const imageDataUrl = await prepareRecipeImportImage(file);
-      setPreparedImportImage(imageDataUrl);
-      const result = await importRecipeWithLocalOcr(imageDataUrl, (progress) => {
+      const imageDataUrls = await Promise.all(files.map(prepareRecipeImportImage));
+      setPreparedImportImages(imageDataUrls);
+      const result = await importRecipesWithLocalOcr(imageDataUrls, (progress) => {
         setImportStatus(progress.status);
         setImportProgress(progress.progress);
       });
-      setImportedRecipe(result);
+      setImportedRecipes(result);
       setImportSource("local");
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "Could not import that recipe photo.");
@@ -683,8 +695,14 @@ export function RecipeForm({
   }
 
   async function handleImportImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) await importRecipePhoto(file);
+    const selectedFiles = Array.from(e.target.files ?? []);
+    if (selectedFiles.length > 4) {
+      setImportError("Choose no more than four recipe pages at a time.");
+      if (importFileRef.current) importFileRef.current.value = "";
+      return;
+    }
+    const files = selectedFiles;
+    if (files.length) await importRecipePhotos(files);
   }
 
   async function handleImportDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -692,24 +710,28 @@ export function RecipeForm({
     setIsImportDragging(false);
     if (isImporting) return;
 
-    const file = Array.from(e.dataTransfer.files).find((candidate) =>
+    const files = Array.from(e.dataTransfer.files).filter((candidate) =>
       candidate.type.startsWith("image/")
     );
-    if (!file) {
+    if (!files.length) {
       setImportError("Drop a JPEG, PNG, or WebP image of the recipe.");
       return;
     }
+    if (files.length > 4) {
+      setImportError("Drop no more than four recipe pages at a time.");
+      return;
+    }
 
-    await importRecipePhoto(file);
+    await importRecipePhotos(files);
   }
 
   async function handleImproveImport() {
-    if (!preparedImportImage || isImprovingImport) return;
+    if (!preparedImportImages.length || isImprovingImport) return;
 
     setIsImprovingImport(true);
     setImportError(null);
 
-    const result = await improveRecipeImportWithOpenAI(bookId, preparedImportImage);
+    const result = await improveRecipeImportWithOpenAI(bookId, preparedImportImages);
     setIsImprovingImport(false);
 
     if (!result.success) {
@@ -717,18 +739,21 @@ export function RecipeForm({
       return;
     }
 
-    setImportedRecipe(result.data);
+    setImportedRecipes([result.data]);
+    setActiveImportedRecipeIndex(0);
+    setConfirmImportReplace(false);
     setImportSource("openai");
   }
 
   function formHasContent() {
     const values = getValues();
+    const defaultCategory = activeCategories.find((category) => category.is_default)?.name ?? activeCategories[0]?.name ?? "";
     return Boolean(
       values.title?.trim() ||
         values.description?.trim() ||
         values.source_name?.trim() ||
         values.story?.trim() ||
-        values.category?.trim() ||
+        (values.category?.trim() && values.category !== defaultCategory) ||
         values.prep_minutes ||
         values.cook_minutes ||
         values.servings ||
@@ -741,13 +766,11 @@ export function RecipeForm({
     );
   }
 
-  function applyImportedRecipe() {
+  function applyImportedRecipe(force = false) {
     if (!importedRecipe) return;
 
-    if (
-      formHasContent() &&
-      !window.confirm("Replace the current recipe fields with the imported text?")
-    ) {
+    if (formHasContent() && !force) {
+      setConfirmImportReplace(true);
       return;
     }
 
@@ -763,6 +786,12 @@ export function RecipeForm({
     replaceIngredients(importedRecipe.ingredients);
     replaceInstructions(importedRecipe.instructions);
     setRecipeImportedViaUpload(true);
+    setConfirmImportReplace(false);
+    setPhotoImportReviewNotice(
+      `We added ${importedRecipe.ingredients.length} ingredient${importedRecipe.ingredients.length === 1 ? "" : "s"} and ${importedRecipe.instructions.length} step${importedRecipe.instructions.length === 1 ? "" : "s"} from your photo. Review the details, choose a category, then save when you’re ready.`
+    );
+    setEntryMode("manual");
+    window.scrollTo(0, 0);
   }
 
   function handleParsePastedRecipe() {
@@ -1000,7 +1029,10 @@ export function RecipeForm({
               <button
                 key={mode}
                 type="button"
-                onClick={() => setEntryMode(mode as "manual" | "paste" | "import")}
+                onClick={() => {
+                  setEntryMode(mode as "manual" | "paste" | "import");
+                  if (mode !== "manual") setPhotoImportReviewNotice(null);
+                }}
                 className={clsx(
                   "rounded-full px-4 py-2 text-sm font-extrabold transition-colors",
                   selected
@@ -1018,6 +1050,16 @@ export function RecipeForm({
 
       {(!showPasteEntry || entryMode === "manual") ? (
       <div className="space-y-6">
+        {photoImportReviewNotice && (
+          <div className="flex gap-3 rounded-xl border border-green-sage/30 bg-green-pale/70 p-4">
+            <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-green-deep" strokeWidth={1.8} />
+            <div>
+              <p className="text-sm font-bold text-green-deep">Photo import ready to review</p>
+              <p className="mt-1 text-sm leading-5 text-ink-muted">{photoImportReviewNotice}</p>
+              <p className="mt-1 text-xs font-semibold text-ink-soft">Nothing has been saved yet.</p>
+            </div>
+          </div>
+        )}
         <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-start">
 
         {/* ── Right column (40%): photo + details ── */}
@@ -1804,8 +1846,8 @@ export function RecipeForm({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-ink">Import from cookbook photo</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Free OCR runs in your browser first. For better extraction, you can improve
-                    the result with your own OpenAI API key.
+                    Choose recipe pages in reading order (up to four). Free OCR runs in your
+                    browser first; you can improve the combined result with your own OpenAI API key.
                   </p>
                 </div>
               </div>
@@ -1848,10 +1890,10 @@ export function RecipeForm({
                 <div className="flex flex-col items-center justify-center gap-2">
                   <Camera size={20} className="text-green-deep" strokeWidth={1.8} />
                   <p className="text-sm font-bold text-ink">
-                    {isImporting ? "Reading photo" : "Drop a recipe photo here"}
+                    {isImporting ? "Reading recipe pages" : "Drop recipe page photos here"}
                   </p>
                   <p className="text-xs text-ink-soft">
-                    or choose a JPEG, PNG, or WebP from your device
+                    or choose one to four JPEG, PNG, or WebP pages in reading order
                   </p>
                 </div>
                 <Button
@@ -1890,6 +1932,7 @@ export function RecipeForm({
                 ref={importFileRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
+                multiple
                 onChange={handleImportImageChange}
                 className="sr-only"
               />
@@ -1903,6 +1946,34 @@ export function RecipeForm({
 
               {importedRecipe && (
                 <div className="mt-4 rounded-lg border border-line bg-paper-soft p-3">
+                  {importedRecipes.length > 1 && (
+                    <div className="mb-3 rounded-md border border-accent-honey/35 bg-paper-warm/70 p-3">
+                      <p className="text-xs font-bold text-green-deep">
+                        Found {importedRecipes.length} recipes on this page
+                      </p>
+                      <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+                        This looks like a multi-recipe cookbook spread. Choose one recipe to review and save.
+                      </p>
+                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {importedRecipes.map((recipe, index) => (
+                          <Button
+                            key={`${recipe.title}-${index}`}
+                            type="button"
+                            variant={activeImportedRecipeIndex === index ? "primary" : "secondary"}
+                            size="md"
+                            fullWidth
+                            className="min-w-0 justify-start overflow-hidden text-left"
+                            onClick={() => {
+                              setActiveImportedRecipeIndex(index);
+                              setConfirmImportReplace(false);
+                            }}
+                          >
+                            <span className="truncate">{recipeChoiceLabel(recipe.title, index)}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-start gap-2">
                     <CheckCircle2
                       size={16}
@@ -1928,16 +1999,44 @@ export function RecipeForm({
                       ))}
                     </ul>
                   )}
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={applyImportedRecipe}
-                    className="mt-3 w-full"
-                  >
-                    Apply to recipe form
-                  </Button>
-                  {preparedImportImage && importSource !== "openai" && (
+                  {confirmImportReplace ? (
+                    <div className="mt-3 rounded-md border border-accent-honey/35 bg-paper-warm/70 p-3">
+                      <p className="text-xs font-medium text-ink">
+                        Replace the recipe fields currently in this form, then review the import in Manual entry?
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setConfirmImportReplace(false)}
+                          className="flex-1"
+                        >
+                          Keep editing
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() => applyImportedRecipe(true)}
+                          className="flex-1"
+                        >
+                          Replace &amp; review
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={() => applyImportedRecipe()}
+                      className="mt-3 w-full"
+                    >
+                      Review &amp; save recipe
+                    </Button>
+                  )}
+                  {preparedImportImages.length > 0 && importSource !== "openai" && importedRecipes.length === 1 && (
                     hasOpenAIKey ? (
                       <Button
                         type="button"

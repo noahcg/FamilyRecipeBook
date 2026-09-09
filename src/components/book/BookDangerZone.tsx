@@ -74,9 +74,9 @@ export function BookDangerZone({ bookId, bookTitle, isKeeper }: BookDangerZonePr
           </p>
           <div className="flex gap-3">
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
-              className="flex-1"
+              className="flex-1 bg-card-muted hover:bg-paper-deep"
               onClick={() => setOpen(null)}
               disabled={saving}
             >
@@ -122,9 +122,9 @@ export function BookDangerZone({ bookId, bookTitle, isKeeper }: BookDangerZonePr
         </p>
         <div className="flex gap-3">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
-            className="flex-1"
+            className="flex-1 bg-card-muted hover:bg-paper-deep"
             onClick={() => setOpen(null)}
             disabled={saving}
           >

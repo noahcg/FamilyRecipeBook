@@ -307,7 +307,7 @@ export function BookCategoriesManager({ bookId, initialCategories }: BookCategor
               >
                 Move and delete
               </Button>
-              <Button type="button" variant="ghost" onClick={closeReassign} disabled={pending}>
+              <Button type="button" variant="secondary" className="bg-card-muted hover:bg-paper-deep" onClick={closeReassign} disabled={pending}>
                 Cancel
               </Button>
             </div>

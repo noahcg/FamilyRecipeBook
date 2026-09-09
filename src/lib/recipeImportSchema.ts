@@ -18,6 +18,9 @@ export const importedRecipeSchema = z.object({
       unit: z.string().max(30),
       item: z.string().min(1).max(200),
       note: z.string().max(200),
+      // Ingredient sections such as "Dough" and "Frosting". Null keeps
+      // ordinary, ungrouped lists backwards compatible.
+      group_label: z.string().max(100).nullable().default(null),
     })
   ).min(1).max(80),
   instructions: z.array(
@@ -70,12 +73,13 @@ export const importedRecipeJsonSchema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["quantity", "unit", "item", "note"],
+        required: ["quantity", "unit", "item", "note", "group_label"],
         properties: {
           quantity: { type: "string" },
           unit: { type: "string" },
           item: { type: "string" },
           note: { type: "string" },
+          group_label: { type: ["string", "null"] },
         },
       },
     },
@@ -116,6 +120,7 @@ export function normalizeImportedRecipe(recipe: ImportedRecipe): ImportedRecipe 
         unit: ingredient.unit.trim(),
         item: ingredient.item.trim(),
         note: ingredient.note.trim(),
+        group_label: ingredient.group_label?.trim() || null,
       }))
       .filter((ingredient) => ingredient.item)
       .slice(0, 80),
