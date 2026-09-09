@@ -88,6 +88,11 @@ function truncateImportValue(value: string | undefined, max: number) {
   return value.length > max ? value.slice(0, max).trim() : value;
 }
 
+function recipeChoiceLabel(title: string, index: number) {
+  const withoutCaption = title.replace(/\s*\([^)]*\).*/, "").trim();
+  return withoutCaption || `Recipe ${index + 1}`;
+}
+
 function validImportUrl(value: string | undefined) {
   if (!value) return undefined;
   try {
@@ -1949,19 +1954,21 @@ export function RecipeForm({
                       <p className="mt-1 text-xs leading-relaxed text-ink-muted">
                         This looks like a multi-recipe cookbook spread. Choose one recipe to review and save.
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                         {importedRecipes.map((recipe, index) => (
                           <Button
                             key={`${recipe.title}-${index}`}
                             type="button"
                             variant={activeImportedRecipeIndex === index ? "primary" : "secondary"}
-                            size="sm"
+                            size="md"
+                            fullWidth
+                            className="min-w-0 justify-start overflow-hidden text-left"
                             onClick={() => {
                               setActiveImportedRecipeIndex(index);
                               setConfirmImportReplace(false);
                             }}
                           >
-                            {recipe.title || `Recipe ${index + 1}`}
+                            <span className="truncate">{recipeChoiceLabel(recipe.title, index)}</span>
                           </Button>
                         ))}
                       </div>

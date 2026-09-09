@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.12.9] - 2026-09-09
+
+### Photo recipe imports
+
+- Made multi-recipe import choices compact and readable, stripping OCR image captions and description text from detected cookbook titles.
+
+## [0.12.8] - 2026-09-09
+
+### Photo recipe imports
+
+- Restored two-recipe cookbook-spread imports when older recipes begin their directions with verbs such as “Dissolve” or “Bring.”
+
+## [0.12.7] - 2026-09-09
+
+### Photo recipe imports
+
+- Restored the recipe chooser for one-page cookbook spreads that clearly contain two independently titled side-by-side recipes, without splitting a single centered-title recipe's ingredient and direction columns.
+
 ## [0.12.6] - 2026-09-09
 
 ### Photo recipe imports

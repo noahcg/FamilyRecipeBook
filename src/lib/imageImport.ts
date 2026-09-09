@@ -11,6 +11,16 @@ type OcrProgress = {
   progress: number;
 };
 
+type OcrBlock = {
+  text: string;
+  bbox: {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  };
+};
+
 function loadImage(dataUrl: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
@@ -107,6 +117,82 @@ function normalizeOcrText(text: string) {
     .filter(Boolean);
 }
 
+function isLikelyRecipeTitleBlock(block: OcrBlock) {
+  const firstLine = block.text.trim().split("\n")[0]?.trim() ?? "";
+  const letters = firstLine.match(/[a-z]/gi) ?? [];
+  const uppercaseLetters = firstLine.match(/[A-Z]/g) ?? [];
+  const wordCount = firstLine.split(/\s+/).filter(Boolean).length;
+
+  return (
+    wordCount >= 1 &&
+    wordCount <= 7 &&
+    letters.length >= 4 &&
+    uppercaseLetters.length / letters.length >= 0.8
+  );
+}
+
+function recipeTitleFromBlock(block: OcrBlock) {
+  const text = block.text.trim().replace(/\s+/g, " ");
+  // Cookbook title blocks often include a parenthetical image caption and,
+  // after OCR, the opening description sentence. Keep the all-caps title only.
+  const uppercaseTitle = text.match(/^([A-Z0-9][A-Z0-9 '&.-]*(?:\s+[A-Z0-9][A-Z0-9 '&.-]*)*)/);
+  return (uppercaseTitle?.[1] ?? text.split(/\s*\(/)[0] ?? text).trim();
+}
+
+/**
+ * Split only spreads containing two independently titled recipes. This is
+ * intentionally stricter than detecting two text columns: a recipe such as
+ * Brunch Casserole has one centered title with ingredients and directions in
+ * columns and must remain a single import.
+ */
+function splitIndependentlyTitledRecipeColumns(blocks: OcrBlock[] | null) {
+  if (!blocks?.length) return null;
+
+  const readableBlocks = blocks
+    .map((block) => ({ ...block, text: block.text.trim() }))
+    .filter((block) => block.text && block.bbox.x1 > block.bbox.x0 && block.bbox.y1 > block.bbox.y0);
+  if (readableBlocks.length < 4) return null;
+
+  const leftEdge = Math.min(...readableBlocks.map((block) => block.bbox.x0));
+  const rightEdge = Math.max(...readableBlocks.map((block) => block.bbox.x1));
+  const topEdge = Math.min(...readableBlocks.map((block) => block.bbox.y0));
+  const bottomEdge = Math.max(...readableBlocks.map((block) => block.bbox.y1));
+  const pageWidth = rightEdge - leftEdge;
+  const pageHeight = bottomEdge - topEdge;
+  if (pageWidth <= 0 || pageHeight <= 0) return null;
+
+  const midpoint = leftEdge + pageWidth / 2;
+  const titleLimit = topEdge + pageHeight * 0.3;
+  const titleBlocks = readableBlocks.filter(
+    (block) => block.bbox.y0 <= titleLimit && isLikelyRecipeTitleBlock(block)
+  );
+  const leftTitle = titleBlocks
+    .filter((block) => (block.bbox.x0 + block.bbox.x1) / 2 < midpoint)
+    .sort((a, b) => a.bbox.y0 - b.bbox.y0)[0];
+  const rightTitle = titleBlocks
+    .filter((block) => (block.bbox.x0 + block.bbox.x1) / 2 > midpoint)
+    .sort((a, b) => a.bbox.y0 - b.bbox.y0)[0];
+
+  if (!leftTitle || !rightTitle || Math.abs(leftTitle.bbox.y0 - rightTitle.bbox.y0) > pageHeight * 0.08) {
+    return null;
+  }
+
+  const sortTopToBottom = (a: OcrBlock, b: OcrBlock) => a.bbox.y0 - b.bbox.y0 || a.bbox.x0 - b.bbox.x0;
+  const titleTop = Math.min(leftTitle.bbox.y0, rightTitle.bbox.y0) - 8;
+  const leftText = readableBlocks
+    .filter((block) => block.bbox.y0 >= titleTop && (block.bbox.x0 + block.bbox.x1) / 2 < midpoint)
+    .sort(sortTopToBottom)
+    .map((block) => (block === leftTitle ? recipeTitleFromBlock(block) : block.text))
+    .join("\n\n");
+  const rightText = readableBlocks
+    .filter((block) => block.bbox.y0 >= titleTop && (block.bbox.x0 + block.bbox.x1) / 2 > midpoint)
+    .sort(sortTopToBottom)
+    .map((block) => (block === rightTitle ? recipeTitleFromBlock(block) : block.text))
+    .join("\n\n");
+
+  return leftText.length >= 100 && rightText.length >= 100 ? [leftText, rightText] : null;
+}
+
 function isSectionHeading(line: string, headings: string[]) {
   const normalized = line.toLowerCase().replace(/[^a-z\s]/g, "").trim();
   return headings.some((heading) => normalized === heading || normalized.startsWith(`${heading} `));
@@ -115,7 +201,7 @@ function isSectionHeading(line: string, headings: string[]) {
 function isStepLine(line: string) {
   const cleaned = line.trim();
   if (/^(step\s+\d+|\d+[\).:-])\s+/i.test(cleaned) || isStandaloneInstructionMarker(cleaned)) return true;
-  return /^(bake|beat|blend|boil|combine|cook|cover|fold|heat|mix|place|pour|preheat|reduce|remove|serve|simmer|stir|whisk)\b/i.test(cleaned);
+  return /^(add|bake|beat|blend|boil|bring|chill|combine|cook|cover|dissolve|fold|heat|mix|place|pour|preheat|reduce|remove|serve|simmer|stir|whisk)\b/i.test(cleaned);
 }
 
 function hasInstructionMarker(line: string) {
@@ -606,7 +692,7 @@ export async function extractRecipeTextWithLocalOcr(
     });
     const pages: string[] = [];
     for (const imageDataUrl of ocrSections) {
-      const result = await worker.recognize(imageDataUrl);
+      const result = await worker.recognize(imageDataUrl, {}, { blocks: true });
       const text = result.data.text.trim();
       if (text) pages.push(text);
       currentSection += 1;
@@ -632,8 +718,32 @@ export async function importRecipesWithLocalOcr(
   imageDataUrls: string[],
   onProgress?: (progress: OcrProgress) => void
 ) {
-  // Each selected file is either a page in this recipe or a single recipe page.
-  // Do not infer separate recipes from ingredient columns: cookbook layouts use
-  // those columns within one recipe surprisingly often.
-  return [await importRecipeWithLocalOcr(imageDataUrls, onProgress)];
+  if (imageDataUrls.length !== 1) {
+    return [await importRecipeWithLocalOcr(imageDataUrls, onProgress)];
+  }
+
+  const { createWorker, PSM } = await import("tesseract.js");
+  const worker = await createWorker("eng", 1, {
+    logger: (message) => {
+      onProgress?.({ status: message.status, progress: Math.round((message.progress ?? 0) * 100) });
+    },
+  });
+
+  try {
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.AUTO,
+      preserve_interword_spaces: "1",
+    });
+    const result = await worker.recognize(imageDataUrls[0], {}, { blocks: true });
+    const splitColumns = splitIndependentlyTitledRecipeColumns(result.data.blocks);
+    if (!splitColumns) return [parseRecipeText(result.data.text)];
+
+    const recipes = splitColumns.map(parseRecipeText);
+    const completeRecipes = recipes.filter(
+      (recipe) => recipe.ingredients.some((ingredient) => ingredient.item) && recipe.instructions.some((step) => step.body)
+    );
+    return completeRecipes.length === 2 ? completeRecipes : [parseRecipeText(result.data.text)];
+  } finally {
+    await worker.terminate();
+  }
 }
