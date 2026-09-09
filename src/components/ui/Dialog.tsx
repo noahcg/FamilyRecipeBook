@@ -87,7 +87,7 @@ export function Dialog({
             </button>
           </div>
         )}
-        <div className={clsx("px-5 pb-6", !title && "pt-5")}>{children}</div>
+        <div className="px-5 pb-6 pt-5">{children}</div>
       </div>
     </div>,
     document.body

@@ -727,9 +727,9 @@ export function RecipeDetail({
         </p>
         <div className="flex gap-3">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
-            className="flex-1"
+            className="flex-1 bg-card-muted hover:bg-paper-deep"
             onClick={() => setDeleteOpen(false)}
             disabled={deleting}
           >
@@ -759,7 +759,7 @@ export function RecipeDetail({
         }
       >
         {copiedTo ? (
-          <div className="space-y-6 pt-5" role="status" aria-live="polite">
+          <div className="space-y-6" role="status" aria-live="polite">
             <p className="text-sm leading-relaxed text-ink-muted">
               <span className="font-semibold text-ink">{recipe.title}</span> was
               copied — memories, reactions, and ratings included.
@@ -785,7 +785,7 @@ export function RecipeDetail({
             </div>
           </div>
         ) : (
-          <div className="space-y-5 pt-5">
+          <div className="space-y-5">
             <p className="text-sm leading-relaxed text-ink-muted">
               {transferMode === "move" ? (
                 <>
@@ -903,9 +903,9 @@ export function RecipeDetail({
             {targets !== null && targets.length > 0 && (
               <div className="flex gap-3 pt-1">
                 <Button
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
-                  className="flex-1"
+                  className="flex-1 bg-card-muted hover:bg-paper-deep"
                   onClick={closeTransfer}
                   disabled={transferring}
                 >
@@ -933,7 +933,7 @@ export function RecipeDetail({
         title="Add this recipe again?"
         className="overflow-hidden border border-line-soft"
       >
-        <div className="pt-5">
+        <div>
           <div className="mb-5 rounded-xl bg-paper-warm/65 p-4">
             <div className="flex gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-soft text-green-deep">
@@ -953,9 +953,9 @@ export function RecipeDetail({
         </div>
         <div className="flex gap-3">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
-            className="flex-1"
+            className="flex-1 bg-card-muted hover:bg-paper-deep"
             onClick={() => setConfirmGroceryOpen(false)}
             disabled={isAddingGroceries}
           >

@@ -580,7 +580,12 @@ export function UiCatalog() {
             : "This is the titleless utility dialog. Its accessible name is supplied with ariaLabel when the visible task content makes a heading redundant."}
         </p>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="ghost" size="sm" onClick={() => setDialogMode(null)}>
+          <Button
+            variant={dialogMode === "decision" ? "secondary" : "ghost"}
+            size="sm"
+            className={dialogMode === "decision" ? "bg-card-muted hover:bg-paper-deep" : undefined}
+            onClick={() => setDialogMode(null)}
+          >
             {dialogMode === "decision" ? "Keep recipe" : "Close"}
           </Button>
           {dialogMode === "decision" && (

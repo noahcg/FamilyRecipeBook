@@ -48,7 +48,7 @@ function extractOutputText(response: unknown) {
 
 export async function improveRecipeImportWithOpenAI(
   bookId: string,
-  imageDataUrl: string
+  imageDataUrls: string[]
 ): Promise<ActionResult<ImportedRecipe>> {
   const user = await requireUser();
   const supabase = await createClient();
@@ -74,11 +74,15 @@ export async function improveRecipeImportWithOpenAI(
     };
   }
 
-  if (!/^data:image\/(?:jpeg|jpg|png|webp);base64,/i.test(imageDataUrl)) {
+  if (!imageDataUrls.length || imageDataUrls.length > 4) {
+    return { success: false, error: "Choose between one and four recipe pages." };
+  }
+
+  if (!imageDataUrls.every((imageDataUrl) => /^data:image\/(?:jpeg|jpg|png|webp);base64,/i.test(imageDataUrl))) {
     return { success: false, error: "Upload a JPEG, PNG, or WebP image." };
   }
 
-  if (imageDataUrl.length > 1_050_000) {
+  if (imageDataUrls.some((imageDataUrl) => imageDataUrl.length > 1_050_000)) {
     return {
       success: false,
       error: "That photo is too large to improve. Try cropping closer to the recipe text.",
@@ -106,13 +110,13 @@ export async function improveRecipeImportWithOpenAI(
             {
               type: "input_text",
               text:
-                "Extract the recipe title, short description if present, source/author if present, prep time, cook or bake time, servings/yield, ingredients, and method steps from this image. Split ingredient quantity, unit, item, and note when reasonably clear. Preserve numbered instruction boundaries. If a field is not visible, use 0 or empty strings/arrays as appropriate.",
+                "Extract one complete cookbook recipe from these images, in the exact order supplied. A recipe may continue across pages: combine visible ingredients and method steps from every page, preserving their reading order. Join title lines into one title. Preserve ingredient components such as Dough, Filling, and Frosting by putting their heading in group_label for every ingredient in that component; use null for an ungrouped ingredient. Extract the recipe title, short description if present, source/author if present, prep time, cook or bake time, servings/yield, ingredients, and method steps. Split ingredient quantity, unit, item, and note when reasonably clear. Preserve numbered instruction boundaries. Do not invent text absent from the images; use empty strings and warning notes for unclear or missing fields.",
             },
-            {
-              type: "input_image",
+            ...imageDataUrls.map((imageDataUrl) => ({
+              type: "input_image" as const,
               image_url: imageDataUrl,
-              detail: "high",
-            },
+              detail: "high" as const,
+            })),
           ],
         },
       ],
