@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -135,13 +135,30 @@ export function RecipeDetail({
   ratingSummary,
 }: RecipeDetailProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const recipesPath = `/app/books/${bookId}/recipes`;
+  const returnTo = searchParams.get("returnTo");
+  const safeReturnPath =
+    returnTo === "/app/recipes" ||
+    returnTo?.startsWith("/app/recipes?") ||
+    returnTo?.startsWith("/app/recipes#") ||
+    returnTo === recipesPath ||
+    returnTo?.startsWith(`${recipesPath}?`) ||
+    returnTo?.startsWith(`${recipesPath}#`)
+      ? returnTo
+      : null;
 
   // Return to wherever the user came from (My Recipes, Favorites, a cookbook's
   // list, search…). Fall back to this recipe's cookbook for deep links — e.g. a
   // shared recipe opened directly, which has no in-app history to return to.
   function handleBack() {
+    if (safeReturnPath) {
+      router.push(safeReturnPath);
+      return;
+    }
+
     if (hasInAppHistory()) router.back();
-    else router.push(`/app/books/${bookId}/recipes`);
+    else router.push(recipesPath);
   }
 
   const [storyText, setStoryText] = useState("");
