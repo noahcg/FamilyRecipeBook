@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
   Printer,
   Search,
+  Share2,
   ShoppingCart,
   Star,
   Trash2,
@@ -26,6 +27,7 @@ import { Button, Dialog } from "@/components/ui";
 import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
+import { RecipeShareDialog } from "./RecipeShareDialog";
 import { ServingScaler } from "./ServingScaler";
 import { hasInAppHistory } from "@/components/layout/RouteHistoryTracker";
 import {
@@ -149,6 +151,8 @@ export function RecipeDetail({
   const [localRatingSummary, setLocalRatingSummary] = useState(ratingSummary);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [servingScale, setServingScale] = useState(1);
   const [isAddingGroceries, startAddingGroceries] = useTransition();
@@ -212,6 +216,12 @@ export function RecipeDetail({
     const timeout = window.setTimeout(() => setGroceryMessage(null), 4200);
     return () => window.clearTimeout(timeout);
   }, [groceryMessage]);
+
+  useEffect(() => {
+    if (!shareMessage) return;
+    const timeout = window.setTimeout(() => setShareMessage(null), 4200);
+    return () => window.clearTimeout(timeout);
+  }, [shareMessage]);
 
   async function handleAddStory() {
     if (!storyText.trim()) return;
@@ -431,6 +441,14 @@ export function RecipeDetail({
                       <Printer size={15} strokeWidth={1.75} className="text-ink-soft" />
                       Print recipe
                     </Link>
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                      onClick={() => { setMenuOpen(false); setShareOpen(true); }}
+                    >
+                      <Share2 size={15} strokeWidth={1.75} className="text-ink-soft" />
+                      Share recipe
+                    </button>
                     {canEdit && (
                       <Link
                         href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}
@@ -712,6 +730,20 @@ export function RecipeDetail({
               x
             </button>
           </div>
+        </div>
+      )}
+
+      <RecipeShareDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        recipe={recipe}
+        bookId={bookId}
+        onMessage={setShareMessage}
+      />
+
+      {shareMessage && (
+        <div className="fixed bottom-5 left-1/2 z-[110] -translate-x-1/2 rounded-full bg-green-deep px-4 py-2 text-sm font-semibold text-white shadow-lg" role="status">
+          {shareMessage}
         </div>
       )}
 
