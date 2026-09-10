@@ -2,7 +2,7 @@
 
 import { use, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BookOpen,
   Heart,
@@ -129,6 +129,7 @@ function recipeMatchesPracticalFilter(recipe: RecipeListItem, filter: PracticalF
 
 export default function RecipesPage({ params }: Props) {
   const { bookId } = use(params);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const filterParam = searchParams.get("filter");
   const activeFilter: PracticalFilter | null = isPracticalFilter(filterParam) ? filterParam : null;
@@ -260,20 +261,40 @@ export default function RecipesPage({ params }: Props) {
   const canOpenBookSettings = canView(userRole);
   const toolbarActionCount = [canAddRecipes, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
 
+  useEffect(() => {
+    if (loading) return;
+
+    // On a refresh (or a browser Back navigation), the native hash jump happens
+    // before the async recipe list has rendered its chapter elements. Retry it
+    // once the chapters exist, and also support later native hash changes.
+    const restoreHashTarget = () => {
+      const id = window.location.hash.slice(1);
+      if (!id) return;
+
+      window.requestAnimationFrame(() => {
+        document.getElementById(decodeURIComponent(id))?.scrollIntoView({
+          behavior: "auto",
+          block: "start",
+        });
+      });
+    };
+
+    restoreHashTarget();
+    window.addEventListener("hashchange", restoreHashTarget);
+    return () => window.removeEventListener("hashchange", restoreHashTarget);
+  }, [chapters, loading]);
+
   function closeContents() {
     setIsContentsOpen(false);
   }
 
   function scrollToChapter(category: string) {
     const id = chapterId(category);
-    const target = document.getElementById(id);
-    if (!target) {
-      window.history.pushState(null, "", `#${id}`);
-      return;
-    }
+    // Let the browser own the hash history entry. Manually calling pushState or
+    // replaceState here prevents Next from restoring the list route on Back.
+    if (window.location.hash !== `#${id}`) window.location.assign(`#${id}`);
 
-    window.history.pushState(null, "", `#${id}`);
-    target.scrollIntoView({
+    document.getElementById(id)?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
         ? "auto"
         : "smooth",
@@ -286,14 +307,24 @@ export default function RecipesPage({ params }: Props) {
     category: string,
     closeDrawer = false
   ) {
-    event.preventDefault();
     if (closeDrawer) {
+      event.preventDefault();
       closeContents();
       window.requestAnimationFrame(() => scrollToChapter(category));
-      return;
     }
+  }
 
-    scrollToChapter(category);
+  function handleRecipeOpen(event: MouseEvent<HTMLAnchorElement>, recipeId: string) {
+    // Preserve normal browser behavior for a new tab/window, but make the
+    // ordinary click carry an explicit return destination. This avoids relying
+    // on App Router restoration of a hash-only history update.
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    event.preventDefault();
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    router.push(
+      `/app/books/${bookId}/recipes/${recipeId}?returnTo=${encodeURIComponent(returnTo)}`
+    );
   }
 
   return (
@@ -492,6 +523,7 @@ export default function RecipesPage({ params }: Props) {
                           <li key={recipe.id}>
                             <Link
                               href={`/app/books/${bookId}/recipes/${recipe.id}`}
+                              onClick={(event) => handleRecipeOpen(event, recipe.id)}
                               className="group grid gap-3 py-4 outline-none transition-colors hover:bg-card/50 focus-visible:bg-card/70 sm:grid-cols-[minmax(0,1fr)_auto]"
                             >
                               <span className="min-w-0">
@@ -572,6 +604,7 @@ export default function RecipesPage({ params }: Props) {
                 {newestRecipe && (
                   <Link
                     href={`/app/books/${bookId}/recipes/${newestRecipe.id}`}
+                    onClick={(event) => handleRecipeOpen(event, newestRecipe.id)}
                     className="group block border-t border-line-soft px-5 py-5 hover:bg-green-pale/50"
                   >
                     <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">

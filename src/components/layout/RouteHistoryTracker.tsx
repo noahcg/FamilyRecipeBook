@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 const LAST_PATH_KEY = "hc:lastPath";
@@ -17,9 +17,19 @@ const HAS_HISTORY_KEY = "hc:hasInAppHistory";
  */
 export function RouteHistoryTracker() {
   const pathname = usePathname();
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     try {
+      // sessionStorage survives a refresh and a URL pasted into the same tab.
+      // Those are fresh entries, not in-app navigation, so discard stale state
+      // before evaluating the first route rendered by this document.
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        window.sessionStorage.removeItem(LAST_PATH_KEY);
+        window.sessionStorage.removeItem(HAS_HISTORY_KEY);
+      }
+
       const last = window.sessionStorage.getItem(LAST_PATH_KEY);
       if (last !== null && last !== pathname) {
         window.sessionStorage.setItem(HAS_HISTORY_KEY, "1");
