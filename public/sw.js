@@ -127,7 +127,8 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("push", (event) => {
   let payload = {};
   try {
-    payload = event.data ? event.data.json() : {};
+    const parsed = event.data ? event.data.json() : {};
+    payload = parsed && typeof parsed === "object" ? parsed : {};
   } catch {
     payload = {};
   }

@@ -1,173 +1,164 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Bell, BellOff } from "lucide-react";
-import {
-  getAdminPushPublicKey,
-  subscribeAdminToPush,
-  unsubscribeAdminFromPush,
-} from "@/lib/actions/admin-push";
+import { Button } from "@/components/ui";
+import { getAdminPushPublicKey, subscribeAdminToPush, unsubscribeAdminFromPush, testAdminPush } from "@/lib/actions/admin-push";
+import { pushKeyMatches, urlBase64ToUint8Array } from "@/lib/push/subscription";
 
-type Status = "checking" | "unsupported" | "unconfigured" | "denied" | "idle" | "subscribed";
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
-}
+type Status = "checking" | "unsupported" | "unconfigured" | "denied" | "idle" | "repair" | "subscribed" | "error";
 
 async function getRegistration() {
-  if (!("serviceWorker" in navigator)) return null;
-  return navigator.serviceWorker.ready;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await navigator.serviceWorker.register("/sw.js");
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("Notifications could not start. Close and reopen the app, then try again.")), 10000); }),
+    ]);
+  } finally { clearTimeout(timer); }
 }
 
 export function PushSubscriptionToggle() {
   const [status, setStatus] = useState<Status>("checking");
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [retry, setRetry] = useState(0);
+  const setup = useRef<{ registration: ServiceWorkerRegistration; key: string; subscription: PushSubscription | null } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-
     async function checkState() {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        setStatus("unsupported");
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+        if (!cancelled) setStatus("unsupported");
         return;
       }
       if (Notification.permission === "denied") {
-        setStatus("denied");
+        if (!cancelled) setStatus("denied");
         return;
       }
-
       const publicKey = await getAdminPushPublicKey();
       if (!publicKey.success) {
-        if (!cancelled) setStatus("unconfigured");
+        if (!cancelled) { setStatus("unconfigured"); setMessage(publicKey.error); }
         return;
       }
-
       const registration = await getRegistration();
-      const subscription = await registration?.pushManager.getSubscription();
-      if (!cancelled) setStatus(subscription ? "subscribed" : "idle");
+      const subscription = await registration.pushManager.getSubscription();
+      if (cancelled) return;
+      setup.current = { registration, key: publicKey.data, subscription };
+      if (!subscription) { setStatus("idle"); return; }
+      if (!pushKeyMatches(subscription.options.applicationServerKey, publicKey.data)) { setStatus("repair"); return; }
+      // A browser subscription alone does not prove the server can reach it.
+      const result = await subscribeAdminToPush(subscription.toJSON(), navigator.userAgent);
+      if (cancelled) return;
+      setStatus(result.success ? "subscribed" : "error");
+      if (!result.success) setMessage(result.error);
     }
-
-    void checkState().catch((error) => {
-      console.error("[push-toggle] state check failed:", error);
-      if (!cancelled) {
-        setMessage("Could not check this device's notification status.");
-        setStatus("idle");
-      }
+    void checkState().catch(() => {
+      if (!cancelled) { setStatus("error"); setMessage("Could not check notifications. Check your connection and try again."); }
     });
+    return () => { cancelled = true; };
+  }, [retry]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  function enablePush() {
+  function enablePush(repair = false) {
+    // Request permission directly from the tap, before any server round trip.
+    const permission = Notification.permission === "granted" ? Promise.resolve("granted" as NotificationPermission) : Notification.requestPermission();
     startTransition(async () => {
       setMessage(null);
-
-      if (Notification.permission !== "granted") {
-        const permission = await Notification.requestPermission();
-        if (permission === "denied") {
-          setStatus("denied");
-          return;
+      try {
+        const granted = await permission;
+        if (granted !== "granted") { setStatus(granted === "denied" ? "denied" : "idle"); return; }
+        const ready = setup.current;
+        if (!ready) throw new Error("Reopen the app and try again.");
+        let subscription = ready.subscription;
+        let oldEndpoint: string | undefined;
+        if (subscription && (repair || !pushKeyMatches(subscription.options.applicationServerKey, ready.key))) {
+          oldEndpoint = subscription.endpoint;
+          // false means it was already inactive, which is also safe to replace.
+          await subscription.unsubscribe();
+          ready.subscription = null;
+          subscription = null;
         }
-        if (permission !== "granted") return;
+        subscription ??= await ready.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(ready.key) });
+        ready.subscription = subscription;
+        const result = await subscribeAdminToPush(subscription.toJSON(), navigator.userAgent);
+        if (!result.success) throw new Error(result.error);
+        if (oldEndpoint && oldEndpoint !== subscription.endpoint) {
+          await unsubscribeAdminFromPush(oldEndpoint).catch(() => undefined);
+        }
+        setStatus("subscribed");
+        setMessage("Notifications connected. Send a test to check delivery.");
+      } catch (error) {
+        setStatus("repair");
+        setMessage(error instanceof Error ? error.message : "Could not enable notifications. Try again.");
       }
-
-      const publicKey = await getAdminPushPublicKey();
-      if (!publicKey.success) {
-        setStatus("unconfigured");
-        setMessage(publicKey.error);
-        return;
-      }
-
-      const registration = await getRegistration();
-      if (!registration) {
-        setStatus("unsupported");
-        return;
-      }
-
-      const subscription =
-        (await registration.pushManager.getSubscription()) ??
-        (await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey.data),
-        }));
-
-      const result = await subscribeAdminToPush(
-        subscription.toJSON(),
-        navigator.userAgent
-      );
-
-      if (!result.success) {
-        setMessage(result.error);
-        return;
-      }
-
-      setStatus("subscribed");
-      setMessage("Push notifications are enabled on this device.");
     });
   }
 
   function disablePush() {
     startTransition(async () => {
       setMessage(null);
-      const registration = await getRegistration();
-      const subscription = await registration?.pushManager.getSubscription();
-      if (!subscription) {
+      try {
+        const ready = setup.current;
+        const subscription = ready?.subscription;
+        if (subscription) {
+          await subscription.unsubscribe();
+          ready!.subscription = null;
+          // An inactive browser endpoint cannot deliver, even if cleanup fails.
+          await unsubscribeAdminFromPush(subscription.endpoint).catch(() => undefined);
+        }
         setStatus("idle");
-        return;
-      }
-
-      const endpoint = subscription.endpoint;
-      await subscription.unsubscribe();
-      const result = await unsubscribeAdminFromPush(endpoint);
-      if (!result.success) {
-        setMessage(result.error);
-        return;
-      }
-
-      setStatus("idle");
-      setMessage("Push notifications are disabled on this device.");
+        setMessage("Push notifications are disabled on this device.");
+      } catch (error) { setMessage(error instanceof Error ? error.message : "Could not disable notifications. Try again."); }
     });
   }
 
-  const disabled = isPending || status === "checking" || status === "unsupported" || status === "unconfigured" || status === "denied";
-  const subscribed = status === "subscribed";
+  function sendTest() {
+    startTransition(async () => {
+      setMessage(null);
+      try {
+        const endpoint = setup.current?.subscription?.endpoint;
+        if (!endpoint) { setStatus("repair"); return; }
+        const result = await testAdminPush(endpoint);
+        if (!result.success) { setStatus("repair"); setMessage(result.error); return; }
+        setMessage("Test sent to this device. If it doesn't appear, check iPhone notification settings and Focus.");
+      } catch { setMessage("Could not send a test. Check your connection and try again."); }
+    });
+  }
 
+  const subscribed = status === "subscribed";
+  const disabled = isPending || ["checking", "unsupported", "unconfigured", "denied"].includes(status);
   return (
     <div className="rounded-md border border-line-soft bg-white-soft/70 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink-soft">
-            Admin alerts
-          </p>
-          <p className="mt-1 text-sm font-bold text-ink">
-            {subscribed ? "Push enabled on this device" : "Push notifications"}
-          </p>
+      <div className="space-y-3">
+        <div>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink-soft">Admin alerts</p>
+          <p className="mt-1 text-sm font-bold text-ink">{subscribed ? "Push connected on this device" : "Push notifications"}</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-            {status === "checking" && "Checking this browser."}
-            {status === "unsupported" && "This browser does not support Web Push."}
-            {status === "unconfigured" && "Add VAPID keys before enabling alerts."}
-            {status === "denied" && "Notifications are blocked in this browser."}
+            {status === "checking" && "Checking this device and its connection."}
+            {status === "unsupported" && "On iPhone, open Home Cooked from your Home Screen to enable notifications."}
+            {status === "unconfigured" && "Notification delivery is not configured on the server."}
+            {status === "denied" && "Allow notifications for Home Cooked in your device settings, then reopen the app."}
             {status === "idle" && "Get notified for new signups and server errors."}
-            {status === "subscribed" && "New signups and server errors will notify this browser."}
+            {status === "repair" && "Reconnect this device to restore notification delivery."}
+            {status === "subscribed" && "New signups and server errors will notify this device."}
           </p>
-          {message ? <p className="mt-2 text-xs font-bold text-green-deep">{message}</p> : null}
+          {message && <p role="status" className="mt-2 text-xs font-semibold text-ink">{message}</p>}
         </div>
-
-        <button
-          type="button"
-          onClick={subscribed ? disablePush : enablePush}
-          disabled={disabled}
-          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-green-deep/30 bg-green-pale px-4 text-sm font-extrabold text-green-deep transition-colors hover:bg-green-deep hover:text-white disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-green-pale disabled:hover:text-green-deep"
-        >
-          {subscribed ? <BellOff size={16} /> : <Bell size={16} />}
-          {isPending ? "Saving..." : subscribed ? "Disable" : "Enable"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" size="sm" disabled={disabled} onClick={() => {
+            if (status === "error") { setStatus("checking"); setMessage(null); setRetry((value) => value + 1); }
+            else if (subscribed) disablePush();
+            else enablePush(status === "repair");
+          }}>
+            {subscribed ? <BellOff size={16} /> : <Bell size={16} />}
+            {isPending ? "Working…" : subscribed ? "Disable" : status === "repair" ? "Reconnect" : status === "error" ? "Try again" : "Enable"}
+          </Button>
+          {subscribed && <>
+            <Button size="sm" disabled={isPending} onClick={sendTest}>Send test</Button>
+            <Button size="sm" variant="ghost" disabled={isPending} onClick={() => enablePush(true)}>Reconnect</Button>
+          </>}
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
+import { copyRecipeOriginals } from "@/lib/actions/recipeOriginals";
 import { listCategories, resolveCategoryIdForBook } from "@/lib/actions/categories";
 import {
   canContribute,
@@ -532,6 +533,17 @@ export async function copyRecipeToBook(
 
   if (insertError || !copy) {
     return { success: false, error: insertError?.message ?? "Could not copy recipe." };
+  }
+
+  const originalsResult = await copyRecipeOriginals(recipeId, copy.id);
+  if (!originalsResult.success) {
+    const { error: rollbackError } = await supabase.from("recipes").delete().eq("id", copy.id);
+    return {
+      success: false,
+      error: rollbackError
+        ? "The recipe was copied, but its originals could not be preserved. Check the destination cookbook before retrying."
+        : "Could not preserve the original files, so the recipe was not copied. Please try again.",
+    };
   }
 
   if (ingredients?.length) {

@@ -49,7 +49,8 @@ export async function sendAdminPush(payload: AdminPushPayload) {
             title: payload.title,
             body: payload.body,
             url: payload.url ?? "/app/admin",
-          })
+          }),
+          { TTL: 3600, urgency: "high", timeout: 10000 }
         );
       } catch (error) {
         const statusCode =
@@ -62,7 +63,8 @@ export async function sendAdminPush(payload: AdminPushPayload) {
           return;
         }
 
-        console.error("[admin-push] Could not send notification:", error);
+        // web-push errors include request headers and private endpoint details.
+        console.error("[admin-push] Could not send notification:", { statusCode });
       }
     })
   );
