@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.13.1] - 2026-09-19
+
+### Original recipe attachments
+
+- Added a drag-and-drop upload area with tap-to-browse support.
+- Replaced large attachment cards with compact rows, photo thumbnails, and an inline remove icon.
+
+## [0.13.0] - 2026-09-19
+
+### Original recipe attachments
+
+- Added Original recipe to the recipe action menu, with a drawer for preserving multiple photos, scanned pages, and PDFs (up to 20 MB each).
+- Cookbook members can open originals; recipe editors can attach or remove files. Originals use private storage and are excluded from public recipe shares.
+- Preserve originals when moving recipes and duplicate them when copying recipes between cookbooks.
+- Requires the recipe originals storage migration before enabling uploads.
+
 ## [0.12.9] - 2026-09-09
 
 ### Photo recipe imports

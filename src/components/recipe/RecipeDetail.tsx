@@ -14,6 +14,7 @@ import {
   FolderInput,
   Heart,
   MoreHorizontal,
+  Paperclip,
   Printer,
   Search,
   Share2,
@@ -28,6 +29,7 @@ import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
 import { RecipeShareDialog } from "./RecipeShareDialog";
+import { RecipeOriginalsDrawer } from "./RecipeOriginalsDrawer";
 import { ServingScaler } from "./ServingScaler";
 import { hasInAppHistory } from "@/components/layout/RouteHistoryTracker";
 import {
@@ -169,6 +171,7 @@ export function RecipeDetail({
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [originalsOpen, setOriginalsOpen] = useState(false);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [servingScale, setServingScale] = useState(1);
@@ -466,6 +469,14 @@ export function RecipeDetail({
                       <Share2 size={15} strokeWidth={1.75} className="text-ink-soft" />
                       Share recipe
                     </button>
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-ink transition-colors hover:bg-green-pale"
+                      onClick={() => { setMenuOpen(false); setOriginalsOpen(true); }}
+                    >
+                      <Paperclip size={15} strokeWidth={1.75} className="text-ink-soft" />
+                      Original recipe
+                    </button>
                     {canEdit && (
                       <Link
                         href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}
@@ -748,6 +759,10 @@ export function RecipeDetail({
             </button>
           </div>
         </div>
+      )}
+
+      {originalsOpen && (
+        <RecipeOriginalsDrawer recipeId={recipe.id} canEdit={canEdit} onClose={() => setOriginalsOpen(false)} />
       )}
 
       <RecipeShareDialog
