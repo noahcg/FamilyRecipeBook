@@ -118,6 +118,21 @@ export async function createBook(
     error = retry.error;
   }
 
+  // A client retry can happen after the insert succeeded but before the
+  // response reached the browser. Resolve that retry to the original book.
+  if (error?.code === "23505") {
+    const existing = await admin
+      .from("recipe_books")
+      .select()
+      .eq("owner_id", user.id)
+      .eq("creation_token", parsed.data.creation_token)
+      .maybeSingle();
+    if (existing.data) {
+      book = existing.data;
+      error = null;
+    }
+  }
+
   if (error || !book) {
     notifyAdminOfError("createBook", error ?? "Missing created book", {
       userId: user.id,

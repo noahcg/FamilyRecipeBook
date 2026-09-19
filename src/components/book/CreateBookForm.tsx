@@ -14,6 +14,8 @@ import { createBook } from "@/lib/actions/books";
 export function CreateBookForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [submitLocked, setSubmitLocked] = useState(false);
+  const [creationToken] = useState(() => crypto.randomUUID());
 
   const {
     register,
@@ -36,9 +38,14 @@ export function CreateBookForm() {
   const sharingEnabled = useWatch({ control, name: "sharing_enabled" });
 
   async function onSubmit(data: CreateBookInput) {
+    if (submitLocked) return;
+    setSubmitLocked(true);
     setServerError(null);
-    const result = await createBook(data);
+    // Keep this token stable across retries. If the first request reached the
+    // server but its response was lost, the retry can resolve to the same book.
+    const result = await createBook({ ...data, creation_token: creationToken });
     if (!result.success) {
+      setSubmitLocked(false);
       setServerError(result.error);
       return;
     }
@@ -162,7 +169,7 @@ export function CreateBookForm() {
         <p className="text-sm text-danger font-medium">{serverError}</p>
       )}
 
-      <Button type="submit" variant="primary" fullWidth loading={isSubmitting}>
+      <Button type="submit" variant="primary" fullWidth loading={isSubmitting || submitLocked}>
         Create book
       </Button>
     </form>
