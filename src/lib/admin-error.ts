@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash } from "crypto";
+import { after } from "next/server";
 import { sendAdminPush } from "@/lib/push/sendAdminPush";
 
 const THROTTLE_MS = 10 * 60 * 1000;
@@ -33,11 +34,16 @@ export function notifyAdminOfError(
     if (now - timestamp > THROTTLE_MS) recentErrors.delete(key);
   }
 
-  void sendAdminPush({
-    title: "Home Cooked server error",
-    body: `${stage}: ${getMessage(error).slice(0, 160)}`,
-    url: "/app/admin",
-  }).catch((pushError) => {
-    console.error("[admin-error] push failed:", pushError);
+  // Keep delivery alive after the action/route responds on serverless hosts.
+  after(async () => {
+    try {
+      await sendAdminPush({
+        title: "Home Cooked server error",
+        body: `${stage}: ${getMessage(error).slice(0, 160)}`,
+        url: "/app/admin",
+      });
+    } catch (pushError) {
+      console.error("[admin-error] push failed:", pushError);
+    }
   });
 }

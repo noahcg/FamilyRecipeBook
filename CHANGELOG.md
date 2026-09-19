@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.2] - 2026-09-19
+
+### PWA notification reliability
+
+- Resync existing admin subscriptions with the server and detect changed notification keys instead of reporting a browser-only subscription as enabled.
+- Added device-specific test notifications, reconnect controls, setup timeouts, and recoverable error messages.
+- Keep server-error notification delivery alive after the request finishes, and report incomplete server notification configuration.
+- Handle malformed push payloads without skipping the visible notification.
+
 ## [0.13.1] - 2026-09-19
 
 ### Original recipe attachments
