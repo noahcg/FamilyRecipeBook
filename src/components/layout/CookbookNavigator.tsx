@@ -34,14 +34,21 @@ export function CookbookNavigator({
   mobileOpen,
   onMobileOpenChange,
 }: CookbookNavigatorProps) {
-  const [data, setData] = useState<NavData | null>(navCache);
+  // Keep the first render identical to the server. The module cache only
+  // exists in the browser and may already be populated after client-side
+  // navigation, which would otherwise change the hydrated nav tree.
+  const [data, setData] = useState<NavData | null>(null);
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const flyoutRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
-    if (!navCache) {
+    if (navCache) {
+      Promise.resolve(navCache).then((cached) => {
+        if (active) setData(cached);
+      });
+    } else {
       getCookbookNavData()
         .then((result) => {
           navCache = result;

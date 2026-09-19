@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -109,6 +109,14 @@ const railItemClass = (isActive: boolean) =>
 
 export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShellProps) {
   const pathname = usePathname();
+  // usePathname can differ between the server snapshot and the browser when a
+  // route was reached through a rewrite or client navigation. Keep the first
+  // nav markup route-neutral, then apply active states after hydration.
+  const pathnameReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const mobileNavRef = useRef<HTMLDivElement>(null);
   const mobileNavItemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const sideDrawerRef = useRef<HTMLElement>(null);
@@ -119,12 +127,13 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
   const { isAdmin } = useAccount();
   const { userId } = useUser();
   // The active cookbook on book routes comes straight from the URL.
-  const currentBookId = pathname.match(/^\/app\/books\/([^/]+)/)?.[1] ?? null;
-  const offlineActive = isActivePath(pathname, "/app/offline");
+  const navPathname = pathnameReady ? pathname : "";
+  const currentBookId = navPathname.match(/^\/app\/books\/([^/]+)/)?.[1] ?? null;
+  const offlineActive = isActivePath(navPathname, "/app/offline");
   const navItems = offlineCount > 0 || offlineActive ? [...ACCOUNT_NAV, OFFLINE_NAV] : ACCOUNT_NAV;
 
-  const settingsActive = isActivePath(pathname, "/app/settings");
-  const activeMobileId = navItems.find((item) => isActivePath(pathname, item.href, item.exact))?.id;
+  const settingsActive = isActivePath(navPathname, "/app/settings");
+  const activeMobileId = navItems.find((item) => isActivePath(navPathname, item.href, item.exact))?.id;
 
   useEffect(() => {
     if (!userId) return;
@@ -169,7 +178,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
           <nav aria-label="Primary navigation" className="shrink-0 px-6">
             <div className="space-y-2.5">
               {navItems.map(({ id, href, icon: Icon, label, exact }) => {
-                const isActive = isActivePath(pathname, href, exact);
+                const isActive = isActivePath(navPathname, href, exact);
                 return (
                   <Link
                     key={id}
@@ -308,7 +317,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
         >
           {!lockNav &&
             navItems.map(({ id, href, icon: Icon, label, exact }) => {
-              const isActive = isActivePath(pathname, href, exact);
+              const isActive = isActivePath(navPathname, href, exact);
               return (
                 <Link
                   key={id}
