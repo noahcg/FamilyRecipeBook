@@ -20,7 +20,7 @@ export default async function RecipeIdeasPage({ params, searchParams }: Props) {
         bookId={bookId}
         bookOptions={contributableBooks}
         initialPrompt={prompt}
-        autoGenerate={surprise === "1"}
+        autoGenerate={surprise === "1" || Boolean(prompt?.trim())}
         showCookbookBackLink
       />
     </AppShell>

@@ -19,6 +19,9 @@ import { formatDuration } from "@/lib/formatDuration";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { IdeaCookView } from "@/components/recipe/IdeaCookView";
 
+import { TonightsTable } from "@/components/recipe/TonightsTable";
+import { buildIdeaTablePrompt, defaultIdeaTable, describeIdeaTable } from "@/lib/ideaTable";
+
 interface AIRecipeIdeaPanelProps {
   bookId: string;
   bookOptions?: { id: string; title: string }[];
@@ -63,6 +66,8 @@ export function AIRecipeIdeaPanel({
     ? selectedBookId
     : initialBookId;
   const [prompt, setPrompt] = useState(initialPrompt ?? "");
+  const [table, setTable] = useState(defaultIdeaTable);
+  const [generatedFor, setGeneratedFor] = useState("");
   const [idea, setIdea] = useState<AIRecipeIdea | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, startGenerating] = useTransition();
@@ -71,18 +76,24 @@ export function AIRecipeIdeaPanel({
   const didAutoGenerate = useRef(false);
 
   function handleGenerate(nextPrompt = prompt) {
-    const trimmed = nextPrompt.trim();
+    const trimmed = buildIdeaTablePrompt(nextPrompt, table);
+    const summary = describeIdeaTable(table);
     setPrompt(nextPrompt);
     setError(null);
     // A fresh idea replaces whatever was open in the cook view.
     setCookOpen(false);
     startGenerating(async () => {
-      const result = await generateRecipeIdea(trimmed, resolvedBookId);
-      if (!result.success) {
-        setError(result.error);
-        return;
+      try {
+        const result = await generateRecipeIdea(trimmed, resolvedBookId);
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+        setIdea(result.data);
+        setGeneratedFor(summary);
+      } catch {
+        setError("We couldn’t generate an idea. Please try again.");
       }
-      setIdea(result.data);
     });
   }
 
@@ -90,17 +101,21 @@ export function AIRecipeIdeaPanel({
     if (!idea) return;
     setError(null);
     startSaving(async () => {
-      const result = await saveRecipeIdea(resolvedBookId, idea);
-      if (!result.success) {
-        setError(result.error);
-        return;
+      try {
+        const result = await saveRecipeIdea(resolvedBookId, idea);
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+        router.push(`/app/books/${resolvedBookId}/recipes/${result.data.id}`);
+      } catch {
+        setError("We couldn’t save this idea. Your draft is still here; please try again.");
       }
-      router.push(`/app/books/${resolvedBookId}/recipes/${result.data.id}`);
     });
   }
 
-  // "Get Inspired" asks us to generate straight away so the user lands on a
-  // finished draft. Pick a random prompt (unless one was passed) and run once.
+  // Linked prompts and "Get Inspired" both generate straight away so the user
+  // lands on a finished draft. Pick a random prompt only when none was passed.
   useEffect(() => {
     if (autoGenerate && !didAutoGenerate.current) {
       didAutoGenerate.current = true;
@@ -143,31 +158,16 @@ export function AIRecipeIdeaPanel({
             className="max-w-4xl text-4xl font-bold leading-tight text-green-deep lg:text-5xl"
             style={{ fontFamily: "var(--font-playfair)" }}
           >
-            What should we make?
+            Need an Idea?
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-muted">
-            Tell the cookbook what is in your kitchen, what kind of meal you want, and how much time you have.
+            A little inspiration for your people, your budget, and your evening.
           </p>
         </header>
 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:gap-12">
           <section className="min-w-0">
-            <div className="mb-5 flex items-baseline gap-4">
-              <h2
-                className="text-2xl font-bold leading-tight text-green-deep"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                Describe the idea
-              </h2>
-              <span className="h-px flex-1 bg-line-soft" />
-            </div>
-
-            <textarea
-              className="input-cookbook min-h-[300px] w-full resize-y bg-white-soft/80 text-base leading-relaxed"
-              placeholder="I have chicken thighs, rice, lemons, spinach, and yogurt. I want something cozy for dinner in under an hour."
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-            />
+            <TonightsTable value={table} onChange={setTable} disabled={isGenerating || isSaving} />
 
             {assignmentOptions.length > 1 && (
               <div className="mt-4">
@@ -175,6 +175,7 @@ export function AIRecipeIdeaPanel({
                   id="idea-book"
                   label="Save to cookbook"
                   value={resolvedBookId}
+                  disabled={isGenerating || isSaving}
                   onChange={(event) => setSelectedBookId(event.target.value)}
                   className="h-12 text-sm"
                 >
@@ -188,7 +189,7 @@ export function AIRecipeIdeaPanel({
             )}
 
             {error && (
-              <p className="mt-3 rounded-md border border-danger/20 bg-card-muted px-3 py-2 text-sm font-semibold text-danger">
+              <p role="alert" className="mt-3 rounded-md border border-danger/20 bg-card-muted px-3 py-2 text-sm font-semibold text-danger">
                 {error}
               </p>
             )}
@@ -200,10 +201,10 @@ export function AIRecipeIdeaPanel({
                 size="md"
                 className="rounded-md"
                 onClick={() => handleGenerate()}
-                disabled={isGenerating || prompt.trim().length < 10}
+                disabled={isGenerating || isSaving}
               >
                 {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                Generate Idea
+                {isGenerating ? "Finding inspiration…" : "Find an idea"}
               </Button>
               {idea && (
                 <Button
@@ -212,15 +213,15 @@ export function AIRecipeIdeaPanel({
                   size="md"
                   className="rounded-md"
                   onClick={() => handleGenerate()}
-                  disabled={isGenerating}
+                  disabled={isGenerating || isSaving}
                 >
                   Try Another
                 </Button>
               )}
             </div>
 
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-muted">
-              Include ingredients, mood, timing, dietary needs, or who you are cooking for. The result can be edited after saving.
+            <p className="mt-4 max-w-md text-xs leading-relaxed text-ink-muted">
+              AI ideas aren’t verified allergy safe. Check ingredients, product labels, and preparation before cooking.
             </p>
           </section>
 
@@ -230,16 +231,22 @@ export function AIRecipeIdeaPanel({
                 className="text-2xl font-bold leading-tight text-green-deep"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
-                Recipe draft
+                On the menu
               </h2>
               <span className="h-px flex-1 bg-line-soft" />
             </div>
 
-            {idea ? (
+            {isGenerating ? (
+              <div role="status" className="flex min-h-[430px] flex-col items-center justify-center gap-4 rounded-xl border border-line-soft bg-paper-warm p-6 text-center">
+                <Loader2 size={28} className="animate-spin text-green-deep" />
+                <p className="font-semibold text-green-deep">Finding inspiration for your table…</p>
+                <p className="text-sm text-ink-muted">Bringing your ingredients and preferences together.</p>
+              </div>
+            ) : idea ? (
               <div>
                 <div className="mb-6">
                   <p className="text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
-                    Suggested Recipe
+                    AI recipe idea
                   </p>
                   <h3
                     className="mt-2 text-3xl font-bold leading-tight text-green-deep lg:text-4xl"
@@ -252,6 +259,7 @@ export function AIRecipeIdeaPanel({
                   </p>
                 </div>
 
+                <p className="mb-5 rounded-md bg-paper-warm p-3 text-sm leading-relaxed text-ink-muted"><span className="font-bold text-green-deep">Requested for this draft: </span>{generatedFor}</p>
                 <div className="mb-7 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-ink-muted">
                   <span>Serves {idea.servings}</span>
                   <span className="inline-flex items-center gap-1.5">
@@ -334,12 +342,11 @@ export function AIRecipeIdeaPanel({
                   <Sparkles size={26} strokeWidth={1.6} />
                 </span>
                 <p className="text-base font-semibold text-ink">
-                  Your recipe draft will appear here
+                  A dinner idea, made around your table
                 </p>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-muted">
-                  Describe what you have and what you&rsquo;re craving, then generate an
-                  idea. Drafts include ingredients, instructions, timing, category, and
-                  an automatically selected food photo.
+                  Set your budget, dietary needs, and time, then find an idea.
+                  You’ll get a full recipe to cook now or keep in your cookbook.
                 </p>
               </div>
             )}

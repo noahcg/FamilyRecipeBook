@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.14.0] - 2026-09-19
+
+### Tonight’s table in Ideas
+
+- Evolved the existing Ideas page with servings, budget, dietary preferences, allergy exclusions, and total cooking time in a compact inline form, ordered by people, budget, time, and dietary needs, with compact right-aligned selects and an always-visible ingredients field.
+- Added optional pantry ingredients; generate dinner ideas from table settings alone.
+- Keep the existing navigation, cook-now view, and cookbook saving flow. Show the original request alongside each generated draft and clarify that allergy suitability is not verified.
+- Added generation loading feedback and recoverable generation/save errors.
+
 ## [0.13.2] - 2026-09-19
 
 ### PWA notification reliability
