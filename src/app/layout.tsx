@@ -74,6 +74,9 @@ export const metadata: Metadata = {
     description: "Create a shared family recipe book and preserve the meals, memories, and stories worth passing down.",
     images: ["/opengraph-image"],
   },
+  other: {
+    "p:domain_verify": "96754351eb0bda1db55eff04152312be",
+  },
 };
 
 export const viewport: Viewport = {
