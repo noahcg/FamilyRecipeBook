@@ -6,6 +6,7 @@ import {
   LocateFixed,
   MapPin,
   Search,
+  SlidersHorizontal,
   Star,
   Store,
 } from "lucide-react";
@@ -37,6 +38,17 @@ export function NearbyGroceryStores() {
   const [geo, setGeo] = useState<LocationState>({ status: "idle" });
   const [search, setSearch] = useState<SearchState>({ status: "idle" });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [dietaryFilters, setDietaryFilters] = useState<string[]>([]);
+  const [openNow, setOpenNow] = useState(false);
+
+  const dietaryOptions = [
+    ["gluten-free", "Gluten free"],
+    ["dairy-free", "Dairy free"],
+    ["vegetarian", "Vegetarian"],
+    ["vegan", "Vegan"],
+  ] as const;
+  const activeFilterCount = dietaryFilters.length + (openNow ? 1 : 0);
 
   function locateUser() {
     if (!navigator.geolocation) {
@@ -77,9 +89,9 @@ export function NearbyGroceryStores() {
 
     const result = await searchNearbyGroceryStores(
       hasManual
-        ? { query: manual }
+        ? { query: manual, dietary: dietaryFilters, openNow }
         : geo.status === "ready"
-        ? { latitude: geo.latitude, longitude: geo.longitude }
+        ? { latitude: geo.latitude, longitude: geo.longitude, dietary: dietaryFilters, openNow }
         : {}
     );
 
@@ -141,15 +153,55 @@ export function NearbyGroceryStores() {
             </button>
           </form>
 
-          <button
-            type="button"
-            onClick={locateUser}
-            disabled={geo.status === "loading"}
-            className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white-soft px-3 py-2 text-xs font-bold text-green-deep transition hover:bg-green-pale disabled:opacity-50"
-          >
-            <LocateFixed size={14} />
-            {geo.status === "loading" ? "Locating..." : "Use my location"}
-          </button>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={locateUser}
+              disabled={geo.status === "loading"}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white-soft px-3 py-2 text-xs font-bold text-green-deep transition hover:bg-green-pale disabled:opacity-50"
+            >
+              <LocateFixed size={14} />
+              {geo.status === "loading" ? "Locating..." : "Use my location"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((current) => !current)}
+              aria-expanded={filtersOpen}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-bold text-green-deep transition hover:bg-green-pale"
+            >
+              <SlidersHorizontal size={14} />
+              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+            </button>
+          </div>
+
+          {filtersOpen && (
+            <div className="mt-2 rounded-lg border border-line-soft bg-paper-warm px-3 py-2.5">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                {dietaryOptions.map(([value, label]) => (
+                  <label key={value} className="flex min-h-8 items-center gap-2 text-xs text-ink">
+                    <input
+                      type="checkbox"
+                      className="size-3.5 accent-green-deep"
+                      checked={dietaryFilters.includes(value)}
+                      onChange={(event) => setDietaryFilters((current) => event.target.checked
+                        ? [...current, value]
+                        : current.filter((item) => item !== value))}
+                    />
+                    {label}
+                  </label>
+                ))}
+                <label className="flex min-h-8 items-center gap-2 text-xs text-ink">
+                  <input
+                    type="checkbox"
+                    className="size-3.5 accent-green-deep"
+                    checked={openNow}
+                    onChange={(event) => setOpenNow(event.target.checked)}
+                  />
+                  Open now
+                </label>
+              </div>
+            </div>
+          )}
 
           {geo.status === "error" && (
             <p className="mt-2 text-xs text-danger">{geo.message}</p>

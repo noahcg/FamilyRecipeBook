@@ -492,6 +492,8 @@ export async function searchNearbyGroceryStores(input: {
   query?: string;
   latitude?: number;
   longitude?: number;
+  dietary?: string[];
+  openNow?: boolean;
 }): Promise<ActionResult<NearbyStore[]>> {
   await requireUser();
 
@@ -507,6 +509,11 @@ export async function searchNearbyGroceryStores(input: {
     typeof input.latitude === "number" && typeof input.longitude === "number";
   const trimmedQuery = input.query?.trim() ?? "";
   const hasQuery = trimmedQuery.length > 0;
+  const dietaryTerms = (input.dietary ?? [])
+    .filter((value) => ["gluten-free", "dairy-free", "vegetarian", "vegan"].includes(value))
+    .map((value) => value.replace("-", " "));
+  const hasDietaryFilter = dietaryTerms.length > 0;
+  const hasOpenNowFilter = input.openNow === true;
 
   if (!hasCoords && !hasQuery) {
     return {
@@ -529,11 +536,12 @@ export async function searchNearbyGroceryStores(input: {
   let url: string;
   let body: Record<string, unknown>;
 
-  if (hasCoords) {
+  if (hasCoords && !hasDietaryFilter) {
     url = "https://places.googleapis.com/v1/places:searchNearby";
     body = {
       includedTypes: ["supermarket", "grocery_store"],
       maxResultCount: 15,
+      ...(hasOpenNowFilter ? { openNow: true } : {}),
       locationRestriction: {
         circle: {
           center: { latitude: input.latitude, longitude: input.longitude },
@@ -543,9 +551,23 @@ export async function searchNearbyGroceryStores(input: {
     };
   } else {
     url = "https://places.googleapis.com/v1/places:searchText";
+    const dietaryQuery = hasDietaryFilter
+      ? `${dietaryTerms.join(" and ")} grocery stores`
+      : "grocery stores";
     body = {
-      textQuery: `grocery stores near ${trimmedQuery}`,
+      textQuery: hasQuery ? `${dietaryQuery} near ${trimmedQuery}` : dietaryQuery,
       maxResultCount: 15,
+      ...(hasOpenNowFilter ? { openNow: true } : {}),
+      ...(hasCoords
+        ? {
+            locationBias: {
+              circle: {
+                center: { latitude: input.latitude, longitude: input.longitude },
+                radius: 8000,
+              },
+            },
+          }
+        : {}),
     };
   }
 
