@@ -12,7 +12,7 @@ policy copy. Grep anchors that help: server actions in `src/lib/actions/`,
 validators in `src/lib/validators/`, migrations in `supabase/migrations/`, and
 outbound `fetch(` calls to non-Supabase hosts.
 
-_Last verified against the codebase: migrations `001`–`019`._
+_Last verified against the codebase: September 21, 2026._
 
 ---
 
@@ -79,7 +79,9 @@ editor is currently wired — these are display-only today._
 
 | Data | Mechanism | Notes |
 |---|---|---|
-| Session / authentication cookies | Supabase auth cookies set server-side (`src/lib/supabase/server.ts`) | Strictly necessary. **No analytics, tracking, or advertising cookies exist; no consent banner is required.** |
+| Session / authentication cookies | Supabase SSR cookies set through `src/lib/supabase/server.ts` and refreshed in `src/proxy.ts` | Strictly necessary for sign-in, session refresh, email-code/Google auth flows, and authenticated requests. Cookie names and attributes are managed by `@supabase/ssr`; the app does not use them for analytics, advertising, or cross-site tracking. |
+| Sign-in flow state | `sessionStorage` in `src/app/sign-in/page.tsx` | Email-code resend cooldown only; temporary, tab-scoped state. |
+| App and offline state | `localStorage` / IndexedDB in offline recipe, grocery, guide, and navigation modules | Core functionality such as offline access, queued grocery changes, onboarding-guide state, and navigation history; not analytics or advertising tracking. |
 | Precise geolocation (latitude/longitude) or typed location | `src/components/grocery/NearbyGroceryStores.tsx` via `navigator.geolocation` | Sent to Google Places for "grocery stores near me"; only when the user invokes the feature |
 | Device user-agent + browser push keys | `src/lib/actions/admin-push.ts` | **Admin-only** Web Push; stored in `admin_push_subscriptions` (`endpoint`, `p256dh`, `auth`, `user_agent`) |
 | Request / edge server logs | Vercel hosting | Standard hosting logs |
@@ -87,6 +89,17 @@ editor is currently wired — these are display-only today._
 
 Fonts are self-hosted at build time via `next/font` — no runtime request to
 Google Fonts and no font-based tracking.
+
+### Cookie-consent status
+
+The current implementation contains only authentication cookies that are
+strictly necessary to provide the sign-in service, plus browser storage used for
+core app functionality. It contains no analytics, advertising, marketing,
+session-replay, or cross-site tracking technologies. A cookie-consent banner is
+therefore not currently required by the product’s implementation. If a
+non-essential tracking or analytics technology is added, it must be added to
+this inventory and the consent flow, policy copy, and activation timing must be
+reviewed before release.
 
 ---
 
