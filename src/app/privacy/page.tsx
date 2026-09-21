@@ -63,13 +63,32 @@ const privacySections = [
   {
     title: "Cookies, Analytics, and Local Storage",
     body: (
-      <p>
-        <BrandName /> uses necessary cookies and local storage to keep you signed
-        in, remember app state, support offline recipes, and make core features
-        work. Hosting and infrastructure providers may create standard server
-        logs for security and reliability. We do not use advertising tracking
-        cookies.
-      </p>
+      <>
+        <p>
+          <BrandName /> uses strictly necessary authentication cookies managed
+          by Supabase to keep you signed in, refresh your session, complete
+          email-code and Google sign-in flows, and protect authenticated
+          requests. These cookies are used to provide a feature you request and
+          are not used for advertising or cross-site tracking.
+        </p>
+        <p>
+          We also use browser <code>localStorage</code>,{" "}
+          <code>sessionStorage</code>, and limited offline browser storage to
+          remember app state, support offline recipes and grocery features, and
+          preserve sign-in-flow state such as an email-code resend cooldown.
+          These browser-storage items support core product functionality and are
+          not used for analytics or advertising.
+        </p>
+        <p>
+          Hosting and infrastructure providers may create standard server logs
+          for security and reliability. We do not currently use analytics
+          cookies, advertising cookies, tracking pixels, session-replay tools,
+          or similar non-essential tracking technologies. We therefore do not
+          currently display a cookie-consent banner. If that changes, we will
+          update this policy and request consent before activating technologies
+          that require it.
+        </p>
+      </>
     ),
   },
   {
@@ -136,7 +155,7 @@ const privacySections = [
 
 export default function PrivacyPage() {
   return (
-    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="August 25, 2026">
+    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="September 21, 2026">
       <p>
         This Privacy Policy explains what <BrandName /> collects, how that
         information is used, and when it is shared. The app is designed for
