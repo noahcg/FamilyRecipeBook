@@ -22,6 +22,9 @@ export function SiteFooter() {
           <a href={supportMailto} className="transition hover:text-green-deep">
             Contact
           </a>
+          <Link href="/pricing" className="transition hover:text-green-deep">
+            Pricing
+          </Link>
           <Link href="/terms" className="transition hover:text-green-deep">
             Terms
           </Link>

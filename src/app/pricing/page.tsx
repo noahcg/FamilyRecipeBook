@@ -1,0 +1,142 @@
+import Link from "next/link";
+import Image from "next/image";
+import { Check } from "lucide-react";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { PublicHeader } from "@/components/layout/PublicHeader";
+
+const freeFeatures = [
+  "One private recipe book, made yours",
+  "Save up to 50 recipes worth keeping",
+  "Need AI-inspired help for your next recipe? We’ve got you covered",
+  "Keep your cookbook organized and easy to browse",
+  "Give your most cherished recipes a place to live",
+];
+
+const proFeatures = [
+  "Share all your cookbooks with family and friends",
+  "Unlimited cookbooks for every chapter of your life",
+  "Keep every recipe you love, with no limits",
+  "Bring recipes in from PDFs, websites, text files, and more",
+  "Paste a recipe and let Home Cooked do the organizing",
+  "Send any recipe as a link or polished PDF",
+  "Unlimited AI-inspired meal ideas, whenever you need them",
+  "Plan the meals you’re looking forward to",
+  "Build your grocery list as you plan",
+  "Keep your go-to recipes close with Favorites",
+];
+
+function FeatureRow({ children, premium = false }: { children: React.ReactNode; premium?: boolean }) {
+  return (
+    <li className="flex items-start gap-3 text-[0.92rem] leading-relaxed text-ink-muted sm:text-[0.98rem]">
+      <Check
+        aria-hidden="true"
+        className={premium ? "mt-1 shrink-0 text-accent-terracotta" : "mt-1 shrink-0 text-green-deep"}
+        size={16}
+        strokeWidth={3}
+      />
+      <span>{children}</span>
+    </li>
+  );
+}
+
+export const metadata = {
+  title: "Pricing",
+  description:
+    "Start your recipe collection for free, or unlock every Home Cooked feature for $15 a year.",
+};
+
+export default function PricingPage() {
+  return (
+    <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-hidden overflow-y-visible bg-cream text-ink">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-0 z-0 w-screen max-w-[100vw]"
+      >
+        <Image
+          src="/pricing-bkg.png"
+          alt=""
+          width={1750}
+          height={899}
+          priority
+          sizes="100vw"
+          className="block h-auto w-full max-w-full"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 bottom-0 h-[38%]"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(247,243,233,0) 0%, rgba(247,243,233,0.3) 38%, rgba(247,243,233,0.82) 78%, var(--color-cream) 100%)",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10">
+        <PublicHeader />
+
+        <main>
+          <section className="mx-auto max-w-[980px] px-4 pb-6 pt-28 text-center sm:px-8 sm:pb-8 sm:pt-32 lg:pt-36">
+            <h1
+              className="text-[clamp(2.4rem,5.3vw,4.5rem)] font-bold leading-[1.04] text-green-deep"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              A better way to keep your recipes.
+              <span className="block font-semibold italic text-accent-terracotta">
+                For every kitchen, at every stage.
+              </span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-[1rem] leading-relaxed text-ink-muted sm:text-[1.15rem]">
+              Start for free, or unlock the full Home Cooked experience. Either
+              way, you&rsquo;ll be one step closer to a more organized, delicious life.
+            </p>
+          </section>
+
+          <section className="mx-auto grid max-w-[960px] gap-5 px-4 pb-10 sm:px-8 sm:pb-12 lg:grid-cols-2 lg:gap-6 lg:px-0">
+            <article className="flex min-h-[490px] flex-col rounded-[1.1rem] border border-white/75 bg-white/90 p-7 shadow-[0_12px_34px_rgba(79,61,38,0.12)] backdrop-blur-sm sm:p-8">
+              <p className="text-sm font-extrabold uppercase tracking-[0.14em] text-green-sage">Free</p>
+              <h2 className="mt-2 text-[2rem] font-bold leading-none text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
+                Get Started
+              </h2>
+              <p className="mt-3 text-[0.98rem] text-ink-muted">Everything you need to start making your recipe collection yours.</p>
+              <div className="mt-5 flex items-baseline gap-2 border-b border-line-soft pb-5">
+                <span className="text-[3.1rem] font-bold leading-none text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>$0</span>
+                <span className="text-sm text-ink-muted">forever</span>
+              </div>
+              <ul className="mt-5 space-y-2.5">
+                {freeFeatures.map((feature) => <FeatureRow key={feature}>{feature}</FeatureRow>)}
+              </ul>
+              <Link href="/sign-in" className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full border-2 border-green-deep px-5 text-sm font-extrabold text-green-deep transition hover:bg-green-pale">
+                Create Free Account
+              </Link>
+            </article>
+
+            <article className="flex min-h-[490px] flex-col rounded-[1.1rem] border border-white/80 bg-[#fffaf0]/95 p-7 shadow-[0_12px_34px_rgba(79,61,38,0.14)] backdrop-blur-sm sm:p-8">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-extrabold uppercase tracking-[0.14em] text-accent-terracotta">Pro</p>
+                  <h2 className="mt-2 text-[2rem] font-bold leading-none text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
+                    All the Good Stuff
+                  </h2>
+                </div>
+                <span className="rounded-full bg-accent-terracotta px-3 py-1 text-xs font-extrabold uppercase text-white shadow-sm">Best value</span>
+              </div>
+              <p className="mt-3 text-[0.98rem] text-ink-muted">Share all your cookbooks and unlock every Home Cooked feature.</p>
+              <div className="mt-5 flex items-baseline gap-2 border-b border-line-soft pb-5">
+                <span className="text-[3.1rem] font-bold leading-none text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>$15</span>
+                <span className="text-sm text-ink-muted">/ year</span>
+              </div>
+              <ul className="mt-5 space-y-2.5 pb-5">
+                {proFeatures.map((feature) => <FeatureRow key={feature} premium>{feature}</FeatureRow>)}
+              </ul>
+              <Link href="/sign-in" className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full bg-green-forest-dark px-5 text-sm font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep">
+                Share All Your Cookbooks for $15 / Year
+              </Link>
+            </article>
+          </section>
+        </main>
+
+        <SiteFooter />
+      </div>
+    </div>
+  );
+}

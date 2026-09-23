@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, ChefHat, ShoppingCart, Sparkles } from "lucide-react";
-import { BrandLockup } from "@/components/ui/BrandLockup";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 
 function FeatureCopy({
   icon: Icon,
@@ -76,14 +76,10 @@ export default function LandingPage() {
         />
       </div>
 
-      <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5 lg:px-12 lg:py-8">
-        <Link href="/" className="shrink-0">
-          <BrandLockup className="brand-lockup--homepage" />
-        </Link>
-      </header>
+      <PublicHeader />
 
       <main>
-        <section className="relative min-h-[480px] pb-4 pt-8 sm:min-h-[520px] lg:min-h-[560px] lg:pb-6 lg:pt-8">
+        <section className="relative min-h-[480px] pb-4 pt-28 sm:min-h-[520px] sm:pt-32 lg:min-h-[560px] lg:pb-6 lg:pt-36">
           <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 sm:px-8 lg:px-12">
             <div className="max-w-2xl">
               <h1
