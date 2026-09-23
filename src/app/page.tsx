@@ -138,10 +138,10 @@ export default function LandingPage() {
               <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
                 <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
-                    src="/images/homecooked-landing.png"
+                    src="/images/home-page/app-landing.png"
                     alt="Home Cooked cookbook home screen with recipes, meal plan, and quick actions"
-                    width={1507}
-                    height={760}
+                    width={1536}
+                    height={1024}
                     sizes="(min-width: 1024px) 640px, 100vw"
                     className="h-auto w-full"
                   />
@@ -171,10 +171,10 @@ export default function LandingPage() {
               <div className="order-2 flex justify-center lg:justify-end">
                 <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
-                    src="/images/homecooked-ideas.png"
+                    src="/images/home-page/ai-ideas.png"
                     alt="The Home Cooked recipe ideas screen, turning a short description into a draft recipe"
-                    width={1508}
-                    height={658}
+                    width={1672}
+                    height={941}
                     sizes="(min-width: 1024px) 640px, 100vw"
                     className="h-auto w-full"
                   />
@@ -186,10 +186,10 @@ export default function LandingPage() {
               <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
                 <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
-                    src="/images/homecooked-recipe.png"
+                    src="/images/home-page/recipe-page.png"
                     alt="A recipe page in Home Cooked showing photo, ingredients, and step-by-step method"
-                    width={1507}
-                    height={763}
+                    width={1536}
+                    height={1024}
                     sizes="(min-width: 1024px) 640px, 100vw"
                     className="h-auto w-full"
                   />
@@ -219,10 +219,10 @@ export default function LandingPage() {
               <div className="order-2 flex justify-center lg:justify-end">
                 <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
                   <Image
-                    src="/images/homecooked-groceries.png"
+                    src="/images/home-page/grocery-listing.png"
                     alt="The grocery list in Home Cooked with categorized items and nearby store suggestions"
-                    width={1507}
-                    height={761}
+                    width={1536}
+                    height={1024}
                     sizes="(min-width: 1024px) 640px, 100vw"
                     className="h-auto w-full"
                   />
