@@ -79,7 +79,7 @@ export default function LandingPage() {
       <PublicHeader />
 
       <main>
-        <section className="relative min-h-[480px] pb-4 pt-28 sm:min-h-[520px] sm:pt-32 lg:min-h-[560px] lg:pb-6 lg:pt-36">
+        <section className="relative min-h-[480px] pb-4 pt-8 sm:min-h-[520px] lg:min-h-[560px] lg:pb-6 lg:pt-8">
           <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 sm:px-8 lg:px-12">
             <div className="max-w-2xl">
               <h1

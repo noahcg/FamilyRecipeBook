@@ -30,10 +30,10 @@ export function PublicHeader() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="absolute inset-x-0 top-0 z-30">
-      <div className="relative mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5 lg:px-12 lg:py-6">
-        <Link href="/" aria-label="Home Cooked home" className="block w-[11.5rem] shrink-0 sm:w-[13rem] lg:w-[14.5rem]">
-          <BrandLockup compact={false} className="brand-lockup--public" />
+    <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5 lg:px-12 lg:py-8">
+      <div className="flex w-full items-center justify-between gap-3">
+        <Link href="/" aria-label="Home Cooked home" className="shrink-0">
+          <BrandLockup className="brand-lockup--homepage" />
         </Link>
 
         <div className="flex items-center gap-2 rounded-full border border-white/55 bg-paper-soft/78 p-1.5 shadow-[0_8px_24px_rgba(75,53,31,0.1)] backdrop-blur-sm sm:gap-3 sm:p-2 lg:gap-5">
