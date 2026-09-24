@@ -69,6 +69,8 @@ export async function getMealPlanWeek(
   householdId: string,
   weekStart: string
 ): Promise<(MealPlan & { recipe: { title: string; photo_url: string | null } | null })[]> {
+  const user = await requireUser();
+  await assertFeatureAccess(user.id, "mealPlanner");
   const supabase = await createClient();
 
   // weekStart is a YYYY-MM-DD Monday; fetch 7 days

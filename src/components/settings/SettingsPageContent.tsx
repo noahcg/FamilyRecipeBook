@@ -59,7 +59,7 @@ export function GlobalSettingsPageContent({
   billing,
 }: GlobalSettingsPageContentProps) {
   const aiSummary = aiSettings.ai_provider ? "Custom AI key set" : "Default AI";
-  const grocerySummary = groceryDayLabels ? "Grocery day labels on" : "Grocery day labels off";
+  const grocerySummary = billing.plan === "plus" ? (groceryDayLabels ? "Grocery day labels on" : "Grocery day labels off") : "Free plan";
   const profileSummary = profile.full_name ?? "Profile";
 
   return (
@@ -88,7 +88,7 @@ export function GlobalSettingsPageContent({
 
         <div className="space-y-10">
           <BillingCard billing={billing} />
-          <section className="scroll-mt-6 border-b border-line-soft pb-8">
+          {billing.plan === "plus" && <section className="scroll-mt-6 border-b border-line-soft pb-8">
             <div className="mb-4 flex items-baseline gap-4">
               <h2
                 className="text-2xl font-bold leading-tight text-green-deep"
@@ -140,7 +140,7 @@ export function GlobalSettingsPageContent({
                 </div>
               )}
             </div>
-          </section>
+          </section>}
 
           <section className="scroll-mt-6 border-b border-line-soft pb-8">
             <div className="mb-4 flex items-baseline gap-4">

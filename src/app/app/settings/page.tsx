@@ -6,13 +6,13 @@ import { requireProfile, requireUser } from "@/lib/auth";
 import { getEffectiveEntitlements } from "@/lib/entitlements";
 
 export default async function GlobalSettingsPage() {
-  const [profile, user, aiSettings, groceryDayLabels] = await Promise.all([
+  const [profile, user, aiSettings] = await Promise.all([
     requireProfile(),
     requireUser(),
     getAISettings(),
-    getGroceryDayLabelPref(),
   ]);
   const billing = await getEffectiveEntitlements(user.id);
+  const groceryDayLabels = billing.plan === "plus" ? await getGroceryDayLabelPref() : false;
 
   const cloudflareConfigured = !!(
     process.env.CLOUDFLARE_ACCOUNT_ID &&

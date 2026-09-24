@@ -330,7 +330,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                         {hasRecipes ? "Recipe pick" : "Welcome"}
                       </SectionEyebrow>
                       <h2
-                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-tight text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
+                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-[1.15] text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
                         style={{ fontFamily: "var(--font-playfair)" }}
                       >
                         {hasRecipes ? featuredTitle : "Your cookbook is ready"}
@@ -426,7 +426,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                       </div>
                       <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
                         <h3
-                          className="block w-full max-w-full text-xl font-bold text-green-deep"
+                          className="block w-full max-w-full text-xl font-bold leading-[1.15] text-green-deep"
                           style={{ fontFamily: "var(--font-playfair)" }}
                         >
                           {latestRecipe?.title}

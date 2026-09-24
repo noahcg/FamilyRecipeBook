@@ -32,6 +32,7 @@ import { RecipeShareDialog } from "./RecipeShareDialog";
 import { RecipeOriginalsDrawer } from "./RecipeOriginalsDrawer";
 import { ServingScaler } from "./ServingScaler";
 import { hasInAppHistory } from "@/components/layout/RouteHistoryTracker";
+import { useAccount } from "@/lib/context/AccountContext";
 import {
   addRecipeStory,
   deleteRecipe,
@@ -136,6 +137,8 @@ export function RecipeDetail({
   userReactions,
   ratingSummary,
 }: RecipeDetailProps) {
+  const { plan } = useAccount();
+  const canUseGrocery = plan === "plus";
   const router = useRouter();
   const searchParams = useSearchParams();
   const recipesPath = `/app/books/${bookId}/recipes`;
@@ -530,7 +533,7 @@ export function RecipeDetail({
                 </p>
               )}
               <h1
-                className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
+                className="text-4xl font-bold leading-[1.12] sm:text-5xl lg:text-6xl"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
                 {recipe.title}
@@ -665,17 +668,19 @@ export function RecipeDetail({
                       Ingredients
                     </h2>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleAddIngredientsToGrocery()}
-                    disabled={isAddingGroceries}
-                    className="inline-flex min-h-9 w-full shrink-0 items-center justify-center gap-2 rounded-md bg-green-deep px-3 text-xs font-extrabold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-45 sm:w-auto"
-                  >
-                    <ShoppingCart size={14} />
-                    {isAddingGroceries ? "Adding" : "Add to list"}
-                  </button>
+                  {canUseGrocery && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddIngredientsToGrocery()}
+                      disabled={isAddingGroceries}
+                      className="inline-flex min-h-9 w-full shrink-0 items-center justify-center gap-2 rounded-md bg-green-deep px-3 text-xs font-extrabold text-ink-inverse transition-opacity hover:opacity-90 disabled:opacity-45 sm:w-auto"
+                    >
+                      <ShoppingCart size={14} />
+                      {isAddingGroceries ? "Adding" : "Add to list"}
+                    </button>
+                  )}
                 </div>
-                {groceryMessage && (
+                {canUseGrocery && groceryMessage && (
                   <p className="mt-2 text-xs font-semibold text-green-deep">
                     {groceryMessage}
                   </p>

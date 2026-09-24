@@ -627,7 +627,7 @@ export default function RecipesPage({ params }: Props) {
                       </div>
                       <div className="min-w-0">
                         <h3
-                          className="truncate text-lg font-bold leading-tight text-green-deep"
+                          className="truncate text-lg font-bold leading-[1.15] text-green-deep"
                           style={{ fontFamily: "var(--font-playfair)" }}
                         >
                           {newestRecipe.title}

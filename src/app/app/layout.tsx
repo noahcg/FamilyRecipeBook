@@ -4,6 +4,7 @@ import { getFirstBookId } from "@/lib/actions/books";
 import { isAdminEmail } from "@/lib/admin";
 import { AccountProvider } from "@/lib/context/AccountContext";
 import { RouteHistoryTracker } from "@/components/layout/RouteHistoryTracker";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 
 export default async function AppLayout({
   children,
@@ -20,8 +21,9 @@ export default async function AppLayout({
   }
   // Admin status is account-level, so it must be available on the global pages
   // (Home, My Recipes, …) that have no per-book context.
+  const billing = await getEffectiveEntitlements(user.id);
   return (
-    <AccountProvider isAdmin={isAdminEmail(user.email)}>
+    <AccountProvider isAdmin={isAdminEmail(user.email)} plan={billing.plan}>
       <RouteHistoryTracker />
       {children}
     </AccountProvider>

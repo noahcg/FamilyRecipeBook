@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getFirstBookId } from "@/lib/actions/books";
 import { getAccountRecentRecipes } from "@/lib/actions/recipes";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -129,7 +130,7 @@ export default async function AppHomePage() {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [recent, householdId, firstBookId, favoritesCountRes] = await Promise.all([
+  const [recent, householdId, firstBookId, favoritesCountRes, billing] = await Promise.all([
     getAccountRecentRecipes(6),
     getHouseholdId(),
     getFirstBookId(),
@@ -138,6 +139,7 @@ export default async function AppHomePage() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("type", "favorite"),
+    getEffectiveEntitlements(user.id),
   ]);
 
   const latestRecipe = recent[0] ?? null;
@@ -151,7 +153,7 @@ export default async function AppHomePage() {
   // Real meal-plan data for Weekly snapshot + Helpful cues
   const weekStart = getMondayOfCurrentWeek();
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const weekMealPlans = householdId ? await getMealPlanWeek(householdId, weekStart) : [];
+  const weekMealPlans = billing.plan === "plus" && householdId ? await getMealPlanWeek(householdId, weekStart) : [];
   const plannedDates = new Set(weekMealPlans.map((m) => m.planned_date));
   const daysWithMeals = weekDates.filter((d) => plannedDates.has(d)).length;
   const totalMealsPlanned = weekMealPlans.length;
@@ -266,12 +268,12 @@ export default async function AppHomePage() {
                     <div>
                       <SectionEyebrow>{hasRecipes ? "Recipe pick" : "Welcome"}</SectionEyebrow>
                       <h2
-                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-tight text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
+                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-[1.15] text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
                         style={{ fontFamily: "var(--font-playfair)" }}
                       >
                         {hasRecipes ? latestRecipe!.title : "Your kitchen is ready"}
                       </h2>
-                      {hasRecipes && (
+                      {hasRecipes && billing.plan === "plus" && (
                         <div className="mt-3">
                           <CookbookBadge title={latestRecipe!.bookTitle} />
                         </div>
@@ -361,12 +363,14 @@ export default async function AppHomePage() {
                         )}
                       </div>
                       <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
-                        <h3 className="block w-full max-w-full text-xl font-bold text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
+                        <h3 className="block w-full max-w-full text-xl font-bold leading-[1.15] text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
                           {latestRecipe!.title}
                         </h3>
-                        <div className="mt-1.5">
-                          <CookbookBadge title={latestRecipe!.bookTitle} />
-                        </div>
+                        {billing.plan === "plus" && (
+                          <div className="mt-1.5">
+                            <CookbookBadge title={latestRecipe!.bookTitle} />
+                          </div>
+                        )}
                         <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-muted">
                           {latestRecipe!.description}
                         </p>
@@ -430,12 +434,14 @@ export default async function AppHomePage() {
                 <div className="mt-4 space-y-1">
                   <QuickAction href={addRecipeHref} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />
                   <QuickAction href="/app/ideas" icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />
-                  <QuickAction href="/app/meal-plan" icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
-                  <QuickAction href="/app/groceries" icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
+                  {billing.plan === "plus" && <>
+                    <QuickAction href="/app/meal-plan" icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
+                    <QuickAction href="/app/groceries" icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
+                  </>}
                 </div>
               </PageSection>
 
-              <PageSection>
+              {billing.plan === "plus" && <PageSection>
                 <SectionHeader eyebrow="Weekly snapshot" title="The week ahead" />
                 {hasAnyMealPlanned ? (
                   <p className="mt-2 text-xl font-bold leading-snug text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
@@ -467,7 +473,7 @@ export default async function AppHomePage() {
                     Plan a meal <ChevronRight size={15} />
                   </Link>
                 )}
-              </PageSection>
+              </PageSection>}
             </aside>
           </div>
         </div>

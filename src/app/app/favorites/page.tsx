@@ -5,6 +5,7 @@ import { RecipeCard, EmptyState } from "@/components/ui";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { formatDuration } from "@/lib/formatDuration";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 
 interface FavoriteRecipe {
   id: string;
@@ -33,6 +34,7 @@ function bookTitle(recipe: FavoriteRecipe) {
 export default async function FavoritesPage() {
   const user = await requireUser();
   const supabase = await createClient();
+  const billing = await getEffectiveEntitlements(user.id);
 
   // No book filter — these are the account's favorites across every cookbook.
   const { data: favorites } = await supabase
@@ -85,11 +87,13 @@ export default async function FavoritesPage() {
                     isFavorited
                   />
                 </Link>
-                <CookbookBadge
-                  title={bookTitle(recipe)}
-                  href={`/app/books/${recipe.book_id}/recipes`}
-                  className="self-start"
-                />
+                {billing.plan === "plus" && (
+                  <CookbookBadge
+                    title={bookTitle(recipe)}
+                    href={`/app/books/${recipe.book_id}/recipes`}
+                    className="self-start"
+                  />
+                )}
               </div>
             ))}
           </div>

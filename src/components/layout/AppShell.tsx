@@ -124,13 +124,14 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
   useModalFocus({ containerRef: sideDrawerRef, open: mobileSideDrawer?.isOpen ?? false });
   const [cookbooksMobileOpen, setCookbooksMobileOpen] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
-  const { isAdmin } = useAccount();
+  const { isAdmin, plan } = useAccount();
   const { userId } = useUser();
   // The active cookbook on book routes comes straight from the URL.
   const navPathname = pathnameReady ? pathname : "";
   const currentBookId = navPathname.match(/^\/app\/books\/([^/]+)/)?.[1] ?? null;
   const offlineActive = isActivePath(navPathname, "/app/offline");
-  const navItems = offlineCount > 0 || offlineActive ? [...ACCOUNT_NAV, OFFLINE_NAV] : ACCOUNT_NAV;
+  const planNav = plan === "plus" ? ACCOUNT_NAV : ACCOUNT_NAV.filter((item) => item.id !== "meal-plan" && item.id !== "groceries");
+  const navItems = offlineCount > 0 || offlineActive ? [...planNav, OFFLINE_NAV] : planNav;
 
   const settingsActive = isActivePath(navPathname, "/app/settings");
   const activeMobileId = navItems.find((item) => isActivePath(navPathname, item.href, item.exact))?.id;
@@ -194,13 +195,15 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
               })}
             </div>
 
-            <div className="mt-2.5 border-y border-line-soft py-2.5">
-              <CookbookNavigator
-                currentBookId={currentBookId}
-                mobileOpen={cookbooksMobileOpen}
-                onMobileOpenChange={setCookbooksMobileOpen}
-              />
-            </div>
+            {plan === "plus" && (
+              <div className="mt-2.5 border-y border-line-soft py-2.5">
+                <CookbookNavigator
+                  currentBookId={currentBookId}
+                  mobileOpen={cookbooksMobileOpen}
+                  onMobileOpenChange={setCookbooksMobileOpen}
+                />
+              </div>
+            )}
           </nav>
         )}
 
@@ -341,7 +344,7 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
               );
             })}
 
-          {!lockNav && (
+          {!lockNav && plan === "plus" && (
             <button
               type="button"
               onClick={() => setCookbooksMobileOpen(true)}

@@ -61,6 +61,7 @@ function sortWeekdays(names: Iterable<string>): string[] {
 
 export async function getGroceryDayLabelPref(): Promise<boolean> {
   const user = await requireUser();
+  await assertFeatureAccess(user.id, "grocery");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("user_settings")
@@ -76,6 +77,7 @@ export async function setGroceryDayLabelPref(
   enabled: boolean
 ): Promise<ActionResult> {
   const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
   const { error } = await supabase
     .from("user_settings")
@@ -90,6 +92,8 @@ export async function setGroceryDayLabelPref(
 // ─── Queries ─────────────────────────────────────────────────
 
 export async function getGroceryItems(householdId: string): Promise<GroceryItem[]> {
+  const user = await requireUser();
+  await assertFeatureAccess(user.id, "grocery");
   const supabase = await createClient();
 
   const { data } = await supabase
