@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui";
 
-export function BillingButton({ mode = "checkout", autoStart = false, children }: { mode?: "checkout" | "portal"; autoStart?: boolean; children: React.ReactNode }) {
+export function BillingButton({ mode = "checkout", autoStart = false, className, children }: { mode?: "checkout" | "portal"; autoStart?: boolean; className?: string; children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const openBilling = useCallback(async () => {
@@ -30,5 +30,5 @@ export function BillingButton({ mode = "checkout", autoStart = false, children }
     const timer = window.setTimeout(() => { void openBilling(); }, 0);
     return () => window.clearTimeout(timer);
   }, [autoStart, openBilling]);
-  return <div><Button type="button" onClick={openBilling} loading={loading}>{children}</Button>{error && <p className="mt-2 text-sm text-danger" role="alert">{error}</p>}</div>;
+  return <div><Button type="button" onClick={openBilling} loading={loading} className={className}>{children}</Button>{error && <p className="mt-2 text-sm text-danger" role="alert">{error}</p>}</div>;
 }

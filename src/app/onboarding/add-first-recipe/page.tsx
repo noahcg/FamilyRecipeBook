@@ -3,6 +3,8 @@ import Link from "next/link";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
 import { listCategories } from "@/lib/actions/categories";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
+import { requireUser } from "@/lib/auth";
 import { EntryShell } from "@/components/layout/EntryShell";
 
 interface Props {
@@ -12,10 +14,12 @@ interface Props {
 export default async function AddFirstRecipePage({ searchParams }: Props) {
   const { bookId } = await searchParams;
   if (!bookId) redirect("/onboarding/create-book");
+  const user = await requireUser();
   const [aiSettings, categories] = await Promise.all([
     getAISettings(),
     listCategories(bookId),
   ]);
+  const billing = await getEffectiveEntitlements(user.id);
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
 
   return (
@@ -42,6 +46,7 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
         bookId={bookId}
         categories={categories}
         hasOpenAIKey={hasOpenAIKey}
+        enablePasteEntry={billing.plan === "plus"}
         onSuccessRedirect={`/onboarding/add-member?bookId=${bookId}`}
       />
     </EntryShell>

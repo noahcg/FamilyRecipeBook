@@ -6,6 +6,8 @@ import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
 import { listCategories } from "@/lib/actions/categories";
 import { getRecipeAssignmentOptions } from "@/lib/actions/recipes";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
+import { requireUser } from "@/lib/auth";
 import { canContribute } from "@/lib/permissions";
 
 interface Props {
@@ -14,11 +16,13 @@ interface Props {
 
 export default async function NewRecipePage({ params }: Props) {
   const { bookId } = await params;
+  const user = await requireUser();
   const [aiSettings, categories, bookOptions] = await Promise.all([
     getAISettings(),
     listCategories(bookId),
     getRecipeAssignmentOptions(),
   ]);
+  const billing = await getEffectiveEntitlements(user.id);
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
   const contributableBooks = bookOptions.filter((book) => canContribute(book.role));
   if (contributableBooks.length === 0) notFound();
@@ -46,7 +50,7 @@ export default async function NewRecipePage({ params }: Props) {
           categories={categories}
           bookOptions={contributableBooks}
           hasOpenAIKey={hasOpenAIKey}
-          enablePasteEntry
+          enablePasteEntry={billing.plan === "plus"}
         />
       </div>
     </AppShell>

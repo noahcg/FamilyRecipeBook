@@ -828,6 +828,7 @@ export function RecipeForm({
 
     replaceIngredients(parsedRecipe.ingredients);
     replaceInstructions(parsedRecipe.instructions);
+    setValue("import_source", "pasted_text", { shouldDirty: true });
     setRecipeImportedViaUpload(false);
     const parsedDetails = {
       title: parsedRecipe.title,
@@ -1031,6 +1032,11 @@ export function RecipeForm({
                 type="button"
                 onClick={() => {
                   setEntryMode(mode as "manual" | "paste" | "import");
+                  setValue("import_source", mode === "paste" ? "pasted_text" : "", { shouldDirty: true });
+                  if (mode === "manual") {
+                    setValue("import_method", undefined, { shouldDirty: true });
+                    setValue("import_metadata", {}, { shouldDirty: true });
+                  }
                   if (mode !== "manual") setPhotoImportReviewNotice(null);
                 }}
                 className={clsx(

@@ -105,7 +105,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
               <ul className="mt-5 space-y-2.5">
                 {freeFeatures.map((feature) => <FeatureRow key={feature}>{feature}</FeatureRow>)}
               </ul>
-              <Link href="/sign-in" className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full border-2 border-green-deep px-5 text-sm font-extrabold text-green-deep transition hover:bg-green-pale">
+              <Link href="/sign-in" className="mt-auto inline-flex min-h-12 w-full items-center justify-center rounded-full border-2 border-green-deep px-5 text-sm font-extrabold text-green-deep transition hover:bg-green-pale">
                 Create Free Account
               </Link>
             </article>
@@ -127,7 +127,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
               <ul className="mt-5 space-y-2.5 pb-5">
                 {plusFeatures.map((feature) => <FeatureRow key={feature} premium>{feature}</FeatureRow>)}
               </ul>
-              <div className="mt-auto"><BillingButton autoStart={resumeCheckout}>Get Plus for $14.99 / Year</BillingButton><p className="mt-2 text-center text-xs text-ink-soft">You’ll confirm payment through Stripe Checkout.</p></div>
+              <div className="mt-auto"><BillingButton autoStart={resumeCheckout} className="w-full !rounded-full">Get Plus for $14.99 / Year</BillingButton><p className="mt-2 text-center text-xs text-ink-soft">You’ll confirm payment through Stripe Checkout.</p></div>
             </article>
           </section>
         </main>
