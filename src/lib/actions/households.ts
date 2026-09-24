@@ -9,6 +9,7 @@ import type {
   MealPlan,
   MealSlot,
 } from "@/lib/types";
+import { assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
 
 // ─── Household ────────────────────────────────────────────────
 
@@ -95,6 +96,12 @@ export async function setMealPlan(
   slot: MealSlot
 ): Promise<ActionResult<MealPlan>> {
   const user = await requireUser();
+  try {
+    await assertFeatureAccess(user.id, "mealPlanner");
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
+  }
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -124,6 +131,13 @@ export async function removeMealPlan(
   plannedDate: string,
   slot: MealSlot
 ): Promise<ActionResult> {
+  const user = await requireUser();
+  try {
+    await assertFeatureAccess(user.id, "mealPlanner");
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
+  }
   const supabase = await createClient();
 
   const { error } = await supabase

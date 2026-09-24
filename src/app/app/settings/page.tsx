@@ -3,6 +3,7 @@ import { getAISettings } from "@/lib/actions/aiSettings";
 import { getGroceryDayLabelPref } from "@/lib/actions/grocery";
 import { isAdminEmail } from "@/lib/admin";
 import { requireProfile, requireUser } from "@/lib/auth";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 
 export default async function GlobalSettingsPage() {
   const [profile, user, aiSettings, groceryDayLabels] = await Promise.all([
@@ -11,6 +12,7 @@ export default async function GlobalSettingsPage() {
     getAISettings(),
     getGroceryDayLabelPref(),
   ]);
+  const billing = await getEffectiveEntitlements(user.id);
 
   const cloudflareConfigured = !!(
     process.env.CLOUDFLARE_ACCOUNT_ID &&
@@ -24,6 +26,7 @@ export default async function GlobalSettingsPage() {
       aiSettings={aiSettings}
       cloudflareConfigured={cloudflareConfigured}
       groceryDayLabels={groceryDayLabels}
+      billing={billing}
     />
   );
 }

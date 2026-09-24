@@ -26,6 +26,13 @@ const privacySections = [
           features can work. Location is used only when you ask to find nearby
           stores or type a location for that search.
         </p>
+        <p>
+          If you subscribe to Plus, Stripe processes your payment. We receive
+          limited billing information such as a Stripe customer or subscription
+          identifier, subscription status, price, billing-period dates, payment
+          outcome, and cancellation settings. Home Cooked does not receive or
+          store your full card number or card security code.
+        </p>
       </>
     ),
   },
@@ -49,9 +56,11 @@ const privacySections = [
           Your cookbook content is shared with the people who have access to that
           cookbook. Outside your invited members, we share information with
           service providers that help run the app, such as authentication,
-          database, storage, email, hosting, AI, image search, and location-search
-          providers. They receive the information needed to perform their
-          services.
+          database, storage, email, hosting, AI, image search, location-search,
+          and payment providers. Stripe receives the information needed to
+          process subscriptions, payments, invoices, and account billing
+          management. See Stripe&apos;s privacy policy for its independent
+          processing practices.
         </p>
         <p>
           We may also disclose information if required by law, to protect the
@@ -109,9 +118,11 @@ const privacySections = [
       <p>
         We keep account and cookbook information while your account is active or
         as needed to provide the service. You can delete recipes, cookbooks, and
-        some settings in the app. Some records may remain for a limited time in
-        backups, logs, security records, or where retention is needed for legal
-        or operational reasons.
+        some settings in the app. If you cancel Plus, we retain your billing
+        records and saved content as needed to provide the Free plan, process
+        support requests, prevent fraud, reconcile payments, and meet legal or
+        accounting obligations. Some records may remain for a limited time in
+        backups, logs, security records, or other required operational systems.
       </p>
     ),
   },
@@ -155,7 +166,7 @@ const privacySections = [
 
 export default function PrivacyPage() {
   return (
-    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="September 21, 2026">
+    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="September 23, 2026">
       <p>
         This Privacy Policy explains what <BrandName /> collects, how that
         information is used, and when it is shared. The app is designed for

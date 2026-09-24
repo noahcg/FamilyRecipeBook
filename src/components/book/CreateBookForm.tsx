@@ -30,6 +30,7 @@ export function CreateBookForm() {
       cover_style: BOOK_COVER_COLORS[0].hex,
       icon: "bowl",
       sharing_enabled: false,
+      creation_token: creationToken,
     },
   });
 
@@ -43,17 +44,29 @@ export function CreateBookForm() {
     setServerError(null);
     // Keep this token stable across retries. If the first request reached the
     // server but its response was lost, the retry can resolve to the same book.
-    const result = await createBook({ ...data, creation_token: creationToken });
-    if (!result.success) {
+    try {
+      const result = await createBook({ ...data, creation_token: creationToken });
+      if (!result.success) {
+        setSubmitLocked(false);
+        setServerError(result.error);
+        return;
+      }
+      router.push(`/app/books/${result.data.id}?created=1`);
+    } catch (error) {
       setSubmitLocked(false);
-      setServerError(result.error);
-      return;
+      console.error("[CreateBookForm] createBook failed", error);
+      setServerError(
+        "We couldn’t create that cookbook right now. Please try again. If it keeps happening, check that the billing migration is applied."
+      );
     }
-    router.push(`/app/books/${result.data.id}?created=1`);
+  }
+
+  function onInvalid() {
+    setServerError("Please fix the highlighted fields before creating your cookbook.");
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="w-full space-y-6" noValidate>
       <div className="space-y-4">
         <Input
           label="Book title"
@@ -166,7 +179,13 @@ export function CreateBookForm() {
       </div>
 
       {serverError && (
-        <p className="text-sm text-danger font-medium">{serverError}</p>
+        <div
+          className="rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm font-medium text-danger"
+          role="alert"
+          aria-live="assertive"
+        >
+          {serverError}
+        </div>
       )}
 
       <Button type="submit" variant="primary" fullWidth loading={isSubmitting || submitLocked}>

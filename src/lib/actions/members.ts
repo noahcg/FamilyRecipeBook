@@ -14,6 +14,7 @@ import {
   type InviteMemberInput,
 } from "@/lib/validators/member";
 import type { ActionResult, BookInvitation, MemberWithProfile } from "@/lib/types";
+import { assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
 
 export type PendingBookInvitation = Pick<
   BookInvitation,
@@ -75,6 +76,8 @@ export async function inviteMember(
   input: InviteMemberInput
 ): Promise<ActionResult<BookInvitation>> {
   const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "cookbook.share"); }
+  catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const parsed = inviteMemberSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };

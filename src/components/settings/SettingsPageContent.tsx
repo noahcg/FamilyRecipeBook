@@ -16,6 +16,8 @@ import { supportMailto } from "@/lib/support";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
+import type { BillingStatus } from "@/lib/entitlements";
+import { BillingCard } from "@/components/billing/BillingCard";
 
 interface GlobalSettingsPageContentProps {
   profile: Profile;
@@ -26,6 +28,7 @@ interface GlobalSettingsPageContentProps {
   };
   cloudflareConfigured: boolean;
   groceryDayLabels: boolean;
+  billing: BillingStatus;
 }
 
 interface BookSettingsPageContentProps {
@@ -53,6 +56,7 @@ export function GlobalSettingsPageContent({
   aiSettings,
   cloudflareConfigured,
   groceryDayLabels,
+  billing,
 }: GlobalSettingsPageContentProps) {
   const aiSummary = aiSettings.ai_provider ? "Custom AI key set" : "Default AI";
   const grocerySummary = groceryDayLabels ? "Grocery day labels on" : "Grocery day labels off";
@@ -83,6 +87,7 @@ export function GlobalSettingsPageContent({
         </header>
 
         <div className="space-y-10">
+          <BillingCard billing={billing} />
           <section className="scroll-mt-6 border-b border-line-soft pb-8">
             <div className="mb-4 flex items-baseline gap-4">
               <h2

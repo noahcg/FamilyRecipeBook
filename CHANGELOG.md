@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.15.2] - 2026-09-24
+
+### Free cookbook creation fix
+
+- Fixed the Free-limit database trigger to use `owner_id` for cookbooks and `created_by` for recipes.
+- Added migration 027 to repair already-migrated databases.
+
+## [0.15.1] - 2026-09-23
+
+### Billing policy disclosures
+
+- Updated the Terms of Service for the Plus subscription, annual renewal, cancellation, Stripe processing, and retained content after downgrade.
+- Updated the Privacy Policy for Stripe billing identifiers, payment processing, and billing-record retention.
+
+## [0.15.0] - 2026-09-23
+
+### Free and Plus billing infrastructure
+
+- Added centralized Free/Plus entitlements, safe limits, and atomic AI allowances.
+- Added Stripe Checkout, Billing Portal, signed idempotent webhook sync, and billing settings.
+- Added database migration 026 for billing state, webhook events, usage, and insert-boundary limits.
+
 ## [0.14.0] - 2026-09-19
 
 ### Tonight’s table in Ideas
@@ -168,3 +190,8 @@
 
 ### Copy
 - Changed "Add someone to this book" → **"Share this book with someone"** (page heading, onboarding title, and aria-label).
+# 0.15.0
+
+- Added centralized Free/Plus entitlements, safe limits, and atomic AI allowances.
+- Added Stripe Checkout, Billing Portal, signed idempotent webhook sync, and billing settings.
+- Added database migration 026 for billing state, webhook events, usage, and insert-boundary limits.

@@ -6,6 +6,7 @@ import { selectRecipeImage } from "@/lib/actions/pexels";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Recipe } from "@/lib/types";
+import { consumeAiAllowance, EntitlementError } from "@/lib/entitlements";
 
 async function fetchBookCategoryNames(bookId: string): Promise<string[]> {
   const supabase = await createClient();
@@ -453,11 +454,25 @@ export async function generateRecipeIdea(
   bookId: string
 ): Promise<ActionResult<AIRecipeIdea>> {
   const prompt = pantryPrompt.trim();
+  const user = await getUser();
+  if (!user) return { success: false, error: "Sign in to get recipe ideas." };
+  const userId = user.id;
   if (prompt.length < 10) {
     return {
       success: false,
       error: "Tell me what you have and what kind of meal you want.",
     };
+  }
+
+  async function consumeOnSuccess(result: ActionResult<AIRecipeIdea>): Promise<ActionResult<AIRecipeIdea>> {
+    if (!result.success) return result;
+    try {
+      await consumeAiAllowance(userId);
+      return result;
+    } catch (error) {
+      if (error instanceof EntitlementError) return { success: false as const, error: error.message };
+      throw error;
+    }
   }
 
   // Tell the AI about this cookbook's actual chapters, so suggestions land in
@@ -469,7 +484,7 @@ export async function generateRecipeIdea(
   if (provider && key) {
     if (provider === "anthropic") {
       const result = await generateWithAnthropic(prompt, categories, key);
-      if (result) return result;
+      if (result) return consumeOnSuccess(result);
     } else {
       const result = await generateWithOpenAI(prompt, categories, key);
       if (result) return result;
@@ -478,11 +493,11 @@ export async function generateRecipeIdea(
 
   // Fall back to server-configured Cloudflare Workers AI
   const cloudflareResult = await generateWithCloudflare(prompt, categories);
-  if (cloudflareResult) return cloudflareResult;
+  if (cloudflareResult) return consumeOnSuccess(cloudflareResult);
 
   // Fall back to server-configured OpenAI key
   const openAIResult = await generateWithOpenAI(prompt, categories);
-  if (openAIResult) return openAIResult;
+  if (openAIResult) return consumeOnSuccess(openAIResult);
 
   return {
     success: false,

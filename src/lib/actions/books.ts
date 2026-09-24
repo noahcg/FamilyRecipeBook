@@ -14,6 +14,7 @@ import {
   type UpdateBookInput,
 } from "@/lib/validators/book";
 import type { ActionResult, BookMember, BookPreview, BookRole, Profile, Recipe, RecipeBook } from "@/lib/types";
+import { assertCanCreateCookbook, assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
 
 interface BookPageMember extends BookMember {
   profile: Profile | null;
@@ -86,6 +87,12 @@ export async function createBook(
   input: CreateBookInput
 ): Promise<ActionResult<RecipeBook>> {
   const user = await requireUser();
+  try {
+    await assertCanCreateCookbook(user.id);
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
+  }
   const parsed = createBookSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -218,6 +225,10 @@ export async function updateBook(
           "Remove non-keeper members and cancel pending invitations before making this cookbook private.",
       };
     }
+  }
+  if (parsed.data.sharing_enabled === true) {
+    try { await assertFeatureAccess(user.id, "cookbook.share"); }
+    catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   }
 
   const updatePayload = { ...parsed.data, updated_at: new Date().toISOString() };

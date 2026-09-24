@@ -27,6 +27,7 @@ import type {
   RecipeWithRelations,
 } from "@/lib/types";
 import type { BookCategory } from "@/lib/actions/categories";
+import { assertCanCreateRecipe, assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
 
 const RECIPE_SELECT_WITH_CATEGORY =
   "*, category:book_categories!recipes_category_id_fkey(id, name)";
@@ -53,9 +54,20 @@ export async function createRecipe(
   input: CreateRecipeInput
 ): Promise<ActionResult<Recipe>> {
   const user = await requireUser();
+  try {
+    await assertCanCreateRecipe(user.id);
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
+  }
   const parsed = createRecipeSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  if (parsed.data.import_method || parsed.data.import_source || parsed.data.source_url) {
+    try { await assertFeatureAccess(user.id, "recipe.import"); }
+    catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   }
 
   const supabase = await createClient();

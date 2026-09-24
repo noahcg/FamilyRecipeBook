@@ -61,15 +61,31 @@ const termsSections = [
     ),
   },
   {
-    title: "Payments, If Applicable",
+    title: "Paid Plans and Billing",
     body: (
-      <p>
-        <BrandName /> may offer paid plans, trials, or optional paid features in
-        the future. If payments are added, the price, renewal terms, cancellation
-        process, and refund rules will be shown before you buy. Until then, no
-        payment terms apply unless they are presented in the product or in a
-        separate written agreement.
-      </p>
+      <>
+        <p>
+          <BrandName /> offers a free plan and an optional Plus subscription. Plus
+          is currently offered at <strong>$14.99 per year</strong>, with the
+          features and limits shown on the pricing page before you subscribe.
+          Prices may change for future renewals, and any change will be shown or
+          communicated as required by law.
+        </p>
+        <p>
+          Plus subscriptions renew annually unless you cancel before the next
+          renewal. Checkout and payment processing are handled by Stripe. You
+          can update payment details, view invoices, or cancel through the
+          Billing Portal available in your account settings. Cancellation stops
+          the next renewal; it does not delete your recipes, cookbooks, or other
+          saved content. Access to Plus features may continue through the paid
+          period and will then follow the Free plan limits.
+        </p>
+        <p>
+          Any refund, credit, tax, or consumer-cancellation rights are governed
+          by the terms shown at checkout and applicable law. For billing help,
+          contact support promptly with the email address on your account.
+        </p>
+      </>
     ),
   },
   {
@@ -119,7 +135,7 @@ const termsSections = [
 
 export default function TermsPage() {
   return (
-    <LegalPage eyebrow="Legal" title="Terms of Service" lastUpdated="August 25, 2026">
+    <LegalPage eyebrow="Legal" title="Terms of Service" lastUpdated="September 23, 2026">
       <p>
         These Terms explain the basic rules for using <BrandName />. By creating
         an account or using the service, you agree to these Terms and to our

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Check } from "lucide-react";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { BillingButton } from "@/components/billing/BillingButton";
 
 const freeFeatures = [
   "Create one cookbook of your own",
@@ -42,7 +43,9 @@ export const metadata = {
     "Start your recipe collection for free, or unlock every Home Cooked feature for $14.99 a year.",
 };
 
-export default function PricingPage() {
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ upgrade?: string }> }) {
+  const params = await searchParams;
+  const resumeCheckout = params.upgrade === "1";
   return (
     <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-hidden overflow-y-visible bg-cream text-ink">
       <div
@@ -124,9 +127,7 @@ export default function PricingPage() {
               <ul className="mt-5 space-y-2.5 pb-5">
                 {plusFeatures.map((feature) => <FeatureRow key={feature} premium>{feature}</FeatureRow>)}
               </ul>
-              <Link href="/sign-in" className="mt-auto inline-flex min-h-12 items-center justify-center rounded-full bg-green-forest-dark px-5 text-sm font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep">
-                Get Plus for $14.99 / Year
-              </Link>
+              <div className="mt-auto"><BillingButton autoStart={resumeCheckout}>Get Plus for $14.99 / Year</BillingButton><p className="mt-2 text-center text-xs text-ink-soft">You’ll confirm payment through Stripe Checkout.</p></div>
             </article>
           </section>
         </main>
