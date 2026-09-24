@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PushSubscriptionToggle } from "@/components/admin/PushSubscriptionToggle";
 import { AdminShareProfiles } from "./AdminShareProfiles";
+import { AdminEntitlements, type AdminEntitlementRow } from "@/components/admin/AdminEntitlements";
 
 // PostgREST returns a to-one embed (e.g. a book's owner) as a single object, so
 // reading it with [0] always misses. Normalize either shape.
@@ -92,6 +93,7 @@ export default async function AdminPage({
     { data: allMemberships },
     { data: pendingInviteRows },
     { data: authUsers },
+    { data: billingRows },
     { data: auditRows },
   ] = await Promise.all([
     admin.from("profiles").select("id", { count: "exact", head: true }),
@@ -137,6 +139,7 @@ export default async function AdminPage({
       .gte("expires_at", new Date().toISOString()),
     // Emails live in auth.users, not profiles — fetch them to label rows.
     admin.auth.admin.listUsers({ perPage: 1000 }),
+    admin.from("billing_accounts").select("user_id,status,plan,grandfathered_plus").order("updated_at", { ascending: false }),
     // Recent privileged actions for the audit log feed.
     admin
       .from("admin_actions")
@@ -158,6 +161,16 @@ export default async function AdminPage({
     name: profile.full_name ?? "",
     email: emailById.get(profile.id) ?? null,
   }));
+  const billingByUser = new Map((billingRows ?? []).map((row) => [row.user_id, row]));
+  const entitlementRows: AdminEntitlementRow[] = profileRows.map((profile) => {
+    const billing = billingByUser.get(profile.id);
+    const tier = billing?.grandfathered_plus
+      ? "grandfathered"
+      : billing?.status === "active" || billing?.status === "trialing" || billing?.plan === "plus"
+        ? "plus"
+        : "free";
+    return { id: profile.id, name: profile.full_name ?? "Unnamed profile", email: emailById.get(profile.id) ?? null, tier };
+  });
   const shareCookbooks = (allCookbooks ?? [])
     .map((row) => {
       const book = Array.isArray(row.recipe_books)
@@ -225,6 +238,8 @@ export default async function AdminPage({
         <section className="mt-4">
           <PushSubscriptionToggle />
         </section>
+
+        <AdminEntitlements rows={entitlementRows} />
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
           <div className="recipe-card flex max-h-[34rem] flex-col overflow-hidden">

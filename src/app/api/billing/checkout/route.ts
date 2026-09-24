@@ -11,6 +11,9 @@ export async function POST() {
     if (!price) return NextResponse.json({ error: "Plus checkout is not configured yet." }, { status: 503 });
     const admin = createServiceClient();
     const { data: billing } = await admin.from("billing_accounts").select("*").eq("user_id", user.id).maybeSingle();
+    if (billing?.grandfathered_plus) {
+      return NextResponse.json({ error: "Your account already has lifetime Plus access." }, { status: 409 });
+    }
     if (billing?.stripe_subscription_id && ["active", "trialing", "past_due", "unpaid"].includes(billing.status)) {
       return NextResponse.json({ error: "You already have a Plus subscription. Use Manage Billing in Settings." }, { status: 409 });
     }

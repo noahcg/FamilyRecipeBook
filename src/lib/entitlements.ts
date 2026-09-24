@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
 
 export type PlanKey = "free" | "plus";
+export type BillingTier = "free" | "plus" | "grandfathered";
 export type FeatureKey =
   | "recipe.create"
   | "cookbook.create"
@@ -39,7 +40,15 @@ export const PLAN_DEFINITIONS = {
   },
 } as const satisfies Record<PlanKey, { maxCookbooks: number | null; maxRecipes: number | null; maxAiIdeasPerPeriod: number; features: Record<FeatureKey, boolean> }>;
 
-export type BillingStatus = { plan: PlanKey; status: string; current_period_end: string | null; cancel_at_period_end: boolean; stripe_customer_id: string | null };
+export type BillingStatus = {
+  plan: PlanKey;
+  tier: BillingTier;
+  status: string;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  stripe_customer_id: string | null;
+  grandfathered_at: string | null;
+};
 export class EntitlementError extends Error {
   constructor(public readonly code: "FEATURE_REQUIRES_PLUS" | "RECIPE_LIMIT_REACHED" | "COOKBOOK_LIMIT_REACHED" | "AI_ALLOWANCE_EXHAUSTED", message: string) { super(message); }
 }
@@ -50,10 +59,13 @@ export function planForStatus(status: string | null | undefined): PlanKey {
 
 export async function getEffectiveEntitlements(userId: string): Promise<BillingStatus & { maxCookbooks: number | null; maxRecipes: number | null; maxAiIdeasPerPeriod: number }> {
   const supabase = await createClient();
-  const { data } = await supabase.from("billing_accounts").select("plan,status,current_period_end,cancel_at_period_end,stripe_customer_id").eq("user_id", userId).maybeSingle();
-  const plan = planForStatus(data?.status ?? data?.plan);
+  const { data } = await supabase.from("billing_accounts").select("plan,status,current_period_end,cancel_at_period_end,stripe_customer_id,grandfathered_plus,grandfathered_at").eq("user_id", userId).maybeSingle();
+  const tier: BillingTier = data?.grandfathered_plus === true
+    ? "grandfathered"
+    : planForStatus(data?.status ?? data?.plan);
+  const plan: PlanKey = tier === "free" ? "free" : "plus";
   const definition = PLAN_DEFINITIONS[plan];
-  return { plan, status: data?.status ?? "free", current_period_end: data?.current_period_end ?? null, cancel_at_period_end: data?.cancel_at_period_end ?? false, stripe_customer_id: data?.stripe_customer_id ?? null, maxCookbooks: definition.maxCookbooks, maxRecipes: definition.maxRecipes, maxAiIdeasPerPeriod: definition.maxAiIdeasPerPeriod };
+  return { plan, tier, status: data?.status ?? "free", current_period_end: data?.current_period_end ?? null, cancel_at_period_end: data?.cancel_at_period_end ?? false, stripe_customer_id: data?.stripe_customer_id ?? null, grandfathered_at: data?.grandfathered_at ?? null, maxCookbooks: definition.maxCookbooks, maxRecipes: definition.maxRecipes, maxAiIdeasPerPeriod: definition.maxAiIdeasPerPeriod };
 }
 
 export async function canUseFeature(userId: string, feature: FeatureKey) {

@@ -15,7 +15,43 @@ const inviteToBookSchema = z.object({
   role: z.enum(["contributor", "family"]),
 });
 
+const entitlementUserSchema = z.string().uuid();
+
 export type AdminInviteToBookInput = z.infer<typeof inviteToBookSchema>;
+
+export async function setUserGrandfatheredPlus(userId: string, enabled: boolean): Promise<ActionResult> {
+  const adminUser = await requireAdmin();
+  const parsed = entitlementUserSchema.safeParse(userId);
+  if (!parsed.success) return { success: false, error: "User not found." };
+
+  const service = createServiceClient();
+  const { data: targetProfile } = await service.from("profiles").select("id,full_name").eq("id", parsed.data).maybeSingle();
+  if (!targetProfile) return { success: false, error: "User not found." };
+
+  const now = new Date().toISOString();
+  const { error } = await service.from("billing_accounts").upsert({
+    user_id: parsed.data,
+    grandfathered_plus: enabled,
+    grandfathered_at: enabled ? now : undefined,
+    grandfathered_revoked_at: enabled ? null : now,
+  }, { onConflict: "user_id" });
+  if (error) return { success: false, error: error.message };
+
+  const label = targetProfile.full_name?.trim() || parsed.data;
+  await logAdminAction(service, {
+    actorId: adminUser.id,
+    action: enabled ? "grant_grandfathered_plus" : "revoke_grandfathered_plus",
+    targetType: "user",
+    targetId: parsed.data,
+    summary: `${enabled ? "Granted" : "Revoked"} lifetime Plus access for ${label}`,
+    metadata: { userId: parsed.data, grandfatheredPlus: enabled },
+  });
+
+  revalidatePath("/app/admin");
+  revalidatePath(`/app/admin/users/${parsed.data}`);
+  revalidatePath("/app/settings");
+  return { success: true, data: undefined };
+}
 
 function inviterFirstName(fullName?: string | null) {
   const trimmed = fullName?.trim();
@@ -195,4 +231,3 @@ export async function inviteUserToBook(
   revalidatePath(`/app/books/${bookId}/members`);
   return { success: true, data: undefined };
 }
-
