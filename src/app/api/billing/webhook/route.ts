@@ -39,7 +39,19 @@ export async function POST(request: Request) {
   catch { return new NextResponse("Invalid signature", { status: 400 }); }
   const admin = createServiceClient();
   const inserted = await admin.from("billing_webhook_events").insert({ event_id: event.id, event_type: event.type, livemode: event.livemode });
-  if (inserted.error?.code === "23505") return NextResponse.json({ received: true, duplicate: true });
+  if (inserted.error?.code === "23505") {
+    // A duplicate that was already processed is safely idempotent. If an
+    // earlier attempt failed (or was interrupted while still received),
+    // continue below so Stripe retries can actually recover the event.
+    const existing = await admin
+      .from("billing_webhook_events")
+      .select("processing_status")
+      .eq("event_id", event.id)
+      .maybeSingle();
+    if (existing.data?.processing_status === "processed") {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+  }
   if (inserted.error) return new NextResponse("Could not record event", { status: 500 });
   try {
     if (["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"].includes(event.type)) await syncSubscription(event.data.object as Stripe.Subscription, event.id, event.created);
