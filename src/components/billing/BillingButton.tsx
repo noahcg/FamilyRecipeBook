@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui";
 
-export function BillingButton({ mode = "checkout", autoStart = false, className, children }: { mode?: "checkout" | "portal"; autoStart?: boolean; className?: string; children: React.ReactNode }) {
+export function BillingButton({ mode = "checkout", autoStart = false, className, intent, children }: { mode?: "checkout" | "portal"; autoStart?: boolean; className?: string; intent?: "plus"; children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const openBilling = useCallback(async () => {
@@ -18,13 +18,14 @@ export function BillingButton({ mode = "checkout", autoStart = false, className,
       }
       if (response.status === 401) {
         const nextPath = mode === "checkout" ? "/pricing?upgrade=1" : window.location.pathname;
-        window.location.assign(`/sign-in?next=${encodeURIComponent(nextPath)}`);
+        const authPath = intent === "plus" ? `/sign-in?plan=plus&next=${encodeURIComponent(nextPath)}` : `/sign-in?next=${encodeURIComponent(nextPath)}`;
+        window.location.assign(authPath);
         return;
       }
       if (!response.ok || !data.url) throw new Error(data.error ?? `Could not open billing (HTTP ${response.status}).`);
       window.location.assign(data.url);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not open billing."); setLoading(false); }
-  }, [mode]);
+  }, [intent, mode]);
   useEffect(() => {
     if (!autoStart) return;
     const timer = window.setTimeout(() => { void openBilling(); }, 0);

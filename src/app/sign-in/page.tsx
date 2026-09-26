@@ -73,10 +73,12 @@ function EmailStep({
   nextPath,
   initialEmail,
   oauthError,
+  plusIntent,
 }: {
   nextPath: string | null;
   initialEmail: string;
   oauthError: string | null;
+  plusIntent: boolean;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(oauthError);
@@ -101,6 +103,7 @@ function EmailStep({
     markCodeSent(data.email);
     const params = new URLSearchParams({ email: data.email, sent: "1" });
     if (nextPath) params.set("next", nextPath);
+    if (plusIntent) params.set("plan", "plus");
     router.push(`/sign-in?${params.toString()}`);
   }
 
@@ -125,9 +128,9 @@ function EmailStep({
 
   return (
     <EntryShell
-      eyebrow="Welcome"
-      title="Sign in to Home Cooked"
-      description="Enter your email and we'll send you a sign-in code. No password to remember."
+      eyebrow={plusIntent ? "Start with Plus" : "Welcome"}
+      title={plusIntent ? "Create your Plus account" : "Create your free account"}
+      description={plusIntent ? "Enter your email and we'll take you straight to secure checkout for Home Cooked Plus. No password to remember." : "Enter your email to create a free Home Cooked account or sign in to your cookbook. No password to remember."}
       maxWidth="md"
       sideImageSrc="/images/entry/sign-in.jpg"
       sideImageAlt="Open recipe notebook on a kitchen counter"
@@ -137,7 +140,18 @@ function EmailStep({
       footer={
         <div className="mt-5 space-y-2 text-center">
           <p className="text-sm text-ink-muted">
-            New here? Same box &mdash; we&rsquo;ll set you up automatically.
+            {plusIntent ? "Already have Home Cooked? We'll connect your Plus subscription to this account." : "New here? Same box — we’ll set you up automatically."}
+          </p>
+          <p className="text-sm font-semibold text-green-deep">
+            {plusIntent ? (
+              <Link href="/sign-in" className="hover:underline">
+                Prefer to start free? Create a free account
+              </Link>
+            ) : (
+              <Link href="/sign-in?plan=plus" className="hover:underline">
+                Ready for the full experience? Start with Plus
+              </Link>
+            )}
           </p>
           <p className="text-xs text-ink-soft">
             By continuing you agree to our{" "}
@@ -219,7 +233,7 @@ function GoogleMark() {
   );
 }
 
-function CodeStep({ email, nextPath }: { email: string; nextPath: string | null }) {
+function CodeStep({ email, nextPath, plusIntent }: { email: string; nextPath: string | null; plusIntent: boolean }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
 
@@ -276,9 +290,9 @@ function CodeStep({ email, nextPath }: { email: string; nextPath: string | null 
 
   return (
     <EntryShell
-      eyebrow="Almost there"
+      eyebrow={plusIntent ? "Plus is one step away" : "Almost there"}
       title="Check your email"
-      description={`We sent a sign-in email to ${email}. Open the link in that email, or enter the code here if one is shown.`}
+      description={`${plusIntent ? "We sent a verification email" : "We sent a sign-in email"} to ${email}. Open the link in that email, or enter the code here if one is shown.`}
       maxWidth="md"
       sideImageSrc="/images/entry/email.jpg"
       sideImageAlt="Laptop and coffee on a kitchen table"
@@ -311,7 +325,7 @@ function CodeStep({ email, nextPath }: { email: string; nextPath: string | null 
         )}
 
         <Button type="submit" variant="primary" fullWidth loading={isSubmitting}>
-          Sign in
+          {plusIntent ? "Continue to Plus checkout" : "Sign in"}
         </Button>
       </form>
 
@@ -338,16 +352,17 @@ function CodeStep({ email, nextPath }: { email: string; nextPath: string | null 
 
 function SignInContent() {
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next");
+  const plusIntent = searchParams.get("plan") === "plus";
+  const nextPath = searchParams.get("next") ?? (plusIntent ? "/pricing?upgrade=1" : null);
   const email = searchParams.get("email") ?? "";
   const sent = searchParams.get("sent") === "1";
   const oauthError = OAUTH_ERRORS[searchParams.get("error") ?? ""] ?? null;
 
   if (sent && email) {
-    return <CodeStep key={email} email={email} nextPath={nextPath} />;
+    return <CodeStep key={email} email={email} nextPath={nextPath} plusIntent={plusIntent} />;
   }
 
-  return <EmailStep nextPath={nextPath} initialEmail={email} oauthError={oauthError} />;
+  return <EmailStep nextPath={nextPath} initialEmail={email} oauthError={oauthError} plusIntent={plusIntent} />;
 }
 
 export default function SignInPage() {

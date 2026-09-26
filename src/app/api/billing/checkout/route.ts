@@ -29,7 +29,7 @@ export async function POST() {
       customer: customerId,
       line_items: [{ price, quantity: 1 }],
       allow_promotion_codes: true,
-      success_url: `${getBillingAppUrl()}/app/settings?billing=processing`,
+      success_url: `${getBillingAppUrl()}/app?billing=processing`,
       cancel_url: `${getBillingAppUrl()}/pricing?billing=canceled`,
       metadata: { home_cooked_user_id: user.id },
       subscription_data: { metadata: { home_cooked_user_id: user.id } },
