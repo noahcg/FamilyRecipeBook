@@ -169,7 +169,8 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
       <a href="#main-content" className="skip-link" onClick={handleSkipToMain}>
         Skip to main content
       </a>
-      <aside className="cookbook-sidebar fixed inset-y-4 left-4 z-30 hidden w-[280px] overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
+      <div className="relative mx-auto min-h-dvh w-full lg:grid lg:w-[calc(100%-2rem)] lg:max-w-[1440px] lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-1">
+      <aside className="cookbook-sidebar sticky top-4 z-30 hidden h-[calc(100dvh-2rem)] w-[280px] self-start overflow-y-auto rounded-l-xl lg:flex lg:flex-col">
         <Link href="/app" className="brand-logo-link shrink-0 m-5 p-2">
           <BrandLockup compact />
         </Link>
@@ -243,10 +244,11 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
       <main
         id="main-content"
         tabIndex={-1}
-        className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] focus:shadow-none focus:outline-none focus-visible:shadow-none focus-visible:outline-none lg:ml-[300px] lg:my-4 lg:mr-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0"
+        className="cookbook-main-panel relative z-10 mx-auto min-h-dvh max-w-[760px] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] focus:shadow-none focus:outline-none focus-visible:shadow-none focus-visible:outline-none lg:mx-0 lg:my-4 lg:max-w-none lg:min-h-[calc(100dvh-2rem)] lg:rounded-xl lg:rounded-tl-none lg:rounded-bl-none lg:pb-0"
       >
         {children}
       </main>
+      </div>
 
       {mobileSideDrawer && (
         <button

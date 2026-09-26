@@ -387,8 +387,8 @@ export function RecipeDetail({
 
   return (
     <article>
-      <header className="relative h-[310px] overflow-hidden bg-green-pale sm:h-[360px] lg:h-[390px] lg:rounded-tr-xl">
-        <div className="absolute inset-0">
+      <header className="relative z-10 h-[310px] overflow-visible bg-green-pale sm:h-[360px] lg:h-[390px] lg:rounded-tr-xl">
+        <div className="absolute inset-0 overflow-hidden lg:rounded-tr-xl">
           {recipe.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -402,7 +402,7 @@ export function RecipeDetail({
             </div>
           )}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10 lg:rounded-tr-xl" />
         <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-14 pt-4 sm:pt-5">
           <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-8">
             <button
@@ -444,7 +444,7 @@ export function RecipeDetail({
                     onClick={() => setMenuOpen(false)}
                   />
                   <div
-                    className="absolute right-0 top-12 z-50 w-44 overflow-hidden rounded-md py-1 shadow-md"
+                    className="absolute right-0 top-12 z-50 max-h-[calc(100dvh-5rem)] w-44 overflow-y-auto overscroll-contain rounded-md py-1 shadow-md"
                     style={{ background: "var(--color-paper-soft)", border: "1px solid var(--color-line-soft)" }}
                   >
                     <OfflineRecipeButton
