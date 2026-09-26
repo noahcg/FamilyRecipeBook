@@ -183,7 +183,7 @@ export default async function AppHomePage() {
     <AppShell>
       <div className="relative min-h-dvh overflow-hidden px-2.5 py-5 min-[360px]:px-3 min-[425px]:px-4 sm:px-5 lg:rounded-tr-xl lg:px-8 lg:py-8">
         <div
-          className="pointer-events-none absolute right-0 top-0 z-0 h-[430px] w-full overflow-hidden sm:h-[500px] lg:right-[-8rem] lg:top-[-9rem] lg:h-[470px] lg:w-[55vw] lg:min-w-[660px]"
+          className="pointer-events-none absolute right-0 top-0 z-0 h-[430px] w-full overflow-hidden sm:h-[500px] lg:right-[-8rem] lg:top-[-9rem] lg:h-[470px] lg:w-[min(55vw,792px)] lg:min-w-[660px]"
           style={{
             maskImage: [
               "linear-gradient(to right, transparent 0%, black 22%)",
@@ -204,7 +204,7 @@ export default async function AppHomePage() {
             alt=""
             fill
             priority
-            sizes="(min-width: 1024px) 55vw, 100vw"
+            sizes="(min-width: 1440px) 792px, (min-width: 1024px) 55vw, 100vw"
             className="object-cover object-[74%_34%] opacity-[0.42] sm:object-[70%_48%] min-[993px]:opacity-80"
             aria-hidden="true"
           />

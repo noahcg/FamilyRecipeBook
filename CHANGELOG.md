@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.14.1] - 2026-09-26
+
+### Ultrawide layout
+
+- Capped the public landing-page hero inside a centered 1,900px canvas and grouped the authenticated app rail and main panel together inside one centered 1,440px grid so they stay adjacent on large monitors.
+- Capped the authenticated home hero artwork at 792px so it stops scaling once the app shell reaches its maximum width.
+- Allow recipe action menus to extend beyond the photo hero instead of being clipped by the description region, with scrolling available on short mobile screens.
+- Keep the softer full-width landing hero through tablet widths, with a moderate image fade at 1,024px and the stronger existing treatment retained on mobile.
+
 ## [0.14.0] - 2026-09-19
 
 ### Tonight’s table in Ideas

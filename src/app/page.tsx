@@ -41,39 +41,43 @@ function FeatureCopy({
 export default function LandingPage() {
   return (
     <div className="relative app-paper-bg paper-texture min-h-screen overflow-hidden text-ink">
-      <div
-        className="absolute top-0 right-0 z-0 h-[520px] w-full overflow-hidden sm:h-[640px] lg:h-[820px] lg:w-[58vw] lg:min-w-[660px]"
-        style={{
-          maskImage: [
-            'linear-gradient(to right, transparent 0%, black 22%)',
-            'linear-gradient(to top, transparent 0%, black 18%)',
-          ].join(', '),
-          WebkitMaskImage: [
-            'linear-gradient(to right, transparent 0%, black 22%)',
-            'linear-gradient(to top, transparent 0%, black 18%)',
-          ].join(', '),
-          maskComposite: 'intersect',
-          WebkitMaskComposite: 'source-in',
-          maskSize: '100% 100%, 100% 100%',
-          maskRepeat: 'no-repeat',
-        }}
-      >
-        <Image
-          src="/images/landing-cookbook-hero.png"
-          alt="Open handwritten recipe book on a warm kitchen counter with apples, herbs, flour, spices, and coffee"
-          fill
-          priority
-          sizes="(min-width: 1024px) 58vw, 100vw"
-          className="object-cover object-[74%_34%] sm:object-[70%_48%]"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,233,0.08)_0%,rgba(247,243,233,0.38)_24%,rgba(247,243,233,0.82)_48%,var(--color-cream)_76%)] sm:bg-[linear-gradient(to_bottom,rgba(247,243,233,0)_0%,rgba(247,243,233,0.16)_58%,var(--color-cream)_100%)] lg:hidden"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-cream)_0%,rgba(247,243,233,0.92)_20%,rgba(247,243,233,0.42)_58%,rgba(247,243,233,0.04)_100%)] sm:hidden"
-        />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[520px] sm:h-[640px] xl:h-[820px]">
+        <div className="relative mx-auto h-full w-full max-w-[1900px]">
+          <div
+            className="absolute right-0 h-full w-full overflow-hidden xl:w-[58%] xl:min-w-[660px]"
+            style={{
+              maskImage: [
+                'linear-gradient(to right, transparent 0%, black 22%)',
+                'linear-gradient(to top, transparent 0%, black 18%)',
+              ].join(', '),
+              WebkitMaskImage: [
+                'linear-gradient(to right, transparent 0%, black 22%)',
+                'linear-gradient(to top, transparent 0%, black 18%)',
+              ].join(', '),
+              maskComposite: 'intersect',
+              WebkitMaskComposite: 'source-in',
+              maskSize: '100% 100%, 100% 100%',
+              maskRepeat: 'no-repeat',
+            }}
+          >
+            <Image
+              src="/images/landing-cookbook-hero.png"
+              alt="Open handwritten recipe book on a warm kitchen counter with apples, herbs, flour, spices, and coffee"
+              fill
+              priority
+              sizes="(min-width: 1900px) 1102px, (min-width: 1024px) 58vw, 100vw"
+              className="object-cover object-[74%_34%] sm:object-[70%_48%] sm:opacity-70 xl:opacity-100"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,233,0.08)_0%,rgba(247,243,233,0.38)_24%,rgba(247,243,233,0.82)_48%,var(--color-cream)_76%)] sm:bg-[linear-gradient(to_bottom,rgba(247,243,233,0)_0%,rgba(247,243,233,0.16)_58%,var(--color-cream)_100%)] xl:hidden"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-cream)_0%,rgba(247,243,233,0.92)_20%,rgba(247,243,233,0.42)_58%,rgba(247,243,233,0.04)_100%)] sm:hidden"
+            />
+          </div>
+        </div>
       </div>
 
       <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5 lg:px-12 lg:py-8">
@@ -83,11 +87,11 @@ export default function LandingPage() {
       </header>
 
       <main>
-        <section className="relative min-h-[480px] pb-4 pt-8 sm:min-h-[520px] lg:min-h-[560px] lg:pb-6 lg:pt-8">
+        <section className="relative min-h-[480px] pb-4 pt-8 sm:min-h-[520px] xl:min-h-[560px] xl:pb-6 xl:pt-8">
           <div className="relative z-10 mx-auto w-full max-w-[1360px] px-4 sm:px-8 lg:px-12">
             <div className="max-w-2xl">
               <h1
-                className="text-[clamp(2.25rem,11vw,2.85rem)] font-bold leading-[1.02] tracking-normal text-green-deep sm:text-[4.25rem] lg:text-[5.35rem]"
+                className="text-[clamp(2.25rem,11vw,2.85rem)] font-bold leading-[1.02] tracking-normal text-green-deep sm:text-[4.25rem] xl:text-[5.35rem]"
                 style={{ fontFamily: "var(--font-playfair)" }}
               >
                 Made with love.
