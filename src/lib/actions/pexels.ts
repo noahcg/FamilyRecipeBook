@@ -1,5 +1,12 @@
 "use server";
 
+import { runCloudflareTask } from "@/lib/ai/cloudflare";
+import {
+  buildRecipeImageRankingMessages,
+  buildRecipeImageSearchMessages,
+} from "@/lib/ai/prompts";
+import { consumeAiTaskThrottle } from "@/lib/ai/throttle";
+import { requireUser } from "@/lib/auth";
 import {
   searchRecipeImageCandidates,
   selectDefaultImageUrl,
@@ -18,69 +25,24 @@ function hasCloudflareConfig() {
   );
 }
 
-// Shared helper - same fetch pattern as aiRecipes.ts, but gated by
-// ENABLE_AI_IMAGE_PICKER so Pexels-only search remains the primary path.
-async function callCloudflareText(
-  systemPrompt: string,
-  userPrompt: string,
-  maxTokens: number
-): Promise<string | null> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const apiToken = process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN;
-  const model =
-    process.env.CLOUDFLARE_WORKERS_AI_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
-
-  if (!isAiImagePickerEnabled() || !accountId || !apiToken) return null;
-
-  try {
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
-      {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${apiToken}`,
-          "content-type": "application/json",
-        },
-        cache: "no-store",
-        signal: AbortSignal.timeout(2500),
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          max_tokens: maxTokens,
-        }),
-      }
-    );
-
-    if (!response.ok) return null;
-
-    const json = (await response.json()) as {
-      result?: {
-        response?: unknown;
-        choices?: { message?: { content?: unknown } }[];
-      };
-    };
-    const output =
-      json.result?.response ?? json.result?.choices?.[0]?.message?.content;
-    return typeof output === "string" ? output.trim() : null;
-  } catch {
-    return null;
-  }
-}
-
 async function improveSearchQuery(
   title: string,
   ingredients: string[]
 ): Promise<string | null> {
   if (!hasCloudflareConfig()) return null;
 
-  const sample = ingredients.slice(0, 5).join(", ");
-  const raw = await callCloudflareText(
-    "You convert recipe names into short stock photo search queries. Return ONLY a 3-5 word phrase. Focus on homemade food and natural presentation. No quotes, no punctuation, no explanation.",
-    `Recipe: ${title}${sample ? `\nKey ingredients: ${sample}` : ""}`,
-    40
-  );
+  const safeTitle = title.trim().slice(0, 200);
+  const safeIngredients = ingredients
+    .slice(0, 5)
+    .map((ingredient) => ingredient.trim().slice(0, 200))
+    .filter(Boolean);
+
+  const result = await runCloudflareTask("recipeImageSearchQuery", {
+    messages: buildRecipeImageSearchMessages(safeTitle, safeIngredients),
+  });
+  const raw = result?.success && (typeof result.output === "string" || typeof result.output === "number")
+    ? String(result.output).trim()
+    : null;
 
   const cleaned = raw?.split("\n")[0].replace(/['"*]/g, "").trim().slice(0, 80);
   return cleaned || null;
@@ -119,15 +81,19 @@ async function rankWithCloudflare(
 ): Promise<RecipeImageCandidate[] | null> {
   if (!hasCloudflareConfig() || candidates.length <= 1) return null;
 
-  const list = candidates
-    .map((candidate, index) => `${index + 1}. ${candidate.alt}`)
-    .join("\n");
+  const safeTitle = title.trim().slice(0, 200);
+  const safeQuery = query.trim().slice(0, 100);
 
-  const raw = await callCloudflareText(
-    "You pick the best food photo for a warm family cookbook. Prefer homemade look, natural lighting, simple plating, and appetizing but not over-styled food. Avoid restaurant or studio photos. Return ONLY the number of the best image.",
-    `Recipe: ${title}\nSearch: ${query}\n\nImages:\n${list}`,
-    20
-  );
+  const result = await runCloudflareTask("recipeImageRanking", {
+    messages: buildRecipeImageRankingMessages(
+      safeTitle,
+      safeQuery,
+      candidates.map((candidate) => candidate.alt.slice(0, 300))
+    ),
+  });
+  const raw = result?.success && (typeof result.output === "string" || typeof result.output === "number")
+    ? String(result.output).trim()
+    : null;
 
   if (!raw) return null;
 
@@ -144,12 +110,15 @@ export async function searchRecipeImages(
   title: string,
   ingredients: string[]
 ): Promise<RecipeImageCandidate[]> {
+  const user = await requireUser();
+  const useAiPicker = isAiImagePickerEnabled() &&
+    consumeAiTaskThrottle(user.id, "recipeImageSearchQuery");
   return searchRecipeImageCandidates({
     title,
     ingredients,
     fetchCandidates: fetchPexelsCandidates,
-    improveQuery: isAiImagePickerEnabled() ? improveSearchQuery : undefined,
-    rankCandidates: isAiImagePickerEnabled() ? rankWithCloudflare : undefined,
+    improveQuery: useAiPicker ? improveSearchQuery : undefined,
+    rankCandidates: useAiPicker ? rankWithCloudflare : undefined,
     limit: 8,
   });
 }

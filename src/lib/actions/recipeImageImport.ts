@@ -1,6 +1,9 @@
 "use server";
 
 import { requireUser } from "@/lib/auth";
+import { runExternalAiRequest } from "@/lib/ai/external";
+import { resolveExternalModel } from "@/lib/ai/modelRegistry";
+import { consumeAiTaskThrottle } from "@/lib/ai/throttle";
 import { canContribute } from "@/lib/permissions";
 import {
   importedRecipeJsonSchema,
@@ -89,15 +92,20 @@ export async function improveRecipeImportWithOpenAI(
     };
   }
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${settings.ai_api_key}`,
-      "content-type": "application/json",
-    },
-    cache: "no-store",
-    body: JSON.stringify({
-      model: process.env.OPENAI_RECIPE_OCR_MODEL ?? "gpt-4.1-mini",
+  if (!consumeAiTaskThrottle(user.id, "recipePhotoImport")) {
+    return {
+      success: false,
+      error: "Too many photo improvements at once. Wait a minute and try again.",
+    };
+  }
+
+  const result = await runExternalAiRequest({
+    task: "recipePhotoImport",
+    provider: "openai",
+    model: resolveExternalModel("recipePhotoImport", "openai"),
+    apiKey: settings.ai_api_key,
+    timeoutMs: 45_000,
+    body: {
       input: [
         {
           role: "system",
@@ -128,19 +136,17 @@ export async function improveRecipeImportWithOpenAI(
           schema: importedRecipeJsonSchema,
         },
       },
-    }),
+    },
   });
 
-  if (!response.ok) {
-    const body = await response.text();
+  if (!result.success) {
     return {
       success: false,
-      error: `OpenAI could not improve this import. ${body.slice(0, 180)}`,
+      error: "OpenAI could not improve this import. Check the key and try again.",
     };
   }
 
-  const json = (await response.json()) as unknown;
-  const outputText = extractOutputText(json);
+  const outputText = extractOutputText(result.json);
   if (!outputText) {
     return { success: false, error: "OpenAI did not return recipe text." };
   }

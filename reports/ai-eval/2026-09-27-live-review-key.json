@@ -1,0 +1,5 @@
+{
+  "Model A": "@cf/google/gemma-4-26b-a4b-it",
+  "Model B": "@cf/meta/llama-3.1-8b-instruct-fast",
+  "Model C": "@cf/zai-org/glm-4.7-flash"
+}

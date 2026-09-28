@@ -1,12 +1,16 @@
 {
   "name": "app",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --test tests/*.test.mjs",
+    "ai:eval": "node scripts/ai-eval.mjs",
+    "ai:eval:regrade": "node scripts/ai-regrade.mjs",
+    "ai:eval:review": "node scripts/ai-blind-review.mjs",
     "test:pexels": "node --test tests/pexelsSearch.test.mjs",
     "capture:guides": "node scripts/capture-guides.mjs",
     "version:check": "node scripts/check-version-tracking.js",

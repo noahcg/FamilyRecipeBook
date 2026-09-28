@@ -1,0 +1,155 @@
+{
+  "createdAt": "2026-09-28T12:26:35.083Z",
+  "evaluatorVersion": "recipe-tasks-v3",
+  "thresholds": {
+    "minimumOverallPassRate": 0.9,
+    "minimumRecipeSchemaRate": 0.95,
+    "maximumCriticalConstraintFailures": 0,
+    "maximumErrorRate": 0.05
+  },
+  "models": [
+    "@cf/google/gemma-4-26b-a4b-it"
+  ],
+  "cases": [
+    {
+      "id": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "chicken",
+          "rice"
+        ],
+        "requiredInstructionIngredients": [
+          "chicken",
+          "rice"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "@cf/google/gemma-4-26b-a4b-it": {
+      "calls": 1,
+      "callSuccesses": 1,
+      "errorRate": 0,
+      "passRate": 1,
+      "recipeSchemaRate": 1,
+      "criticalFailures": 0,
+      "latencyMs": {
+        "p50": 13818,
+        "p95": 13818
+      },
+      "usage": {
+        "inputTokens": 272,
+        "outputTokens": 443,
+        "usd": 0.00016010000000000002,
+        "neurons": 14.554691
+      },
+      "taskPassRates": {
+        "recipeGeneration": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 13818,
+      "usage": {
+        "inputTokens": 272,
+        "outputTokens": 443,
+        "totalTokens": 715
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 35,
+          "description": "A comforting, one-pan meal featuring tender chicken thighs and sweet, caramelized vegetables served over fluffy rice. This dish offers a perfect balance of savory juices and gentle sweetness for a cozy night in.",
+          "ingredients": [
+            {
+              "item": "chicken thighs",
+              "note": "bone-in, skin-on",
+              "quantity": "4",
+              "unit": "pieces"
+            },
+            {
+              "item": "white rice",
+              "note": "long-grain preferred",
+              "quantity": "1.5",
+              "unit": "cups"
+            },
+            {
+              "item": "carrots",
+              "note": "peeled and sliced",
+              "quantity": "2",
+              "unit": "large"
+            },
+            {
+              "item": "onion",
+              "note": "diced",
+              "quantity": "1",
+              "unit": "medium"
+            },
+            {
+              "item": "chicken broth",
+              "note": "low sodium",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "2",
+              "unit": "tablespoons"
+            },
+            {
+              "item": "salt and pepper",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Heat olive oil in a large skillet or pot over medium-high heat and sear chicken thighs skin-side down until golden brown."
+            },
+            {
+              "body": "Remove chicken and set aside, then sauté diced onions and sliced carrots in the remaining fat until softened."
+            },
+            {
+              "body": "Stir in the dry rice to lightly toast the grains for one minute."
+            },
+            {
+              "body": "Return chicken to the pan, pour in the chicken broth, and bring to a gentle simmer."
+            },
+            {
+              "body": "Cover tightly with a lid, reduce heat to low, and cook for 20-25 minutes until rice is tender and liquid is absorbed."
+            },
+            {
+              "body": "Season with salt and pepper before serving warm."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple one-pot meal is a lifesaver on busy weeknights when you want something hearty without a mountain of dishes. It brings a sense of warmth and easy nourishment to the table after a long day.",
+          "tags": [
+            "One-Pot",
+            "Chicken",
+            "Family-Friendly",
+            "Easy-Cleanup",
+            "Rice-Dish-Recipe-Idea-12345678"
+          ],
+          "title": "One-Pan Savory Chicken and Rice"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":35,\"description\":\"A comforting, one-pan meal featuring tender chicken thighs and sweet, caramelized vegetables served over fluffy rice. This dish offers a perfect balance of savory juices and gentle sweetness for a cozy night in.\",\"ingredients\":[{\"item\":\"chicken thighs\",\"note\":\"bone-in, skin-on\",\"quantity\":\"4\",\"unit\":\"pieces\"},{\"item\":\"white rice\",\"note\":\"long-grain preferred\",\"quantity\":\"1.5\",\"unit\":\"cups\"},{\"item\":\"carrots\",\"note\":\"peeled and sliced\",\"quantity\":\"2\",\"unit\":\"large\"},{\"item\":\"onion\",\"note\":\"diced\",\"quantity\":\"1\",\"unit\":\"medium\"},{\"item\":\"chicken broth\",\"note\":\"low sodium\",\"quantity\":\"3\",\"unit\":\"cups\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"tablespoons\"},{\"item\":\"salt and pepper\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"}],\"instructions\":[{\"body\":\"Heat olive oil in a large skillet or pot over medium-high heat and sear chicken thighs skin-side down until golden brown.\"},{\"body\":\"Remove chicken and set aside, then sauté diced onions and sliced carrots in the remaining fat until softened.\"},{\"body\":\"Stir in the dry rice to lightly toast the grains for one minute.\"},{\"body\":\"Return chicken to the pan, pour in the chicken broth, and bring to a gentle simmer.\"},{\"body\":\"Cover tightly with a lid, reduce heat to low, and cook for 20-25 minutes until rice is tender and liquid is absorbed.\"},{\"body\":\"Season with salt and pepper before serving warm.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This simple one-pot meal is a lifesaver on busy weeknights when you want something hearty without a mountain of dishes. It brings a sense of warmth and easy nourishment to the table after a long day.\",\"tags\":[\"One-Pot\",\"Chicken\",\"Family-Friendly\",\"Easy-Cleanup\",\"Rice-Dish-Recipe-Idea-12345678\"],\"title\":\"One-Pan Savory Chicken and Rice\"}"
+    }
+  ]
+}
