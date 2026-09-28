@@ -26,7 +26,7 @@ export function PublicMasthead({
           <span className="h-px w-12 bg-green-sage/70 sm:w-16" />
         </div>
         <h1 className="mt-6 max-w-[1100px] text-[clamp(2.75rem,5.4vw,5.5rem)] font-bold leading-[.98] tracking-[-.025em] text-green-forest-dark" style={{ fontFamily: "var(--font-playfair)" }}>{title}</h1>
-        <p className="mx-auto mt-6 max-w-[760px] text-[clamp(1rem,1.5vw,1.3rem)] font-semibold italic leading-[1.45] text-accent-terracotta" style={{ fontFamily: "var(--font-playfair)" }}>{description}</p>
+        <p className="mx-auto mt-6 max-w-[1200px] text-balance text-[clamp(1.25rem,2.4vw,2.4rem)] font-semibold italic leading-[1.32] text-accent-terracotta" style={{ fontFamily: "var(--font-playfair)" }}>{description}</p>
         {children && <div className="mt-8">{children}</div>}
       </section>
     </div>

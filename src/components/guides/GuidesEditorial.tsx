@@ -1,18 +1,48 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Camera, Heart, Leaf, UsersRound } from "lucide-react";
+import { ArrowRight, BookOpen, Camera, Heart, UsersRound } from "lucide-react";
 import { PublicMasthead } from "@/components/layout/PublicMasthead";
+import { GuideTableOfContents } from "@/components/guides/GuideTableOfContents";
 import type { EditorialGuide } from "@/lib/guides/editorial";
 import { guideBySlug } from "@/lib/guides/editorial";
 
 const display = { fontFamily: "var(--font-playfair)" };
 
-function Flourish() {
-  return <span aria-hidden="true" className="inline-flex items-center gap-3 text-green-sage"><Leaf size={18} strokeWidth={1.6} /><span className="h-px w-14 bg-green-sage/60" /></span>;
-}
-
 export function GuideMasthead({ eyebrow = "GUIDE", title, description }: { eyebrow?: string; title: string; description: string }) {
   return <PublicMasthead eyebrow={eyebrow} title={title} description={description} background="/guides-bkg.png" />;
+}
+
+function GuideDirectoryLinks({ guides }: { guides: EditorialGuide[] }) {
+  return (
+    <ol>
+      {guides.map((guide) => (
+        <li key={guide.slug}>
+          <Link href={`/guides/${guide.slug}`} className="block min-h-12 px-5 py-3 text-[.98rem] leading-snug text-ink-muted transition-[background-color,color,padding] duration-200 hover:bg-green-pale/75 hover:px-7 hover:text-green-deep sm:px-7 sm:hover:px-9">
+            {guide.title}
+          </Link>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+export function GuideDirectoryRail({ guides }: { guides: EditorialGuide[] }) {
+  return (
+    <aside className="lg:sticky lg:top-5 lg:self-start" aria-label="Guide library">
+      <details className="overflow-hidden bg-paper-soft/68 lg:hidden">
+        <summary className="flex min-h-20 list-none items-center px-5 text-[1.65rem] font-bold text-green-deep marker:hidden sm:px-7" style={display}>Browse the Guides</summary>
+        <nav className="pb-5" aria-label="Guide pages">
+          <GuideDirectoryLinks guides={guides} />
+        </nav>
+      </details>
+      <div className="hidden min-h-[48rem] overflow-hidden bg-paper-soft/68 lg:block">
+        <h2 className="flex min-h-20 items-center px-7 text-[1.65rem] font-bold text-green-deep" style={display}>Browse the Guides</h2>
+        <nav className="pb-5" aria-label="Guide pages">
+          <GuideDirectoryLinks guides={guides} />
+        </nav>
+      </div>
+    </aside>
+  );
 }
 
 export function GuideCard({ guide, featured = false }: { guide: EditorialGuide; featured?: boolean }) {
@@ -47,33 +77,7 @@ export function GuideCard({ guide, featured = false }: { guide: EditorialGuide; 
 }
 
 function EditorialHeading({ children }: { children: React.ReactNode }) {
-  return <div><h2 className="text-[clamp(2.25rem,4.5vw,3.75rem)] font-bold leading-[1.04] text-green-deep" style={display}>{children}</h2><div className="mt-3"><Flourish /></div></div>;
-}
-
-function TableOfContents({ guide }: { guide: EditorialGuide }) {
-  return (
-    <aside className="lg:sticky lg:top-5 lg:self-start" aria-label="In this guide">
-      <details open className="bg-[#f5f0e6]/72 lg:min-h-[46rem] lg:open:block">
-        <summary className="flex min-h-20 list-none items-center gap-3 px-5 text-[1.65rem] font-bold text-green-deep marker:hidden sm:px-6" style={display}><Leaf aria-hidden="true" size={20} strokeWidth={1.6} /> In This Guide</summary>
-        <nav className="pb-5" aria-label="Guide sections">
-          <ol>
-            <li className="relative border-l-2 border-green-deep bg-green-pale/80">
-              <span aria-hidden="true" className="absolute -left-[5px] top-1/2 size-2 -translate-y-1/2 rounded-full bg-green-deep" />
-              <a href={`#${guide.sections[0].id}`} className="block min-h-12 px-5 py-3 text-[.98rem] leading-snug text-green-deep sm:px-6">{guide.sections[0].heading}</a>
-            </li>
-            {guide.steps.map((step, index) => <li key={step.title}><a href={`#step-${index + 1}`} className="block min-h-12 px-5 py-3 text-[.98rem] leading-snug text-ink-muted transition hover:bg-green-pale/60 hover:text-green-deep sm:px-6">Step {index + 1}: {step.title}</a></li>)}
-            <li><a href="#tips-for-success" className="block min-h-12 px-5 py-3 text-[.98rem] leading-snug text-ink-muted transition hover:bg-green-pale/60 hover:text-green-deep sm:px-6">Tips for Success</a></li>
-            <li><a href="#home-cooked" className="block min-h-12 px-5 py-3 text-[.98rem] leading-snug text-ink-muted transition hover:bg-green-pale/60 hover:text-green-deep sm:px-6">How Home Cooked Helps</a></li>
-          </ol>
-        </nav>
-        <div className="hidden px-8 pb-10 pt-16 lg:block">
-          <Leaf aria-hidden="true" className="text-green-sage" size={42} strokeWidth={1.1} />
-          <p className="mt-3 rotate-[-3deg] font-hand text-[1.75rem] leading-[1.1] text-green-deep">Good<br />Recipes<br />Brighter<br />Days</p>
-          <Heart aria-hidden="true" className="ml-24 mt-3 text-accent-terracotta" size={23} strokeWidth={1.7} />
-        </div>
-      </details>
-    </aside>
-  );
+  return <div><h2 className="text-[clamp(2.25rem,4.5vw,3.75rem)] font-bold leading-[1.04] text-green-deep" style={display}>{children}</h2><div aria-hidden="true" className="mt-4 h-px w-20 bg-green-sage/60" /></div>;
 }
 
 function OpeningSection({ guide }: { guide: EditorialGuide }) {
@@ -164,7 +168,7 @@ export function GuideArticle({ guide }: { guide: EditorialGuide }) {
   return (
     <main id="main-content" className="mx-auto w-full max-w-[1260px] px-5 pb-20 sm:px-8 lg:px-12">
       <div className="grid gap-10 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-14">
-        <TableOfContents guide={guide} />
+        <GuideTableOfContents guide={guide} />
         <article className="min-w-0">
           <OpeningSection guide={guide} />
           <div className="mt-8"><WhatYouWillLearn guide={guide} /></div>
