@@ -7,6 +7,7 @@
 - Added a public, accessible Guides index and ten substantive editorial guide pages for collecting, organizing, preserving, digitizing, and sharing recipes.
 - Added reusable Guide content data, detail-template modules, guide metadata, related links, table of contents, and real pricing/sign-up calls to action.
 - Unified Guides, Pricing, and Our Story around a shared image-backed editorial masthead and replaced card-based public-page layouts with open spreads, dividers, and typographic hierarchy.
+- Rewrote all ten Guides as long-form editorial articles and replaced the mandatory numbered-step presentation with narrative sections and optional supporting lists.
 
 ## [0.15.2] - 2026-09-24
 

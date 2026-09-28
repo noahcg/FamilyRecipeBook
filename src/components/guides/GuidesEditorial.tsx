@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Camera, Heart, UsersRound } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
 import { PublicMasthead } from "@/components/layout/PublicMasthead";
 import { GuideTableOfContents } from "@/components/guides/GuideTableOfContents";
 import type { EditorialGuide } from "@/lib/guides/editorial";
@@ -86,6 +86,7 @@ function OpeningSection({ guide }: { guide: EditorialGuide }) {
     <section id={section.id} className="scroll-mt-8">
       <EditorialHeading>{section.heading}</EditorialHeading>
       <div className="mt-5 max-w-[48rem] space-y-4 text-[1.08rem] leading-[1.72] text-ink-muted sm:text-[1.18rem]">{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
+      {section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.05rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.12rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}
       <div className="relative mt-8 overflow-hidden">
         <div className="relative aspect-[16/8.7] min-h-[20rem]">
           <Image src="/images/landing-cookbook-hero.png" alt="An open handwritten family cookbook with apples and baking ingredients" fill sizes="(min-width: 1024px) 800px, 100vw" className="object-cover object-[66%_center]" />
@@ -95,37 +96,6 @@ function OpeningSection({ guide }: { guide: EditorialGuide }) {
           <Heart aria-hidden="true" className="mx-auto mt-2 text-accent-terracotta" size={20} />
         </div>
       </div>
-    </section>
-  );
-}
-
-const lessonItems = [
-  { icon: BookOpen, label: "Preserve cherished recipes" },
-  { icon: Camera, label: "Capture family stories and traditions" },
-  { icon: UsersRound, label: "Organize everything in one place" },
-  { icon: Heart, label: "Create a legacy to share" },
-];
-
-function WhatYouWillLearn({ guide }: { guide: EditorialGuide }) {
-  return (
-    <section className="border-y border-green-sage/35 bg-green-pale/55 px-5 py-8 sm:px-8 sm:py-10">
-      <EditorialHeading>What You’ll Learn</EditorialHeading>
-      <p className="mx-auto mt-4 max-w-3xl text-center text-[1.02rem] leading-relaxed text-ink-muted">In this guide, we’ll walk through the practical steps behind {guide.title.toLowerCase()}, with room for the stories and details that make the collection yours.</p>
-      <ul className="mt-8 grid gap-0 sm:grid-cols-2 lg:grid-cols-4">
-        {lessonItems.map(({ icon: Icon, label }, index) => <li key={label} className={`px-4 py-5 text-center ${index > 0 ? "sm:border-l sm:border-line" : ""}`}><span className="mx-auto grid size-14 place-items-center rounded-full bg-paper-soft/80"><Icon aria-hidden="true" className="text-green-deep" size={25} strokeWidth={1.7} /></span><p className="mx-auto mt-3 max-w-[10rem] text-sm leading-snug text-green-deep">{label}</p></li>)}
-      </ul>
-    </section>
-  );
-}
-
-function DetailedSteps({ guide }: { guide: EditorialGuide }) {
-  return (
-    <section aria-labelledby="step-by-step-heading">
-      <p className="text-xs font-extrabold uppercase tracking-[.22em] text-accent-terracotta">Step by step</p>
-      <h2 id="step-by-step-heading" className="mt-3 text-[clamp(2.25rem,4.5vw,3.75rem)] font-bold leading-[1.04] text-green-deep" style={display}>A practical path forward</h2>
-      <ol className="mt-8 border-b border-line">
-        {guide.steps.map((step, index) => <li id={`step-${index + 1}`} key={step.title} className="scroll-mt-8 grid gap-4 border-t border-line py-7 sm:grid-cols-[4rem_1fr] sm:py-9"><span className="text-sm font-extrabold uppercase tracking-[.16em] text-green-sage">{String(index + 1).padStart(2, "0")}</span><div><h3 className="text-2xl font-bold leading-tight text-green-deep" style={display}>{step.title}</h3><p className="mt-2 max-w-2xl leading-relaxed text-ink-muted">{step.body}</p></div></li>)}
-      </ol>
     </section>
   );
 }
@@ -171,10 +141,8 @@ export function GuideArticle({ guide }: { guide: EditorialGuide }) {
         <GuideTableOfContents guide={guide} />
         <article className="min-w-0">
           <OpeningSection guide={guide} />
-          <div className="mt-8"><WhatYouWillLearn guide={guide} /></div>
-          <div className="mt-16"><DetailedSteps guide={guide} /></div>
-          <div id="tips-for-success" className="mt-16 space-y-14 scroll-mt-8">
-            {guide.sections.slice(1).map((section, index) => <section id={section.id} key={section.id} className="scroll-mt-8"><EditorialHeading>{section.heading}</EditorialHeading><div className="mt-5 max-w-[48rem] space-y-4 text-[1.06rem] leading-[1.78] text-ink-muted sm:text-[1.12rem]">{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>{index === 0 && <aside className="mt-7 border-y border-green-sage/45 py-6 text-[1.05rem] italic leading-relaxed text-green-deep"><span className="font-bold not-italic">A note to keep close:</span> {guide.callout}</aside>}</section>)}
+          <div className="mt-16 space-y-14">
+            {guide.sections.slice(1).map((section, index) => <section id={section.id} key={section.id} className="scroll-mt-8"><EditorialHeading>{section.heading}</EditorialHeading><div className="mt-5 max-w-[48rem] space-y-4 text-[1.06rem] leading-[1.78] text-ink-muted sm:text-[1.12rem]">{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>{section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.04rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.1rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}{index === 0 && <aside className="mt-7 border-y border-green-sage/45 py-6 text-[1.05rem] italic leading-relaxed text-green-deep"><span className="font-bold not-italic">A note to keep close:</span> {guide.callout}</aside>}</section>)}
           </div>
           <div className="mt-16"><GuideFeature /></div>
         </article>

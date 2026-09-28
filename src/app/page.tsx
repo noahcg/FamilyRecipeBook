@@ -153,7 +153,7 @@ export default function LandingPage() {
                   tone="bg-green-soft/80 text-green-deep"
                   titleLead="Your cookbooks,"
                   titleAccent="all in one place."
-                  body="Every recipe, idea, and meal plan lives in your own private cookbook — ready when you are."
+                  body="Every recipe, idea, and meal plan lives in your own private cookbook, ready when you are."
                 />
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function LandingPage() {
             </span>
           </h2>
           <p className="mx-auto mt-4 max-w-md text-[1.05rem] leading-relaxed text-ink-muted">
-            It only takes a minute. Save the recipes that matter — and the
+            It only takes a minute. Save the recipes that matter and the
             moments behind them.
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3">

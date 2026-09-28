@@ -117,7 +117,7 @@ export function SignedOutCta({
       sideImageSrc="/images/entry/add-family.jpg"
       sideImageAlt="Family-style dinner table"
       sideTitle="The recipes are waiting for one more cook."
-      sideDescription={`Use ${invitation.email} to join — we kept your spot at the table.`}
+      sideDescription={`Use ${invitation.email} to join. We kept your spot at the table.`}
       sideNote="Recipes are better when everyone can add their part."
     >
       <div>
@@ -141,7 +141,7 @@ export function SignedOutCta({
         </Link>
 
         <p className="mt-5 text-center text-xs text-ink-soft">
-          No account needed first &mdash; we will add you to the cookbook
+          No account needed first. We will add you to the cookbook
           automatically once you sign in.
         </p>
       </div>

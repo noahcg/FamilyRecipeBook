@@ -50,7 +50,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
       <PublicMasthead
         eyebrow="PRICING"
         title="A better way to keep your recipes."
-        description="Start for free, or unlock the full Home Cooked experience—for every kitchen, at every stage."
+        description="Start for free, or unlock the full Home Cooked experience for every kitchen, at every stage."
         background="/pricing-bkg.png"
       />
 

@@ -140,7 +140,7 @@ function EmailStep({
       footer={
         <div className="mt-5 space-y-2 text-center">
           <p className="text-sm text-ink-muted">
-            {plusIntent ? "Already have Home Cooked? We'll connect your Plus subscription to this account." : "New here? Same box — we’ll set you up automatically."}
+            {plusIntent ? "Already have Home Cooked? We'll connect your Plus subscription to this account." : "New here? Use the same box. We’ll set you up automatically."}
           </p>
           <p className="text-sm font-semibold text-green-deep">
             {plusIntent ? (

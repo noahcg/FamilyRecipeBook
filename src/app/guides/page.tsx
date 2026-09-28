@@ -37,7 +37,7 @@ export default function GuidesPage() {
               <h2 id="why-family-cookbook" className="text-[clamp(2.65rem,4.25vw,4rem)] font-bold leading-[1.02] text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Why a Family Cookbook?</h2>
               <div aria-hidden="true" className="mt-4 h-px w-24 bg-green-sage/60" />
               <p className="mt-5 max-w-[58rem] text-[1.08rem] leading-[1.62] text-ink-muted sm:text-[1.2rem]">
-                Recipes are more than just instructions—they&rsquo;re stories, traditions, and a connection to the people we love. Creating a family cookbook is a beautiful way to preserve those memories and keep them alive for future generations.
+                Recipes are more than just instructions. They&rsquo;re stories, traditions, and a connection to the people we love. Creating a family cookbook is a beautiful way to preserve those memories and keep them alive for future generations.
               </p>
 
               <div className="relative mt-8 aspect-[4/3] overflow-hidden rounded-[1rem] bg-[#d7c39e] shadow-[0_14px_34px_rgba(79,61,38,0.14)] sm:aspect-video">

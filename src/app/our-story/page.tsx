@@ -47,7 +47,7 @@ export default function OurStoryPage() {
               <StoryHeading>A better place for the recipes we actually use</StoryHeading>
               <div className="mt-5 space-y-4 text-[1rem] leading-[1.75] text-ink-muted sm:text-[1.04rem]">
                 <p>Recipes have a way of ending up everywhere: saved in a browser, buried in a message, scribbled on a card, or tucked away in a notebook we cannot find when we need it. The recipes themselves are often the easy part. Keeping them together is not.</p>
-                <p>Home Cooked was created to make that feel simpler. It gives recipes a real home, where family favorites, dependable weeknight meals, and personal discoveries can live together in collections that feel like cookbooks—not just a list of saved links.</p>
+                <p>Home Cooked was created to make that feel simpler. It gives recipes a real home, where family favorites, dependable weeknight meals, and personal discoveries can live together in collections that feel like cookbooks, not just a list of saved links.</p>
               </div>
             </div>
           </div>
@@ -81,7 +81,7 @@ export default function OurStoryPage() {
               <p>I built Home Cooked because it is the recipe app I wanted for myself. I wanted one place for the meals I make often, the recipes I want to remember, and the collections I would be happy to share.</p>
               <p>I also wanted it to feel less like managing information and more like keeping a personal cookbook. That idea is still at the center of Home Cooked as it grows.</p>
               <p>There is a lot of care behind the product, and there is still a lot left to build. Thank you for being here early.</p>
-              <div className="pt-1 font-hand text-2xl text-accent-cinnamon">— Noah</div>
+              <div className="pt-1 font-hand text-2xl text-accent-cinnamon">Noah</div>
             </div>
           </div>
         </section>

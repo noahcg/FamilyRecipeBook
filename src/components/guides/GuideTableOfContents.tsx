@@ -8,9 +8,7 @@ const display = { fontFamily: "var(--font-playfair)" };
 
 export function GuideTableOfContents({ guide }: { guide: EditorialGuide }) {
   const links = [
-    { id: guide.sections[0].id, label: guide.sections[0].heading },
-    ...guide.steps.map((step, index) => ({ id: `step-${index + 1}`, label: `Step ${index + 1}: ${step.title}` })),
-    { id: "tips-for-success", label: "Tips for Success" },
+    ...guide.sections.map((section) => ({ id: section.id, label: section.heading })),
     { id: "home-cooked", label: "How Home Cooked Helps" },
   ];
   const sectionKey = links.map(({ id }) => id).join("|");
