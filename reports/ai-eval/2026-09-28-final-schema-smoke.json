@@ -1,0 +1,64 @@
+{
+  "createdAt": "2026-09-28T12:25:56.370Z",
+  "evaluatorVersion": "recipe-tasks-v3",
+  "thresholds": {
+    "minimumOverallPassRate": 0.9,
+    "minimumRecipeSchemaRate": 0.95,
+    "maximumCriticalConstraintFailures": 0,
+    "maximumErrorRate": 0.05
+  },
+  "models": [
+    "@cf/google/gemma-4-26b-a4b-it"
+  ],
+  "cases": [
+    {
+      "id": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "chicken",
+          "rice"
+        ],
+        "requiredInstructionIngredients": [
+          "chicken",
+          "rice"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "@cf/google/gemma-4-26b-a4b-it": {
+      "calls": 1,
+      "callSuccesses": 0,
+      "errorRate": 1,
+      "passRate": 0,
+      "recipeSchemaRate": 0,
+      "criticalFailures": 0,
+      "latencyMs": {
+        "p50": null,
+        "p95": null
+      },
+      "usage": {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "usd": 0,
+        "neurons": 0
+      },
+      "taskPassRates": {
+        "recipeGeneration": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "callSuccess": false,
+      "status": 400,
+      "durationMs": 1127,
+      "errorCategory": "request"
+    }
+  ]
+}

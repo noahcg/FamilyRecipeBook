@@ -1,14 +1,41 @@
 "use server";
 
 import { z } from "zod";
+import {
+  cloudflareFailureMessage,
+  runCloudflareTask,
+} from "@/lib/ai/cloudflare";
+import { runExternalAiRequest } from "@/lib/ai/external";
+import { resolveExternalModel } from "@/lib/ai/modelRegistry";
+import { consumeAiTaskThrottle } from "@/lib/ai/throttle";
+import {
+  RECIPE_GENERATION_QUALITY_GUIDANCE,
+  buildRecipeGenerationMessages,
+  formatCategoryList,
+} from "@/lib/ai/prompts";
+import {
+  buildRecipeIdeaJsonSchema,
+  isValidRecipeQuantity,
+} from "@/lib/ai/recipeContract";
 import { createRecipe } from "@/lib/actions/recipes";
 import { selectRecipeImage } from "@/lib/actions/pexels";
-import { getUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Recipe } from "@/lib/types";
 
-async function fetchBookCategoryNames(bookId: string): Promise<string[]> {
+async function fetchBookCategoryNames(
+  bookId: string,
+  userId: string
+): Promise<string[] | null> {
   const supabase = await createClient();
+  const { data: membership } = await supabase
+    .from("book_members")
+    .select("role")
+    .eq("book_id", bookId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!membership) return null;
+
   const { data } = await supabase
     .from("book_categories")
     .select("name")
@@ -17,33 +44,16 @@ async function fetchBookCategoryNames(bookId: string): Promise<string[]> {
   return (data ?? []).map((row) => row.name);
 }
 
-function buildRecipeIdeaJsonSchema(categories: string[]) {
-  const list = categories.length ? categories : ["Other"];
-  return {
-    ...recipeIdeaJsonSchema,
-    properties: {
-      ...recipeIdeaJsonSchema.properties,
-      category: { type: "string", enum: list },
-    },
-  };
-}
-
-function formatCategoryList(categories: string[]) {
-  if (categories.length === 0) return "Other";
-  if (categories.length === 1) return categories[0];
-  return `${categories.slice(0, -1).join(", ")}, or ${categories[categories.length - 1]}`;
-}
-
 const aiIngredientSchema = z.object({
-  quantity: z.string().max(20),
+  quantity: z.string().max(20).refine(isValidRecipeQuantity),
   unit: z.string().max(30),
   item: z.string().min(1),
   note: z.string().max(200),
-});
+}).strict();
 
 const aiInstructionSchema = z.object({
   body: z.string().min(1),
-});
+}).strict();
 
 const aiRecipeIdeaSchema = z.object({
   title: z.string().min(1).max(200),
@@ -57,74 +67,22 @@ const aiRecipeIdeaSchema = z.object({
   // by resolving the name to a book_categories row (case-insensitive) and falling
   // back to "Other" if no match exists.
   category: z.string().max(60),
-  tags: z.array(z.string().max(30)).max(10),
-  ingredients: z.array(aiIngredientSchema).min(1),
-  instructions: z.array(aiInstructionSchema).min(1),
-});
+  tags: z.array(z.string().max(30)).max(5),
+  ingredients: z.array(aiIngredientSchema).min(4).max(8),
+  instructions: z.array(aiInstructionSchema).min(3).max(6).superRefine((steps, context) => {
+    const normalized = steps.map((step) =>
+      step.body.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+    );
+    if (new Set(normalized).size !== normalized.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Instruction steps must be distinct.",
+      });
+    }
+  }),
+}).strict();
 
 export type AIRecipeIdea = z.infer<typeof aiRecipeIdeaSchema>;
-
-const recipeIdeaJsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  required: [
-    "title",
-    "description",
-    "source_name",
-    "story",
-    "prep_minutes",
-    "cook_minutes",
-    "servings",
-    "category",
-    "tags",
-    "ingredients",
-    "instructions",
-  ],
-  properties: {
-    title: { type: "string" },
-    description: { type: "string" },
-    source_name: { type: "string" },
-    story: { type: "string" },
-    prep_minutes: { type: "integer" },
-    cook_minutes: { type: "integer" },
-    servings: { type: "integer" },
-    category: { type: "string" },
-    tags: {
-      type: "array",
-      maxItems: 5,
-      items: { type: "string" },
-    },
-    ingredients: {
-      type: "array",
-      minItems: 4,
-      maxItems: 8,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["quantity", "unit", "item", "note"],
-        properties: {
-          quantity: { type: "string" },
-          unit: { type: "string" },
-          item: { type: "string" },
-          note: { type: "string" },
-        },
-      },
-    },
-    instructions: {
-      type: "array",
-      minItems: 3,
-      maxItems: 6,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["body"],
-        properties: {
-          body: { type: "string" },
-        },
-      },
-    },
-  },
-};
 
 function extractOutputText(response: unknown) {
   if (response && typeof response === "object" && "output_text" in response) {
@@ -167,93 +125,27 @@ async function generateWithCloudflare(
 ): Promise<ActionResult<AIRecipeIdea> | null> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN;
-  const model =
-    process.env.CLOUDFLARE_WORKERS_AI_MODEL || "@cf/meta/llama-3.1-8b-instruct-fast";
 
   if (!accountId || !apiToken) return null;
 
   const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
-  const categoryList = formatCategoryList(categories);
-  const exampleCategory = categories[0] ?? "Other";
-
-  const messages = [
-    {
-      role: "system",
-      content: `You are a warm, practical family cookbook assistant. Return only valid compact JSON matching this shape: {"title":"","description":"","source_name":"AI Recipe Idea","story":"","prep_minutes":0,"cook_minutes":0,"servings":4,"category":"${exampleCategory}","tags":[""],"ingredients":[{"quantity":"","unit":"","item":"","note":""}],"instructions":[{"body":""}]}. Choose category from ${categoryList}. Keep descriptions and steps concise. Use 4-8 ingredients and 3-6 steps. Use empty strings for unknown quantity, unit, or note. Do not include markdown.`,
+  const result = await runCloudflareTask("recipeGeneration", {
+    messages: buildRecipeGenerationMessages(prompt, categories),
+    responseFormat: {
+      type: "json_schema",
+      json_schema: dynamicSchema,
     },
-    {
-      role: "user",
-      content: `Create one realistic, saveable recipe idea from this pantry request: ${prompt}`,
-    },
-  ];
+  });
 
-  async function runCloudflare(useSchema: boolean) {
-    return fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
-      {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${apiToken}`,
-          "content-type": "application/json",
-        },
-        cache: "no-store",
-        body: JSON.stringify({
-          messages,
-          max_tokens: 1800,
-          ...(useSchema
-            ? {
-                response_format: {
-                  type: "json_schema",
-                  json_schema: {
-                    type: "object",
-                    properties: dynamicSchema.properties,
-                    required: dynamicSchema.required,
-                  },
-                },
-              }
-            : {}),
-        }),
-      }
-    );
-  }
-
-  const response = await runCloudflare(true);
-
-  if (!response.ok) {
-    const body = await response.text();
+  if (!result) return null;
+  if (!result.success) {
     return {
       success: false,
-      error: `Cloudflare Workers AI could not generate a recipe. ${body.slice(0, 180)}`,
+      error: cloudflareFailureMessage(result.category),
     };
   }
 
-  const json = (await response.json()) as {
-    success?: boolean;
-    errors?: { message?: string }[];
-    result?: {
-      response?: unknown;
-      choices?: { message?: { content?: unknown } }[];
-    };
-  };
-
-  if (json.success === false) {
-    return {
-      success: false,
-      error: json.errors?.[0]?.message ?? "Cloudflare Workers AI returned an error.",
-    };
-  }
-
-  // Newer Workers AI models return OpenAI chat-completion shape
-  // (result.choices[].message.content); older ones use result.response.
-  const output =
-    json.result?.response ?? json.result?.choices?.[0]?.message?.content;
-  if (!output) {
-    return {
-      success: false,
-      error: "Cloudflare Workers AI did not return a recipe idea.",
-    };
-  }
-
+  const output = result.output;
   if (typeof output === "object") {
     const parsed = aiRecipeIdeaSchema.safeParse(output);
     if (parsed.success) return { success: true, data: parsed.data };
@@ -265,32 +157,72 @@ async function generateWithCloudflare(
       const parsed = aiRecipeIdeaSchema.safeParse(parsedJson);
       if (parsed.success) return { success: true, data: parsed.data };
     } catch {
-      // Retry below without schema mode; some models mix schema output with text.
+      return {
+        success: false,
+        error: "The generated recipe was not valid JSON. Try again.",
+      };
     }
   }
 
-  const retryResponse = await runCloudflare(false);
-  if (!retryResponse.ok) {
+  return {
+    success: false,
+    error: "The generated recipe was incomplete. Try again with a little more detail.",
+  };
+}
+
+async function generateWithOpenAI(
+  prompt: string,
+  categories: string[],
+  overrideKey?: string
+): Promise<ActionResult<AIRecipeIdea> | null> {
+  const apiKey = overrideKey ?? process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
+  const categoryList = formatCategoryList(categories);
+
+  const result = await runExternalAiRequest({
+    task: "recipeGeneration",
+    provider: "openai",
+    model: resolveExternalModel("recipeGeneration", "openai"),
+    apiKey,
+    timeoutMs: 30_000,
+    body: {
+      input: [
+        {
+          role: "system",
+          content: `You are a warm, practical family cookbook assistant. Create one realistic, saveable recipe idea from the user's pantry and preferences. Favor common ingredients, clear steps, and family-friendly wording. Do not invent unavailable specialty ingredients unless they are explicitly optional. Choose category from ${categoryList}. ${RECIPE_GENERATION_QUALITY_GUIDANCE}`,
+        },
+        {
+          role: "user",
+          content: `Pantry request: ${prompt}`,
+        },
+      ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "recipe_idea",
+          strict: true,
+          schema: dynamicSchema,
+        },
+      },
+    },
+  });
+
+  if (!result.success) {
     return {
       success: false,
-      error: "The generated recipe was incomplete. Try again with a little more detail.",
+      error: "OpenAI could not generate a recipe idea. Check the key and try again.",
     };
   }
 
-  const retryJson = (await retryResponse.json()) as {
-    result?: {
-      response?: unknown;
-      choices?: { message?: { content?: unknown } }[];
-    };
-  };
-  const retryOutput =
-    retryJson.result?.response ?? retryJson.result?.choices?.[0]?.message?.content;
+  const outputText = extractOutputText(result.json);
+  if (!outputText) {
+    return { success: false, error: "The model did not return a recipe idea." };
+  }
 
   try {
-    const parsedJson =
-      typeof retryOutput === "string"
-        ? (JSON.parse(extractJsonObject(retryOutput)) as unknown)
-        : retryOutput;
+    const parsedJson = JSON.parse(extractJsonObject(outputText)) as unknown;
     const parsed = aiRecipeIdeaSchema.safeParse(parsedJson);
     if (!parsed.success) {
       return {
@@ -308,94 +240,24 @@ async function generateWithCloudflare(
   }
 }
 
-async function generateWithOpenAI(
-  prompt: string,
-  categories: string[],
-  overrideKey?: string
-): Promise<ActionResult<AIRecipeIdea> | null> {
-  const apiKey = overrideKey ?? process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
-
-  const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
-  const categoryList = formatCategoryList(categories);
-
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json",
-    },
-    cache: "no-store",
-    body: JSON.stringify({
-      model: process.env.OPENAI_RECIPE_MODEL ?? "gpt-5-mini",
-      input: [
-        {
-          role: "system",
-          content: `You are a warm, practical family cookbook assistant. Create one realistic, saveable recipe idea from the user's pantry and preferences. Favor common ingredients, clear steps, and family-friendly wording. Do not invent unavailable specialty ingredients unless they are explicitly optional. Choose category from ${categoryList}.`,
-        },
-        {
-          role: "user",
-          content: `Pantry request: ${prompt}`,
-        },
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "recipe_idea",
-          strict: true,
-          schema: dynamicSchema,
-        },
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    return {
-      success: false,
-      error: `OpenAI could not generate a recipe idea. ${body.slice(0, 180)}`,
-    };
-  }
-
-  const json = (await response.json()) as unknown;
-  const outputText = extractOutputText(json);
-  if (!outputText) {
-    return { success: false, error: "The model did not return a recipe idea." };
-  }
-
-  const parsedJson = JSON.parse(outputText) as unknown;
-  const parsed = aiRecipeIdeaSchema.safeParse(parsedJson);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: "The generated recipe was incomplete. Try again with a little more detail.",
-    };
-  }
-
-  return { success: true, data: parsed.data };
-}
-
 async function generateWithAnthropic(
   prompt: string,
   categories: string[],
   apiKey: string
 ): Promise<ActionResult<AIRecipeIdea> | null> {
-  const model = process.env.ANTHROPIC_RECIPE_MODEL ?? "claude-haiku-4-5-20251001";
+  const model = resolveExternalModel("recipeGeneration", "anthropic");
   const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
   const categoryList = formatCategoryList(categories);
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    cache: "no-store",
-    body: JSON.stringify({
-      model,
+  const result = await runExternalAiRequest({
+    task: "recipeGeneration",
+    provider: "anthropic",
+    model,
+    apiKey,
+    timeoutMs: 30_000,
+    body: {
       max_tokens: 2000,
-      system: `You are a warm, practical family cookbook assistant. Use the create_recipe tool to return exactly one realistic, saveable recipe idea. Favor common ingredients, clear steps, and family-friendly wording. Choose category from ${categoryList}.`,
+      system: `You are a warm, practical family cookbook assistant. Use the create_recipe tool to return exactly one realistic, saveable recipe idea. Favor common ingredients, clear steps, and family-friendly wording. Choose category from ${categoryList}. ${RECIPE_GENERATION_QUALITY_GUIDANCE}`,
       messages: [{ role: "user", content: `Pantry request: ${prompt}` }],
       tools: [
         {
@@ -405,18 +267,17 @@ async function generateWithAnthropic(
         },
       ],
       tool_choice: { type: "tool", name: "create_recipe" },
-    }),
+    },
   });
 
-  if (!response.ok) {
-    const body = await response.text();
+  if (!result.success) {
     return {
       success: false,
-      error: `Anthropic could not generate a recipe idea. ${body.slice(0, 180)}`,
+      error: "Anthropic could not generate a recipe idea. Check the key and try again.",
     };
   }
 
-  const json = (await response.json()) as {
+  const json = result.json as {
     content?: { type: string; name?: string; input?: unknown }[];
   };
 
@@ -436,14 +297,12 @@ async function generateWithAnthropic(
   return { success: true, data: parsed.data };
 }
 
-async function getUserAISettings(): Promise<{ provider: string | null; key: string | null }> {
-  const user = await getUser();
-  if (!user) return { provider: null, key: null };
+async function getUserAISettings(userId: string): Promise<{ provider: string | null; key: string | null }> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("user_settings")
     .select("ai_provider, ai_api_key")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .single();
   return { provider: data?.ai_provider ?? null, key: data?.ai_api_key ?? null };
 }
@@ -459,13 +318,30 @@ export async function generateRecipeIdea(
       error: "Tell me what you have and what kind of meal you want.",
     };
   }
+  if (prompt.length > 2_000) {
+    return {
+      success: false,
+      error: "Keep the recipe request under 2,000 characters.",
+    };
+  }
+
+  const user = await requireUser();
 
   // Tell the AI about this cookbook's actual chapters, so suggestions land in
   // the right place (including any custom chapters the user has added).
-  const categories = await fetchBookCategoryNames(bookId);
+  const categories = await fetchBookCategoryNames(bookId, user.id);
+  if (!categories) {
+    return { success: false, error: "You don't have access to this cookbook." };
+  }
+  if (!consumeAiTaskThrottle(user.id, "recipeGeneration")) {
+    return {
+      success: false,
+      error: "Too many recipe requests at once. Wait a minute and try again.",
+    };
+  }
 
   // User's own provider/key takes priority
-  const { provider, key } = await getUserAISettings();
+  const { provider, key } = await getUserAISettings(user.id);
   if (provider && key) {
     if (provider === "anthropic") {
       const result = await generateWithAnthropic(prompt, categories, key);

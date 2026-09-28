@@ -1,0 +1,144 @@
+{
+  "createdAt": "2026-09-28T12:17:23.110Z",
+  "evaluatorVersion": "recipe-tasks-v3",
+  "thresholds": {
+    "minimumOverallPassRate": 0.9,
+    "minimumRecipeSchemaRate": 0.95,
+    "maximumCriticalConstraintFailures": 0,
+    "maximumErrorRate": 0.05
+  },
+  "models": [
+    "@cf/google/gemma-4-26b-a4b-it"
+  ],
+  "cases": [
+    {
+      "id": "generation-dessert",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 8,
+        "requiredIngredients": [
+          "berr",
+          "oat"
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "@cf/google/gemma-4-26b-a4b-it": {
+      "calls": 1,
+      "callSuccesses": 1,
+      "errorRate": 0,
+      "passRate": 1,
+      "recipeSchemaRate": 1,
+      "criticalFailures": 0,
+      "latencyMs": {
+        "p50": 14799,
+        "p95": 14799
+      },
+      "usage": {
+        "inputTokens": 268,
+        "outputTokens": 378,
+        "usd": 0.0001402,
+        "neurons": 12.745582
+      },
+      "taskPassRates": {
+        "recipeGeneration": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-dessert",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 14799,
+      "usage": {
+        "inputTokens": 268,
+        "outputTokens": 378,
+        "totalTokens": 646
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dessert",
+          "cook_minutes": 35,
+          "description": "A comforting blend of tart mixed berries tucked under a golden, crunchy oat topping. It is the perfect warm treat for a cozy evening or a weekend brunch.",
+          "ingredients": [
+            {
+              "item": "frozen mixed berries",
+              "note": "do not thaw",
+              "quantity": "6",
+              "unit": "cups"
+            },
+            {
+              "item": "rolled oats",
+              "note": "old fashioned preferred",
+              "quantity": "1.5",
+              "unit": "cups"
+            },
+            {
+              "item": "all-purpose flour",
+              "note": "",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "brown sugar",
+              "note": "packed",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "unsalted butter",
+              "note": "cold and cubed",
+              "quantity": "0.5",
+              "unit": "cup"
+            },
+            {
+              "item": "cinnamon",
+              "note": "ground",
+              "quantity": "1",
+              "unit": "teaspoon"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Preheat your oven to 375°F (190°C) and lightly grease a large baking dish."
+            },
+            {
+              "body": "Spread the frozen mixed berries evenly across the bottom of the prepared dish."
+            },
+            {
+              "body": "In a medium bowl, mix the oats, flour, brown sugar, and cinnamon together."
+            },
+            {
+              "body": "Cut the cold butter into the oat mixture using a pastry cutter or fork until it looks like coarse crumbs."
+            },
+            {
+              "body": "Sprinkle the oat topping evenly over the berries."
+            },
+            {
+              "body": "Bake for 35 minutes or until the fruit is bubbling and the topping is golden brown."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 8,
+          "source_name": "AI Recipe Idea",
+          "story": "This crumble is our go-to whenever we need something sweet but effortless. It turns a bag of frozen fruit into a centerpiece that brings everyone to the kitchen table.",
+          "tags": [
+            "berry",
+            "crumble",
+            "oatmeal",
+            "easy"
+          ],
+          "title": "Simple Berry Oat Crumble"
+        }
+      },
+      "output": "{\"category\":\"Dessert\",\"cook_minutes\":35,\"description\":\"A comforting blend of tart mixed berries tucked under a golden, crunchy oat topping. It is the perfect warm treat for a cozy evening or a weekend brunch.\",\"ingredients\":[{\"item\":\"frozen mixed berries\",\"note\":\"do not thaw\",\"quantity\":\"6\",\"unit\":\"cups\"},{\"item\":\"rolled oats\",\"note\":\"old fashioned preferred\",\"quantity\":\"1.5\",\"unit\":\"cups\"},{\"item\":\"all-purpose flour\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"brown sugar\",\"note\":\"packed\",\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"unsalted butter\",\"note\":\"cold and cubed\",\"quantity\":\"0.5\",\"unit\":\"cup\"},{\"item\":\"cinnamon\",\"note\":\"ground\",\"quantity\":\"1\",\"unit\":\"teaspoon\"}],\"instructions\":[{\"body\":\"Preheat your oven to 375°F (190°C) and lightly grease a large baking dish.\"},{\"body\":\"Spread the frozen mixed berries evenly across the bottom of the prepared dish.\"},{\"body\":\"In a medium bowl, mix the oats, flour, brown sugar, and cinnamon together.\"},{\"body\":\"Cut the cold butter into the oat mixture using a pastry cutter or fork until it looks like coarse crumbs.\"},{\"body\":\"Sprinkle the oat topping evenly over the berries.\"},{\"body\":\"Bake for 35 minutes or until the fruit is bubbling and the topping is golden brown.\"}],\"prep_minutes\":10,\"servings\":8,\"source_name\":\"AI Recipe Idea\",\"story\":\"This crumble is our go-to whenever we need something sweet but effortless. It turns a bag of frozen fruit into a centerpiece that brings everyone to the kitchen table.\",\"tags\":[\"berry\",\"crumble\",\"oatmeal\",\"easy\"],\"title\":\"Simple Berry Oat Crumble\"}"
+    }
+  ]
+}

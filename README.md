@@ -37,7 +37,13 @@ cp .env.local.example .env.local
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → service_role key |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Dashboard → Workers AI → Use REST API |
 | `CLOUDFLARE_WORKERS_AI_API_TOKEN` | Cloudflare Dashboard → Workers AI → Create Workers AI API Token |
-| `CLOUDFLARE_WORKERS_AI_MODEL` | Optional. Defaults to `@cf/meta/llama-3.1-8b-instruct` |
+| `CLOUDFLARE_WORKERS_AI_MODEL` | Optional global rollback pin. Leave unset to use the task-specific server registry |
+| `CLOUDFLARE_RECIPE_GENERATION_MODEL` | Optional allowlisted recipe-generation override |
+| `CLOUDFLARE_RECIPE_DESCRIPTION_MODEL` | Optional allowlisted blank-description override |
+| `CLOUDFLARE_RECIPE_IMAGE_SEARCH_MODEL` | Optional allowlisted image-query override |
+| `CLOUDFLARE_RECIPE_IMAGE_RANKING_MODEL` | Optional allowlisted image-ranking override |
+| `CLOUDFLARE_WORKERS_AI_FALLBACK_MODEL` | Legacy global fallback override. Prefer task-specific fallbacks because task primaries differ |
+| `ENABLE_AI_IMAGE_PICKER` | Optional. Set `true` to enable AI-assisted Pexels query/ranking; deterministic search remains the default |
 | `RESEND_API_KEY` | Resend → API Keys. Used for auth and member invitation emails |
 | `EMAIL_FROM` | Verified Resend sender, e.g. `Home Cooked <noreply@send.your-domain.com>` |
 | `SEND_EMAIL_HOOK_SECRET` | Supabase → Authentication → Hooks → Send Email. Required for sign-in codes |
@@ -45,7 +51,7 @@ cp .env.local.example .env.local
 
 > **Important:** Never commit `.env.local` or expose `SUPABASE_SERVICE_ROLE_KEY` to the browser. It bypasses all Row Level Security policies and is used only in server actions.
 
-The pantry-based recipe idea feature uses Cloudflare Workers AI by default. Cloudflare provides a free daily Workers AI allocation, and requests will fail closed if the Cloudflare variables are not configured. An optional OpenAI fallback is supported with `OPENAI_API_KEY`, but leaving it unset avoids OpenAI API charges.
+The pantry-based recipe idea feature uses Cloudflare Workers AI by default. Server-side task selection and bounded fallbacks live in `src/lib/ai/modelRegistry.ts`; model IDs are allowlisted and never accepted from the browser. Cloudflare provides a shared free daily Workers AI allocation, and requests fail closed if the variables are not configured or the allocation is exhausted. An optional OpenAI fallback is supported with `OPENAI_API_KEY`, but leaving it unset avoids OpenAI API charges. See `docs/ai-model-inventory.md` and `docs/ai-model-review.md` for the current selections, capped live-evaluation command, cost assumptions, and rollback steps.
 
 All email goes out through Resend from the app server. Member invitations are sent directly; Supabase Auth email is routed through the **Send Email hook** (Authentication → Hooks → Send Email, pointed at `/api/auth/send-email`), which renders our own templates and bypasses the Supabase SMTP and Email Template settings entirely — changes made there have no effect.
 

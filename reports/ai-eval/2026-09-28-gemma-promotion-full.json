@@ -1,0 +1,2434 @@
+{
+  "createdAt": "2026-09-28T12:15:54.623Z",
+  "evaluatorVersion": "recipe-tasks-v3",
+  "thresholds": {
+    "minimumOverallPassRate": 0.9,
+    "minimumRecipeSchemaRate": 0.95,
+    "maximumCriticalConstraintFailures": 0,
+    "maximumErrorRate": 0.05
+  },
+  "models": [
+    "@cf/google/gemma-4-26b-a4b-it"
+  ],
+  "cases": [
+    {
+      "id": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "chicken",
+          "rice"
+        ]
+      }
+    },
+    {
+      "id": "generation-sparse",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4
+      }
+    },
+    {
+      "id": "generation-vegan-lentil",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "lentil"
+        ],
+        "forbiddenIngredients": [
+          "chicken",
+          "beef",
+          "pork",
+          "milk",
+          "cheese",
+          "egg",
+          "honey"
+        ]
+      }
+    },
+    {
+      "id": "generation-gluten-free",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "chicken"
+        ],
+        "forbiddenIngredients": [
+          "wheat",
+          "flour",
+          "breadcrumb",
+          "pasta",
+          "soy sauce",
+          "bread"
+        ]
+      }
+    },
+    {
+      "id": "generation-allergy-conflict",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "rice",
+          "chickpea"
+        ],
+        "forbiddenIngredients": [
+          "peanut",
+          "sesame"
+        ],
+        "noUnverifiedSafetyClaim": true
+      }
+    },
+    {
+      "id": "generation-two-servings",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 2,
+        "requiredIngredients": [
+          "pasta",
+          "tomato"
+        ]
+      }
+    },
+    {
+      "id": "generation-eight-servings",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 8,
+        "requiredIngredients": [
+          "turkey",
+          "bean"
+        ]
+      }
+    },
+    {
+      "id": "generation-thirty-minutes",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "maxTotalMinutes": 30,
+        "requiredIngredients": [
+          "shrimp",
+          "tortilla"
+        ]
+      }
+    },
+    {
+      "id": "generation-budget",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "bean",
+          "rice"
+        ],
+        "forbiddenOutputTerms": [
+          "$",
+          "dollar",
+          "guaranteed savings"
+        ]
+      }
+    },
+    {
+      "id": "generation-vegetarian",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "mushroom",
+          "bean"
+        ],
+        "forbiddenIngredients": [
+          "chicken",
+          "beef",
+          "pork",
+          "fish",
+          "bacon"
+        ]
+      }
+    },
+    {
+      "id": "generation-dairy-free",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "potato"
+        ],
+        "forbiddenIngredients": [
+          "milk",
+          "butter",
+          "cream",
+          "cheese",
+          "yogurt"
+        ],
+        "allowedForbiddenPhrases": [
+          "coconut milk",
+          "oat milk",
+          "almond milk",
+          "soy milk",
+          "cashew cream"
+        ]
+      }
+    },
+    {
+      "id": "generation-egg-free",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 6,
+        "requiredIngredients": [
+          "banana",
+          "oat"
+        ],
+        "forbiddenIngredients": [
+          "egg"
+        ]
+      }
+    },
+    {
+      "id": "generation-fifteen-minutes",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 2,
+        "maxTotalMinutes": 15,
+        "requiredIngredients": [
+          "chickpea",
+          "cucumber"
+        ]
+      }
+    },
+    {
+      "id": "generation-salmon",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "salmon",
+          "asparagus",
+          "lemon"
+        ]
+      }
+    },
+    {
+      "id": "generation-leftovers",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "chicken",
+          "tortilla",
+          "bean"
+        ]
+      }
+    },
+    {
+      "id": "generation-breakfast",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "apple",
+          "oat"
+        ]
+      }
+    },
+    {
+      "id": "generation-dessert",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 8,
+        "requiredIngredients": [
+          "berr",
+          "oat"
+        ]
+      }
+    },
+    {
+      "id": "generation-soup",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 6,
+        "requiredIngredients": [
+          "tomato",
+          "bean",
+          "spinach"
+        ]
+      }
+    },
+    {
+      "id": "generation-unicode-fraction",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "couscous",
+          "chickpea",
+          "parsley",
+          "lemon"
+        ],
+        "ingredientQuantities": [
+          {
+            "item": "parsley",
+            "accepted": [
+              "½",
+              "0.5",
+              ".5",
+              "1/2"
+            ]
+          },
+          {
+            "item": "lemon",
+            "accepted": [
+              "¼",
+              "0.25",
+              ".25",
+              "1/4"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "generation-kids-lunch",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "turkey",
+          "wrap",
+          "apple"
+        ],
+        "forbiddenIngredients": [
+          "almond",
+          "peanut",
+          "walnut",
+          "cashew",
+          "pecan"
+        ]
+      }
+    },
+    {
+      "id": "description-lasagna",
+      "task": "recipeDescription",
+      "invariants": {
+        "minWords": 30,
+        "maxWords": 100
+      }
+    },
+    {
+      "id": "description-soup",
+      "task": "recipeDescription",
+      "invariants": {
+        "minWords": 30,
+        "maxWords": 100
+      }
+    },
+    {
+      "id": "description-cake",
+      "task": "recipeDescription",
+      "invariants": {
+        "minWords": 30,
+        "maxWords": 100
+      }
+    },
+    {
+      "id": "image-query-stew",
+      "task": "recipeImageSearchQuery",
+      "invariants": {
+        "minWords": 3,
+        "maxWords": 5
+      }
+    },
+    {
+      "id": "image-query-pie",
+      "task": "recipeImageSearchQuery",
+      "invariants": {
+        "minWords": 3,
+        "maxWords": 5
+      }
+    },
+    {
+      "id": "image-ranking-soup",
+      "task": "recipeImageRanking",
+      "invariants": {
+        "expectedIndex": 1
+      }
+    },
+    {
+      "id": "image-ranking-cake",
+      "task": "recipeImageRanking",
+      "invariants": {
+        "expectedIndex": 2
+      }
+    }
+  ],
+  "summary": {
+    "@cf/google/gemma-4-26b-a4b-it": {
+      "calls": 27,
+      "callSuccesses": 27,
+      "errorRate": 0,
+      "passRate": 0.9629629629629629,
+      "recipeSchemaRate": 0.95,
+      "criticalFailures": 1,
+      "latencyMs": {
+        "p50": 8088,
+        "p95": 16032
+      },
+      "usage": {
+        "inputTokens": 6216,
+        "outputTokens": 8316,
+        "usd": 0.0031163999999999996,
+        "neurons": 283.311924
+      },
+      "taskPassRates": {
+        "recipeGeneration": 0.95,
+        "recipeDescription": 1,
+        "recipeImageSearchQuery": 1,
+        "recipeImageRanking": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 12417,
+      "usage": {
+        "inputTokens": 272,
+        "outputTokens": 420,
+        "totalTokens": 692
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 35,
+          "description": "A comforting, one-pan meal featuring tender chicken and sweet glazed carrots nestled in fluffy rice. This hearty dish is perfect for a cozy weeknight meal that feels like a warm hug.",
+          "ingredients": [
+            {
+              "item": "chicken thighs",
+              "note": "bone-in, skin-on",
+              "quantity": "4",
+              "unit": "pieces"
+            },
+            {
+              "item": "white rice",
+              "note": "long-grain",
+              "quantity": "1.5",
+              "unit": "cups"
+            },
+            {
+              "item": "carrots",
+              "note": "peeled and sliced into rounds",
+              "quantity": "2",
+              "unit": "large"
+            },
+            {
+              "item": "onion",
+              "note": "diced",
+              "quantity": "1",
+              "unit": "medium"
+            },
+            {
+              "item": "chicken broth",
+              "note": "low sodium",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "2",
+              "unit": "tablespoons"
+            },
+            {
+              "item": "salt and pepper",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Season the chicken thighs generously with salt and pepper."
+            },
+            {
+              "body": "In a large skillet or pot, heat olive oil over medium-high heat and sear chicken skin-side down until golden, then remove chicken."
+            },
+            {
+              "body": "Add the diced onion and sliced carrots to the pan, sautéing for 5 minutes until slightly softened."
+            },
+            {
+              "body": "Stir in the rice and chicken broth, scraping the bottom of the pan to release any flavor."
+            },
+            {
+              "body": "Place the chicken thighs back on top of the rice mixture, cover tightly, and simmer for 25 minutes until rice is tender and chicken is cooked through."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "On those busy evenings when the kitchen feels a little chaotic, this simple one-pot meal brings a sense of calm and nourishment to the table. It is the kind of reliable staple that makes cleaning up easy and bellies full.",
+          "tags": [
+            "One-Pot",
+            "Chicken",
+            "Family-Friendly",
+            "Easy-Cleanup",
+            "Dinner"
+          ],
+          "title": "Golden Chicken and Carrot Rice Bake"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":35,\"description\":\"A comforting, one-pan meal featuring tender chicken and sweet glazed carrots nestled in fluffy rice. This hearty dish is perfect for a cozy weeknight meal that feels like a warm hug.\",\"ingredients\":[{\"item\":\"chicken thighs\",\"note\":\"bone-in, skin-on\",\"quantity\":\"4\",\"unit\":\"pieces\"},{\"item\":\"white rice\",\"note\":\"long-grain\",\"quantity\":\"1.5\",\"unit\":\"cups\"},{\"item\":\"carrots\",\"note\":\"peeled and sliced into rounds\",\"quantity\":\"2\",\"unit\":\"large\"},{\"item\":\"onion\",\"note\":\"diced\",\"quantity\":\"1\",\"unit\":\"medium\"},{\"item\":\"chicken broth\",\"note\":\"low sodium\",\"quantity\":\"3\",\"unit\":\"cups\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"tablespoons\"},{\"item\":\"salt and pepper\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"}],\"instructions\":[{\"body\":\"Season the chicken thighs generously with salt and pepper.\"},{\"body\":\"In a large skillet or pot, heat olive oil over medium-high heat and sear chicken skin-side down until golden, then remove chicken.\"},{\"body\":\"Add the diced onion and sliced carrots to the pan, sautéing for 5 minutes until slightly softened.\"},{\"body\":\"Stir in the rice and chicken broth, scraping the bottom of the pan to release any flavor.\"},{\"body\":\"Place the chicken thighs back on top of the rice mixture, cover tightly, and simmer for 25 minutes until rice is tender and chicken is cooked through.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"On those busy evenings when the kitchen feels a little chaotic, this simple one-pot meal brings a sense of calm and nourishment to the table. It is the kind of reliable staple that makes cleaning up easy and bellies full.\",\"tags\":[\"One-Pot\",\"Chicken\",\"Family-Friendly\",\"Easy-Cleanup\",\"Dinner\"] , \"title\":\"Golden Chicken and Carrot Rice Bake\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-sparse",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 6474,
+      "usage": {
+        "inputTokens": 263,
+        "outputTokens": 354,
+        "totalTokens": 617
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 20,
+          "description": "A comforting, savory pasta dish featuring a silky sauce and hearty textures perfect for a busy Tuesday night.",
+          "ingredients": [
+            {
+              "item": "Spaghetti",
+              "note": "dry",
+              "quantity": "12",
+              "unit": "oz"
+            },
+            {
+              "item": "Olive oil",
+              "note": "extra virgin",
+              "quantity": "3",
+              "unit": "tbsp"
+            },
+            {
+              "item": "Garlic",
+              "note": "minced",
+              "quantity": "4",
+              "unit": "cloves"
+            },
+            {
+              "item": "Red pepper flakes",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            },
+            {
+              "item": "Parmesan cheese",
+              "note": "freshly grated",
+              "quantity": "0.5",
+              "unit": "cup"
+            },
+            {
+              "item": "Fresh parsley",
+              "note": "finely chopped",
+              "quantity": "0.25",
+              "unit": "cup"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Bring a large pot of salted water to a boil and cook the spaghetti according to package directions until al dente."
+            },
+            {
+              "body": "While pasta cooks, heat olive oil in a large skillet over medium heat and sauté minced garlic and red pepper flakes until fragrant."
+            },
+            {
+              "body": "Reserve half a cup of pasta water, then drain the spaghetti."
+            },
+            {
+              "body": "Add the spaghetti to the skillet with the garlic oil, tossing well to coat."
+            },
+            {
+              "body": "Stir in the grated Parmesan and fresh parsley, adding small splashes of reserved pasta water until the sauce is silky."
+            }
+          ],
+          "prep_minutes": 5,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This reliable pantry staple meal is our go-to when the evening moves too fast for complex prep. It turns basic ingredients into a warm, filling hug for the whole family.",
+          "tags": [
+            "Vegetarian",
+            "Quick",
+            "Pasta",
+            "Weeknight"
+          ],
+          "title": "Garlic and Herb Spaghetti"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":20,\"description\":\"A comforting, savory pasta dish featuring a silky sauce and hearty textures perfect for a busy Tuesday night.\",\"ingredients\":[{\"item\":\"Spaghetti\",\"note\":\"dry\",\"quantity\":\"12\",\"unit\":\"oz\"},{\"item\":\"Olive oil\",\"note\":\"extra virgin\",\"quantity\":\"3\",\"unit\":\"tbsp\"},{\"item\":\"Garlic\",\"note\":\"minced\",\"quantity\":\"4\",\"unit\":\"cloves\"},{\"item\":\"Red pepper flakes\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"},{\"item\":\"Parmesan cheese\",\"note\":\"freshly grated\",\"quantity\":\"0.5\",\"unit\":\"cup\"},{\"item\":\"Fresh parsley\",\"note\":\"finely chopped\",\"quantity\":\"0.25\",\"unit\":\"cup\"}],\"instructions\":[{\"body\":\"Bring a large pot of salted water to a boil and cook the spaghetti according to package directions until al dente.\"},{\"body\":\"While pasta cooks, heat olive oil in a large skillet over medium heat and sauté minced garlic and red pepper flakes until fragrant.\"},{\"body\":\"Reserve half a cup of pasta water, then drain the spaghetti.\"},{\"body\":\"Add the spaghetti to the skillet with the garlic oil, tossing well to coat.\"},{\"body\":\"Stir in the grated Parmesan and fresh parsley, adding small splashes of reserved pasta water until the sauce is silky.\"}],\"prep_minutes\":5,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This reliable pantry staple meal is our go-to when the evening moves too fast for complex prep. It turns basic ingredients into a warm, filling hug for the whole family.\",\"tags\":[\"Vegetarian\",\"Quick\",\"Pasta\",\"Weeknight\"] ,\"title\":\"Garlic and Herb Spaghetti\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-vegan-lentil",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 16032,
+      "usage": {
+        "inputTokens": 278,
+        "outputTokens": 384,
+        "totalTokens": 662
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 25,
+          "description": "A hearty and comforting stew featuring tender lentils and bright, tangy tomatoes with a silky finish. This warm bowl is perfect for a cozy weeknight meal when you need something nourishing.",
+          "ingredients": [
+            {
+              "item": "brown lentils",
+              "note": "rinsed and dried",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "canned crushed tomatoes",
+              "note": "",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "fresh baby spinach",
+              "note": "loosely packed",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "vegetable broth",
+              "note": "",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "onion",
+              "note": "finely diced",
+              "quantity": "1",
+              "unit": "medium"
+            },
+            {
+              "item": "garlic",
+              "note": "minced",
+              "quantity": "3",
+              "unit": "cloves"
+            },
+            {
+              "item": "dried oregano",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "teaspoon"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "1",
+              "unit": "tablespoon"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Sauté the onion in olive oil over medium heat until softened, then add the garlic and cook for one minute."
+            },
+            {
+              "body": "Stir in the dried lentils, crushed tomatoes, vegetable broth, and oregano."
+            },
+            {
+              "body": "Bring the mixture to a boil, then reduce heat and simmer for 20 minutes until lentils are tender."
+            },
+            {
+              "body": "Fold in the fresh spinach and stir until just wilted."
+            },
+            {
+              "body": "Serve warm in deep bowls."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This one-pot wonder is a reliable staple for busy evenings when the kitchen needs to stay simple. It fills the house with a wonderful aroma and keeps everyone feeling full and satisfied.",
+          "tags": [
+            "vegan",
+            "lentil",
+            "one-pot",
+            "healthy",
+            "dinner"
+          ],
+          "title": "Hearty Tomato and Spinach Lentil Stew"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":25,\"description\":\"A hearty and comforting stew featuring tender lentils and bright, tangy tomatoes with a silky finish. This warm bowl is perfect for a cozy weeknight meal when you need something nourishing.\",\"ingredients\":[{\"item\":\"brown lentils\",\"note\":\"rinsed and dried\" ,\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"canned crushed tomatoes\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"fresh baby spinach\",\"note\":\"loosely packed\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"vegetable broth\",\"note\":\"\",\"quantity\":\"3\",\"unit\":\"cups\"},{\"item\":\"onion\",\"note\":\"finely diced\",\"quantity\":\"1\",\"unit\":\"medium\"},{\"item\":\"garlic\",\"note\":\"minced\",\"quantity\":\"3\",\"unit\":\"cloves\"},{\"item\":\"dried oregano\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"teaspoon\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"tablespoon\"}],\"instructions\":[{\"body\":\"Sauté the onion in olive oil over medium heat until softened, then add the garlic and cook for one minute.\"},{\"body\":\"Stir in the dried lentils, crushed tomatoes, vegetable broth, and oregano.\"},{\"body\":\"Bring the mixture to a boil, then reduce heat and simmer for 20 minutes until lentils are tender.\"},{\"body\":\"Fold in the fresh spinach and stir until just wilted.\"},{\"body\":\"Serve warm in deep bowls.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This one-pot wonder is a reliable staple for busy evenings when the kitchen needs to stay simple. It fills the house with a wonderful aroma and keeps everyone feeling full and satisfied.\",\"tags\":[\"vegan\",\"lentil\",\"one-pot\",\"healthy\",\"dinner\"] ,\"title\":\"Hearty Tomato and Spinach Lentil Stew\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-gluten-free",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 11072,
+      "usage": {
+        "inputTokens": 282,
+        "outputTokens": 424,
+        "totalTokens": 706
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 25,
+          "description": "A vibrant, comforting tray bake where tender chicken meets caramelized vegetables in a bright, citrusy glaze. This dish offers a perfect balance of savory protein and natural sweetness.",
+          "ingredients": [
+            {
+              "item": "chicken thighs",
+              "note": "boneless, skinless, bite-sized pieces",
+              "quantity": "1.5",
+              "unit": "lbs"
+            },
+            {
+              "item": "sweet potatoes",
+              "note": "peeled and cubed",
+              "quantity": "2",
+              "unit": "large"
+            },
+            {
+              "item": "broccoli florets",
+              "note": "fresh",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "3",
+              "unit": "tbsp"
+            },
+            {
+              "item": "lemon juice",
+              "note": "freshly squeezed",
+              "quantity": "2",
+              "unit": "tbsp"
+            },
+            {
+              "item": "garlic powder",
+              "note": "",
+              "quantity": "1",
+              "unit": "tsp"
+            },
+            {
+              "item": "dried oregano",
+              "note": "",
+              "quantity": "1",
+              "unit": "tsp"
+            },
+            {
+              "item": "salt and black pepper",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Preheat your oven to 400°F (200°C) and lightly grease a large sheet pan."
+            },
+            {
+              "body": "Place the chicken, sweet potatoes, and broccoli in a large bowl and toss with olive oil, lemon juice, garlic powder, oregano, salt, and pepper."
+            },
+            {
+              "body": "Spread the mixture in a single layer across the prepared sheet pan."
+            },
+            {
+              "body": "Roast for 25 minutes or until the chicken is cooked through and the sweet potatoes are tender."
+            },
+            {
+              "body": "Serve warm straight from the pan for easy cleanup."
+            }
+          ],
+          "prep_minutes": 15,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This one-pan wonder is a lifesaver on busy weeknights when you want a wholesome meal without a mountain of dishes. It turns simple pantry staples into a bright, nourishing feast that everyone can enjoy together.",
+          "tags": [
+            "Gluten-Free",
+            "Sheet Pan",
+            "Healthy",
+            "Chicken",
+            "Vegetables"
+          ],
+          "title": "Lemon-Garlic Chicken and Roasted Veggie Bake"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":25,\"description\":\"A vibrant, comforting tray bake where tender chicken meets caramelized vegetables in a bright, citrusy glaze. This dish offers a perfect balance of savory protein and natural sweetness.\",\"ingredients\":[{\"item\":\"chicken thighs\",\"note\":\"boneless, skinless, bite-sized pieces\",\"quantity\":\"1.5\",\"unit\":\"lbs\"},{\"item\":\"sweet potatoes\",\"note\":\"peeled and cubed\",\"quantity\":\"2\",\"unit\":\"large\"},{\"item\":\"broccoli florets\",\"note\":\"fresh\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"3\",\"unit\":\"tbsp\"},{\"item\":\"lemon juice\",\"note\":\"freshly squeezed\",\"quantity\":\"2\",\"unit\":\"tbsp\"},{\"item\":\"garlic powder\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"tsp\"},{\"item\":\"dried oregano\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"tsp\"},{\"item\":\"salt and black pepper\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"}],\"instructions\":[{\"body\":\"Preheat your oven to 400°F (200°C) and lightly grease a large sheet pan.\"},{\"body\":\"Place the chicken, sweet potatoes, and broccoli in a large bowl and toss with olive oil, lemon juice, garlic powder, oregano, salt, and pepper.\"},{\"body\":\"Spread the mixture in a single layer across the prepared sheet pan.\"},{\"body\":\"Roast for 25 minutes or until the chicken is cooked through and the sweet potatoes are tender.\"},{\"body\":\"Serve warm straight from the pan for easy cleanup.\"}],\"prep_minutes\":15,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This one-pan wonder is a lifesaver on busy weeknights when you want a wholesome meal without a mountain of dishes. It turns simple pantry staples into a bright, nourishing feast that everyone can enjoy together.\",\"tags\":[\"Gluten-Free\",\"Sheet Pan\",\"Healthy\",\"Chicken\",\"Vegetables\"],\"title\":\"Lemon-Garlic Chicken and Roasted Veggie Bake\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-allergy-conflict",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 9895,
+      "usage": {
+        "inputTokens": 305,
+        "outputTokens": 387,
+        "totalTokens": 692
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 20,
+          "description": "A comforting and hearty bowl featuring tender roasted broccoli and protein-packed chickpeas over fluffy rice. The savory notes make it a perfect, wholesome weeknight meal.",
+          "ingredients": [
+            {
+              "item": "white rice",
+              "note": "cooked",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "chickpeas",
+              "note": "drained and rinsed",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "broccoli florets",
+              "note": "chopped",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "olive oil",
+              "note": "for roasting",
+              "quantity": "2",
+              "unit": "tbsp"
+            },
+            {
+              "item": "garlic powder",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "tsp"
+            },
+            {
+              "item": "soy sauce",
+              "note": "ensure wheat/soy base without sesame",
+              "quantity": "2",
+              "unit": "tbsp"
+            },
+            {
+              "item": "water",
+              "note": "for steaming broccoli",
+              "quantity": "2",
+              "unit": "tbsp"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Preheat your oven to 400°F (200°C)."
+            },
+            {
+              "body": "Toss broccoli florets and chickpeas with olive oil and garlic powder on a baking sheet."
+            },
+            {
+              "body": "Roast the vegetables and chickpeas for 15-20 minutes until the broccoli is tender-crisp."
+            },
+            {
+              "body": "While roasting, prepare your cooked rice and warm it in a large bowl."
+            },
+            {
+              "body": "Combine the roasted mixture with the rice and drizzle with soy sauce before serving."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple bowl is our favorite way to turn pantry staples into a warm, nourishing meal during busy evenings. It is easy to whip up when you need something reliable and filling for the whole family.",
+          "tags": [
+            "Vegetarian",
+            "Rice Bowl",
+            "Pantry Staples",
+            "Quick Dinner",
+            "Nut-Free Friendly"
+          ],
+          "title": "Roasted Broccoli and Chickpea Rice Bowls"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":20,\"description\":\"A comforting and hearty bowl featuring tender roasted broccoli and protein-packed chickpeas over fluffy rice. The savory notes make it a perfect, wholesome weeknight meal.\",\"ingredients\":[{\"item\":\"white rice\",\"note\":\"cooked\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"chickpeas\",\"note\":\"drained and rinsed\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"broccoli florets\",\"note\":\"chopped\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"olive oil\",\"note\":\"for roasting\",\"quantity\":\"2\",\"unit\":\"tbsp\"},{\"item\":\"garlic powder\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"tsp\"},{\"item\":\"soy sauce\",\"note\":\"ensure wheat/soy base without sesame\",\"quantity\":\"2\",\"unit\":\"tbsp\"},{\"item\":\"water\",\"note\":\"for steaming broccoli\",\"quantity\":\"2\",\"unit\":\"tbsp\"}],\"instructions\":[{\"body\":\"Preheat your oven to 400°F (200°C).\"},{\"body\":\"Toss broccoli florets and chickpeas with olive oil and garlic powder on a baking sheet.\"},{\"body\":\"Roast the vegetables and chickpeas for 15-20 minutes until the broccoli is tender-crisp.\"},{\"body\":\"While roasting, prepare your cooked rice and warm it in a large bowl.\"},{\"body\":\"Combine the roasted mixture with the rice and drizzle with soy sauce before serving.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This simple bowl is our favorite way to turn pantry staples into a warm, nourishing meal during busy evenings. It is easy to whip up when you need something reliable and filling for the whole family.\",\"tags\":[\"Vegetarian\",\"Rice Bowl\",\"Pantry Staples\",\"Quick Dinner\",\"Nut-Free Friendly\"],\"title\":\"Roasted Broccoli and Chickpea Rice Bowls\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-two-servings",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 10036,
+      "usage": {
+        "inputTokens": 267,
+        "outputTokens": 375,
+        "totalTokens": 642
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 12,
+          "description": "A bright and comforting pasta dish featuring juicy tomatoes, aromatic garlic, and fresh basil. It is perfect for a quick weeknight meal that feels like a warm hug.",
+          "ingredients": [
+            {
+              "item": "pasta",
+              "note": "short shapes like penne or fusilli work best",
+              "quantity": "200",
+              "unit": "g"
+            },
+            {
+              "item": "canned tomatoes",
+              "note": "crushed or diced",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "garlic",
+              "note": "thinly sliced",
+              "quantity": "3",
+              "unit": "cloves"
+            },
+            {
+              "item": "fresh basil",
+              "note": "torn into pieces",
+              "quantity": "1",
+              "unit": "handful"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "2",
+              "unit": "tablespoons"
+            },
+            {
+              "item": "salt",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Bring a large pot of salted water to a boil and cook the pasta according to package directions until al dente."
+            },
+            {
+              "body": "While pasta cooks, heat olive oil in a pan over medium heat and sauté the garlic until fragrant but not brown."
+            },
+            {
+              "body": "Add the canned tomatoes to the pan and simmer gently for about 8-10 minutes until the sauce thickens slightly."
+            },
+            {
+              "body": "Drain the pasta and toss it directly into the tomato sauce."
+            },
+            {
+              "body": "Remove from heat, stir in the fresh basil, and season with salt to taste before serving."
+            }
+          ],
+          "prep_minutes": 5,
+          "servings": 2,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple meal is our go-to when the kitchen is busy and we need something nourishing in minutes. It turns a few pantry staples into a beautiful, shared moment at the table.",
+          "tags": [
+            "Vegetarian",
+            "Quick",
+            "Pantry Staples",
+            "Italian"
+          ],
+          "title": "Simple Tomato and Garlic Pasta"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":12,\"description\":\"A bright and comforting pasta dish featuring juicy tomatoes, aromatic garlic, and fresh basil. It is perfect for a quick weeknight meal that feels like a warm hug.\",\"ingredients\":[{\"item\":\"pasta\",\"note\":\"short shapes like penne or fusilli work best\",\"quantity\":\"200\",\"unit\":\"g\"},{\"item\":\"canned tomatoes\",\"note\":\"crushed or diced\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"garlic\",\"note\":\"thinly sliced\",\"quantity\":\"3\",\"unit\":\"cloves\"},{\"item\":\"fresh basil\",\"note\":\"torn into pieces\",\"quantity\":\"1\",\"unit\":\"handful\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"tablespoons\"},{\"item\":\"salt\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"}],\"instructions\":[{\"body\":\"Bring a large pot of salted water to a boil and cook the pasta according to package directions until al dente.\"},{\"body\":\"While pasta cooks, heat olive oil in a pan over medium heat and sauté the garlic until fragrant but not brown.\"},{\"body\":\"Add the canned tomatoes to the pan and simmer gently for about 8-10 minutes until the sauce thickens slightly.\"},{\"body\":\"Drain the pasta and toss it directly into the tomato sauce.\"},{\"body\":\"Remove from heat, stir in the fresh basil, and season with salt to taste before serving.\"}],\"prep_minutes\":5,\"servings\":2,\"source_name\":\"AI Recipe Idea\",\"story\":\"This simple meal is our go-to when the kitchen is busy and we need something nourishing in minutes. It turns a few pantry staples into a beautiful, shared moment at the table.\",\"tags\":[\"Vegetarian\",\"Quick\",\"Pantry Staples\",\"Italian\"],\"title\":\"Simple Tomato and Garlic Pasta\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-eight-servings",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 11973,
+      "usage": {
+        "inputTokens": 272,
+        "outputTokens": 626,
+        "totalTokens": 898
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 40,
+          "description": "A hearty and comforting chili featuring lean turkey and sweet corn in a rich, tomato-based sauce. It is the perfect warming meal for a chilly evening at the kitchen table.",
+          "ingredients": [
+            {
+              "item": "ground turkey",
+              "note": "browned",
+              "quantity": "2",
+              "unit": "lbs"
+            },
+            {
+              "item": "kidney beans",
+              "note": "drained and rinsed",
+              "quantity": "2",
+              "unit": "cans"
+            },
+            {
+              "item": "diced tomatoes",
+              "note": "with juices",
+              "quantity": "28",
+              "unit": "oz"
+            },
+            {
+              "item": "corn",
+              "note": "frozen or canned",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "chili powder",
+              "note": "",
+              "quantity": "3",
+              "unit": "tbsp"
+            },
+            {
+              "item": "onion",
+              "note": "diced",
+              "quantity": "1",
+              "unit": "large"
+            },
+            {
+              "item": "salt",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": ""
+            }
+          ],
+          "instructions": [
+            {
+              "body": "In a large pot, brown the ground turkey and diced onion over medium heat until the meat is cooked through."
+            },
+            {
+              "body": "Stir in the chili powder and cook for one minute until fragrant."
+            },
+            {
+              "body": "Add the diced tomatoes, drained beans, and corn to the pot."
+            },
+            {
+              "body": "Simmer the mixture on low heat for 25 to 30 minutes to allow the flavors to meld."
+            },
+            {
+              "body": "Season with salt to taste and serve warm in deep bowls."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 8,
+          "source_name": "AI Recipe Idea",
+          "story": "This one-pot meal simplifies busy weeknights by bringing everything together in a single pot. It is a reliable staple for filling up hungry bellies without a mountain of cleanup.",
+          "tags": [
+            "Turkey",
+            "Family Meal",
+            "One-Pot",
+            "Hearty"
+          ],
+          "title": "Simple Turkey and Corn Chili"
+        }
+      },
+      "output": "{\n  \"category\": \"Dinner\",\n  \"cook_minutes\": 40,\n  \"description\": \"A hearty and comforting chili featuring lean turkey and sweet corn in a rich, tomato-based sauce. It is the perfect warming meal for a chilly evening at the kitchen table.\",\n  \"ingredients\": [\n    {\n      \"item\": \"ground turkey\",\n      \"note\": \"browned\",\n      \"quantity\": \"2\",\n      \"unit\": \"lbs\"\n    },\n    {\n      \"item\": \"kidney beans\",\n      \"note\": \"drained and rinsed\",\n      \"quantity\": \"2\",\n      \"unit\": \"cans\"\n    },\n    {\n      \"item\": \"diced tomatoes\",\n      \"note\": \"with juices\",\n      \"quantity\": \"28\",\n      \"unit\": \"oz\"\n    },\n    {\n      \"item\": \"corn\",\n      \"note\": \"frozen or canned\",\n      \"quantity\": \"1\",\n      \"unit\": \"cup\"\n    },\n    {\n      \"item\": \"chili powder\",\n      \"note\": \"\",\n      \"quantity\": \"3\",\n      \"unit\": \"tbsp\"\n    },\n    {\n      \"item\": \"onion\",\n      \"note\": \"diced\",\n      \"quantity\": \"1\",\n      \"unit\": \"large\"\n    },\n    {\n      \"item\": \"salt\",\n      \"note\": \"to taste\",\n      \"quantity\": \"1\",\n      \"unit\": \"\"\n    }\n  ],\n  \"instructions\": [\n    {\n      \"body\": \"In a large pot, brown the ground turkey and diced onion over medium heat until the meat is cooked through.\"\n    },\n    {\n      \"body\": \"Stir in the chili powder and cook for one minute until fragrant.\"\n    },\n    {\n      \"body\": \"Add the diced tomatoes, drained beans, and corn to the pot.\"\n    },\n    {\n      \"body\": \"Simmer the mixture on low heat for 25 to 30 minutes to allow the flavors to meld.\"\n    },\n    {\n      \"body\": \"Season with salt to taste and serve warm in deep bowls.\"\n    }\n  ],\n  \"prep_minutes\": 10,\n  \"servings\": 8,\n  \"source_name\": \"AI Recipe Idea\",\n  \"story\": \"This one-pot meal simplifies busy weeknights by bringing everything together in a single pot. It is a reliable staple for filling up hungry bellies without a mountain of cleanup.\",\n  \"tags\": [\n    \"Turkey\",\n    \"Family Meal\",\n    \"One-Pot\",\n    \"Hearty\"\n  ],\n  \"title\": \"Simple Turkey and Corn Chili\"\n}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-thirty-minutes",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 27339,
+      "usage": {
+        "inputTokens": 273,
+        "outputTokens": 674,
+        "totalTokens": 947
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 10,
+          "description": "Zesty, pan-seared shrimp paired with crunchy cabbage and a bright lime crema for a refreshing weeknight feast.",
+          "ingredients": [
+            {
+              "item": "shrimp",
+              "note": "peeled and deveined",
+              "quantity": "1",
+              "unit": "lb"
+            },
+            {
+              "item": "taco seasoning",
+              "note": "mild or medium",
+              "quantity": "2",
+              "unit": "tbsp"
+            },
+            {
+              "item": "corn tortillas",
+              "note": "warmed",
+              "quantity": "8",
+              "unit": "small"
+            },
+            {
+              "item": "coleslaw mix",
+              "note": "shredded cabbage and carrots",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "sour cream",
+              "note": "for the crema",
+              "quantity": "1/2",
+              "unit": "cup"
+            },
+            {
+              "item": "lime",
+              "note": "juiced",
+              "quantity": "1",
+              "unit": "whole"
+            },
+            {
+              "item": "avocado",
+              "note": "sliced",
+              "quantity": "1",
+              "unit": "whole"
+            },
+            {
+              "item": "fresh cilantro",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "sprig"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "In a small bowl, whisk together the sour cream and lime juice to create a creamy dressing."
+            },
+            {
+              "body": "Toss the shrimp with the taco seasoning until evenly coated."
+            },
+            {
+              "body": "Heat a skillet over medium-high heat and cook the shrimp for 2-3 minutes per side until pink and opaque."
+            },
+            {
+              "body": "Assemble the tacos by layering the cabbage mix, cooked shrimp, and avocado slices into warmed tortillas."
+            },
+            {
+              "body": "Drizzle with the lime crema and garnish with fresh cilantro if desired."
+            }
+          ],
+          "prep_minutes": 15,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "These tacos are the perfect solution for those busy evenings when you need a meal on the table in a flash. They bring a bright, festive energy to the dining table without any heavy cleanup.",
+          "tags": [
+            "Seafood",
+            "Quick",
+            "Tacos",
+            "Weeknight"
+          ],
+          "title": "Quick Zesty Shrimp Tacos"
+        }
+      },
+      "output": "{\n  \"category\": \"Dinner\",\n  \"cook_minutes\": 10,\n  \"description\": \"Zesty, pan-seared shrimp paired with crunchy cabbage and a bright lime crema for a refreshing weeknight feast.\",\n  \"ingredients\": [\n    {\n      \"item\": \"shrimp\",\n      \"note\": \"peeled and deveined\",\n      \"quantity\": \"1\",\n      \"unit\": \"lb\"\n    },\n    {\n      \"item\": \"taco seasoning\",\n      \"note\": \"mild or medium\",\n      \"quantity\": \"2\",\n      \"unit\": \"tbsp\"\n    },\n    {\n      \"item\": \"corn tortillas\",\n      \"note\": \"warmed\",\n      \"quantity\": \"8\",\n      \"unit\": \"small\"\n    },\n    {\n      \"item\": \"coleslaw mix\",\n      \"note\": \"shredded cabbage and carrots\",\n      \"quantity\": \"2\",\n      \"unit\": \"cups\"\n    },\n    {\n      \"item\": \"sour cream\",\n      \"note\": \"for the crema\",\n      \"quantity\": \"1/2\",\n      \"unit\": \"cup\"\n    },\n    {\n      \"item\": \"lime\",\n      \"note\": \"juiced\",\n      \"quantity\": \"1\",\n      \"unit\": \"whole\"\n    },\n    {\n      \"item\": \"avocado\",\n      \"note\": \"sliced\",\n      \"quantity\": \"1\",\n      \"unit\": \"whole\"\n    },\n    {\n      \"item\": \"fresh cilantro\",\n      \"note\": \"to taste\",\n      \"quantity\": \"1\",\n      \"unit\": \"sprig\"\n    }\n  ],\n  \"instructions\": [\n    {\n      \"body\": \"In a small bowl, whisk together the sour cream and lime juice to create a creamy dressing.\"\n    },\n    {\n      \"body\": \"Toss the shrimp with the taco seasoning until evenly coated.\"\n    },\n    {\n      \"body\": \"Heat a skillet over medium-high heat and cook the shrimp for 2-3 minutes per side until pink and opaque.\"\n    },\n    {\n      \"body\": \"Assemble the tacos by layering the cabbage mix, cooked shrimp, and avocado slices into warmed tortillas.\"\n    },\n    {\n      \"body\": \"Drizzle with the lime crema and garnish with fresh cilantro if desired.\"\n    }\n  ],\n  \"prep_minutes\": 15,\n  \"servings\": 4,\n  \"source_name\": \"AI Recipe Idea\",\n  \"story\": \"These tacos are the perfect solution for those busy evenings when you need a meal on the table in a flash. They bring a bright, festive energy to the dining table without any heavy cleanup.\",\n  \"tags\": [\n    \"Seafood\",\n    \"Quick\",\n    \"Tacos\",\n    \"Weeknight\"\n  ],\n  \"title\": \"Quick Zesty Shrimp Tacos\"\n}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-budget",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 9680,
+      "usage": {
+        "inputTokens": 281,
+        "outputTokens": 390,
+        "totalTokens": 671
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 20,
+          "description": "A comforting, savory bowl of seasoned rice and beans with sweet bursts of corn. This hearty meal is perfect for a cozy mid-week dinner that hits the spot.",
+          "ingredients": [
+            {
+              "item": "white rice",
+              "note": "uncooked",
+              "quantity": "1.5",
+              "unit": "cups"
+            },
+            {
+              "item": "canned black beans",
+              "note": "rinsed and drained",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "frozen corn",
+              "note": "",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "vegetable broth",
+              "note": "or water",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "chili powder",
+              "note": "",
+              "quantity": "1",
+              "unit": "teaspoon"
+            },
+            {
+              "item": "garlic powder",
+              "note": "",
+              "quantity": "0.5",
+              "unit": "teaspoon"
+            },
+            {
+              "item": "salt",
+              "note": "to taste",
+              "quantity": "",
+              "unit": ""
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Combine the rice, vegetable broth, chili powder, and garlic powder in a medium pot."
+            },
+            {
+              "body": "Bring the mixture to a boil, then reduce heat to low, cover, and simmer for 15 minutes."
+            },
+            {
+              "body": "Stir in the drained beans and frozen corn into the pot."
+            },
+            {
+              "body": "Cover and continue to cook for another 5 minutes until the liquid is absorbed and the corn is heated through."
+            },
+            {
+              "body": "Fluff with a fork and season with salt to taste before serving."
+            }
+          ],
+          "prep_minutes": 5,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple combination of pantry staples turns into a filling meal that requires very little effort. It is the kind of reliable recipe we keep on hand for those busy evenings when we need something warm and nourishing.",
+          "tags": [
+            "Vegetarian",
+            "Budget-Friendly",
+            "One-Pot",
+            "Pantry-Staples",
+            "Easy-Cleanup"
+          ],
+          "title": "Savory Pantry Bean and Corn Rice"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":20,\"description\":\"A comforting, savory bowl of seasoned rice and beans with sweet bursts of corn. This hearty meal is perfect for a cozy mid-week dinner that hits the spot.\",\"ingredients\":[{\"item\":\"white rice\",\"note\":\"uncooked\",\"quantity\":\"1.5\",\"unit\":\"cups\"},{\"item\":\"canned black beans\",\"note\":\"rinsed and drained\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"frozen corn\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"vegetable broth\",\"note\":\"or water\",\"quantity\":\"3\",\"unit\":\"cups\"},{\"item\":\"chili powder\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"teaspoon\"},{\"item\":\"garlic powder\",\"note\":\"\",\"quantity\":\"0.5\",\"unit\":\"teaspoon\"},{\"item\":\"salt\",\"note\":\"to taste\",\"quantity\":\"\",\"unit\":\"\"}],\"instructions\":[{\"body\":\"Combine the rice, vegetable broth, chili powder, and garlic powder in a medium pot.\"}, {\"body\":\"Bring the mixture to a boil, then reduce heat to low, cover, and simmer for 15 minutes.\"}, {\"body\":\"Stir in the drained beans and frozen corn into the pot.\"}, {\"body\":\"Cover and continue to cook for another 5 minutes until the liquid is absorbed and the corn is heated through.\"}, {\"body\":\"Fluff with a fork and season with salt to taste before serving.\"}],\"prep_minutes\":5,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This simple combination of pantry staples turns into a filling meal that requires very little effort. It is the kind of reliable recipe we keep on hand for those busy evenings when we need something warm and nourishing.\",\"tags\":[\"Vegetarian\",\"Budget-Friendly\",\"One-Pot\",\"Pantry-Staples\",\"Easy-Cleanup\"],\"title\":\"Savory Pantry Bean and Corn Rice\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-vegetarian",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 7630,
+      "usage": {
+        "inputTokens": 273,
+        "outputTokens": 378,
+        "totalTokens": 651
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 20,
+          "description": "A comforting and hearty stew featuring earthy mushrooms, creamy white beans, and tender kale in a savory broth. It is the perfect cozy meal for a quiet weeknight at home.",
+          "ingredients": [
+            {
+              "item": "mushrooms",
+              "note": "sliced",
+              "quantity": "10",
+              "unit": "oz"
+            },
+            {
+              "item": "cannellini beans",
+              "note": "drained and rinsed",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "kale",
+              "note": "stems removed and chopped",
+              "quantity": "4",
+              "unit": "cups"
+            },
+            {
+              "item": "vegetable broth",
+              "note": "low sodium",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "garlic",
+              "note": "minced",
+              "quantity": "3",
+              "unit": "cloves"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "2",
+              "unit": "tbsp"
+            },
+            {
+              "item": "dried thyme",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "tsp"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Heat olive oil in a large pot over medium heat and sauté the sliced mushrooms until golden brown."
+            },
+            {
+              "body": "Add the minced garlic and dried thyme, stirring for about one minute until fragrant."
+            },
+            {
+              "body": "Pour in the vegetable broth and white beans, then bring the mixture to a gentle simmer."
+            },
+            {
+              "body": "Stir in the chopped kale and cook for 5 minutes until the leaves are tender."
+            },
+            {
+              "body": "Season with salt and pepper to taste before serving warm."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This nourishing pot of goodness is a go-to when the pantry is light but the heart needs warmth. It turns simple staples into a meal that feels like a gentle hug on a busy evening.",
+          "tags": [
+            "Vegetarian",
+            "One-Pot",
+            "Healthy",
+            "Comfort Food",
+            "Dinner mid-week"
+          ],
+          "title": "Hearty Mushroom and White Bean Kale Stew"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":20,\"description\":\"A comforting and hearty stew featuring earthy mushrooms, creamy white beans, and tender kale in a savory broth. It is the perfect cozy meal for a quiet weeknight at home.\",\"ingredients\":[{\"item\":\"mushrooms\",\"note\":\"sliced\",\"quantity\":\"10\",\"unit\":\"oz\"},{\"item\":\"cannellini beans\",\"note\":\"drained and rinsed\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"kale\",\"note\":\"stems removed and chopped\",\"quantity\":\"4\",\"unit\":\"cups\"},{\"item\":\"vegetable broth\",\"note\":\"low sodium\",\"quantity\":\"3\",\"unit\":\"cups\"},{\"item\":\"garlic\",\"note\":\"minced\",\"quantity\":\"3\",\"unit\":\"cloves\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"tbsp\"},{\"item\":\"dried thyme\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"tsp\"}],\"instructions\":[{\"body\":\"Heat olive oil in a large pot over medium heat and sauté the sliced mushrooms until golden brown.\"},{\"body\":\"Add the minced garlic and dried thyme, stirring for about one minute until fragrant.\"},{\"body\":\"Pour in the vegetable broth and white beans, then bring the mixture to a gentle simmer.\"},{\"body\":\"Stir in the chopped kale and cook for 5 minutes until the leaves are tender.\"},{\"body\":\"Season with salt and pepper to taste before serving warm.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This nourishing pot of goodness is a go-to when the pantry is light but the heart needs warmth. It turns simple staples into a meal that feels like a gentle hug on a busy evening.\",\"tags\":[\"Vegetarian\",\"One-Pot\",\"Healthy\",\"Comfort Food\",\"Dinner mid-week\"],\"title\":\"Hearty Mushroom and White Bean Kale Stew\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-dairy-free",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 8308,
+      "usage": {
+        "inputTokens": 277,
+        "outputTokens": 362,
+        "totalTokens": 639
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Soup",
+          "cook_minutes": 25,
+          "description": "A velvety, comforting potato soup that relies on starchy potatoes for creaminess rather than dairy. It is the perfect warming bowl for a quiet weeknight evening.",
+          "ingredients": [
+            {
+              "item": "Russet potatoes",
+              "note": "peeled and cubed",
+              "quantity": "4",
+              "unit": "large"
+            },
+            {
+              "item": "Vegetable broth",
+              "note": "low sodium",
+              "quantity": "4",
+              "unit": "cups"
+            },
+            {
+              "item": "Yellow onion",
+              "note": "finely diced",
+              "quantity": "1",
+              "unit": "medium"
+            },
+            {
+              "item": "Garlic",
+              "note": "minced",
+              "quantity": "3",
+              "unit": "cloves"
+            },
+            {
+              "item": "Olive oil",
+              "note": "",
+              "quantity": "2",
+              "unit": "tablespoons"
+            },
+            {
+              "item": "Salt and pepper",
+              "note": "to taste",
+              "quantity": "",
+              "unit": ""
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Heat the olive oil in a large pot over medium heat and sauté the onion and garlic until soft and translucent."
+            },
+            {
+              "body": "Add the cubed potatoes and vegetable broth to the pot, bringing the mixture to a boil."
+            },
+            {
+              "body": "Reduce heat to low, cover, and simmer for about 15-20 minutes until potatoes are very tender."
+            },
+            {
+              "body": "Use an immersion blender to blend the soup directly in the pot until the desired creamy consistency is reached."
+            },
+            {
+              "body": "Season with salt and pepper to taste before serving hot."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This recipe is a wonderful way to stretch a few pantry staples into a filling meal. It reminds us that simple, whole ingredients can create a sense of comfort without needing anything fancy.",
+          "tags": [
+            "Dairy-Free",
+            "Vegan",
+            "Comfort Food",
+            "Potato",
+            "Budget-Friendly"
+          ],
+          "title": "Velvety Pantry Potato Soup"
+        }
+      },
+      "output": "{\"category\":\"Soup\",\"cook_minutes\":25,\"description\":\"A velvety, comforting potato soup that relies on starchy potatoes for creaminess rather than dairy. It is the perfect warming bowl for a quiet weeknight evening.\",\"ingredients\":[{\"item\":\"Russet potatoes\",\"note\":\"peeled and cubed\" , \"quantity\":\"4\",\"unit\":\"large\"},{\"item\":\"Vegetable broth\",\"note\":\"low sodium\",\"quantity\":\"4\",\"unit\":\"cups\"},{\"item\":\"Yellow onion\",\"note\":\"finely diced\",\"quantity\":\"1\",\"unit\":\"medium\"},{\"item\":\"Garlic\",\"note\":\"minced\",\"quantity\":\"3\",\"unit\":\"cloves\"},{\"item\":\"Olive oil\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"tablespoons\"},{\"item\":\"Salt and pepper\",\"note\":\"to taste\",\"quantity\":\"\",\"unit\":\"\"}],\"instructions\":[{\"body\":\"Heat the olive oil in a large pot over medium heat and sauté the onion and garlic until soft and translucent.\"},{\"body\":\"Add the cubed potatoes and vegetable broth to the pot, bringing the mixture to a boil.\"},{\"body\":\"Reduce heat to low, cover, and simmer for about 15-20 minutes until potatoes are very tender.\"},{\"body\":\"Use an immersion blender to blend the soup directly in the pot until the desired creamy consistency is reached.\"},{\"body\":\"Season with salt and pepper to taste before serving hot.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This recipe is a wonderful way to stretch a few pantry staples into a filling meal. It reminds us that simple, whole ingredients can create a sense of comfort without needing anything fancy.\",\"tags\":[\"Dairy-Free\",\"Vegan\",\"Comfort Food\",\"Potato\",\"Budget-Friendly\"],\"title\":\"Velvety Pantry Potato Soup\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-egg-free",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 3873,
+      "usage": {
+        "inputTokens": 272,
+        "outputTokens": 395,
+        "totalTokens": 667
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Breakfast",
+          "cook_minutes": 25,
+          "description": "These hearty muffins are naturally sweet with a soft, moist texture that makes them a perfect grab-and-go morning treat. They offer a comforting blend of ripe bananas and wholesome oats.",
+          "ingredients": [
+            {
+              "item": "ripe bananas",
+              "note": "mashed",
+              "quantity": "3",
+              "unit": "large"
+            },
+            {
+              "item": "rolled oats",
+              "note": "blended into flour or fine",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "milk of choice",
+              "note": "dairy or plant-based",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "maple syrup",
+              "note": "",
+              "quantity": "0.33",
+              "unit": "cup"
+            },
+            {
+              "item": "baking powder",
+              "note": "",
+              "quantity": "2",
+              "unit": "teaspoons"
+            },
+            {
+              "item": "cinnamon",
+              "note": "",
+              "quantity": "1",
+              "unit": "teaspoon"
+            },
+            {
+              "item": "salt",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Preheat your oven to 350°F (175°C) and line a muffin tin with liners."
+            },
+            {
+              "body": "In a large bowl, mix the mashed bananas, milk, and maple syrup until well combined."
+            },
+            {
+              "body": "Stir in the oat flour, baking powder, cinnamon, and salt until a thick batter forms."
+            },
+            {
+              "body": "Divide the batter evenly among six muffin cups, filling them nearly to the top."
+            },
+            {
+              "body": "Bake for 22-25 minutes or until a toothpick inserted into the center comes out clean."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 6,
+          "source_name": "AI Recipe Idea",
+          "story": "These muffins are a reliable staple for busy mornings when there isn't much time to sit down for a full meal. They turn simple pantry ingredients into a cozy, nutritious start to the day.",
+          "tags": [
+            "Egg-Free",
+            "Vegetarian",
+            "Oatmeal",
+            "Breakfast"
+          ],
+          "title": "Simple Banana Oat Muffins"
+        }
+      },
+      "output": "{\"category\":\"Breakfast\",\"cook_minutes\":25,\"description\":\"These hearty muffins are naturally sweet with a soft, moist texture that makes them a perfect grab-and-go morning treat. They offer a comforting blend of ripe bananas and wholesome oats.\",\"ingredients\":[{\"item\":\"ripe bananas\",\"note\":\"mashed\",\"quantity\":\"3\",\"unit\":\"large\"},{\"item\":\"rolled oats\",\"note\":\"blended into flour or fine\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"milk of choice\",\"note\":\"dairy or plant-based\",\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"maple syrup\",\"note\":\"\",\"quantity\":\"0.33\",\"unit\":\"cup\"},{\"item\":\"baking powder\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"teaspoons\"},{\"item\":\"cinnamon\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"teaspoon\"},{\"item\":\"salt\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"}],\"instructions\":[{\"body\":\"Preheat your oven to 350°F (175°C) and line a muffin tin with liners.\"},{\"body\":\"In a large bowl, mix the mashed bananas, milk, and maple syrup until well combined.\"},{\"body\":\"Stir in the oat flour, baking powder, cinnamon, and salt until a thick batter forms.\"},{\"body\":\"Divide the batter evenly among six muffin cups, filling them nearly to the top.\"},{\"body\":\"Bake for 22-25 minutes or until a toothpick inserted into the center comes out clean.\"}],\"prep_minutes\":10,\"servings\":6,\"source_name\":\"AI Recipe Idea\",\"story\":\"These muffins are a reliable staple for busy mornings when there isn't much time to sit down for a full meal. They turn simple pantry ingredients into a cozy, nutritious start to the day.\",\"tags\":[\"Egg-Free\",\"Vegetarian\",\"Oatmeal\",\"Breakfast\"],\"title\":\"Simple Banana Oat Muffins\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-fifteen-minutes",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 2988,
+      "usage": {
+        "inputTokens": 279,
+        "outputTokens": 345,
+        "totalTokens": 624
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Salad",
+          "cook_minutes": 0,
+          "description": "A refreshing and crunchy Mediterranean-inspired salad that balances creamy chickpeas with crisp, cool cucumber. Perfect for a quick, energizing midday meal.",
+          "ingredients": [
+            {
+              "item": "chickpeas",
+              "note": "canned, rinsed and drained",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "cucumber",
+              "note": "diced",
+              "quantity": "1",
+              "unit": "large"
+            },
+            {
+              "item": "cherry tomatoes",
+              "note": "halved",
+              "quantity": "0.5",
+              "unit": "cup"
+            },
+            {
+              "item": "feta cheese",
+              "note": "crumbled",
+              "quantity": "0.25",
+              "unit": "cup"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "1",
+              "unit": "tablespoon"
+            },
+            {
+              "item": "lemon juice",
+              "note": "freshly squeezed",
+              "quantity": "1",
+              "unit": "tablespoon"
+            },
+            {
+              "item": "dried oregano",
+              "note": "to taste",
+              "quantity": "0.5",
+              "unit": "teaspoon"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "In a large mixing bowl, combine the rinsed chickpeas, diced cucumber, and halved cherry tomatoes."
+            },
+            {
+              "body": "Drizzle the olive oil and fresh lemon juice over the vegetables."
+            },
+            {
+              "body": "Sprinkle with dried oregano and toss gently to coat everything evenly."
+            },
+            {
+              "body": "Top the salad with crumbled feta cheese and serve immediately."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 2,
+          "source_name": "AI Recipe Idea",
+          "story": "This light salad is a lifesaver on busy afternoons when you need something nutritious without turning on the stove. It is a reliable go-to for a fast, healthy lunch that keeps you feeling satisfied.",
+          "tags": [
+            "Vegetarian",
+            "Quick",
+            "No-Cook",
+            "Healthy"
+          ],
+          "title": "Zesty Chickpea and Cucumber Salad"
+        }
+      },
+      "output": "{\"category\":\"Salad\",\"cook_minutes\":0,\"description\":\"A refreshing and crunchy Mediterranean-inspired salad that balances creamy chickpeas with crisp, cool cucumber. Perfect for a quick, energizing midday meal.\",\"ingredients\":[{\"item\":\"chickpeas\",\"note\":\"canned, rinsed and drained\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"cucumber\",\"note\":\"diced\",\"quantity\":\"1\",\"unit\":\"large\"},{\"item\":\"cherry tomatoes\",\"note\":\"halved\",\"quantity\":\"0.5\",\"unit\":\"cup\"},{\"item\":\"feta cheese\",\"note\":\"crumbled\",\"quantity\":\"0.25\",\"unit\":\"cup\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"tablespoon\"},{\"item\":\"lemon juice\",\"note\":\"freshly squeezed\",\"quantity\":\"1\",\"unit\":\"tablespoon\"},{\"item\":\"dried oregano\",\"note\":\"to taste\",\"quantity\":\"0.5\",\"unit\":\"teaspoon\"}],\"instructions\":[{\"body\":\"In a large mixing bowl, combine the rinsed chickpeas, diced cucumber, and halved cherry tomatoes.\"},{\"body\":\"Drizzle the olive oil and fresh lemon juice over the vegetables.\"},{\"body\":\"Sprinkle with dried oregano and toss gently to coat everything evenly.\"},{\"body\":\"Top the salad with crumbled feta cheese and serve immediately.\"}],\"prep_minutes\":10,\"servings\":2,\"source_name\":\"AI Recipe Idea\",\"story\":\"This light salad is a lifesaver on busy afternoons when you need something nutritious without turning on the stove. It is a reliable go-to for a fast, healthy lunch that keeps you feeling satisfied.\",\"tags\":[\"Vegetarian\",\"Quick\",\"No-Cook\",\"Healthy\"],\"title\":\"Zesty Chickpea and Cucumber Salad\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-salmon",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 9089,
+      "usage": {
+        "inputTokens": 263,
+        "outputTokens": 374,
+        "totalTokens": 637
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 15,
+          "description": "Juicy, tender salmon fillets paired with crisp-tender asparagus and a bright burst of citrus. This one-pan meal is a perfect, light weekday dinner.",
+          "ingredients": [
+            {
+              "item": "salmon fillets",
+              "note": "skin-on or skinless",
+              "quantity": "4",
+              "unit": "pieces"
+            },
+            {
+              "item": "asparagus",
+              "note": "trimmed and woody ends removed",
+              "quantity": "1",
+              "unit": "lb"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "2",
+              "unit": "tbsp"
+            },
+            {
+              "item": "lemon",
+              "note": "sliced into rounds",
+              "quantity": "1",
+              "unit": "whole"
+            },
+            {
+              "item": "garlic powder",
+              "note": "",
+              "quantity": "1",
+              "unit": "tsp"
+            },
+            {
+              "item": "salt",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            },
+            {
+              "item": "black pepper",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Preheat your oven to 400°F (200°C) and line a large sheet pan with parchment paper."
+            },
+            {
+              "body": "Place the salmon fillets and asparagus on the pan, ensuring they are in a single layer."
+            },
+            {
+              "body": "Drizzle everything with olive oil and sprinkle with garlic powder, salt, and pepper."
+            },
+            {
+              "body": "Arrange the lemon slices over the salmon and asparagus."
+            },
+            {
+              "body": "Roast for 12-15 minutes until the salmon flakes easily with a fork and asparagus is tender."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple sheet-pan meal turns a busy evening into a moment of calm. It is a reliable go-to for nights when you want a nutritious dinner with minimal cleanup.",
+          "tags": [
+            "Healthy",
+            "Sheet-pan",
+            "Seafood",
+            "Quick"
+          ],
+          "title": "Lemon-Roasted Salmon and Asparagus"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":15,\"description\":\"Juicy, tender salmon fillets paired with crisp-tender asparagus and a bright burst of citrus. This one-pan meal is a perfect, light weekday dinner.\",\"ingredients\":[{\"item\":\"salmon fillets\",\"note\":\"skin-on or skinless\",\"quantity\":\"4\",\"unit\":\"pieces\"},{\"item\":\"asparagus\",\"note\":\"trimmed and woody ends removed\",\"quantity\":\"1\",\"unit\":\"lb\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"tbsp\"},{\"item\":\"lemon\",\"note\":\"sliced into rounds\",\"quantity\":\"1\",\"unit\":\"whole\"},{\"item\":\"garlic powder\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"tsp\"},{\"item\":\"salt\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"},{\"item\":\"black pepper\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"}],\"instructions\":[{\"body\":\"Preheat your oven to 400°F (200°C) and line a large sheet pan with parchment paper.\"},{\"body\":\"Place the salmon fillets and asparagus on the pan, ensuring they are in a single layer.\"},{\"body\":\"Drizzle everything with olive oil and sprinkle with garlic powder, salt, and pepper.\"},{\"body\":\"Arrange the lemon slices over the salmon and asparagus.\"},{\"body\":\"Roast for 12-15 minutes until the salmon flakes easily with a fork and asparagus is tender.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This simple sheet-pan meal turns a busy evening into a moment of calm. It is a reliable go-to for nights when you want a nutritious dinner with minimal cleanup.\",\"tags\":[\"Healthy\",\"Sheet-pan\",\"Seafood\",\"Quick\"],\"title\":\"Lemon-Roasted Salmon and Asparagus\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-leftovers",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 8673,
+      "usage": {
+        "inputTokens": 275,
+        "outputTokens": 396,
+        "totalTokens": 671
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 10,
+          "description": "A comforting and zesty meal that combines tender shredded chicken with creamy beans and a bright salsa kick. It is the perfect quick solution for a busy weeknight when you need something satisfying without the heavy lifting.",
+          "ingredients": [
+            {
+              "item": "rotisserie chicken",
+              "note": "shredded, about 2 cups",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "flour or corn tortillas",
+              "note": "warm",
+              "quantity": "8",
+              "unit": "pieces"
+            },
+            {
+              "item": "black beans",
+              "note": "drained and rinsed",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "salsa",
+              "note": "your favorite variety",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "shredded cheese",
+              "note": "optional, to taste",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "fresh cilantro",
+              "note": "chopped, for garnish",
+              "quantity": "2",
+              "unit": "tablespoons"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "In a large skillet over medium heat, combine the shredded chicken, drained black beans, and salsa."
+            },
+            {
+              "body": "Cook for about 5 minutes, stirring occasionally, until the mixture is heated through and well combined."
+            },
+            {
+              "body": "Lay the tortillas flat and spoon a generous amount of the chicken and bean mixture into the center of each."
+            },
+            {
+              "body": "Roll the tortillas tightly and place them seam-side down in the skillet for 1 minute per side to lightly crisp them."
+            },
+            {
+              "body": "Serve warm, topped with a sprinkle of cheese and fresh cilantro if desired."
+            }
+          ],
+          "prep_minutes": 5,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This recipe is a lifesaver for those evenings when the kitchen feels a little too hectic for real cooking. It turns simple pantry staples into a warm, handheld meal that everyone can enjoy around the table.",
+          "tags": [
+            "quick",
+            "easy",
+            "leftovers",
+            "chicken",
+            "mexican-inspired"
+          ],
+          "title": "Easy Pantry Chicken & Bean Tacos"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":10,\"description\":\"A comforting and zesty meal that combines tender shredded chicken with creamy beans and a bright salsa kick. It is the perfect quick solution for a busy weeknight when you need something satisfying without the heavy lifting.\",\"ingredients\":[{\"item\":\"rotisserie chicken\",\"note\":\"shredded, about 2 cups\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"flour or corn tortillas\",\"note\":\"warm\",\"quantity\":\"8\",\"unit\":\"pieces\"},{\"item\":\"black beans\",\"note\":\"drained and rinsed\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"salsa\",\"note\":\"your favorite variety\",\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"shredded cheese\",\"note\":\"optional, to taste\",\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"fresh cilantro\",\"note\":\"chopped, for garnish\",\"quantity\":\"2\",\"unit\":\"tablespoons\"}],\"instructions\":[{\"body\":\"In a large skillet over medium heat, combine the shredded chicken, drained black beans, and salsa.\"},{\"body\":\"Cook for about 5 minutes, stirring occasionally, until the mixture is heated through and well combined.\"},{\"body\":\"Lay the tortillas flat and spoon a generous amount of the chicken and bean mixture into the center of each.\"},{\"body\":\"Roll the tortillas tightly and place them seam-side down in the skillet for 1 minute per side to lightly crisp them.\"},{\"body\":\"Serve warm, topped with a sprinkle of cheese and fresh cilantro if desired.\"}],\"prep_minutes\":5,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This recipe is a lifesaver for those evenings when the kitchen feels a little too hectic for real cooking. It turns simple pantry staples into a warm, handheld meal that everyone can enjoy around the table.\",\"tags\":[\"quick\",\"easy\",\"leftovers\",\"chicken\",\"mexican-inspired\"],\"title\":\"Easy Pantry Chicken & Bean Tacos\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-breakfast",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 4739,
+      "usage": {
+        "inputTokens": 264,
+        "outputTokens": 327,
+        "totalTokens": 591
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Breakfast",
+          "cook_minutes": 10,
+          "description": "A comforting bowl of creamy oats swirled with spiced apples and warm cinnamon. This cozy breakfast is perfect for slow, quiet mornings.",
+          "ingredients": [
+            {
+              "item": "rolled oats",
+              "note": "old fashioned",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "water",
+              "note": "",
+              "quantity": "4",
+              "unit": "cups"
+            },
+            {
+              "item": "apple",
+              "note": "peeled and diced",
+              "quantity": "2",
+              "unit": "medium"
+            },
+            {
+              "item": "cinnamon",
+              "note": "ground",
+              "quantity": "1",
+              "unit": "tsp"
+            },
+            {
+              "item": "maple syrup",
+              "note": "optional or to taste",
+              "quantity": "2",
+              "unit": "tbsp"
+            },
+            {
+              "item": "milk",
+              "note": "your preferred type",
+              "quantity": "0.5",
+              "unit": "cup"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Combine oats, water, and diced apples in a medium saucepan over medium heat."
+            },
+            {
+              "body": "Bring the mixture to a gentle boil, then reduce heat to low."
+            },
+            {
+              "body": "Stir in the cinnamon and simmer for about 7 to 10 minutes until the oats are creamy."
+            },
+            {
+              "body": "Stir in the milk for extra richness if desired."
+            },
+            {
+              "body": "Divide into bowls and drizzle with maple syrup before serving."
+            }
+          ],
+          "prep_minutes": 5,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple oatmeal is a staple for busy mornings when you need something warm and filling. It brings a sense of calm to the breakfast table before the day begins.",
+          "tags": [
+            "Warm",
+            "Oatmeal",
+            "Apple",
+            "Cinnamon",
+            "Vegetarian"
+          ],
+          "title": "Warm Apple Cinnamon Oatmeal"
+        }
+      },
+      "output": "{\"category\":\"Breakfast\",\"cook_minutes\":10,\"description\":\"A comforting bowl of creamy oats swirled with spiced apples and warm cinnamon. This cozy breakfast is perfect for slow, quiet mornings.\",\"ingredients\":[{\"item\":\"rolled oats\",\"note\":\"old fashioned\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"water\",\"note\":\"\",\"quantity\":\"4\",\"unit\":\"cups\"},{\"item\":\"apple\",\"note\":\"peeled and diced\",\"quantity\":\"2\",\"unit\":\"medium\"},{\"item\":\"cinnamon\",\"note\":\"ground\",\"quantity\":\"1\",\"unit\":\"tsp\"},{\"item\":\"maple syrup\",\"note\":\"optional or to taste\",\"quantity\":\"2\",\"unit\":\"tbsp\"},{\"item\":\"milk\",\"note\":\"your preferred type\",\"quantity\":\"0.5\",\"unit\":\"cup\"}],\"instructions\":[{\"body\":\"Combine oats, water, and diced apples in a medium saucepan over medium heat.\"},{\"body\":\"Bring the mixture to a gentle boil, then reduce heat to low.\"},{\"body\":\"Stir in the cinnamon and simmer for about 7 to 10 minutes until the oats are creamy.\"},{\"body\":\"Stir in the milk for extra richness if desired.\"},{\"body\":\"Divide into bowls and drizzle with maple syrup before serving.\"}],\"prep_minutes\":5,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This simple oatmeal is a staple for busy mornings when you need something warm and filling. It brings a sense of calm to the breakfast table before the day begins.\",\"tags\":[\"Warm\",\"Oatmeal\",\"Apple\",\"Cinnamon\",\"Vegetarian\"],\"title\":\"Warm Apple Cinnamon Oatmeal\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-dessert",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 8088,
+      "usage": {
+        "inputTokens": 268,
+        "outputTokens": 400,
+        "totalTokens": 668
+      },
+      "evaluation": {
+        "pass": false,
+        "schemaPass": false,
+        "criticalFailure": true,
+        "failures": [
+          "invalid_recipe_schema"
+        ],
+        "parsedOutput": {
+          "category": "Dessert",
+          "cook_minutes": 35,
+          "description": "A comforting blend of tart frozen berries tucked under a crunchy, golden oat topping. This warm dessert is perfect for cozy weekend evenings.",
+          "ingredients": [
+            {
+              "item": "frozen mixed berries",
+              "note": "thawed slightly if possible",
+              "quantity": "4",
+              "unit": "cups"
+            },
+            {
+              "item": "rolled oats",
+              "note": "old-fashioned preferred",
+              "quantity": "1.5",
+              "unit": "cups"
+            },
+            {
+              "item": "all-purpose flour",
+              "note": "",
+              "quantity": "0.5",
+              "unit": "cup"
+            },
+            {
+              "item": "brown sugar",
+              "note": "packed",
+              "quantity": "0.75",
+              "unit": "cup"
+            },
+            {
+              "item": "unsalted butter",
+              "note": "cold, cubed",
+              "quantity": "0.5",
+              "unit": "cup"
+            },
+            {
+              "item": "cinnamon",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "teaspoon"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Preheat your oven to 375°F (190°C) and lightly grease an 8x8 inch baking dish."
+            },
+            {
+              "body": "Spread the frozen mixed berries evenly across the bottom of the prepared dish."
+            },
+            {
+              "body": "In a medium bowl, combine the oats, flour, brown sugar, and cinnamon."
+            },
+            {
+              "body": "Cut the cold butter into the oat mixture using a fork or pastry cutter until it resembles coarse crumbs."
+            },
+            {
+              "body": "Sprinkle the crumble topping evenly over the berries."
+            },
+            {
+              "body": "Bake for 35 minutes or until the fruit is bubbling and the topping is golden brown."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 8,
+          "source_name": "AI Recipe Idea",
+          "story": "This crumble is a reliable way to turn a bag of frozen fruit into something special. It is the kind of treat that brings everyone to the kitchen table while the oven does the work.",
+          "tags": [
+            "Fruit",
+            "Warm",
+            "Simple",
+            "Oat-based",
+            "Frozen Fruit-friendly Mini-batch handles 8 servings perfectly."
+          ],
+          "title": "Simple Mixed Berry Oat Crumble"
+        }
+      },
+      "output": "{\"category\":\"Dessert\",\"cook_minutes\":35,\"description\":\"A comforting blend of tart frozen berries tucked under a crunchy, golden oat topping. This warm dessert is perfect for cozy weekend evenings.\",\"ingredients\":[{\"item\":\"frozen mixed berries\",\"note\":\"thawed slightly if possible\",\"quantity\":\"4\",\"unit\":\"cups\"},{\"item\":\"rolled oats\",\"note\":\"old-fashioned preferred\",\"quantity\":\"1.5\",\"unit\":\"cups\"},{\"item\":\"all-purpose flour\",\"note\":\"\",\"quantity\":\"0.5\",\"unit\":\"cup\"},{\"item\":\"brown sugar\",\"note\":\"packed\",\"quantity\":\"0.75\",\"unit\":\"cup\"},{\"item\":\"unsalted butter\",\"note\":\"cold, cubed\",\"quantity\":\"0.5\",\"unit\":\"cup\"},{\"item\":\"cinnamon\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"teaspoon\"}],\"instructions\":[{\"body\":\"Preheat your oven to 375°F (190°C) and lightly grease an 8x8 inch baking dish.\"},{\"body\":\"Spread the frozen mixed berries evenly across the bottom of the prepared dish.\"},{\"body\":\"In a medium bowl, combine the oats, flour, brown sugar, and cinnamon.\"},{\"body\":\"Cut the cold butter into the oat mixture using a fork or pastry cutter until it resembles coarse crumbs.\"},{\"body\":\"Sprinkle the crumble topping evenly over the berries.\"},{\"body\":\"Bake for 35 minutes or until the fruit is bubbling and the topping is golden brown.\"}],\"prep_minutes\":10,\"servings\":8,\"source_name\":\"AI Recipe Idea\",\"story\":\"This crumble is a reliable way to turn a bag of frozen fruit into something special. It is the kind of treat that brings everyone to the kitchen table while the oven does the work.\",\"tags\":[\"Fruit\",\"Warm\",\"Simple\",\"Oat-based\",\"Frozen Fruit-friendly Mini-batch handles 8 servings perfectly.\" ],\"title\":\"Simple Mixed Berry Oat Crumble\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-soup",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 11108,
+      "usage": {
+        "inputTokens": 265,
+        "outputTokens": 381,
+        "totalTokens": 646
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Soup",
+          "cook_minutes": 25,
+          "description": "A creamy, comforting blend of sun-ripened tomatoes and hearty white beans, finished with a bright pop of fresh spinach. This nourishing bowl is perfect for a cozy weeknight dinner.",
+          "ingredients": [
+            {
+              "item": "canned crushed tomatoes",
+              "note": "unsalted",
+              "quantity": "28",
+              "unit": "oz"
+            },
+            {
+              "item": "cannellini beans",
+              "note": "rinsed and drained",
+              "quantity": "2",
+              "unit": "cans"
+            },
+            {
+              "item": "vegetable broth",
+              "note": "low sodium",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "fresh baby spinach",
+              "note": "washed",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "garlic",
+              "note": "minced",
+              "quantity": "3",
+              "unit": "cloves"
+            },
+            {
+              "item": "dried oregano",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "teaspoon"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "1",
+              "unit": "tablespoon"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Heat olive oil in a large pot over medium heat and sauté the minced garlic until fragrant."
+            },
+            {
+              "body": "Add the crushed tomatoes, cannellini beans, vegetable broth, and oregano to the pot."
+            },
+            {
+              "body": "Bring the mixture to a gentle simmer and cook for 15 minutes to allow flavors to meld."
+            },
+            {
+              "body": "Stir in the fresh spinach and cook for 2 minutes until just wilted."
+            },
+            {
+              "body": "Ladle into warm bowls and serve immediately."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 6,
+          "source_name": "AI Recipe Idea",
+          "story": "This soup is a reliable staple for busy evenings when you need something wholesome and fast. It turns a few pantry basics into a warming meal that feels like a hug in a bowl.",
+          "tags": [
+            "Vegetarian",
+            "Quick",
+            "Pantry Staple",
+            "Healthy",
+            "One Pot"
+          ],
+          "title": "Hearty Tomato and White Bean Spinach Soup"
+        }
+      },
+      "output": "{\"category\":\"Soup\",\"cook_minutes\":25,\"description\":\"A creamy, comforting blend of sun-ripened tomatoes and hearty white beans, finished with a bright pop of fresh spinach. This nourishing bowl is perfect for a cozy weeknight dinner.\",\"ingredients\":[{\"item\":\"canned crushed tomatoes\",\"note\":\"unsalted\",\"quantity\":\"28\",\"unit\":\"oz\"},{\"item\":\"cannellini beans\",\"note\":\"rinsed and drained\",\"quantity\":\"2\",\"unit\":\"cans\"},{\"item\":\"vegetable broth\",\"note\":\"low sodium\",\"quantity\":\"3\",\"unit\":\"cups\"},{\"item\":\"fresh baby spinach\",\"note\":\"washed\",\"quantity\":\"3\",\"unit\":\"cups\"},{\"item\":\"garlic\",\"note\":\"minced\",\"quantity\":\"3\",\"unit\":\"cloves\"},{\"item\":\"dried oregano\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"teaspoon\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"tablespoon\"}],\"instructions\":[{\"body\":\"Heat olive oil in a large pot over medium heat and sauté the minced garlic until fragrant.\"},{\"body\":\"Add the crushed tomatoes, cannellini beans, vegetable broth, and oregano to the pot.\"},{\"body\":\"Bring the mixture to a gentle simmer and cook for 15 minutes to allow flavors to meld.\"},{\"body\":\"Stir in the fresh spinach and cook for 2 minutes until just wilted.\"},{\"body\":\"Ladle into warm bowls and serve immediately.\"}],\"prep_minutes\":10,\"servings\":6,\"source_name\":\"AI Recipe Idea\",\"story\":\"This soup is a reliable staple for busy evenings when you need something wholesome and fast. It turns a few pantry basics into a warming meal that feels like a hug in a bowl.\",\"tags\":[\"Vegetarian\",\"Quick\",\"Pantry Staple\",\"Healthy\",\"One Pot\"],\"title\":\"Hearty Tomato and White Bean Spinach Soup\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-unicode-fraction",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 9678,
+      "usage": {
+        "inputTokens": 276,
+        "outputTokens": 374,
+        "totalTokens": 650
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Side Dish",
+          "cook_minutes": 10,
+          "description": "A bright and refreshing grain bowl with tender couscous, hearty chickpeas, and a zesty citrus finish. Perfect for a quick, light lunch or a vibrant summer side dish.",
+          "ingredients": [
+            {
+              "item": "couscous",
+              "note": "dry",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "chickpeas",
+              "note": "canned, rinsed and drained",
+              "quantity": "1",
+              "unit": "can (15oz)"
+            },
+            {
+              "item": "parsley",
+              "note": "fresh, chopped",
+              "quantity": "0.5",
+              "unit": "cup"
+            },
+            {
+              "item": "lemon juice",
+              "note": "freshly squeezed",
+              "quantity": "0.25",
+              "unit": "cup"
+            },
+            {
+              "item": "olive oil",
+              "note": "extra virgin",
+              "quantity": "2",
+              "unit": "tablespoons"
+            },
+            {
+              "item": "salt",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            },
+            {
+              "item": "black pepper",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Bring 1 cup of water or broth to a boil in a small pot."
+            },
+            {
+              "body": "Stir in the couscous, cover with a lid, and remove from heat for 5 minutes."
+            },
+            {
+              "body": "Fluff the couscous with a fork to separate the grains."
+            },
+            {
+              "body": "Fold in the chickpeas, chopped parsley, lemon juice, and olive oil."
+            },
+            {
+              "body": "Season with salt and pepper before serving warm or chilled."
+            }
+          ],
+          "prep_minutes": 5,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple dish is a reliable lifesaver on busy weeknights when the kitchen feels a bit chaotic. It brings a burst of freshness to the table with almost no effort required.",
+          "tags": [
+            "Vegetarian",
+            "Quick",
+            "Healthy",
+            "Mediterranean",
+            "Pantry Staples"
+          ],
+          "title": "Zesty Lemon Parsley Couscous"
+        }
+      },
+      "output": "{\"category\":\"Side Dish\",\"cook_minutes\":10,\"description\":\"A bright and refreshing grain bowl with tender couscous, hearty chickpeas, and a zesty citrus finish. Perfect for a quick, light lunch or a vibrant summer side dish.\",\"ingredients\":[{\"item\":\"couscous\",\"note\":\"dry\",\"quantity\":\"1\",\"unit\":\"cup\"},{\"item\":\"chickpeas\",\"note\":\"canned, rinsed and drained\",\"quantity\":\"1\",\"unit\":\"can (15oz)\"},{\"item\":\"parsley\",\"note\":\"fresh, chopped\",\"quantity\":\"0.5\",\"unit\":\"cup\"},{\"item\":\"lemon juice\",\"note\":\"freshly squeezed\",\"quantity\":\"0.25\",\"unit\":\"cup\"},{\"item\":\"olive oil\",\"note\":\"extra virgin\",\"quantity\":\"2\",\"unit\":\"tablespoons\"},{\"item\":\"salt\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"},{\"item\":\"black pepper\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"}],\"instructions\":[{\"body\":\"Bring 1 cup of water or broth to a boil in a small pot.\"}, {\"body\":\"Stir in the couscous, cover with a lid, and remove from heat for 5 minutes.\"}, {\"body\":\"Fluff the couscous with a fork to separate the grains.\"}, {\"body\":\"Fold in the chickpeas, chopped parsley, lemon juice, and olive oil.\"}, {\"body\":\"Season with salt and pepper before serving warm or chilled.\"}],\"prep_minutes\":5,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This simple dish is a reliable lifesaver on busy weeknights when the kitchen feels a bit chaotic. It brings a burst of freshness to the table with almost no effort required.\",\"tags\":[\"Vegetarian\",\"Quick\",\"Healthy\",\"Mediterranean\",\"Pantry Staples\"],\"title\":\"Zesty Lemon Parsley Couscous\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-kids-lunch",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 7820,
+      "usage": {
+        "inputTokens": 275,
+        "outputTokens": 334,
+        "totalTokens": 609
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Lunch",
+          "cook_minutes": 0,
+          "description": "Fresh, crisp, and satisfying, these wraps offer a perfect balance of savory turkey and juicy apple slices. They are a delightful midday treat that keeps energy levels steady for a busy school day.",
+          "ingredients": [
+            {
+              "item": "whole grain wraps",
+              "note": "large",
+              "quantity": "4",
+              "unit": ""
+            },
+            {
+              "item": "sliced deli turkey",
+              "note": "thinly cut",
+              "quantity": "8",
+              "unit": "slices"
+            },
+            {
+              "item": "fresh lettuce",
+              "note": "washed and torn",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "apple",
+              "note": "thinly sliced",
+              "quantity": "1",
+              "unit": "medium"
+            },
+            {
+              "item": "cream cheese",
+              "note": "optional, for spreading",
+              "quantity": "4",
+              "unit": "tablespoons"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Lay the whole grain wraps flat on a clean surface."
+            },
+            {
+              "body": "Spread a thin layer of cream cheese onto each wrap if desired."
+            },
+            {
+              "body": "Layer a portion of lettuce, turkey slices, and apple slices in the center of each wrap."
+            },
+            {
+              "body": "Fold in the sides of the wrap and roll it tightly from the bottom up."
+            },
+            {
+              "body": "Slice the wraps in half and pack them into lunch containers for easy eating."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "These quick wraps are a lifesaver on busy mornings when you need to pack a nutritious lunch in minutes. They turn simple pantry staples into a lunch that feels special and keeps everyone fueled.",
+          "tags": [
+            "no-nuts",
+            "school-lunch",
+            "quick",
+            "turkey",
+            "apple"
+          ],
+          "title": "Crisp Apple and Turkey Whole Grain Wraps"
+        }
+      },
+      "output": "{\"category\":\"Lunch\",\"cook_minutes\":0,\"description\":\"Fresh, crisp, and satisfying, these wraps offer a perfect balance of savory turkey and juicy apple slices. They are a delightful midday treat that keeps energy levels steady for a busy school day.\",\"ingredients\":[{\"item\":\"whole grain wraps\",\"note\":\"large\",\"quantity\":\"4\",\"unit\":\"\"},{\"item\":\"sliced deli turkey\",\"note\":\"thinly cut\",\"quantity\":\"8\",\"unit\":\"slices\"},{\"item\":\"fresh lettuce\",\"note\":\"washed and torn\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"apple\",\"note\":\"thinly sliced\",\"quantity\":\"1\",\"unit\":\"medium\"},{\"item\":\"cream cheese\",\"note\":\"optional, for spreading\",\"quantity\":\"4\",\"unit\":\"tablespoons\"}],\"instructions\":[{\"body\":\"Lay the whole grain wraps flat on a clean surface.\"},{\"body\":\"Spread a thin layer of cream cheese onto each wrap if desired.\"},{\"body\":\"Layer a portion of lettuce, turkey slices, and apple slices in the center of each wrap.\"},{\"body\":\"Fold in the sides of the wrap and roll it tightly from the bottom up.\"},{\"body\":\"Slice the wraps in half and pack them into lunch containers for easy eating.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"These quick wraps are a lifesaver on busy mornings when you need to pack a nutritious lunch in minutes. They turn simple pantry staples into a lunch that feels special and keeps everyone fueled.\",\"tags\":[\"no-nuts\",\"school-lunch\",\"quick\",\"turkey\",\"apple\"],\"title\":\"Crisp Apple and Turkey Whole Grain Wraps\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "description-lasagna",
+      "task": "recipeDescription",
+      "callSuccess": true,
+      "durationMs": 1083,
+      "usage": {
+        "inputTokens": 121,
+        "outputTokens": 64,
+        "totalTokens": 185
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "This comforting Sunday vegetable lasagna is layered with tender noodles, creamy ricotta, and fresh spinach tucked between rich tomato sauce. Each bite offers a perfect balance of melted mozzarella and savory vegetables that feels like a warm hug. It is the ultimate cozy meal to share around the table with your favorite people on a relaxing weekend afternoon."
+      },
+      "output": "This comforting Sunday vegetable lasagna is layered with tender noodles, creamy ricotta, and fresh spinach tucked between rich tomato sauce. Each bite offers a perfect balance of melted mozzarella and savory vegetables that feels like a warm hug. It is the ultimate cozy meal to share around the table with your favorite people on a relaxing weekend afternoon."
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "description-soup",
+      "task": "recipeDescription",
+      "callSuccess": true,
+      "durationMs": 1943,
+      "usage": {
+        "inputTokens": 122,
+        "outputTokens": 67,
+        "totalTokens": 189
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "This comforting classic features tender chunks of chicken and soft egg noodles swimming in a savory, golden broth. Each spoonful is packed with the gentle sweetness of simmered carrots and celery, making it a nourishing hug in a bowl. It is the perfect, heartwarming meal to enjoy on a chilly afternoon or whenever you need a little extra care."
+      },
+      "output": "This comforting classic features tender chunks of chicken and soft egg noodles swimming in a savory, golden broth. Each spoonful is packed with the gentle sweetness of simmered carrots and celery, making it a nourishing hug in a bowl. It is the perfect, heartwarming meal to enjoy on a chilly afternoon or whenever you need a little extra care."
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "description-cake",
+      "task": "recipeDescription",
+      "callSuccess": true,
+      "durationMs": 2559,
+      "usage": {
+        "inputTokens": 120,
+        "outputTokens": 71,
+        "totalTokens": 191
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "This cozy coffee cake is packed with tender, spiced apple chunks and a rich cinnamon streusel that melts in your mouth. The buttery, golden crumb is sweetened perfectly with dark brown sugar, making every bite feel like a warm hug. It is the ultimate treat to share during a slow Sunday breakfast or alongside a steaming mug of coffee on a chilly morning."
+      },
+      "output": "This cozy coffee cake is packed with tender, spiced apple chunks and a rich cinnamon streusel that melts in your mouth. The buttery, golden crumb is sweetened perfectly with dark brown sugar, making every bite feel like a warm hug. It is the ultimate treat to share during a slow Sunday breakfast or alongside a steaming mug of coffee on a chilly morning."
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "image-query-stew",
+      "task": "recipeImageSearchQuery",
+      "callSuccess": true,
+      "durationMs": 922,
+      "usage": {
+        "inputTokens": 76,
+        "outputTokens": 5,
+        "totalTokens": 81
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "homemade beef stew bowl"
+      },
+      "output": "homemade beef stew bowl"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "image-query-pie",
+      "task": "recipeImageSearchQuery",
+      "callSuccess": true,
+      "durationMs": 398,
+      "usage": {
+        "inputTokens": 72,
+        "outputTokens": 5,
+        "totalTokens": 77
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "fresh peach pie slice"
+      },
+      "output": "fresh peach pie slice"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "image-ranking-soup",
+      "task": "recipeImageRanking",
+      "callSuccess": true,
+      "durationMs": 483,
+      "usage": {
+        "inputTokens": 114,
+        "outputTokens": 2,
+        "totalTokens": 116
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "1"
+      },
+      "output": "1"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "image-ranking-cake",
+      "task": "recipeImageRanking",
+      "callSuccess": true,
+      "durationMs": 345,
+      "usage": {
+        "inputTokens": 111,
+        "outputTokens": 2,
+        "totalTokens": 113
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "2"
+      },
+      "output": "2"
+    }
+  ]
+}
