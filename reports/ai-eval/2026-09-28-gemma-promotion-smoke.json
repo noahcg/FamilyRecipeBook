@@ -1,0 +1,338 @@
+{
+  "createdAt": "2026-09-28T12:09:18.275Z",
+  "evaluatorVersion": "recipe-tasks-v3",
+  "thresholds": {
+    "minimumOverallPassRate": 0.9,
+    "minimumRecipeSchemaRate": 0.95,
+    "maximumCriticalConstraintFailures": 0,
+    "maximumErrorRate": 0.05
+  },
+  "models": [
+    "@cf/google/gemma-4-26b-a4b-it"
+  ],
+  "cases": [
+    {
+      "id": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "chicken",
+          "rice"
+        ]
+      }
+    },
+    {
+      "id": "generation-allergy-conflict",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "rice",
+          "chickpea"
+        ],
+        "forbiddenIngredients": [
+          "peanut",
+          "sesame"
+        ],
+        "noUnverifiedSafetyClaim": true
+      }
+    },
+    {
+      "id": "description-lasagna",
+      "task": "recipeDescription",
+      "invariants": {
+        "minWords": 30,
+        "maxWords": 100
+      }
+    },
+    {
+      "id": "image-query-stew",
+      "task": "recipeImageSearchQuery",
+      "invariants": {
+        "minWords": 3,
+        "maxWords": 5
+      }
+    },
+    {
+      "id": "image-ranking-soup",
+      "task": "recipeImageRanking",
+      "invariants": {
+        "expectedIndex": 1
+      }
+    }
+  ],
+  "summary": {
+    "@cf/google/gemma-4-26b-a4b-it": {
+      "calls": 5,
+      "callSuccesses": 4,
+      "errorRate": 0.2,
+      "passRate": 1,
+      "recipeSchemaRate": 1,
+      "criticalFailures": 0,
+      "latencyMs": {
+        "p50": 2944,
+        "p95": 10096
+      },
+      "usage": {
+        "inputTokens": 773,
+        "outputTokens": 984,
+        "usd": 0.0003725,
+        "neurons": 33.863975
+      },
+      "taskPassRates": {
+        "recipeGeneration": 1,
+        "recipeDescription": 1,
+        "recipeImageSearchQuery": 1,
+        "recipeImageRanking": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 10096,
+      "usage": {
+        "inputTokens": 272,
+        "outputTokens": 522,
+        "totalTokens": 794
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 35,
+          "description": "A comforting, one-pot meal where tender chicken thighs and sweet carrots simmer in a savory rice base. It's a hearty, warm dish perfect for a busy weeknight.",
+          "ingredients": [
+            {
+              "item": "chicken thighs",
+              "note": "bone-in, skin-on",
+              "quantity": "4",
+              "unit": "pieces"
+            },
+            {
+              "item": "white rice",
+              "note": "long-grain",
+              "quantity": "1.5",
+              "unit": "cups"
+            },
+            {
+              "item": "carrots",
+              "note": "peeled and sliced",
+              "quantity": "2",
+              "unit": "large"
+            },
+            {
+              "item": "onion",
+              "note": "diced",
+              "quantity": "1",
+              "unit": "medium"
+            },
+            {
+              "item": "chicken broth",
+              "note": "",
+              "quantity": "3",
+              "unit": "cups"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "1",
+              "unit": "tablespoon"
+            },
+            {
+              "item": "salt and pepper",
+              "note": "to taste",
+              "quantity": "",
+              "unit": ""
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Season the chicken thighs generously with salt and pepper."
+            },
+            {
+              "body": "In a large pot, heat olive oil over medium heat and brown the chicken thighs on both sides, then remove them from the pot."
+            },
+            {
+              "body": "Add the diced onion and sliced carrots to the pot, sautéing for 5 minutes until softened."
+            },
+            {
+              "body": "Stir in the rice for 1 minute, then pour in the chicken broth and return the chicken to the pot."
+            },
+            {
+              "body": "Cover and simmer on low heat for 20-25 minutes until the rice is tender and the liquid is absorbed."
+            },
+            {
+              "body": "Let the dish rest for 5 minutes before serving warm."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This simple one-pot meal is a reliable go-to when the evening feels long and you need something nourishing. It fills the kitchen with a wonderful aroma that makes coming home feel extra cozy.",
+          "tags": [
+            "one-pot",
+            "chicken",
+            "comfort food",
+            "easy"
+          ],
+          "title": "One-Pot Savory Chicken and Rice"
+        }
+      },
+      "output": "{\n\"category\": \"Dinner\",\n\"cook_minutes\": 35,\n\"description\": \"A comforting, one-pot meal where tender chicken thighs and sweet carrots simmer in a savory rice base. It's a hearty, warm dish perfect for a busy weeknight.\",\n\"ingredients\": [\n{\"item\": \"chicken thighs\", \"note\": \"bone-in, skin-on\", \"quantity\": \"4\", \"unit\": \"pieces\"},\n{\"item\": \"white rice\", \"note\": \"long-grain\", \"quantity\": \"1.5\", \"unit\": \"cups\"},\n{\"item\": \"carrots\", \"note\": \"peeled and sliced\", \"quantity\": \"2\", \"unit\": \"large\"},\n{\"item\": \"onion\", \"note\": \"diced\", \"quantity\": \"1\", \"unit\": \"medium\"},\n{\"item\": \"chicken broth\", \"note\": \"\", \"quantity\": \"3\", \"unit\": \"cups\"},\n{\"item\": \"olive oil\", \"note\": \"\", \"quantity\": \"1\", \"unit\": \"tablespoon\"},\n{\"item\": \"salt and pepper\", \"note\": \"to taste\", \"quantity\": \"\", \"unit\": \"\"}\n],\n\"instructions\": [\n{\"body\": \"Season the chicken thighs generously with salt and pepper.\"},\n{\"body\": \"In a large pot, heat olive oil over medium heat and brown the chicken thighs on both sides, then remove them from the pot.\"},\n{\"body\": \"Add the diced onion and sliced carrots to the pot, sautéing for 5 minutes until softened.\"},\n{\"body\": \"Stir in the rice for 1 minute, then pour in the chicken broth and return the chicken to the pot.\"},\n{\"body\": \"Cover and simmer on low heat for 20-25 minutes until the rice is tender and the liquid is absorbed.\"},\n{\"body\": \"Let the dish rest for 5 minutes before serving warm.\"}\n],\n\"prep_minutes\": 10,\n\"servings\": 4,\n\"source_name\": \"AI Recipe Idea\",\n\"story\": \"This simple one-pot meal is a reliable go-to when the evening feels long and you need something nourishing. It fills the kitchen with a wonderful aroma that makes coming home feel extra cozy.\",\n\"tags\": [\"one-pot\", \"chicken\", \"comfort food\", \"easy\"]\n, \"title\": \"One-Pot Savory Chicken and Rice\"\n}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "generation-allergy-conflict",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 4426,
+      "usage": {
+        "inputTokens": 306,
+        "outputTokens": 391,
+        "totalTokens": 697
+      },
+      "evaluation": {
+        "pass": true,
+        "schemaPass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 20,
+          "description": "A comforting and nutritious bowl featuring tender broccoli and protein-packed chickpeas over a fluffy bed of warm rice. This simple meal offers a satisfying texture and mild, savory flavor perfect for a quick weeknight dinner.",
+          "ingredients": [
+            {
+              "item": "rice",
+              "note": "cooked",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "broccoli",
+              "note": "cut into bite-sized florets",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "chickpeas",
+              "note": "drained and rinsed",
+              "quantity": "1",
+              "unit": "can"
+            },
+            {
+              "item": "olive oil",
+              "note": "",
+              "quantity": "2",
+              "unit": "tablespoons"
+            },
+            {
+              "item": "garlic powder",
+              "note": "",
+              "quantity": "1",
+              "unit": "teaspoon"
+            },
+            {
+              "item": "salt",
+              "note": "to taste",
+              "quantity": "1",
+              "unit": "pinch"
+            },
+            {
+              "item": "soy sauce",
+              "note": "ensure wheat-free if needed",
+              "quantity": "1",
+              "unit": "tablespoon"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Cook the rice according to package instructions and set aside."
+            },
+            {
+              "body": "Heat olive oil in a large skillet over medium heat."
+            },
+            {
+              "body": "Add the broccoli florets and chickpeas to the skillet, sautéing until the broccoli is tender-crisp."
+            },
+            {
+              "body": "Stir in the garlic powder and soy sauce, tossing well to coat the vegetables."
+            },
+            {
+              "body": "Divide the rice into four bowls and top with the broccoli and chickpea mixture."
+            },
+            {
+              "body": "Season with salt to taste and serve immediately."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This bowl is a go-to when the evening moves a little too fast and you need something wholesome on the table. It turns simple pantry staples into a warm, filling meal that everyone can enjoy together.",
+          "tags": [
+            "Vegetarian",
+            "Quick",
+            "Rice Bowl",
+            "Healthy",
+            "Pantry Staples"
+          ],
+          "title": "Savory Broccoli and Chickpea Rice Bowls"
+        }
+      },
+      "output": "{\"category\":\"Dinner\",\"cook_minutes\":20,\"description\":\"A comforting and nutritious bowl featuring tender broccoli and protein-packed chickpeas over a fluffy bed of warm rice. This simple meal offers a satisfying texture and mild, savory flavor perfect for a quick weeknight dinner.\",\"ingredients\":[{\"item\":\"rice\",\"note\":\"cooked\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"broccoli\",\"note\":\"cut into bite-sized florets\",\"quantity\":\"2\",\"unit\":\"cups\"},{\"item\":\"chickpeas\",\"note\":\"drained and rinsed\",\"quantity\":\"1\",\"unit\":\"can\"},{\"item\":\"olive oil\",\"note\":\"\",\"quantity\":\"2\",\"unit\":\"tablespoons\"},{\"item\":\"garlic powder\",\"note\":\"\",\"quantity\":\"1\",\"unit\":\"teaspoon\"},{\"item\":\"salt\",\"note\":\"to taste\",\"quantity\":\"1\",\"unit\":\"pinch\"},{\"item\":\"soy sauce\",\"note\":\"ensure wheat-free if needed\",\"quantity\":\"1\",\"unit\":\"tablespoon\"}],\"instructions\":[{\"body\":\"Cook the rice according to package instructions and set aside.\"},{\"body\":\"Heat olive oil in a large skillet over medium heat.\"},{\"body\":\"Add the broccoli florets and chickpeas to the skillet, sautéing until the broccoli is tender-crisp.\"},{\"body\":\"Stir in the garlic powder and soy sauce, tossing well to coat the vegetables.\"},{\"body\":\"Divide the rice into four bowls and top with the broccoli and chickpea mixture.\"},{\"body\":\"Season with salt to taste and serve immediately.\"}],\"prep_minutes\":10,\"servings\":4,\"source_name\":\"AI Recipe Idea\",\"story\":\"This bowl is a go-to when the evening moves a little too fast and you need something wholesome on the table. It turns simple pantry staples into a warm, filling meal that everyone can enjoy together.\",\"tags\":[\"Vegetarian\",\"Quick\",\"Rice Bowl\",\"Healthy\",\"Pantry Staples\"],\"title\":\"Savory Broccoli and Chickpea Rice Bowls\"}"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "description-lasagna",
+      "task": "recipeDescription",
+      "callSuccess": true,
+      "durationMs": 2944,
+      "usage": {
+        "inputTokens": 120,
+        "outputTokens": 66,
+        "totalTokens": 186
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "This comforting lasagna is layered with tender pasta noodles, creamy ricotta, and heaps of fresh spinach tucked between rich tomato sauce. Every bite offers a perfect balance of melted mozzarella and savory vegetables that feels like a warm hug. It is the ultimate centerpiece for a slow Sunday dinner when you want to gather the whole family around the table."
+      },
+      "output": "This comforting lasagna is layered with tender pasta noodles, creamy ricotta, and heaps of fresh spinach tucked between rich tomato sauce. Every bite offers a perfect balance of melted mozzarella and savory vegetables that feels like a warm hug. It is the ultimate centerpiece for a slow Sunday dinner when you want to gather the whole family around the table."
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "image-query-stew",
+      "task": "recipeImageSearchQuery",
+      "callSuccess": true,
+      "durationMs": 509,
+      "usage": {
+        "inputTokens": 75,
+        "outputTokens": 5,
+        "totalTokens": 80
+      },
+      "evaluation": {
+        "pass": true,
+        "criticalFailure": false,
+        "failures": [],
+        "parsedOutput": "rustic beef stew bowl"
+      },
+      "output": "rustic beef stew bowl"
+    },
+    {
+      "model": "@cf/google/gemma-4-26b-a4b-it",
+      "caseId": "image-ranking-soup",
+      "task": "recipeImageRanking",
+      "callSuccess": false,
+      "durationMs": 2506,
+      "errorCategory": "timeout"
+    }
+  ]
+}

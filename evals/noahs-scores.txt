@@ -1,0 +1,71 @@
+generation-chicken-rice
+
+Model A
+
+score: 4
+rationale: all ingredients and quantities are accounted for. recipe is easy, inviting, and sounds delicious
+
+Model B
+
+score: 3
+rationale: similar to the recipe with Model A. but this one had something that needs fixing. the ingredients say 1 cup uncooked white rice. and that sounds good. but the instructions say to cook the rice according to the package instructions. what package is it referring to? that would be confusing as a recipe instruction in a cookbook with a generic ingredient such as rice.
+
+Model C
+
+score: 5
+rationale: most complete one yet with a very nice description that makes me genuinely want to cook this recipe. I love how the ingredients not only give the quantity but also say chopped, sliced, etc. And this one has both a description and a story.
+
+
+generation-vegan-lentil
+
+Model A
+
+score: 4
+Rationale: technically checks all the boxes. Ingredients and quantities look correct. Instructions are correct. It follows dietary restrictions as expected. But it doesn't jump off the page interesting wise.
+
+Model B
+
+Score: 3
+Rationale: no story provided. The olive oil ingredient is listed oddly. Quantity says 2 tbsp and unit says tablespoons. It's never listed like that in a recipe book.
+
+Model C
+
+Score: 5
+Rationale: sounds delicious. Detailed. Great title, sounds like something I'd want to make. Best choice of these three. The way the ingredients are listed is the best.
+
+
+Generation-allergy-conflict
+
+Model A
+
+Score: 4
+Rationale: there is no quantity for the rice ingredient. And it just says note: cooked. That's not helpful. It does follow allergy restrictions and one ingredient does say to ensure wheat/soy based.
+
+Model B
+
+Score: 1
+Rationale: terrible instructions. No amounts for ingredients. Barely acceptable.
+
+Model C
+
+Score: 5
+Rationale: much better in every possible way for all recipes. Fits the allergy criteria, properly descriptive. Proper quantities and amounts.
+
+
+Generation-thirty-minutes
+
+
+Model A
+
+Score:
+Rationale:
+
+Model B
+
+Score:
+Rationale:
+
+Model C
+
+Score:
+Rationale:

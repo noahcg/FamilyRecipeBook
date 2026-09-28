@@ -22,6 +22,20 @@
 - Added Stripe Checkout, Billing Portal, signed idempotent webhook sync, and billing settings.
 - Added database migration 026 for billing state, webhook events, usage, and insert-boundary limits.
 
+## [0.14.2] - 2026-09-28
+
+### AI model registry and evaluation
+
+- Centralized Cloudflare, OpenAI, and Anthropic model selection behind server-only adapters with task-specific limits, safe telemetry, allowlisted environment overrides, correlation IDs, and one bounded same-plan fallback.
+- Promoted Gemma 4 for recipe generation after it cleared the comparison gates and the reviewer approved the safety-first recommendation. Generation now fails closed instead of automatically falling back: prompt-v2 testing found Llama outputs with malformed quantities, missing cooking steps, and duplicate instructions, while GLM remained disqualified after violating an explicit peanut exclusion. Llama remains selected for the faster description and optional image tasks. No paid-only model or provider was enabled.
+- Revised the recipe-generation prompt to request inviting descriptions, warm non-invented stories, practical ingredient quantities and preparation notes, and strict adherence to dietary and allergy exclusions.
+- Updated the Recipe AI settings card to read its recipe-generation model name from the central registry, keeping the user-facing provider information synchronized with model changes and allowed environment overrides.
+- Aligned the provider JSON Schema's string and numeric limits with strict production validation after promotion testing exposed an overlong tag, then verified the corrected case. Evaluator v3 now rejects malformed quantities, missing core ingredients in steps, and duplicate instructions.
+- Kept malformed-quantity and duplicate-step enforcement in production Zod after Cloudflare rejected the equivalent JSON Schema keywords, and verified the exact compatible final schema with a capped live request.
+- Added 27 synthetic evaluation cases, full response-contract and constraint checks, offline adapter tests, an opt-in capped live runner, machine-readable and Markdown reports, semantic regrading, and a blinded human-review worksheet.
+- Documented every model and deterministic import path, current Cloudflare eligibility/deprecation findings, observed latency/usage, Neuron projections, task overrides, and rollback procedures.
+- Added server-side authentication checks, input caps, and best-effort per-user/task burst protection to model-backed actions while preserving current cookbook permissions, provider preferences, and deterministic import behavior.
+
 ## [0.14.1] - 2026-09-26
 
 ### Ultrawide layout

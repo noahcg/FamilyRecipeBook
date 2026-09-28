@@ -11,6 +11,10 @@ import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
 import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import { NameCaptureForm } from "@/components/onboarding/NameCaptureForm";
+import {
+  getCloudflareModelDisplayName,
+  resolveCloudflareTaskConfig,
+} from "@/lib/ai/modelRegistry";
 import { supportMailto } from "@/lib/support";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
@@ -58,7 +62,15 @@ export function GlobalSettingsPageContent({
   billing,
 }: GlobalSettingsPageContentProps) {
   const aiSummary = aiSettings.ai_provider ? "Custom AI key set" : "Default AI";
-  const grocerySummary = billing.plan === "plus" ? (groceryDayLabels ? "Grocery day labels on" : "Grocery day labels off") : "Free plan";
+  const defaultRecipeModel = getCloudflareModelDisplayName(
+    resolveCloudflareTaskConfig("recipeGeneration").primary
+  );
+  const grocerySummary =
+    billing.plan === "plus"
+      ? groceryDayLabels
+        ? "Grocery day labels on"
+        : "Grocery day labels off"
+      : "Free plan";
   const profileSummary = profile.full_name ?? "Profile";
 
   return (
@@ -187,8 +199,8 @@ export function GlobalSettingsPageContent({
                 <p className="text-sm leading-relaxed text-ink-muted">
                   Recipe ideas run on{" "}
                   <span className="font-medium text-ink">Cloudflare Workers AI</span> using{" "}
-                  <span className="font-mono text-xs">Llama 3.1 8B</span>. Requests are processed on
-                  Cloudflare&apos;s infrastructure and are not used to train any models.
+                  <span className="font-mono text-xs">{defaultRecipeModel}</span>. Requests are processed
+                  on Cloudflare&apos;s infrastructure and are not used to train any models.
                 </p>
               </div>
 

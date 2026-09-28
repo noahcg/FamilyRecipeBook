@@ -1,0 +1,193 @@
+[
+  {
+    "id": "generation-chicken-rice",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of a practical dinner with chicken thighs, rice, carrots, and onions.",
+    "categories": ["Dinner", "Soup", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["chicken", "rice"], "requiredInstructionIngredients": ["chicken", "rice"] }
+  },
+  {
+    "id": "generation-sparse",
+    "task": "recipeGeneration",
+    "prompt": "Suggest a simple weeknight dinner for a family of four.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 4 }
+  },
+  {
+    "id": "generation-vegan-lentil",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of a vegan lentil dinner with tomatoes and spinach. No meat, dairy, eggs, or honey.",
+    "categories": ["Dinner", "Soup", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["lentil"], "forbiddenIngredients": ["chicken", "beef", "pork", "milk", "cheese", "egg", "honey"] }
+  },
+  {
+    "id": "generation-gluten-free",
+    "task": "recipeGeneration",
+    "prompt": "Create a gluten-free chicken and vegetable dinner for 4. Do not use wheat, flour, breadcrumbs, pasta, soy sauce, or bread.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["chicken"], "forbiddenIngredients": ["wheat", "flour", "breadcrumb", "pasta", "soy sauce", "bread"] }
+  },
+  {
+    "id": "generation-allergy-conflict",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of a rice bowl. Required allergy exclusions: peanuts and sesame. Exclude their derivatives, including sauces and garnishes. Pantry list includes rice, broccoli, peanut butter, sesame oil, and chickpeas. Never relax the exclusions and never claim allergy safety.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["rice", "chickpea"], "forbiddenIngredients": ["peanut", "sesame"], "noUnverifiedSafetyClaim": true }
+  },
+  {
+    "id": "generation-two-servings",
+    "task": "recipeGeneration",
+    "prompt": "Make exactly 2 servings of pasta with canned tomatoes, garlic, and basil.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 2, "requiredIngredients": ["pasta", "tomato"] }
+  },
+  {
+    "id": "generation-eight-servings",
+    "task": "recipeGeneration",
+    "prompt": "Make 8 servings of a family chili using ground turkey, beans, tomatoes, and corn.",
+    "categories": ["Dinner", "Soup", "Other"],
+    "invariants": { "servings": 8, "requiredIngredients": ["turkey", "bean"] }
+  },
+  {
+    "id": "generation-thirty-minutes",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of shrimp tacos. Total preparation AND cooking time must be at most 30 minutes.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 4, "maxTotalMinutes": 30, "requiredIngredients": ["shrimp", "tortilla"] }
+  },
+  {
+    "id": "generation-budget",
+    "task": "recipeGeneration",
+    "prompt": "Make a budget-friendly dinner for 4 using canned beans, rice, frozen corn, and common pantry spices. Do not invent prices or savings.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["bean", "rice"], "forbiddenOutputTerms": ["$", "dollar", "guaranteed savings"] }
+  },
+  {
+    "id": "generation-vegetarian",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of a vegetarian dinner with mushrooms, white beans, and kale. No meat or fish.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["mushroom", "bean"], "forbiddenIngredients": ["chicken", "beef", "pork", "fish", "bacon"] }
+  },
+  {
+    "id": "generation-dairy-free",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of creamy-tasting potato soup without milk, butter, cream, cheese, or other dairy.",
+    "categories": ["Soup", "Dinner", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["potato"], "forbiddenIngredients": ["milk", "butter", "cream", "cheese", "yogurt"], "allowedForbiddenPhrases": ["coconut milk", "oat milk", "almond milk", "soy milk", "cashew cream"] }
+  },
+  {
+    "id": "generation-egg-free",
+    "task": "recipeGeneration",
+    "prompt": "Make 6 servings of banana oatmeal muffins without eggs or egg substitutes containing egg.",
+    "categories": ["Breakfast", "Bread", "Snack", "Other"],
+    "invariants": { "servings": 6, "requiredIngredients": ["banana", "oat"], "forbiddenIngredients": ["egg"] }
+  },
+  {
+    "id": "generation-fifteen-minutes",
+    "task": "recipeGeneration",
+    "prompt": "Make 2 servings of a chickpea cucumber lunch. Total preparation AND cooking time must be at most 15 minutes.",
+    "categories": ["Lunch", "Salad", "Other"],
+    "invariants": { "servings": 2, "maxTotalMinutes": 15, "requiredIngredients": ["chickpea", "cucumber"] }
+  },
+  {
+    "id": "generation-salmon",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of roasted salmon with asparagus and lemon.",
+    "categories": ["Dinner", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["salmon", "asparagus", "lemon"] }
+  },
+  {
+    "id": "generation-leftovers",
+    "task": "recipeGeneration",
+    "prompt": "Use leftover rotisserie chicken, tortillas, canned black beans, and salsa for a 4-serving dinner.",
+    "categories": ["Dinner", "Lunch", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["chicken", "tortilla", "bean"] }
+  },
+  {
+    "id": "generation-breakfast",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of a warm apple cinnamon oatmeal breakfast.",
+    "categories": ["Breakfast", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["apple", "oat"] }
+  },
+  {
+    "id": "generation-dessert",
+    "task": "recipeGeneration",
+    "prompt": "Make 8 servings of a simple berry crumble using frozen mixed berries and oats.",
+    "categories": ["Dessert", "Other"],
+    "invariants": { "servings": 8, "requiredIngredients": ["berr", "oat"] }
+  },
+  {
+    "id": "generation-soup",
+    "task": "recipeGeneration",
+    "prompt": "Make 6 servings of tomato white bean soup with spinach.",
+    "categories": ["Soup", "Dinner", "Other"],
+    "invariants": { "servings": 6, "requiredIngredients": ["tomato", "bean", "spinach"] }
+  },
+  {
+    "id": "generation-unicode-fraction",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of couscous with chickpeas. Include ½ cup chopped parsley and ¼ cup lemon juice.",
+    "categories": ["Side Dish", "Lunch", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["couscous", "chickpea", "parsley", "lemon"], "ingredientQuantities": [{ "item": "parsley", "accepted": ["½", "0.5", ".5", "1/2"] }, { "item": "lemon", "accepted": ["¼", "0.25", ".25", "1/4"] }] }
+  },
+  {
+    "id": "generation-kids-lunch",
+    "task": "recipeGeneration",
+    "prompt": "Make 4 servings of a practical school lunch with turkey, whole grain wraps, lettuce, and apple. No nuts.",
+    "categories": ["Lunch", "Other"],
+    "invariants": { "servings": 4, "requiredIngredients": ["turkey", "wrap", "apple"], "forbiddenIngredients": ["almond", "peanut", "walnut", "cashew", "pecan"] }
+  },
+  {
+    "id": "description-lasagna",
+    "task": "recipeDescription",
+    "title": "Sunday Vegetable Lasagna",
+    "ingredients": ["lasagna noodles", "tomato sauce", "ricotta", "spinach", "mozzarella"],
+    "invariants": { "minWords": 30, "maxWords": 100 }
+  },
+  {
+    "id": "description-soup",
+    "task": "recipeDescription",
+    "title": "Grandma's Chicken Noodle Soup",
+    "ingredients": ["chicken", "egg noodles", "carrots", "celery", "broth"],
+    "invariants": { "minWords": 30, "maxWords": 100 }
+  },
+  {
+    "id": "description-cake",
+    "task": "recipeDescription",
+    "title": "Apple Cinnamon Coffee Cake",
+    "ingredients": ["apples", "cinnamon", "flour", "brown sugar", "butter"],
+    "invariants": { "minWords": 30, "maxWords": 100 }
+  },
+  {
+    "id": "image-query-stew",
+    "task": "recipeImageSearchQuery",
+    "title": "Grandpa's Beef Stew",
+    "ingredients": ["beef chuck", "potatoes", "carrots", "onions"],
+    "invariants": { "minWords": 3, "maxWords": 5 }
+  },
+  {
+    "id": "image-query-pie",
+    "task": "recipeImageSearchQuery",
+    "title": "Summer Peach Pie",
+    "ingredients": ["fresh peaches", "pie crust", "cinnamon"],
+    "invariants": { "minWords": 3, "maxWords": 5 }
+  },
+  {
+    "id": "image-ranking-soup",
+    "task": "recipeImageRanking",
+    "title": "Tomato Soup",
+    "query": "homemade tomato soup bowl",
+    "imageDescriptions": ["Homemade tomato soup in a ceramic bowl on a wooden table", "Chef plating soup in a stainless steel restaurant kitchen", "Studio product photo of canned tomato soup"],
+    "invariants": { "expectedIndex": 1 }
+  },
+  {
+    "id": "image-ranking-cake",
+    "task": "recipeImageRanking",
+    "title": "Apple Cake",
+    "query": "homemade apple cake",
+    "imageDescriptions": ["Glossy restaurant dessert with gold leaf", "Rustic apple cake on a family kitchen table in natural light", "Packaged supermarket cake in plastic"],
+    "invariants": { "expectedIndex": 2 }
+  }
+]

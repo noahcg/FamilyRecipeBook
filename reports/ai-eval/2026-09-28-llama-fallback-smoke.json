@@ -1,0 +1,347 @@
+{
+  "createdAt": "2026-09-28T12:17:40.206Z",
+  "evaluatorVersion": "recipe-tasks-v3",
+  "thresholds": {
+    "minimumOverallPassRate": 0.9,
+    "minimumRecipeSchemaRate": 0.95,
+    "maximumCriticalConstraintFailures": 0,
+    "maximumErrorRate": 0.05
+  },
+  "models": [
+    "@cf/meta/llama-3.1-8b-instruct-fast"
+  ],
+  "cases": [
+    {
+      "id": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "chicken",
+          "rice"
+        ]
+      }
+    },
+    {
+      "id": "generation-allergy-conflict",
+      "task": "recipeGeneration",
+      "invariants": {
+        "servings": 4,
+        "requiredIngredients": [
+          "rice",
+          "chickpea"
+        ],
+        "forbiddenIngredients": [
+          "peanut",
+          "sesame"
+        ],
+        "noUnverifiedSafetyClaim": true
+      }
+    }
+  ],
+  "summary": {
+    "@cf/meta/llama-3.1-8b-instruct-fast": {
+      "calls": 2,
+      "callSuccesses": 2,
+      "errorRate": 0,
+      "passRate": 0,
+      "recipeSchemaRate": 1,
+      "criticalFailures": 2,
+      "latencyMs": {
+        "p50": 2192,
+        "p95": 5855
+      },
+      "usage": {
+        "inputTokens": 607,
+        "outputTokens": 852,
+        "usd": 0.000354483,
+        "neurons": 32.207769,
+        "pricingNote": "Estimate uses Cloudflare's listed FP8-fast rate for the active -fast alias."
+      },
+      "taskPassRates": {
+        "recipeGeneration": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "model": "@cf/meta/llama-3.1-8b-instruct-fast",
+      "caseId": "generation-chicken-rice",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 2192,
+      "usage": {
+        "inputTokens": 285,
+        "outputTokens": 248,
+        "totalTokens": 533
+      },
+      "evaluation": {
+        "pass": false,
+        "schemaPass": true,
+        "criticalFailure": true,
+        "failures": [
+          "invalid_quantity:chicken thighs",
+          "missing_instruction_ingredient:rice"
+        ],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 35,
+          "description": "This hearty, comforting dish is perfect for a weeknight dinner, with the sweetness of carrots and onions balancing out the savory flavor of chicken and rice.",
+          "ingredients": [
+            {
+              "item": "chicken thighs",
+              "note": "4",
+              "quantity": ",",
+              "unit": "piece"
+            },
+            {
+              "item": "rice",
+              "note": "",
+              "quantity": "1",
+              "unit": "cup"
+            },
+            {
+              "item": "carrots",
+              "note": "peeled and chopped",
+              "quantity": "2",
+              "unit": "medium"
+            },
+            {
+              "item": "onions",
+              "note": "chopped",
+              "quantity": "1",
+              "unit": "large"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Preheat oven to 400°F (200°C)."
+            },
+            {
+              "body": "Season chicken thighs with salt and pepper, then place in a baking dish."
+            },
+            {
+              "body": "In a large skillet, sauté chopped onions and carrots in a little bit of oil until tender."
+            }
+          ],
+          "prep_minutes": 20,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This recipe is a staple in many busy households, as it's easy to prepare and can be made in under an hour.",
+          "tags": [
+            "chicken",
+            "rice",
+            "carrots",
+            "onions"
+          ],
+          "title": "Baked Chicken and Vegetable Rice Bowl"
+        }
+      },
+      "output": {
+        "category": "Dinner",
+        "cook_minutes": 35,
+        "description": "This hearty, comforting dish is perfect for a weeknight dinner, with the sweetness of carrots and onions balancing out the savory flavor of chicken and rice.",
+        "ingredients": [
+          {
+            "item": "chicken thighs",
+            "note": "4",
+            "quantity": ",",
+            "unit": "piece"
+          },
+          {
+            "item": "rice",
+            "note": "",
+            "quantity": "1",
+            "unit": "cup"
+          },
+          {
+            "item": "carrots",
+            "note": "peeled and chopped",
+            "quantity": "2",
+            "unit": "medium"
+          },
+          {
+            "item": "onions",
+            "note": "chopped",
+            "quantity": "1",
+            "unit": "large"
+          }
+        ],
+        "instructions": [
+          {
+            "body": "Preheat oven to 400°F (200°C)."
+          },
+          {
+            "body": "Season chicken thighs with salt and pepper, then place in a baking dish."
+          },
+          {
+            "body": "In a large skillet, sauté chopped onions and carrots in a little bit of oil until tender."
+          }
+        ],
+        "prep_minutes": 20,
+        "servings": 4,
+        "source_name": "AI Recipe Idea",
+        "story": "This recipe is a staple in many busy households, as it's easy to prepare and can be made in under an hour.",
+        "tags": [
+          "chicken",
+          "rice",
+          "carrots",
+          "onions"
+        ],
+        "title": "Baked Chicken and Vegetable Rice Bowl"
+      }
+    },
+    {
+      "model": "@cf/meta/llama-3.1-8b-instruct-fast",
+      "caseId": "generation-allergy-conflict",
+      "task": "recipeGeneration",
+      "callSuccess": true,
+      "durationMs": 5855,
+      "usage": {
+        "inputTokens": 322,
+        "outputTokens": 604,
+        "totalTokens": 926
+      },
+      "evaluation": {
+        "pass": false,
+        "schemaPass": true,
+        "criticalFailure": true,
+        "failures": [
+          "duplicate_instructions"
+        ],
+        "parsedOutput": {
+          "category": "Dinner",
+          "cook_minutes": 25,
+          "description": "Indulge in a flavorful and nutritious rice bowl, perfect for a quick weeknight dinner or a satisfying lunch on-the-go. The combination of tender broccoli, creamy chickpeas, and aromatic herbs will leave you feeling full and content.",
+          "ingredients": [
+            {
+              "item": "chickpeas",
+              "note": "drained and rinsed",
+              "quantity": "1",
+              "unit": "15 ounce can"
+            },
+            {
+              "item": "rice",
+              "note": "cooked according to package instructions",
+              "quantity": "2",
+              "unit": "cups"
+            },
+            {
+              "item": "broccoli",
+              "note": "steamed until tender",
+              "quantity": "3",
+              "unit": "cups florets"
+            },
+            {
+              "item": "olive oil",
+              "note": "for sautéing",
+              "quantity": "2",
+              "unit": "tablespoons"
+            },
+            {
+              "item": "garlic",
+              "note": "minced",
+              "quantity": "1",
+              "unit": "cloves"
+            },
+            {
+              "item": "fresh parsley",
+              "note": "chopped",
+              "quantity": "1",
+              "unit": "tablespoon"
+            }
+          ],
+          "instructions": [
+            {
+              "body": "Cook the rice according to package instructions. In a large skillet, heat the olive oil over medium-high heat. Add the minced garlic and sauté for 1 minute, until fragrant. Add the steamed broccoli and cook for an additional 2-3 minutes, until tender. In a large bowl, combine the cooked rice, chickpeas, and sautéed broccoli mixture. Season with salt and pepper to taste, and garnish with chopped fresh parsley."
+            },
+            {
+              "body": "Cook the rice according to package instructions. In a large skillet, heat the olive oil over medium-high heat. Add the minced garlic and sauté for 1 minute, until fragrant. Add the steamed broccoli and cook for an additional 2-3 minutes, until tender. In a large bowl, combine the cooked rice, chickpeas, and sautéed broccoli mixture. Season with salt and pepper to taste, and garnish with chopped fresh parsley."
+            },
+            {
+              "body": "Cook the rice according to package instructions. In a large skillet, heat the olive oil over medium-high heat. Add the minced garlic and sauté for 1 minute, until fragrant. Add the steamed broccoli and cook for an additional 2-3 minutes, until tender. In a large bowl, combine the cooked rice, chickpeas, and sautéed broccoli mixture. Season with salt and pepper to taste, and garnish with chopped fresh parsley."
+            }
+          ],
+          "prep_minutes": 10,
+          "servings": 4,
+          "source_name": "AI Recipe Idea",
+          "story": "This rice bowl recipe is a staple in many households, providing a quick and nutritious meal option for busy families. It's perfect for a weeknight dinner or a packed lunch, and can be easily customized to suit your family's tastes and dietary needs.",
+          "tags": [
+            "rice bowl",
+            "chickpeas",
+            "broccoli",
+            "garlic",
+            "parsley"
+          ],
+          "title": "Broccoli and Chickpea Rice Bowl"
+        }
+      },
+      "output": {
+        "category": "Dinner",
+        "cook_minutes": 25,
+        "description": "Indulge in a flavorful and nutritious rice bowl, perfect for a quick weeknight dinner or a satisfying lunch on-the-go. The combination of tender broccoli, creamy chickpeas, and aromatic herbs will leave you feeling full and content.",
+        "ingredients": [
+          {
+            "item": "chickpeas",
+            "note": "drained and rinsed",
+            "quantity": "1",
+            "unit": "15 ounce can"
+          },
+          {
+            "item": "rice",
+            "note": "cooked according to package instructions",
+            "quantity": "2",
+            "unit": "cups"
+          },
+          {
+            "item": "broccoli",
+            "note": "steamed until tender",
+            "quantity": "3",
+            "unit": "cups florets"
+          },
+          {
+            "item": "olive oil",
+            "note": "for sautéing",
+            "quantity": "2",
+            "unit": "tablespoons"
+          },
+          {
+            "item": "garlic",
+            "note": "minced",
+            "quantity": "1",
+            "unit": "cloves"
+          },
+          {
+            "item": "fresh parsley",
+            "note": "chopped",
+            "quantity": "1",
+            "unit": "tablespoon"
+          }
+        ],
+        "instructions": [
+          {
+            "body": "Cook the rice according to package instructions. In a large skillet, heat the olive oil over medium-high heat. Add the minced garlic and sauté for 1 minute, until fragrant. Add the steamed broccoli and cook for an additional 2-3 minutes, until tender. In a large bowl, combine the cooked rice, chickpeas, and sautéed broccoli mixture. Season with salt and pepper to taste, and garnish with chopped fresh parsley."
+          },
+          {
+            "body": "Cook the rice according to package instructions. In a large skillet, heat the olive oil over medium-high heat. Add the minced garlic and sauté for 1 minute, until fragrant. Add the steamed broccoli and cook for an additional 2-3 minutes, until tender. In a large bowl, combine the cooked rice, chickpeas, and sautéed broccoli mixture. Season with salt and pepper to taste, and garnish with chopped fresh parsley."
+          },
+          {
+            "body": "Cook the rice according to package instructions. In a large skillet, heat the olive oil over medium-high heat. Add the minced garlic and sauté for 1 minute, until fragrant. Add the steamed broccoli and cook for an additional 2-3 minutes, until tender. In a large bowl, combine the cooked rice, chickpeas, and sautéed broccoli mixture. Season with salt and pepper to taste, and garnish with chopped fresh parsley."
+          }
+        ],
+        "prep_minutes": 10,
+        "servings": 4,
+        "source_name": "AI Recipe Idea",
+        "story": "This rice bowl recipe is a staple in many households, providing a quick and nutritious meal option for busy families. It's perfect for a weeknight dinner or a packed lunch, and can be easily customized to suit your family's tastes and dietary needs.",
+        "tags": [
+          "rice bowl",
+          "chickpeas",
+          "broccoli",
+          "garlic",
+          "parsley"
+        ],
+        "title": "Broccoli and Chickpea Rice Bowl"
+      }
+    }
+  ]
+}
