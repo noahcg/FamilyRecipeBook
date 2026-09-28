@@ -8,6 +8,7 @@ import { BrandLockup } from "@/components/ui/BrandLockup";
 
 const links = [
   { href: "/our-story", label: "Our Story" },
+  { href: "/guides", label: "Guides" },
   { href: "/pricing", label: "Pricing" },
 ];
 

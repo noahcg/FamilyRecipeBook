@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.16.0] - 2026-09-28
+
+### Home Cooked Guides
+
+- Added a public, accessible Guides index and ten substantive editorial guide pages for collecting, organizing, preserving, digitizing, and sharing recipes.
+- Added reusable Guide content data, detail-template modules, guide metadata, related links, table of contents, and real pricing/sign-up calls to action.
+- Unified Guides, Pricing, and Our Story around a shared image-backed editorial masthead and replaced card-based public-page layouts with open spreads, dividers, and typographic hierarchy.
+
 ## [0.15.2] - 2026-09-24
 
 ### Free cookbook creation fix

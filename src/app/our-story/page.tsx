@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Heart, House, Leaf, UsersRound } from "lucide-react";
-import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicMasthead } from "@/components/layout/PublicMasthead";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 
 export const metadata = {
@@ -26,25 +26,20 @@ const principles = [
 
 export default function OurStoryPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-cream text-ink">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[44rem] sm:h-[50rem] lg:h-[56rem]">
-        <Image src="/our-story-bkg.png" alt="" fill priority sizes="100vw" className="object-cover object-top" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(247,243,233,0.02)_0%,rgba(247,243,233,0.08)_42%,rgba(247,243,233,0.78)_78%,var(--color-cream)_100%)]" />
-      </div>
-
-      <PublicHeader />
+    <div className="min-h-screen bg-cream text-ink">
+      <PublicMasthead
+        eyebrow="OUR STORY"
+        title="Recipes deserve a home."
+        description="Home Cooked started with a simple idea: the recipes that matter to us should be easier to keep, find, and share."
+        background="/our-story-bkg.png"
+      >
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link href="/sign-in" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-sm font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"><BookOpen aria-hidden="true" size={17} strokeWidth={2} />Get Started</Link>
+          <Link href="/pricing" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-green-deep bg-paper-soft/70 px-6 text-sm font-extrabold text-green-deep transition hover:bg-paper-soft">See Pricing</Link>
+        </div>
+      </PublicMasthead>
 
       <main className="relative z-10">
-        <section className="mx-auto max-w-[980px] px-5 pb-16 pt-36 text-center sm:px-8 sm:pb-24 sm:pt-40 lg:pb-28 lg:pt-44">
-          <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-green-sage sm:text-sm">Our Story</p>
-          <h1 className="mx-auto mt-4 max-w-4xl text-[clamp(3.25rem,8vw,6.4rem)] font-bold leading-[0.94] text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Recipes deserve a home.</h1>
-          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">Home Cooked started with a simple idea: the recipes that matter to us should be easier to keep, find, and share.</p>
-          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/sign-in" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-sm font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"><BookOpen aria-hidden="true" size={17} strokeWidth={2} />Get Started</Link>
-            <Link href="/pricing" className="inline-flex min-h-12 items-center justify-center rounded-full border-2 border-green-deep bg-paper-soft/70 px-6 text-sm font-extrabold text-green-deep transition hover:bg-paper-soft">See Pricing</Link>
-          </div>
-        </section>
-
         <section className="mx-auto w-full max-w-[1180px] px-5 sm:px-8 lg:px-12">
           <div className="grid overflow-hidden rounded-[1.25rem] border border-line-soft bg-paper-soft/90 shadow-[var(--shadow-paper)] backdrop-blur-sm lg:grid-cols-[0.95fr_1.05fr]">
             <div className="relative min-h-[18rem] sm:min-h-[24rem] lg:min-h-[29rem]"><Image src="/images/home-page/app-landing.png" alt="A Home Cooked cookbook collection ready to browse" fill sizes="(min-width: 1024px) 48vw, 100vw" className="object-cover" /></div>
