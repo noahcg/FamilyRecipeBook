@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0] - 2026-09-29
+
+### Dedicated bookshelf
+
+- Replaced the Bookshelf navigator drawer with a dedicated, searchable shelf page that presents each cookbook as an accessible illustrated book linked to its existing contents.
+- Added responsive CSS shelves, dynamic cookbook and recipe totals, and empty and no-search-result states while retaining the existing cookbook creation and plan-limit flows.
+
 ## [0.18.1] - 2026-09-29
 
 ### Empty cookbook controls
