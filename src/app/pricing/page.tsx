@@ -39,7 +39,7 @@ function FeatureRow({ children, premium = false }: { children: React.ReactNode; 
 export const metadata = {
   title: "Pricing",
   description:
-    "Start your recipe collection for free, or unlock every Home Cooked feature for $14.99 a year.",
+    "Start your recipe collection for free, or unlock every Home Cooked feature for $24.99 a year.",
 };
 
 export default async function PricingPage({ searchParams }: { searchParams: Promise<{ upgrade?: string }> }) {
@@ -85,13 +85,13 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
             </div>
             <p className="mt-3 text-[0.98rem] text-ink-muted">Everything you love about Home Cooked, with more ways to save, share, and plan.</p>
             <div className="mt-5 flex items-baseline gap-2 border-b border-line-soft pb-5">
-              <span className="text-[3.1rem] font-bold leading-none text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>$14.99</span>
+              <span className="text-[3.1rem] font-bold leading-none text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>$24.99</span>
               <span className="text-sm text-ink-muted">/ year</span>
             </div>
             <ul className="mt-5 space-y-2.5 pb-5">
               {plusFeatures.map((feature) => <FeatureRow key={feature} premium>{feature}</FeatureRow>)}
             </ul>
-            <div className="mt-auto"><BillingButton intent="plus" autoStart={resumeCheckout} className="w-full !rounded-full">Get Plus for $14.99 / Year</BillingButton><p className="mt-2 text-center text-xs text-ink-soft">Create your account, then confirm payment through Stripe Checkout.</p></div>
+            <div className="mt-auto"><BillingButton intent="plus" autoStart={resumeCheckout} className="w-full !rounded-full">Get Plus for $24.99 / Year</BillingButton><p className="mt-2 text-center text-xs text-ink-soft">Create your account, then confirm payment through Stripe Checkout.</p></div>
           </article>
         </section>
       </main>

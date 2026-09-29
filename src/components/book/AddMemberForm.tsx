@@ -23,7 +23,7 @@ const ROLE_OPTIONS = [
   {
     id: "contributor" as const,
     label: "Contributor",
-    description: "Can add and edit recipes and notes.",
+    description: "Can add recipes, edit their own, and add notes and memories.",
     icon: BookOpen,
   },
   {
@@ -122,6 +122,14 @@ export function AddMemberForm({
             Required
           </span>
         </p>
+        <Link
+          href="/guides/how-to-share-your-home-cooked-book#choose-a-role"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-3 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+        >
+          Help choosing a role (opens in a new tab)
+        </Link>
         <div className="space-y-2">
           {ROLE_OPTIONS.map(({ id, label, description, icon: Icon }) => (
             <label

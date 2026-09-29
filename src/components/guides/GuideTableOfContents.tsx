@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Heart } from "lucide-react";
 import type { EditorialGuide } from "@/lib/guides/editorial";
 
 const display = { fontFamily: "var(--font-playfair)" };
@@ -52,7 +51,7 @@ export function GuideTableOfContents({ guide }: { guide: EditorialGuide }) {
 
   return (
     <aside className="lg:sticky lg:top-5 lg:self-start" aria-label="In this guide">
-      <details open className="bg-transparent lg:min-h-[46rem] lg:open:block">
+      <details open className="bg-transparent lg:open:block">
         <summary className="flex min-h-20 list-none items-center px-5 text-[1.65rem] font-bold text-green-deep marker:hidden sm:px-6" style={display}>In This Guide</summary>
         <nav className="pb-5" aria-label="Guide sections">
           <ol>
@@ -74,10 +73,6 @@ export function GuideTableOfContents({ guide }: { guide: EditorialGuide }) {
             })}
           </ol>
         </nav>
-        <div className="hidden px-8 pb-10 pt-16 lg:block">
-          <p className="rotate-[-3deg] font-hand text-[1.75rem] leading-[1.1] text-green-deep">Good<br />Recipes<br />Brighter<br />Days</p>
-          <Heart aria-hidden="true" className="ml-24 mt-3 text-accent-terracotta" size={23} strokeWidth={1.7} />
-        </div>
       </details>
     </aside>
   );

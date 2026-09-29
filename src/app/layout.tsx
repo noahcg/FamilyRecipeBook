@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, Kalam, Nunito, Playfair_Display } from "next/font/google";
+import { Caveat, Fraunces, Inter, Kalam, Nunito, Playfair_Display } from "next/font/google";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
 import "./globals.css";
 
@@ -22,6 +22,12 @@ const handwriting = Kalam({
   variable: "--font-handwriting",
   subsets: ["latin"],
   weight: ["400", "700"],
+});
+
+const noteHandwriting = Caveat({
+  variable: "--font-note-handwriting",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 const fraunces = Fraunces({
@@ -94,7 +100,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${nunito.variable} ${handwriting.variable} ${fraunces.variable} ${inter.variable} h-full`}
+      className={`${playfair.variable} ${nunito.variable} ${handwriting.variable} ${noteHandwriting.variable} ${fraunces.variable} ${inter.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">
         <ServiceWorkerRegistration />

@@ -29,7 +29,7 @@ const ROLE_GUIDE = [
   },
   {
     label: "Contributor",
-    description: "Can add and edit recipes and notes.",
+    description: "Can add recipes, edit their own, and add notes and memories.",
     icon: BookOpen,
   },
   {
@@ -118,6 +118,13 @@ export default async function MembersPage({ params }: Props) {
             )}
           </div>
         </header>
+
+        <Link
+          href="/guides/how-to-share-your-home-cooked-book"
+          className="mb-6 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+        >
+          Read the guide to sharing and member roles
+        </Link>
 
         {!sharingEnabled ? (
           <EmptyState

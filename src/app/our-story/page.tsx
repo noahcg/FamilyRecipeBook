@@ -46,7 +46,7 @@ export default function OurStoryPage() {
             <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
               <StoryHeading>A better place for the recipes we actually use</StoryHeading>
               <div className="mt-5 space-y-4 text-[1rem] leading-[1.75] text-ink-muted sm:text-[1.04rem]">
-                <p>Recipes have a way of ending up everywhere: saved in a browser, buried in a message, scribbled on a card, or tucked away in a notebook we cannot find when we need it. The recipes themselves are often the easy part. Keeping them together is not.</p>
+                <p>Recipes have a way of ending up everywhere: saved in a browser, buried in a message, scribbled on a card, or tucked away in a notebook we can&rsquo;t find when we need it. The recipes themselves are often the easy part. Keeping them together isn&rsquo;t.</p>
                 <p>Home Cooked was created to make that feel simpler. It gives recipes a real home, where family favorites, dependable weeknight meals, and personal discoveries can live together in collections that feel like cookbooks, not just a list of saved links.</p>
               </div>
             </div>
@@ -58,7 +58,7 @@ export default function OurStoryPage() {
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent-terracotta">The idea behind Home Cooked</p>
             <StoryHeading className="mt-3">A recipe collection should feel like yours</StoryHeading>
             <div className="mt-5 space-y-4 text-[1rem] leading-[1.75] text-ink-muted sm:text-[1.04rem]">
-              <p>The best recipe apps help you cook. The best cookbooks also hold a little bit of your life. Home Cooked is being built with both of those ideas in mind: practical enough for a busy Tuesday, personal enough to preserve the recipes you would miss if they disappeared.</p>
+              <p>The best recipe apps help you cook. The best cookbooks also hold a little bit of your life. Home Cooked is being built with both of those ideas in mind: practical enough for a busy Tuesday, personal enough to preserve the recipes you&rsquo;d miss if they disappeared.</p>
               <p>That means making recipes easy to organize, easy to return to, and easy to share with the people you care about. It also means keeping the experience focused. Home Cooked is here to help you build a collection that feels useful, familiar, and genuinely yours.</p>
             </div>
           </div>
@@ -78,9 +78,9 @@ export default function OurStoryPage() {
           <div className="mx-auto grid w-full max-w-[1120px] gap-10 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[0.72fr_1.28fr] lg:items-start lg:gap-24 lg:px-12 lg:py-28">
             <div><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent-terracotta">The person behind it</p><StoryHeading className="mt-3">Hi, I&rsquo;m Noah.</StoryHeading></div>
             <div className="max-w-2xl space-y-5 text-[1.05rem] leading-[1.8] text-ink-muted">
-              <p>I built Home Cooked because it is the recipe app I wanted for myself. I wanted one place for the meals I make often, the recipes I want to remember, and the collections I would be happy to share.</p>
+              <p>I built Home Cooked because it&rsquo;s the recipe app I wanted for myself. I wanted one place for the meals I make often, the recipes I want to remember, and the collections I&rsquo;d be happy to share.</p>
               <p>I also wanted it to feel less like managing information and more like keeping a personal cookbook. That idea is still at the center of Home Cooked as it grows.</p>
-              <p>There is a lot of care behind the product, and there is still a lot left to build. Thank you for being here early.</p>
+              <p>There&rsquo;s a lot of care behind the product, and there&rsquo;s still a lot left to build. Thank you for being here early.</p>
               <div className="pt-1 font-hand text-2xl text-accent-cinnamon">Noah</div>
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function OurStoryPage() {
             <div className="relative">
               <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent-terracotta">For the recipes worth keeping</p>
               <h2 className="mx-auto mt-3 max-w-2xl text-[clamp(2.15rem,4.8vw,3.8rem)] font-bold leading-[1.03] text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Keep the good stuff close</h2>
-              <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">Whether it is a family recipe, a short list of weeknight favorites, or a cookbook you want to pass along, Home Cooked is designed to make those collections easier to keep and easier to share.</p>
+              <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">Whether it&rsquo;s a family recipe, a short list of weeknight favorites, or a cookbook you want to pass along, Home Cooked is designed to make those collections easier to keep and easier to share.</p>
               <Link href="/sign-in" className="mt-7 inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-sm font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep">Make a home for your recipes<ArrowRight aria-hidden="true" size={17} /></Link>
             </div>
           </div>

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.16.2] - 2026-09-29
+
+### Sharing and member roles guide
+
+- Added a guide to Keeper, Contributor, and Family roles, cookbook sharing, invitations, and managing access.
+- Linked the guide from Members and the invitation form, including on mobile.
+- Clarified that Contributors edit their own recipes and removed an unsupported promise of role changes from invitation help.
+
+## [0.16.1] - 2026-09-28
+
+### Conversational public copy
+
+- Used natural contractions in Our Story and the public Guides while preserving their meaning and structure.
+
 ## [0.16.0] - 2026-09-28
 
 ### Home Cooked Guides
@@ -8,6 +22,7 @@
 - Added reusable Guide content data, detail-template modules, guide metadata, related links, table of contents, and real pricing/sign-up calls to action.
 - Unified Guides, Pricing, and Our Story around a shared image-backed editorial masthead and replaced card-based public-page layouts with open spreads, dividers, and typographic hierarchy.
 - Rewrote all ten Guides as long-form editorial articles and replaced the mandatory numbered-step presentation with narrative sections and optional supporting lists.
+- Updated the advertised Plus annual price and Stripe setup documentation to $24.99.
 
 ## [0.15.2] - 2026-09-24
 

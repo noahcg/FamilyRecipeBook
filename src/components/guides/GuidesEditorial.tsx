@@ -87,13 +87,15 @@ function OpeningSection({ guide }: { guide: EditorialGuide }) {
       <EditorialHeading>{section.heading}</EditorialHeading>
       <div className="mt-5 max-w-[48rem] space-y-4 text-[1.08rem] leading-[1.72] text-ink-muted sm:text-[1.18rem]">{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
       {section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.05rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.12rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}
-      <div className="relative mt-8 overflow-hidden">
+      <div className="relative mt-8">
         <div className="relative aspect-[16/8.7] min-h-[20rem]">
-          <Image src="/images/landing-cookbook-hero.png" alt="An open handwritten family cookbook with apples and baking ingredients" fill sizes="(min-width: 1024px) 800px, 100vw" className="object-cover object-[66%_center]" />
+          <Image src="/guide-recipes.png" alt="Family recipes gathered around an open cookbook" fill sizes="(min-width: 1024px) 800px, 100vw" className="object-cover object-[66%_center]" />
         </div>
-        <div className="absolute bottom-0 right-0 max-w-[16rem] rotate-[-2deg] bg-[#fff8e9]/96 px-6 py-5 text-center sm:max-w-[19rem] sm:px-7 sm:py-6">
-          <p className="font-hand text-xl leading-snug text-green-deep sm:text-2xl">{guide.quote}</p>
-          <Heart aria-hidden="true" className="mx-auto mt-2 text-accent-terracotta" size={20} />
+        <div className="absolute -bottom-10 left-3 z-10 grid aspect-[1105/1423] w-[13rem] place-items-center rotate-[-2deg] bg-[url('/paper-texture.png')] bg-[length:100%_100%] bg-no-repeat px-5 py-7 text-center drop-shadow-[0_10px_12px_rgba(54,42,28,0.22)] sm:-bottom-12 sm:left-6 sm:w-[15.5rem] sm:px-7 sm:py-8">
+          <div className="rotate-[-4deg]">
+            <p className="text-[1.05rem] font-medium leading-[1.22] text-green-deep sm:text-[1.3rem]" style={{ fontFamily: "var(--font-note-handwriting)" }}>{guide.quote}</p>
+            <Heart aria-hidden="true" className="mx-auto mt-2 text-accent-terracotta" size={20} />
+          </div>
         </div>
       </div>
     </section>

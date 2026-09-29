@@ -34,7 +34,7 @@ export function PlusPlanDialog() {
         </p>
         <div className="mt-4 flex items-baseline gap-2 border-b border-line-soft pb-4">
           <span className="text-4xl font-bold leading-none text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
-            $14.99
+            $24.99
           </span>
           <span className="text-sm text-ink-muted">/ year</span>
         </div>
@@ -47,7 +47,7 @@ export function PlusPlanDialog() {
           ))}
         </ul>
         <div className="mt-5">
-          <BillingButton className="w-full !rounded-full">Get Plus for $14.99 / Year</BillingButton>
+          <BillingButton className="w-full !rounded-full">Get Plus for $24.99 / Year</BillingButton>
           <p className="mt-2 text-center text-xs text-ink-soft">You’ll confirm payment through Stripe Checkout.</p>
         </div>
       </Dialog>

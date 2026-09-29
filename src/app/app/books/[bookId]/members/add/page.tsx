@@ -18,7 +18,7 @@ const ROLE_GUIDE = [
   },
   {
     label: "Contributor",
-    description: "Can add and edit recipes and notes.",
+    description: "Can add recipes, edit their own, and add notes and memories.",
     icon: BookOpen,
   },
   {
@@ -86,7 +86,7 @@ export default async function AddMemberPage({ params }: Props) {
                   <p className="text-sm font-semibold text-ink">Sent by email</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
                     We&rsquo;ll email an invitation. They join the book as soon as
-                    they accept — you can change their role anytime.
+                    they accept using the email address you invited.
                   </p>
                 </div>
               </div>

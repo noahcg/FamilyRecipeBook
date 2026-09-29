@@ -66,7 +66,7 @@ const termsSections = [
       <>
         <p>
           <BrandName /> offers a free plan and an optional Plus subscription. Plus
-          is currently offered at <strong>$14.99 per year</strong>, with the
+          is currently offered at <strong>$24.99 per year</strong>, with the
           features and limits shown on the pricing page before you subscribe.
           Prices may change for future renewals, and any change will be shown or
           communicated as required by law.
