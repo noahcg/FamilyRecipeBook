@@ -14,7 +14,7 @@ import {
   type InviteMemberInput,
 } from "@/lib/validators/member";
 import type { ActionResult, BookInvitation, MemberWithProfile } from "@/lib/types";
-import { assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
+import { getBookSharingAllowance } from "@/lib/entitlements";
 
 export type PendingBookInvitation = Pick<
   BookInvitation,
@@ -76,8 +76,6 @@ export async function inviteMember(
   input: InviteMemberInput
 ): Promise<ActionResult<BookInvitation>> {
   const user = await requireUser();
-  try { await assertFeatureAccess(user.id, "cookbook.share"); }
-  catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const parsed = inviteMemberSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -88,6 +86,18 @@ export async function inviteMember(
 
   if (!canManageMembers(role)) {
     return { success: false, error: "Only the keeper can invite members." };
+  }
+
+  try {
+    const allowance = await getBookSharingAllowance(bookId);
+    if (!allowance.canShare) {
+      return { success: false, error: "Free sharing is available on your oldest cookbook. Existing members keep access to your other cookbooks. Upgrade to Plus to invite more people to those books." };
+    }
+    if (allowance.isFree && parsed.data.role !== "family") {
+      return { success: false, error: "Free cookbooks can invite Family members only. The cookbook owner can upgrade to Plus to invite Contributors." };
+    }
+  } catch {
+    return { success: false, error: "Could not load cookbook sharing limits. Please try again." };
   }
 
   const token = randomBytes(32).toString("hex");
@@ -174,53 +184,16 @@ export async function acceptInvitation(token: string): Promise<ActionResult<{ bo
     return { success: false, error: "Please sign in or create an account to accept this invitation." };
   }
 
-  // Use service role to read the invitation — RLS only allows keepers to query
-  // book_invitations, but the accepting user is not yet a member at this point.
-  const admin = createServiceClient();
+  // Recipient identity, owner limits, sharing status, and both writes are
+  // checked atomically by the database using the authenticated user's session.
+  const supabase = await createClient();
+  const { data: bookId, error } = await supabase.rpc("accept_book_invitation", { invitation_token: token });
+  if (error || !bookId) return { success: false, error: error?.message ?? "Could not accept this invitation. Please try again." };
 
-  const { data: invitation } = await admin
-    .from("book_invitations")
-    .select("*")
-    .eq("token", token)
-    .is("accepted_at", null)
-    .gte("expires_at", new Date().toISOString())
-    .single();
-
-  if (!invitation) {
-    return { success: false, error: "This invitation is invalid or has expired." };
-  }
-
-  if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
-    return {
-      success: false,
-      error: `This invitation was sent to ${invitation.email}. Sign in with that email address to accept it.`,
-    };
-  }
-
-  // Add user to book_members via service role (user may not yet be a member).
-  // onConflict targets the (book_id, user_id) unique constraint — without it,
-  // supabase-js upserts against the primary key (id), so re-accepting an invite
-  // for an existing membership throws a duplicate-key error instead of updating.
-  const { error: memberError } = await admin
-    .from("book_members")
-    .upsert(
-      { book_id: invitation.book_id, user_id: user.id, role: invitation.role },
-      { onConflict: "book_id,user_id" }
-    );
-
-  if (memberError) {
-    return { success: false, error: memberError.message };
-  }
-
-  // Mark invitation accepted
-  await admin
-    .from("book_invitations")
-    .update({ accepted_by: user.id, accepted_at: new Date().toISOString() })
-    .eq("id", invitation.id);
-
-  revalidatePath(`/app/books/${invitation.book_id}`);
+  revalidatePath(`/app/books/${bookId}`);
+  revalidatePath(`/app/books/${bookId}/members`);
   revalidatePath("/app");
-  return { success: true, data: { bookId: invitation.book_id } };
+  return { success: true, data: { bookId: bookId as string } };
 }
 
 export interface OnboardingInvitation {

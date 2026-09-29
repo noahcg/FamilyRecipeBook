@@ -12,7 +12,7 @@ Recipe counts use `recipes.created_by = user_id`; cookbook limits use owned `rec
 
 Create a Stripe Product and annual recurring Price for 2499 USD cents. Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PLUS_ANNUAL_PRICE_ID`, and `APP_URL` in each environment. Register `POST /api/billing/webhook` and enable checkout, subscription, and invoice events used by the route.
 
-Apply migrations in order, including `026_billing_entitlements.sql`, `027_fix_billing_creation_trigger.sql`, and `028_admin_granted_entitlements.sql`. Migration 028 grants existing billing accounts lifetime Plus access and leaves future accounts on Free by default. No recipe/cookbook rows are deleted.
+Apply migrations in order, including `026_billing_entitlements.sql`, `027_fix_billing_creation_trigger.sql`, `028_admin_granted_entitlements.sql`, `029_free_cookbook_sharing.sql`, and `030_cookbook_recipe_entitlements.sql`. Migration 028 grants existing billing accounts lifetime Plus access and leaves future accounts on Free by default. Migration 030 makes recipe capacity and Contributor access follow the destination cookbook owner’s plan. No recipe/cookbook rows are deleted.
 
 For local testing, use Stripe test mode and `stripe listen --forward-to localhost:3000/api/billing/webhook`. Inspect `billing_accounts` and `billing_webhook_events` when debugging. A failed event remains marked `failed` and Stripe can retry it; replaying the same event is safe because event IDs are unique.
 

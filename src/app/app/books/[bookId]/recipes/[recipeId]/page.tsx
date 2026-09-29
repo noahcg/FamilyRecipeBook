@@ -21,7 +21,7 @@ export default async function RecipeDetailPage({ params }: Props) {
 
   if (!recipe || recipe.book_id !== bookId) notFound();
 
-  const [{ userReactions }, ratingSummary, memberRes] = await Promise.all([
+  const [{ userReactions }, ratingSummary, memberRes, contributionRes] = await Promise.all([
     getReactionData(recipeId, user.id),
     getRecipeRatingSummary(recipeId, user.id),
     supabase
@@ -30,9 +30,11 @@ export default async function RecipeDetailPage({ params }: Props) {
       .eq("book_id", bookId)
       .eq("user_id", user.id)
       .single(),
+    supabase.rpc("can_contribute_to_book", { book_uuid: bookId, user_uuid: user.id }),
   ]);
 
-  const userRole = memberRes.data?.role ?? null;
+  const storedRole = memberRes.data?.role ?? null;
+  const userRole = storedRole === "contributor" && contributionRes.data !== true ? "family" : storedRole;
 
   return (
     <AppShell bookId={bookId}>

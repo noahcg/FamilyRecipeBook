@@ -9,7 +9,7 @@
 // never returns (replayable from Settings → "Replay the welcome tour").
 //
 // To change the tour: edit this file only. Keep the image list in sync with the
-// captures in /public/guides — this is the checklist of screenshots to (re)shoot
+// captures in /public/guides; this is the checklist of screenshots to (re)shoot
 // when the relevant UI changes.
 
 /** Seen-guides key that tracks whether the welcome tour has been taken/skipped. */
@@ -38,7 +38,7 @@ export const WELCOME_TOUR_STEPS: GuideStep[] = [
   {
     anchorId: "nav-bookshelf",
     title: "Your cookbooks live here",
-    body: "Open the Bookshelf to switch between cookbooks or start a new one. Everything else — recipes, meal plan, groceries, favorites — is in the main menu.",
+    body: "Open the Bookshelf to switch between cookbooks or start a new one. Find recipes, meal plans, groceries, and favorites in the main menu.",
     image: {
       src: "/guides/nav-orientation-1.webp",
       alt: "The navigation with the Bookshelf entry highlighted.",
@@ -47,7 +47,7 @@ export const WELCOME_TOUR_STEPS: GuideStep[] = [
   {
     anchorId: "nav-bookshelf",
     title: "Invite your family",
-    body: "Cooking with others? Open a cookbook and use Manage Members to share it, so everyone can add recipes, notes, and memories.",
+    body: "Open your cookbook and use Manage Members to invite up to 3 people on Free. Family members can browse recipes, react, and add notes and memories.",
     image: {
       src: "/guides/invite-members-1.webp",
       alt: "The cookbook toolbar with the Manage Members button highlighted.",
@@ -56,7 +56,7 @@ export const WELCOME_TOUR_STEPS: GuideStep[] = [
   {
     anchorId: "nav-bookshelf",
     title: "Add someone by email",
-    body: "Inside Manage Members, tap Add Someone, enter their email, and pick a role — Contributor (can add and edit recipes) or Family (can view, react, and add notes). They get an email invite.",
+    body: "Inside Manage Members, tap Add Someone and enter their email. Free includes Family access. With Plus, you can also invite Contributors to add recipes and edit their own. They get an email invite.",
     image: {
       src: "/guides/invite-members-2.webp",
       alt: "The Members page with the Add Someone button highlighted.",

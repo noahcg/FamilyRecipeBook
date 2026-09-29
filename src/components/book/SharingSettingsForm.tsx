@@ -45,7 +45,7 @@ export function SharingSettingsForm({
           {
             value: true,
             label: "Shared",
-            description: "Members can be invited to this cookbook only.",
+            description: "Free includes up to 3 people with Family access. Plus lets you invite more people and Contributors.",
             icon: Users,
           },
         ].map((option) => {

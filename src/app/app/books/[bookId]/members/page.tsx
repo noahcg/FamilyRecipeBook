@@ -1,3 +1,4 @@
+import { getBookSharingAllowance } from "@/lib/entitlements";
 import Link from "next/link";
 import { BookOpen, Crown, Lock, Plus, Settings, UserPlus, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -65,6 +66,7 @@ export default async function MembersPage({ params }: Props) {
   ]);
 
   const userRole = memberRes.data?.role ?? null;
+  const sharingAllowance = userRole === "keeper" ? await getBookSharingAllowance(bookId).catch(() => null) : null;
   const sharingEnabled = bookRes.data?.sharing_enabled ?? false;
   const pendingCount = pendingInvites.length;
   const countMap: Record<string, number> = {};
@@ -125,6 +127,15 @@ export default async function MembersPage({ params }: Props) {
         >
           Read the guide to sharing and member roles
         </Link>
+
+        {sharingAllowance?.isFree && (
+          <p className="mb-6 text-sm text-ink-muted">
+            {sharingAllowance.canShare
+              ? `${sharingAllowance.used} of 3 sharing spots used, including pending invitations. Free invitations include Family access.`
+              : "Free sharing is available on your oldest cookbook. Existing members keep access to this cookbook."} {" "}
+            <Link href="/pricing" className="font-semibold text-green-deep underline underline-offset-4">Get Plus to invite more people or Contributors</Link>
+          </p>
+        )}
 
         {!sharingEnabled ? (
           <EmptyState

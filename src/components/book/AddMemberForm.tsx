@@ -13,6 +13,7 @@ import { inviteMember } from "@/lib/actions/members";
 
 interface AddMemberFormProps {
   bookId: string;
+  sharingAllowance?: { isFree: boolean; canShare: boolean; used: number; remaining: number | null } | null;
   bookTitle?: string;
   onSuccessRedirect?: string;
   skipLabel?: string;
@@ -37,6 +38,7 @@ const ROLE_OPTIONS = [
 export function AddMemberForm({
   bookId,
   bookTitle,
+  sharingAllowance,
   onSuccessRedirect,
   skipLabel,
   skipHref,
@@ -87,7 +89,7 @@ export function AddMemberForm({
             Invitation sent
           </h3>
           <p className="text-sm text-ink-muted mt-1">
-            We&rsquo;ll let {invitedEmail} know they&rsquo;ve been added to this book.
+            We&rsquo;ve invited {invitedEmail}. They can access this book after accepting.
           </p>
         </div>
         {onSuccessRedirect && (
@@ -104,6 +106,17 @@ export function AddMemberForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {sharingAllowance === null && <p role="alert" className="text-sm text-danger">Could not load cookbook sharing limits. Please refresh and try again.</p>}
+      {sharingAllowance?.isFree && (
+        <div className="rounded-lg border border-line-soft bg-card-muted p-4 text-sm text-ink-muted">
+          {!sharingAllowance.canShare && <p className="mb-2 font-semibold">Free sharing is available on your oldest cookbook. Existing members keep access to your other cookbooks. Upgrade to Plus to invite more people to those books.</p>}
+          <p className="font-semibold text-green-deep">{sharingAllowance.used} of 3 sharing spots used</p>
+          <p className="mt-1">Free includes up to 3 other people with Family access. They can view recipes, react, and add notes and memories.</p>
+          <p className="mt-1">Pending invitations reserve a spot. Cancel an invitation or remove a member to free one.</p>
+          {sharingAllowance.remaining === 0 && <p className="mt-2 font-semibold">All sharing spots are in use.</p>}
+          <Link href="/pricing" className="mt-2 inline-flex min-h-11 items-center font-semibold text-green-deep underline underline-offset-4">Get Plus to invite more people or Contributors</Link>
+        </div>
+      )}
       <Input
         label="Email address"
         required
@@ -131,7 +144,7 @@ export function AddMemberForm({
           Help choosing a role (opens in a new tab)
         </Link>
         <div className="space-y-2">
-          {ROLE_OPTIONS.map(({ id, label, description, icon: Icon }) => (
+          {ROLE_OPTIONS.filter((option) => !sharingAllowance?.isFree || option.id === "family").map(({ id, label, description, icon: Icon }) => (
             <label
               key={id}
               className={clsx(
@@ -188,8 +201,9 @@ export function AddMemberForm({
         variant="primary"
         fullWidth
         loading={isSubmitting}
+        disabled={sharingAllowance === null || sharingAllowance?.canShare === false || sharingAllowance?.remaining === 0}
       >
-        Add to this book
+        Send invitation
       </Button>
 
       {skipHref && (

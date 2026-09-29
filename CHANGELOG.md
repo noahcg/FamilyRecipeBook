@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.18.1] - 2026-09-29
+
+### Empty cookbook controls
+
+- Kept cookbook member management and settings visible before the first recipe is added.
+- Loaded keeper permissions and member totals through the authenticated server path so an empty cookbook reliably shows its setup actions.
+
+## [0.18.0] - 2026-09-29
+
+### Cookbook-first recipe storage
+
+- Made the owned cookbook the visible recipe home for Free accounts, with a 50-recipe cookbook allowance and Bookshelf access on both plans.
+- Reserved the cross-cookbook All Recipes view for Plus and made cookbook destinations explicit in manual and generated-recipe save flows.
+- Moved recipe capacity and Contributor access to the destination cookbook owner's entitlement, so Plus owners sponsor Free Contributors without expanding those Contributors' personal Free accounts.
+- Made existing Contributors read-only when a cookbook owner downgrades and added database coverage for sponsored contributions, Free capacity, and downgrade behavior.
+
+## [0.17.0] - 2026-09-29
+
+### Free cookbook sharing
+
+- Free cookbook owners can invite up to three other people with Family access; active invitations reserve spots.
+- Plus retains unlimited sharing and Contributor invitations. Owner entitlements and limits are enforced in the database, including atomic invitation acceptance.
+- Added sharing allowance and upgrade guidance to member screens, and refreshed pricing, guides, billing, onboarding, settings, and email copy.
+- Preserved existing memberships on downgrade; new invitations follow Free limits.
+- Recorded wording and local review locations in `reports/2026-09-29-free-sharing-copy-review.md`.
+
 ## [0.16.2] - 2026-09-29
 
 ### Sharing and member roles guide

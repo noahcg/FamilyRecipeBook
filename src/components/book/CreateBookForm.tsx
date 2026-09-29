@@ -97,7 +97,7 @@ export function CreateBookForm() {
             {
               value: true,
               label: "Shared",
-              description: "You can invite members to this cookbook after it is created.",
+              description: "Invite up to 3 people with Family access on Free, or more people and Contributors with Plus.",
               icon: Users,
             },
           ].map((option) => {

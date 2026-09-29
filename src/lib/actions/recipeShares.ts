@@ -5,7 +5,8 @@ import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { canContribute, canView } from "@/lib/permissions";
-import type { ActionResult, RecipeWithRelations } from "@/lib/types";
+import { getBookRecipeAccess } from "@/lib/entitlements";
+import type { ActionResult, BookRole, RecipeWithRelations } from "@/lib/types";
 
 export type PublicSharedRecipe = Pick<RecipeWithRelations, "title" | "description" | "photo_url" | "source_name" | "story" | "prep_minutes" | "cook_minutes" | "servings" | "category" | "ingredients" | "instructions">;
 
@@ -43,8 +44,23 @@ export async function saveSharedRecipe(shareId: string): Promise<ActionResult<{ 
   if (!recipe) return { success: false, error: "This shared recipe is no longer available." };
   const supabase = await createClient();
   const { data: memberships } = await supabase.from("book_members").select("book_id, role").eq("user_id", user.id).order("created_at");
-  const destination = (memberships ?? []).find((membership) => canContribute(membership.role));
-  if (!destination) return { success: false, error: "Create a cookbook before saving recipes." };
+  let destination: { book_id: string; role: BookRole } | undefined;
+  let hasFullCookbook = false;
+  for (const membership of (memberships ?? []) as { book_id: string; role: BookRole }[]) {
+    if (!canContribute(membership.role)) continue;
+    const access = await getBookRecipeAccess(membership.book_id, user.id);
+    if (access.allowed) {
+      destination = membership;
+      break;
+    }
+    if (access.canContribute && access.limit !== null && access.used >= access.limit) hasFullCookbook = true;
+  }
+  if (!destination) return {
+    success: false,
+    error: hasFullCookbook
+      ? "Your Free cookbook already has 50 recipes. Upgrade to Plus to keep saving."
+      : "Create a cookbook before saving recipes.",
+  };
   const { data: inserted, error } = await supabase.from("recipes").insert({
     book_id: destination.book_id, created_by: user.id, title: recipe.title, description: recipe.description,
     photo_url: recipe.photo_url, source_name: recipe.source_name, story: recipe.story,

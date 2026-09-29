@@ -17,6 +17,7 @@ import { BookName } from "@/components/book/BookName";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/formatDuration";
 import { canContribute, canManageMembers, canView } from "@/lib/permissions";
+import { getBookAccessSummary } from "@/lib/actions/books";
 import type { BookRole } from "@/lib/types";
 
 interface Props {
@@ -50,6 +51,12 @@ interface RecipeListItem {
 
 interface FavoriteRow {
   recipe_id: string;
+}
+
+interface RecipeAllowanceRow {
+  is_free: boolean;
+  used: number;
+  recipe_limit: number | null;
 }
 
 const UNCATEGORIZED = "Family Notes";
@@ -138,6 +145,8 @@ export default function RecipesPage({ params }: Props) {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [memberCount, setMemberCount] = useState(0);
   const [userRole, setUserRole] = useState<BookRole | null>(null);
+  const [canEffectivelyContribute, setCanEffectivelyContribute] = useState(false);
+  const [recipeAllowance, setRecipeAllowance] = useState<RecipeAllowanceRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
 
@@ -158,36 +167,22 @@ export default function RecipesPage({ params }: Props) {
 
       const userRequest = supabase.auth.getUser();
 
-      const memberCountRequest = supabase
-        .from("book_members")
-        .select("id", { count: "exact", head: true })
-        .eq("book_id", bookId);
-
-      const [recipesRes, userRes, memberCountRes] = await Promise.all([
+      const [recipesRes, userRes, accessSummary, allowanceRes] = await Promise.all([
         recipesRequest,
         userRequest,
-        memberCountRequest,
+        getBookAccessSummary(bookId),
+        supabase.rpc("get_book_recipe_allowance", { target_book_id: bookId }).maybeSingle(),
       ]);
       let favoriteRows: FavoriteRow[] = [];
-      let nextUserRole: BookRole | null = null;
 
       const user = userRes.data.user;
       if (user) {
-        const [favoritesRes, memberRes] = await Promise.all([
-          supabase
-            .from("recipe_reactions")
-            .select("recipe_id")
-            .eq("user_id", user.id)
-            .eq("type", "favorite"),
-          supabase
-            .from("book_members")
-            .select("role")
-            .eq("book_id", bookId)
-            .eq("user_id", user.id)
-            .maybeSingle(),
-        ]);
+        const favoritesRes = await supabase
+          .from("recipe_reactions")
+          .select("recipe_id")
+          .eq("user_id", user.id)
+          .eq("type", "favorite");
         favoriteRows = (favoritesRes.data ?? []) as FavoriteRow[];
-        nextUserRole = (memberRes.data?.role ?? null) as BookRole | null;
       }
 
       if (!active) return;
@@ -203,8 +198,10 @@ export default function RecipesPage({ params }: Props) {
 
       setRecipes(nextRecipes);
       setFavoriteIds(new Set(favoriteRows.map((row) => row.recipe_id)));
-      setMemberCount(memberCountRes.count ?? 0);
-      setUserRole(nextUserRole);
+      setMemberCount(accessSummary?.memberCount ?? 0);
+      setRecipeAllowance((allowanceRes.data as RecipeAllowanceRow | null) ?? null);
+      setUserRole(accessSummary?.role ?? null);
+      setCanEffectivelyContribute(accessSummary?.canAddRecipes ?? false);
       setLoading(false);
     }
 
@@ -212,6 +209,8 @@ export default function RecipesPage({ params }: Props) {
       if (active) {
         setMemberCount(0);
         setUserRole(null);
+        setCanEffectivelyContribute(false);
+        setRecipeAllowance(null);
         setLoading(false);
       }
     });
@@ -254,9 +253,11 @@ export default function RecipesPage({ params }: Props) {
   const newestRecipe = recipes[0] ?? null;
   const showContents = !loading && filtered.length > 0;
   const activeFilterDetails = activeFilter ? PRACTICAL_FILTERS[activeFilter] : null;
-  const recipeSummary = `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`;
+  const recipeSummary = recipeAllowance?.is_free
+    ? `${recipeAllowance.used} of ${recipeAllowance.recipe_limit ?? 50} recipes · ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`
+    : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`;
   const memberSummary = `${memberCount} ${memberCount === 1 ? "member" : "members"}`;
-  const canAddRecipes = canContribute(userRole);
+  const canAddRecipes = canContribute(userRole) && canEffectivelyContribute;
   const canManageBookMembers = canManageMembers(userRole);
   const canOpenBookSettings = canView(userRole);
   const toolbarActionCount = [canAddRecipes, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
@@ -485,11 +486,29 @@ export default function RecipesPage({ params }: Props) {
             }
             action={
               !query ? (
-                <Link href={`/app/books/${bookId}/recipes/new`}>
-                  <Button variant="primary" size="sm">
-                    <Plus size={14} /> Add a recipe
-                  </Button>
-                </Link>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {canAddRecipes && (
+                    <Link href={`/app/books/${bookId}/recipes/new`}>
+                      <Button variant="primary" size="sm">
+                        <Plus size={14} /> Add a recipe
+                      </Button>
+                    </Link>
+                  )}
+                  {canManageBookMembers && (
+                    <Link href={`/app/books/${bookId}/members`}>
+                      <Button variant="secondary" size="sm">
+                        <Users size={14} /> Manage members
+                      </Button>
+                    </Link>
+                  )}
+                  {canOpenBookSettings && (
+                    <Link href={`/app/books/${bookId}/settings`}>
+                      <Button variant="secondary" size="sm">
+                        <Settings size={14} /> Book settings
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               ) : undefined
             }
           />

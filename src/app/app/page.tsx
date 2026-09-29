@@ -16,7 +16,7 @@ import { CookbookBadge } from "@/components/recipe/CookbookBadge";
 import { Button } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getFirstBookId } from "@/lib/actions/books";
+import { getFirstBookId, getFreeRecipeBookId } from "@/lib/actions/books";
 import { getAccountRecentRecipes } from "@/lib/actions/recipes";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
 import { getEffectiveEntitlements } from "@/lib/entitlements";
@@ -129,10 +129,11 @@ export default async function AppHomePage() {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [recent, householdId, firstBookId, favoritesCountRes, billing] = await Promise.all([
+  const [recent, householdId, firstBookId, freeRecipeBookId, favoritesCountRes, billing] = await Promise.all([
     getAccountRecentRecipes(6),
     getHouseholdId(),
     getFirstBookId(),
+    getFreeRecipeBookId(),
     supabase
       .from("recipe_reactions")
       .select("id", { count: "exact", head: true })
@@ -142,12 +143,16 @@ export default async function AppHomePage() {
   ]);
 
   const latestRecipe = recent[0] ?? null;
+  const recipeBookId = billing.plan === "free" ? freeRecipeBookId : firstBookId;
+  const recipeBrowseHref = billing.plan === "plus"
+    ? "/app/recipes"
+    : recipeBookId ? `/app/books/${recipeBookId}/recipes` : "/onboarding/create-book";
   const hasRecipes = latestRecipe !== null;
   const featuredHref = latestRecipe
     ? `/app/books/${latestRecipe.bookId}/recipes/${latestRecipe.id}`
     : "/app/ideas";
   const featuredImage = latestRecipe?.photo_url ?? "/images/entry/add-first.jpg";
-  const addRecipeHref = firstBookId ? `/app/books/${firstBookId}/recipes/new` : "/onboarding/create-book";
+  const addRecipeHref = recipeBookId ? `/app/books/${recipeBookId}/recipes/new` : "/onboarding/create-book";
 
   // Real meal-plan data for Weekly snapshot + Helpful cues
   const weekStart = getMondayOfCurrentWeek();
@@ -415,7 +420,7 @@ export default async function AppHomePage() {
                     ].map(([label, hint, filter]) => (
                       <Link
                         key={label}
-                        href={`/app/recipes?filter=${filter}`}
+                        href={`${recipeBrowseHref}?filter=${filter}`}
                         className="rounded-sm border border-line-soft bg-white-soft/70 px-3 py-3 text-sm font-bold text-green-deep transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-green-sage/40 hover:bg-green-pale"
                       >
                         {label}

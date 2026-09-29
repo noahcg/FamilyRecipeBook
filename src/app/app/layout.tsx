@@ -20,7 +20,7 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
   // Admin status is account-level, so it must be available on the global pages
-  // (Home, My Recipes, …) that have no per-book context.
+  // (Home, All Recipes, …) that have no per-book context.
   const billing = await getEffectiveEntitlements(user.id);
   return (
     <AccountProvider isAdmin={isAdminEmail(user.email)} plan={billing.plan}>

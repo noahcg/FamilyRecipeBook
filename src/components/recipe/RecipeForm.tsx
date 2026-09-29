@@ -1017,6 +1017,12 @@ export function RecipeForm({
           </Select>
         </div>
       )}
+      {!showCookbookPicker && showPasteEntry && entryMode !== "manual" && activeBook && (
+        <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
+          <p className="mt-1 text-sm font-extrabold text-green-deep">{activeBook.title}</p>
+        </div>
+      )}
 
       {showPasteEntry && (
         <div className="mb-6 inline-flex rounded-full border border-line bg-paper-soft p-1 shadow-xs">
@@ -1087,6 +1093,12 @@ export function RecipeForm({
                 </option>
               ))}
             </Select>
+          </section>
+        )}
+        {!showCookbookPicker && activeBook && (
+          <section className={sectionCardClassName}>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
+            <p className="mt-1 text-sm font-extrabold text-green-deep">{activeBook.title}</p>
           </section>
         )}
 
@@ -1613,7 +1625,7 @@ export function RecipeForm({
             Cancel
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting} className="flex-1">
-            {isEdit ? "Save changes" : "Add to this book"}
+            {isEdit ? "Save changes" : `Save to ${activeBook?.title ?? "cookbook"}`}
           </Button>
         </div>
         </div>
@@ -1835,7 +1847,7 @@ export function RecipeForm({
                   className="whitespace-nowrap"
                   disabled={!pasteSummary}
                 >
-                  Add to this book
+                  Save to {activeBook?.title ?? "cookbook"}
                 </Button>
               </div>
             </div>

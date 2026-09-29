@@ -126,4 +126,6 @@ src/
 |---|---|
 | **Keeper** | Full access — edit/delete any recipe, manage members, delete book |
 | **Contributor** | Add recipes, edit/delete own recipes, add memories |
-| **Family** | Read-only — browse recipes, add reactions and memories |
+| **Family** | Browse recipes, react, and add notes and memories; cannot add or edit recipes or manage members |
+
+Free accounts can own one cookbook with up to 50 recipes and share it with up to 3 other people as Family members. Pending, unexpired invitations reserve a spot. Plus includes unlimited cookbooks and recipes, an All Recipes view across books, unlimited sharing, and Contributor invitations. The destination cookbook owner’s plan controls recipe capacity and collaboration: recipients can join with free accounts, and a Free recipient may contribute inside a Plus-owned cookbook without expanding or consuming the allowance of their personal Free cookbook.

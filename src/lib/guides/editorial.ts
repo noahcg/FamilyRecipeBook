@@ -45,7 +45,7 @@ export const guides: EditorialGuide[] = [
       {
         id: "choose-a-role",
         heading: "Which role should you choose?",
-        paragraphs: ["The person who creates a cookbook is its Keeper. When inviting someone, choose Contributor or Family based on how they'd like to take part."],
+        paragraphs: ["The person who creates a cookbook is its Keeper. Free includes invitations for up to 3 people as Family members. With Plus, choose Contributor or Family based on how they'd like to take part."],
         bullets: [
           "Keeper: looks after the whole book. Keepers manage cookbook settings, invite and remove members, and add, edit, or delete any recipe. They can also react and add notes and memories.",
           "Contributor: helps the collection grow. Contributors can view the book, add recipes, and edit or delete recipes they added. They can react and add notes and memories, but can't edit someone else's recipe or manage members and book settings.",
@@ -56,7 +56,7 @@ export const guides: EditorialGuide[] = [
         id: "roles-in-everyday-use",
         heading: "A simple example",
         paragraphs: [
-          "You create a Sunday Suppers book, so you're its Keeper. Your sister wants to add her lasagna and update the instructions after testing it: invite her as a Contributor. Your dad wants to cook from the book and leave a memory about Sunday lunches: invite him as Family.",
+          "You create a Sunday Suppers book, so you're its Keeper. Your sister wants to add her lasagna and update the instructions after testing it: with Plus, invite her as a Contributor. Your dad wants to cook from the book and leave a memory about Sunday lunches: invite him as Family.",
           "If your sister spots a missing ingredient in a recipe you added, she can leave a note for you. As Keeper, you can make the correction. Being a Contributor doesn't mean being able to rewrite everyone else's recipes.",
         ],
       },
@@ -64,7 +64,7 @@ export const guides: EditorialGuide[] = [
         id: "turn-on-sharing",
         heading: "First, turn on sharing for your book",
         paragraphs: [
-          "The Keeper needs Home Cooked Plus to turn on cookbook sharing and send invitations. The people receiving invitations can accept them with a free Home Cooked account.",
+          "Free lets you share your one cookbook with up to 3 other people as Family members; you are not counted in that limit. Plus includes unlimited sharing and Contributor invitations. The cookbook owner’s plan sets these limits. Recipients only need a free Home Cooked account, and joining a shared book does not use their allowance to create one of their own.",
           "Open the cookbook you want to share and go to its settings. Choose Shared, then select Save sharing. This lets you invite people into that cookbook. They won't become members until they accept an invitation.",
         ],
       },
@@ -72,9 +72,9 @@ export const guides: EditorialGuide[] = [
         id: "invite-someone",
         heading: "Send an invitation",
         paragraphs: [
-          "Open the cookbook's Members page and select Add Someone. Enter the person's email address, choose Contributor or Family, then select Add to this book. Home Cooked emails them an invitation.",
+          "Open the cookbook's Members page and select Add Someone. Enter the person's email address. Free invitations use the Family role; with Plus, choose Contributor or Family. Select Send invitation and Home Cooked emails them an invitation.",
           "Ask them to open the invitation and sign in or create an account using the same email address you invited. After they accept, they'll have access to that book's recipes with the role you chose.",
-          "Invitations expire after seven days. If someone hasn't joined, check the pending invitations on Members and confirm the email address with them. If an invitation has expired, send a new one. If it went to the wrong address, cancel the pending invitation and send a new one.",
+          "Invitations expire after seven days. Pending, unexpired invitations reserve a spot in your Free sharing limit. Canceling an invitation, letting it expire, or removing a member frees a spot. If someone hasn't joined, check the pending invitations on Members and confirm the email address with them. If an invitation has expired, send a new one. If it went to the wrong address, cancel the pending invitation and send a new one.",
         ],
       },
       {
@@ -94,7 +94,7 @@ export const guides: EditorialGuide[] = [
         ],
       },
     ],
-    callout: "Choose Contributor for someone who will add recipes. Choose Family for someone who wants to cook, react, and share memories. Both have a place in the book.",
+    callout: "Share with up to 3 Family members on Free so they can cook, react, and add notes and memories. Choose Plus to invite more people or Contributors who will add recipes.",
     quote: "Everyone can bring something to the table, even when they aren't bringing a new recipe.",
   }),
   guide({
@@ -418,7 +418,7 @@ export const guides: EditorialGuide[] = [
         heading: "Keep the door open after the first share",
         paragraphs: [
           "The first version will cause people to remember more. Someone will notice a missing salad, recognize a card, or finally explain what a vague instruction meant. Make it easy to send those additions, and keep a small record of what changed so contributors know their corrections were heard.",
-          "Home Cooked supports both individual recipe sharing and, on the plan that includes it, invitations to a shared cookbook. That makes it possible to answer a quick request without exposing an entire collection, or to give relatives a common home where recipes, memories, and notes can grow together.",
+          "Home Cooked supports individual recipe sharing and cookbook invitations on both plans: up to 3 Family members on Free, or unlimited people and Contributor access with Plus. That makes it possible to answer a quick request without exposing an entire collection, or to give relatives a common home where recipes, memories, and notes can grow together.",
           "The best shared collection doesn't prove who remembered everything correctly. It gives the family a dependable place to bring what each person knows. Over time, that place becomes more useful because the recipes are cooked, questioned, and improved together.",
         ],
       },
@@ -550,7 +550,7 @@ export const guides: EditorialGuide[] = [
         heading: "Let the gift keep growing after the occasion",
         paragraphs: [
           "A digital family cookbook can continue after the day it's given. The recipient can add a photograph after making a recipe, record a substitution that worked, or contribute the dish that becomes part of their own household. That ongoing use gives the collection a life beyond the occasion.",
-          "Home Cooked lets you create a cookbook, gather recipes and notes in one place, and share it with family on the plan that supports cookbook invitations. You can also share an individual recipe when that is all someone needs. The platform is most useful when it supports the relationships already present in the gift rather than turning the collection into an advertisement.",
+          "Home Cooked lets you create a cookbook, gather recipes and notes in one place, and share it with up to 3 Family members on Free. Plus adds unlimited sharing and Contributor access. You can also share an individual recipe when that is all someone needs. The platform is most useful when it supports the relationships already present in the gift rather than turning the collection into an advertisement.",
           "End with an invitation, not a claim that the book is complete. Ask the recipient to cook from it, question it, and add what comes next. A family gift becomes more meaningful when it makes room for the person receiving it to become part of the story.",
         ],
       },

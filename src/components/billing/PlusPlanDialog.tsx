@@ -7,7 +7,7 @@ import { Dialog } from "@/components/ui";
 
 const plusFeatures = [
   "Create unlimited cookbooks and save unlimited recipes",
-  "Share entire cookbooks with family and friends",
+  "Share cookbooks with unlimited people, including Contributors",
   "Import recipes from websites, PDFs, Paprika, and more",
   "Paste a recipe and let Home Cooked organize it for you",
   "Plan meals and build your grocery list",

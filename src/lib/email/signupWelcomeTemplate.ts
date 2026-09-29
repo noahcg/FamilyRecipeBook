@@ -67,7 +67,7 @@ export function createSignupWelcomeEmail({
                 <p style="margin:20px 0 0;max-width:520px;font-size:17px;line-height:1.65;color:#756F64;">
                   ${
                     code
-                      ? `Hi ${safeFirstName}, enter this code to finish setting up your cookbook — a place for the recipes, weeknight wins, and kitchen notes worth keeping.`
+                      ? `Hi ${safeFirstName}, enter this code to finish setting up your cookbook, a place for the recipes, weeknight wins, and kitchen notes worth keeping.`
                       : `Hi ${safeFirstName}, confirm your email to start building a cookbook for the recipes, weeknight wins, and kitchen notes worth keeping.`
                   }
                 </p>
@@ -83,7 +83,7 @@ export function createSignupWelcomeEmail({
                       <div style="margin-top:10px;font-size:15px;line-height:1.65;color:#243128;">
                         <strong style="color:#2F4F3F;">1.</strong> ${code ? "Enter your code" : "Confirm your email"}<br />
                         <strong style="color:#2F4F3F;">2.</strong> Name your first cookbook<br />
-                        <strong style="color:#2F4F3F;">3.</strong> Invite the family or keep it private
+                        <strong style="color:#2F4F3F;">3.</strong> Invite up to 3 people as Family members for free, or keep it private
                       </div>
                       ${safeEmail ? `<div style="margin-top:12px;font-size:14px;line-height:1.5;color:#756F64;">Account: ${safeEmail}</div>` : ""}
                     </td>
@@ -118,8 +118,9 @@ ${codeBlock}
     `Welcome to Home Cooked, ${firstName}.`,
     "",
     code
-      ? "Enter this code to finish setting up your cookbook — a place for the recipes, weeknight wins, and kitchen notes worth keeping."
+      ? "Enter this code to finish setting up your cookbook, a place for the recipes, weeknight wins, and kitchen notes worth keeping."
       : "Confirm your email to start building a cookbook for the recipes, weeknight wins, and kitchen notes worth keeping.",
+    "Share your cookbook with up to 3 people as Family members for free, or keep it private.",
     ...(code ? ["", renderCodeBlockText(code)] : []),
     "",
     `${code ? "Or sign in here" : "Confirm email"}: ${confirmationUrl}`,

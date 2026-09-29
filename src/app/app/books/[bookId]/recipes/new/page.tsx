@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
@@ -26,6 +26,9 @@ export default async function NewRecipePage({ params }: Props) {
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
   const contributableBooks = bookOptions.filter((book) => canContribute(book.role));
   if (contributableBooks.length === 0) notFound();
+  if (!contributableBooks.some((book) => book.id === bookId)) {
+    redirect(`/app/books/${contributableBooks[0].id}/recipes/new`);
+  }
 
   return (
     <AppShell bookId={bookId}>

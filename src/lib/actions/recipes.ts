@@ -27,7 +27,7 @@ import type {
   RecipeWithRelations,
 } from "@/lib/types";
 import type { BookCategory } from "@/lib/actions/categories";
-import { assertCanCreateRecipe, assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
+import { assertCanCreateRecipe, assertFeatureAccess, EntitlementError, getBookRecipeAccess } from "@/lib/entitlements";
 
 const RECIPE_SELECT_WITH_CATEGORY =
   "*, category:book_categories!recipes_category_id_fkey(id, name)";
@@ -55,7 +55,7 @@ export async function createRecipe(
 ): Promise<ActionResult<Recipe>> {
   const user = await requireUser();
   try {
-    await assertCanCreateRecipe(user.id);
+    await assertCanCreateRecipe(user.id, bookId);
   } catch (error) {
     if (error instanceof EntitlementError) return { success: false, error: error.message };
     throw error;
@@ -222,7 +222,7 @@ export async function updateRecipe(
   }
 
   // A recipe copied into several cookbooks is stored as independent rows that
-  // the "My Recipes" list merges by content. Mirror this edit onto those copies
+  // the "All Recipes" list merges by content. Mirror this edit onto those copies
   // (in cookbooks the user can edit) so they stay in sync and keep merging into
   // a single badged entry instead of splitting apart.
   if (existing) {
@@ -406,6 +406,8 @@ export async function getRecipeTransferTargets(
   for (const row of rows) {
     const book = Array.isArray(row.book) ? row.book[0] : row.book;
     if (!book || book.id === currentBookId) continue;
+    const access = await getBookRecipeAccess(book.id, user.id);
+    if (!access.allowed) continue;
     targets.push({ id: book.id, title: book.title, role: row.role });
   }
   return targets.sort((a, b) => a.title.localeCompare(b.title));
@@ -425,13 +427,23 @@ export async function getRecipeAssignmentOptions(): Promise<RecipeAssignmentOpti
     book: { id: string; title: string } | { id: string; title: string }[] | null;
   }[];
 
-  const books = rows
+  const candidateBooks = rows
     .map((row) => {
       const book = Array.isArray(row.book) ? row.book[0] : row.book;
       return book ? { id: book.id, title: book.title, role: row.role } : null;
     })
     .filter((book): book is { id: string; title: string; role: BookRole } => Boolean(book))
     .sort((a, b) => a.title.localeCompare(b.title));
+
+  const accessByBook = await Promise.all(
+    candidateBooks.map(async (book) => ({
+      book,
+      access: await getBookRecipeAccess(book.id, user.id),
+    }))
+  );
+  const books = accessByBook
+    .filter(({ access }) => access.canContribute)
+    .map(({ book }) => book);
 
   const categoriesByBook = await Promise.all(
     books.map(async (book) => ({
@@ -475,6 +487,13 @@ export async function copyRecipeToBook(
       success: false,
       error: "You can only copy into cookbooks where you can add recipes.",
     };
+  }
+
+  try {
+    await assertCanCreateRecipe(user.id, targetBookId);
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
   }
 
   const { data: src } = await supabase
@@ -646,22 +665,24 @@ export async function moveRecipeToBook(
     .category?.name ?? null;
 
   const isCreator = existing.created_by === user.id;
-  const [sourceRole, targetRole] = await Promise.all([
+  const [sourceRole, targetRole, sourceAccess, targetAccess] = await Promise.all([
     getBookRole(supabase, sourceBookId, user.id),
     getBookRole(supabase, targetBookId, user.id),
+    getBookRecipeAccess(sourceBookId, user.id),
+    getBookRecipeAccess(targetBookId, user.id),
   ]);
 
   // Mirrors the recipes UPDATE policy on both the old and the new row.
   const canRemove =
     canManageBook(sourceRole as BookRole | null) ||
-    (isCreator && canContribute(sourceRole as BookRole | null));
+    (isCreator && canContribute(sourceRole as BookRole | null) && sourceAccess.canContribute);
   if (!canRemove) {
     return { success: false, error: "You don't have permission to move this recipe." };
   }
 
   const canPlace = isCreator
-    ? canContribute(targetRole as BookRole | null)
-    : canManageBook(targetRole as BookRole | null);
+    ? canContribute(targetRole as BookRole | null) && targetAccess.allowed
+    : canManageBook(targetRole as BookRole | null) && targetAccess.allowed;
   if (!canPlace) {
     return {
       success: false,
@@ -853,7 +874,7 @@ export async function getCategoryRecipes(
 
 // Every recipe the user can see, across all their cookbooks, tagged with the
 // cookbook it lives in. RLS scopes `recipes` to the user's books. Powers the
-// global My Recipes page, the Home dashboard, and the cross-book meal-plan
+// global All Recipes page, the Home dashboard, and the cross-book meal-plan
 // recipe picker.
 export async function getAllUserRecipes(): Promise<
   {

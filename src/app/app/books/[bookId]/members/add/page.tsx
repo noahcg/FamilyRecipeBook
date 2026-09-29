@@ -1,3 +1,6 @@
+import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth";
+import { getBookSharingAllowance } from "@/lib/entitlements";
 import { BookOpen, Crown, Lock, Mail, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
@@ -13,7 +16,7 @@ interface Props {
 const ROLE_GUIDE = [
   {
     label: "Keeper",
-    description: "Full control — manages members, settings, and every recipe.",
+    description: "Full control: manages members, settings, and every recipe.",
     icon: Crown,
   },
   {
@@ -31,6 +34,9 @@ const ROLE_GUIDE = [
 export default async function AddMemberPage({ params }: Props) {
   const { bookId } = await params;
   const book = await getBook(bookId);
+  const user = await requireUser();
+  if (!book || !book.members?.some((member) => member.user_id === user.id && member.role === "keeper")) notFound();
+  const sharingAllowance = await getBookSharingAllowance(bookId).catch(() => null);
 
   return (
     <AppShell bookId={bookId}>
@@ -52,6 +58,7 @@ export default async function AddMemberPage({ params }: Props) {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-8">
             <div className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
               <AddMemberForm
+                sharingAllowance={sharingAllowance}
                 bookId={bookId}
                 bookTitle={book?.title}
                 onSuccessRedirect={`/app/books/${bookId}/members`}

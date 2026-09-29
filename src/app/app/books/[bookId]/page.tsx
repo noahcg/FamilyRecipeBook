@@ -176,7 +176,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
 
   const justCreated = created === "1";
 
-  const { book, recent, favorites } = data;
+  const { book, recent, favorites, canAddRecipes } = data;
   const latestRecipe = (recent as HomeRecipe[])[0] ?? null;
   const hasRecipes = latestRecipe !== null;
   const featuredTitle = latestRecipe?.title ?? "";
@@ -350,7 +350,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                             Start cooking
                           </Button>
                         </Link>
-                      ) : (
+                      ) : canAddRecipes ? (
                         <>
                           <Link href={`/app/books/${bookId}/recipes/new`}>
                             <Button variant="primary" size="sm" className="rounded-md">
@@ -365,6 +365,13 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                             </Button>
                           </Link>
                         </>
+                      ) : (
+                        <Link href={`/app/books/${bookId}/recipes`}>
+                          <Button variant="primary" size="sm" className="rounded-md">
+                            <UtensilsCrossed size={17} />
+                            Browse cookbook
+                          </Button>
+                        </Link>
                       )}
                     </div>
                   </div>
@@ -454,8 +461,8 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                         <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-muted">
                           Save a recipe and we&rsquo;ll keep the most recent one handy here.
                         </p>
-                        <Link href={`/app/books/${bookId}/recipes/new`} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
-                          Add a recipe <ChevronRight size={15} />
+                        <Link href={canAddRecipes ? `/app/books/${bookId}/recipes/new` : `/app/books/${bookId}/recipes`} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
+                          {canAddRecipes ? "Add a recipe" : "Browse cookbook"} <ChevronRight size={15} />
                         </Link>
                       </div>
                     </div>
@@ -498,8 +505,8 @@ export default async function BookHomePage({ params, searchParams }: Props) {
               <PageSection>
                 <SectionHeader eyebrow="Quick actions" title="Next move" />
                 <div className="mt-4 space-y-1">
-                  <QuickAction href={`/app/books/${bookId}/recipes/new`} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />
-                  <QuickAction href={`/app/books/${bookId}/ideas`} icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />
+                  {canAddRecipes && <QuickAction href={`/app/books/${bookId}/recipes/new`} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />}
+                  {canAddRecipes && <QuickAction href={`/app/books/${bookId}/ideas`} icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />}
                   <QuickAction href="/app/meal-plan" icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
                   <QuickAction href="/app/groceries" icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
                 </div>

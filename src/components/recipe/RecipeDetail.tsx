@@ -153,7 +153,7 @@ export function RecipeDetail({
       ? returnTo
       : null;
 
-  // Return to wherever the user came from (My Recipes, Favorites, a cookbook's
+  // Return to wherever the user came from (All Recipes, Favorites, a cookbook's
   // list, search…). Fall back to this recipe's cookbook for deep links — e.g. a
   // shared recipe opened directly, which has no in-app history to return to.
   function handleBack() {
