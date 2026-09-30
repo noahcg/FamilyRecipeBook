@@ -17,6 +17,8 @@ import { NewBookBanner } from "@/components/book/NewBookBanner";
 import { Button } from "@/components/ui";
 import { getBookPageData } from "@/lib/actions/books";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
+import { requireUser } from "@/lib/auth";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 import type { Recipe } from "@/lib/types";
 
 interface Props {
@@ -168,11 +170,14 @@ function SectionHeader({
 
 export default async function BookHomePage({ params, searchParams }: Props) {
   const [{ bookId }, { created }] = await Promise.all([params, searchParams]);
-  const [data, householdId] = await Promise.all([
+  const [data, householdId, user] = await Promise.all([
     getBookPageData(bookId),
     getHouseholdId(),
+    requireUser(),
   ]);
   if (!data) notFound();
+
+  const billing = await getEffectiveEntitlements(user.id);
 
   const justCreated = created === "1";
 
@@ -188,7 +193,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
   // Real meal-plan data for Weekly snapshot + Helpful cues
   const weekStart = getMondayOfCurrentWeek();
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const weekMealPlans = householdId
+  const weekMealPlans = billing.plan === "plus" && householdId
     ? await getMealPlanWeek(householdId, weekStart)
     : [];
   const plannedDates = new Set(weekMealPlans.map((m) => m.planned_date));
