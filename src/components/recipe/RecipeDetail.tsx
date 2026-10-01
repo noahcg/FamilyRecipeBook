@@ -30,6 +30,7 @@ import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
 import { RecipeShareDialog } from "./RecipeShareDialog";
 import { RecipeOriginalsDrawer } from "./RecipeOriginalsDrawer";
+import { ReportContentButton } from "@/components/moderation/ReportContentButton";
 import { ServingScaler } from "./ServingScaler";
 import { hasInAppHistory } from "@/components/layout/RouteHistoryTracker";
 import { useAccount } from "@/lib/context/AccountContext";
@@ -201,7 +202,7 @@ export function RecipeDetail({
     userRole === "keeper" ||
     (userRole === "contributor" && recipe.created_by === userId);
 
-  const sourceName = firstNonEmpty(recipe.source_name, recipe.creator?.full_name) ?? "Family";
+  const sourceName = firstNonEmpty(recipe.source_name, recipe.creator?.full_name, recipe.created_by_display_name) ?? "Family";
   const wasAddedViaUpload = recipe.import_method === "image_upload";
   const addedByName = wasAddedViaUpload ? recipe.creator?.full_name ?? "Family" : sourceName;
   const addedByLabel = `${addedByName}${wasAddedViaUpload ? " (via upload)" : ""}`;
@@ -224,13 +225,13 @@ export function RecipeDetail({
     },
     ...(recipe.stories ?? []).slice(0, 2).map((storyItem) => ({
       id: storyItem.id,
-      label: `${storyItem.author?.full_name ?? "Family"} shared a memory`,
+      label: `${storyItem.author?.full_name ?? storyItem.author_display_name ?? "Family"} shared a memory`,
       date: new Date(storyItem.created_at).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
       }),
-      initials: (storyItem.author?.full_name ?? "F").slice(0, 1).toUpperCase(),
+      initials: (storyItem.author?.full_name ?? storyItem.author_display_name ?? "F").slice(0, 1).toUpperCase(),
     })),
   ];
 
@@ -480,6 +481,7 @@ export function RecipeDetail({
                       <Paperclip size={15} strokeWidth={1.75} className="text-ink-soft" />
                       Original recipe
                     </button>
+                    <ReportContentButton targetId={recipe.id} compact />
                     {canEdit && (
                       <Link
                         href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}

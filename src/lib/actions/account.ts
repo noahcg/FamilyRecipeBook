@@ -12,15 +12,30 @@ const USER_STORAGE_BUCKETS = ["recipe-images", "avatars"] as const;
 /**
  * Permanently deletes the current user's account and all of their data.
  *
- * Cascades from the auth-user delete (via migration 020) remove the profile and
- * every owned cookbook/household plus the user's contributions elsewhere. This
- * also purges the user's Storage objects, which do not cascade from DB rows.
+ * Shared cookbook ownership must be resolved before the profile disappears.
+ * Migration 026 preserves authored content in cookbooks that survive account
+ * deletion; it does not allow a shared cookbook to vanish with its owner.
  *
  * This is irreversible.
  */
 export async function deleteAccount(): Promise<ActionResult> {
   const user = await requireUser();
   const service = createServiceClient();
+
+  const { data: ownedBooks, error: ownedBooksError } = await service
+    .from("recipe_books")
+    .select("id,title,members:book_members(user_id)")
+    .eq("owner_id", user.id);
+  if (ownedBooksError) return { success: false, error: "Could not check your cookbook ownership. Please try again." };
+  const sharedBook = (ownedBooks ?? []).find((book) =>
+    (book.members ?? []).some((member) => member.user_id !== user.id)
+  );
+  if (sharedBook) {
+    return {
+      success: false,
+      error: `Transfer ownership of “${sharedBook.title}” before deleting your account. An administrator can help with this.`,
+    };
+  }
 
   // Remove Storage objects under `${userId}/` in each user-namespaced bucket.
   for (const bucket of USER_STORAGE_BUCKETS) {
@@ -34,7 +49,22 @@ export async function deleteAccount(): Promise<ActionResult> {
 
     if (objects && objects.length > 0) {
       const paths = objects.map((obj) => `${user.id}/${obj.name}`);
-      const { error: removeError } = await service.storage.from(bucket).remove(paths);
+      let pathsToRemove = paths;
+      if (bucket === "recipe-images") {
+        const urls = paths.map((path) => service.storage.from(bucket).getPublicUrl(path).data.publicUrl);
+        const { data: referenced, error: referencesError } = await service
+          .from("recipes")
+          .select("photo_url")
+          .in("photo_url", urls);
+        if (referencesError) {
+          return { success: false, error: "Could not verify your recipe images. Please try again." };
+        }
+        const referencedUrls = new Set((referenced ?? []).map((recipe) => recipe.photo_url));
+        pathsToRemove = paths.filter((path, index) => !referencedUrls.has(urls[index]));
+      }
+      const { error: removeError } = pathsToRemove.length
+        ? await service.storage.from(bucket).remove(pathsToRemove)
+        : { error: null };
       if (removeError) {
         return { success: false, error: "Could not remove your files. Please try again." };
       }

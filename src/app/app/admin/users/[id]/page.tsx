@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Clock, Crown, Mail, ScrollText } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
+import { isAdminEmail } from "@/lib/admin";
+import { UserAccountControls } from "@/components/admin/UserAccountControls";
+import { getAccountDeletionImpact } from "@/lib/actions/admin";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -62,11 +65,11 @@ function SupportStat({
 }
 
 export default async function AdminUserDetailPage({ params }: Props) {
-  await requireAdmin();
+  const adminUser = await requireAdmin();
   const { id } = await params;
   const admin = createServiceClient();
 
-  const [{ data: profile }, { data: authData }, { count: recipeCount }, { data: membershipRows }] =
+  const [{ data: profile }, { data: authData }, { count: recipeCount }, { data: membershipRows }, deletionImpact] =
     await Promise.all([
       admin.from("profiles").select("full_name, avatar_url, known_for, created_at").eq("id", id).single(),
       admin.auth.admin.getUserById(id),
@@ -75,11 +78,16 @@ export default async function AdminUserDetailPage({ params }: Props) {
         .from("book_members")
         .select("role, created_at, book:recipe_books(id, title, owner_id)")
         .eq("user_id", id),
+      getAccountDeletionImpact(admin, id),
     ]);
 
   if (!profile) notFound();
 
   const email = authData?.user?.email ?? null;
+  // A past timestamp is harmless to reinstate; treating any recorded ban as
+  // reinstatable also avoids relying on a render-time clock in this RSC.
+  const isSuspended = Boolean(authData?.user?.banned_until);
+  const canManage = Boolean(email && !isAdminEmail(email) && adminUser.id !== id);
 
   const { data: inviteRows } = email
     ? await admin
@@ -184,6 +192,16 @@ export default async function AdminUserDetailPage({ params }: Props) {
               )}
             </div>
           </div>
+        </section>
+
+        <section className="mt-6">
+          <UserAccountControls
+            userId={id}
+            email={email ?? "this account"}
+            isSuspended={isSuspended}
+            canManage={canManage}
+            deletionImpact={deletionImpact}
+          />
         </section>
       </main>
     </div>

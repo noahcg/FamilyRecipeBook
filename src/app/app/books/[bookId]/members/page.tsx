@@ -71,6 +71,7 @@ export default async function MembersPage({ params }: Props) {
   const pendingCount = pendingInvites.length;
   const countMap: Record<string, number> = {};
   for (const r of recipeCounts.data ?? []) {
+    if (!r.created_by) continue;
     countMap[r.created_by] = (countMap[r.created_by] ?? 0) + 1;
   }
   const contributingMembers = members.filter((member) => (countMap[member.user_id] ?? 0) > 0).length;

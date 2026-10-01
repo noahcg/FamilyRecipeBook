@@ -63,6 +63,13 @@ const privacySections = [
           processing practices.
         </p>
         <p>
+          Content contributed to a shared cookbook is part of that cookbook. If
+          a contributor&apos;s account is deleted, recipes and stories that remain
+          in a cookbook may stay available to its members with the account link
+          removed and a historical display name retained. This avoids removing
+          shared family content simply because one person leaves the service.
+        </p>
+        <p>
           We may also disclose information if required by law, to protect the
           service, or to respond to security, fraud, or safety issues.
         </p>
@@ -104,12 +111,36 @@ const privacySections = [
     title: "Uploaded Content",
     body: (
       <p>
-        Recipe photos, cookbook covers, imported files, and other uploaded
-        content are stored so the app can display and process them. Avoid
-        uploading images or documents that include private details you do not
-        want visible to cookbook members. Some stored files may be accessible to
-        anyone who has the direct file link.
+        Recipe photos, cookbook covers, imported files, scans, and other uploaded
+        content are stored so the app can display and process them. Files follow
+        the recipe or cookbook they support rather than the account that uploaded
+        them: an image used by a recipe that survives an account deletion may
+        remain available to that recipe. Avoid uploading images or documents that
+        include private details you do not want visible to cookbook members. Some
+        stored files may be accessible to anyone who has the direct file link.
       </p>
+    ),
+  },
+  {
+    title: "Account Deletion and Shared Content",
+    body: (
+      <>
+        <p>
+          Account deletion removes the account and personal records, but does
+          not automatically remove shared family content. A shared cookbook with
+          other members must be transferred to another member before its owner
+          can be deleted. Private cookbooks with no remaining members may be
+          deleted with the account.
+        </p>
+        <p>
+          For an administrator-initiated deletion, we create an operational
+          deletion record and, before deletion begins, send the account email a
+          compact archive of cookbook content that will be removed. If the archive
+          cannot be created or delivered, the administrator deletion does not
+          proceed. The archive contains structured recipe data and metadata, not
+          binary photo, scan, or PDF files.
+        </p>
+      </>
     ),
   },
   {
@@ -118,11 +149,20 @@ const privacySections = [
       <p>
         We keep account and cookbook information while your account is active or
         as needed to provide the service. You can delete recipes, cookbooks, and
-        some settings in the app. If you cancel Plus, we retain your billing
-        records and saved content as needed to provide the Free plan, process
-        support requests, prevent fraud, reconcile payments, and meet legal or
-        accounting obligations. Some records may remain for a limited time in
-        backups, logs, security records, or other required operational systems.
+        some settings in the app. After an account is deleted, shared content that
+        survives may retain a former contributor&apos;s display name but not their
+        active account reference. Deletion-operation and administrator audit
+        records may remain for security, troubleshooting, and operational
+        accountability. Some records may also remain for a limited time in
+        backups, logs, or where retention is needed for legal or operational
+        reasons.
+        Moderation reports use minimal case references and operational notes; they
+        do not copy recipe text or original media into the moderation record. The
+        final retention periods and reporting process remain subject to legal and
+        privacy review.
+        If you cancel Plus, we retain billing records and saved content as needed
+        to provide the Free plan, process support requests, prevent fraud,
+        reconcile payments, and meet legal or accounting obligations.
       </p>
     ),
   },
@@ -166,7 +206,7 @@ const privacySections = [
 
 export default function PrivacyPage() {
   return (
-    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="September 23, 2026">
+    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="September 30, 2026">
       <p>
         This Privacy Policy explains what <BrandName /> collects, how that
         information is used, and when it is shared. The app is designed for

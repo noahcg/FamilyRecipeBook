@@ -57,6 +57,53 @@ const termsSections = [
           responsible for the content you add and for respecting others&apos;
           rights and privacy.
         </p>
+        <p>
+          Content contributed to a shared cookbook becomes part of that cookbook.
+          If your account is deleted, recipes and stories you contributed to a
+          cookbook that remains may stay with the cookbook. We may remove the
+          active account link while retaining a historical display name so members
+          can understand the contribution&apos;s context.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "Account Suspension and Deletion",
+    body: (
+      <>
+        <p>
+          We may suspend an account to protect the service, its members, or their
+          content. Suspension restricts access but does not by itself change
+          cookbook ownership or delete content.
+        </p>
+        <p>
+          Deleting an account removes personal account data and private content.
+          A shared cookbook with other members must be transferred to a remaining
+          member before its owner can be deleted; it is not removed merely because
+          its owner leaves. For administrator-initiated deletion, we may send a
+          compact archive of the cookbook content that will be removed to the
+          account email before deletion proceeds. Email delivery and attachment
+          size limits can prevent deletion from continuing.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "Reporting and Content Safety (Policy Placeholder)",
+    body: (
+      <>
+        <p>
+          You can report content you believe is inappropriate, harassing, invasive
+          of privacy, infringing, or spam. Reports are handled privately; the
+          reported person is not told who submitted a report.
+        </p>
+        <p>
+          We may hide content while reviewing a report, remove only the affected
+          content, restrict uploads, remove a member from a shared cookbook, or
+          restrict account access for repeated or serious misuse. We intend to
+          provide an appeal path for reversible decisions. This is a product-policy
+          placeholder and is not final legal terms or counsel-approved language.
+        </p>
       </>
     ),
   },
@@ -135,7 +182,7 @@ const termsSections = [
 
 export default function TermsPage() {
   return (
-    <LegalPage eyebrow="Legal" title="Terms of Service" lastUpdated="September 23, 2026">
+    <LegalPage eyebrow="Legal" title="Terms of Service" lastUpdated="September 30, 2026">
       <p>
         These Terms explain the basic rules for using <BrandName />. By creating
         an account or using the service, you agree to these Terms and to our

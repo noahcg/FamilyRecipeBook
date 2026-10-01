@@ -211,6 +211,9 @@ export default async function AdminPage({
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
               Find users and cookbooks for support, and invite people to cookbooks you keep.
             </p>
+            <Link href="/app/admin/moderation" className="mt-3 inline-block text-sm font-bold text-green-deep hover:underline">
+              Open privacy-preserving moderation queue
+            </Link>
           </div>
 
           <form
