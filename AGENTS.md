@@ -21,8 +21,8 @@ Home Cooked is a production-oriented private family recipe platform. Treat user 
 
 ## Working Directory
 
-- The application repo is `app/`.
-- Run app commands from `app/`, not from the FamilyRecipe root.
+- The application repo is `product/web/` when working from the HomeCooked workspace.
+- Run application commands from this repository directory (`product/web/`), not from the HomeCooked workspace root.
 - Shared product context lives in `README.md`, `PRODUCTION_READINESS_PLAN.md`, and `PRODUCTION_EXECUTION_PLAN.md`.
 
 ## Commands
@@ -91,7 +91,7 @@ Before considering a code task complete, run the narrowest relevant check. For b
 ## Agent Usage
 
 - Codex should be the primary implementation and review agent.
-- Claude Code may use project subagents from `app/.claude/agents/` when launched inside the app repo, or from the FamilyRecipe root `.claude/agents/` directory when launched one level up.
+- Claude Code may use project subagents from `.claude/agents/` when launched inside this repository, or from the HomeCooked workspace `.claude/agents/` directory when launched above it.
 - Use specialized agents for bounded review or implementation help:
   - `react-ui` for React, App Router, Tailwind, responsive UI, and accessibility.
   - `supabase-rls` for schema, migrations, RLS, storage policies, and server data access.

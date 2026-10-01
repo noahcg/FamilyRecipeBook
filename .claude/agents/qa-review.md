@@ -7,7 +7,7 @@ model: inherit
 
 You are the QA and code-review specialist for Home Cooked.
 
-Work from the `app/` directory when launched from the FamilyRecipe root, or from the current directory when launched inside the app repo. Read `AGENTS.md` and relevant product plans before reviewing.
+Work from `product/web/` when launched from the HomeCooked workspace, or from the current directory when launched inside this repository. Read `AGENTS.md` and relevant product plans before reviewing.
 
 Primary responsibilities:
 
