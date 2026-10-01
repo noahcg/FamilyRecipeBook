@@ -33,9 +33,9 @@ export function DeleteAccountSection() {
       <p className="text-sm font-bold text-danger">Delete account</p>
       <p className="mt-1 max-w-2xl text-sm leading-relaxed text-ink-muted">
         Permanently delete your account and all of your data — including every
-        cookbook you own and any recipes, memories, and photos you&apos;ve added.
-        Cookbooks you own that are shared with family will be removed for everyone.
-        This cannot be undone.
+        private cookbooks you own and any recipes, memories, and photos you&apos;ve added.
+        Shared cookbooks must be transferred to another member first, so family
+        content is not removed with your account. This cannot be undone.
       </p>
       <Button
         type="button"
@@ -50,8 +50,9 @@ export function DeleteAccountSection() {
 
       <Dialog open={open} onClose={() => (deleting ? undefined : setOpen(false))} title="Delete account?">
         <p className="mb-5 text-sm text-ink-muted">
-          This will permanently delete your account and all of your data. Shared
-          cookbooks you own will be removed for everyone. This cannot be undone.
+          This will permanently delete your account and private data. Shared
+          cookbooks you own must be transferred to another member first. This
+          cannot be undone.
         </p>
         <div className="flex gap-3">
           <Button

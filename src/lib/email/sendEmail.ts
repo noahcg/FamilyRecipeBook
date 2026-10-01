@@ -7,11 +7,17 @@ export async function sendEmail({
   subject,
   html,
   text,
+  attachments,
 }: {
   to: string;
   subject: string;
   html: string;
   text: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer;
+    contentType?: string;
+  }>;
 }) {
   if (!process.env.RESEND_API_KEY) {
     throw new Error("RESEND_API_KEY is not configured.");
@@ -29,6 +35,7 @@ export async function sendEmail({
     subject,
     html,
     text,
+    attachments,
   });
 
   if (error) {
