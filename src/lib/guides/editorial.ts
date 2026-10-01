@@ -762,6 +762,156 @@ export const guides: EditorialGuide[] = [
     callout: "Preserve the source transcription before adding clarity. Future cooks should be able to see what was written and what was learned later.",
     quote: "The card keeps the handwriting. The cookbook keeps the recipe in motion.",
   }),
+  guide({
+    slug: "how-to-set-up-your-first-home-cooked-book",
+    title: "How to Set Up Your First Home Cooked Book",
+    description: "Create a cookbook with a clear purpose, choose privacy and sharing settings that fit your household, and make a welcoming home for the recipes you use.",
+    metaDescription: "Set up your first Home Cooked cookbook with a useful name, description, cover, privacy choice, and a simple plan for its first recipes.",
+    sections: [
+      {
+        id: "start-with-one-purpose",
+        heading: "Start with one useful purpose",
+        paragraphs: [
+          "Your first cookbook does not need to hold every recipe you have ever saved. Give it one job: the dinners your household relies on, a collection of baking projects, the recipes from a relative, or the meals you want to pass to someone starting out. A clear purpose makes the first choices easier and leaves room for another book later.",
+          "Choose a title that you will recognize at a glance. A family name, occasion, or practical promise can all work: The Ramirez Table, Weeknight Keepers, or Dad's Baking Notes. The title can be warm and personal, but adding a little context helps everyone know what belongs there.",
+        ],
+      },
+      {
+        id: "create-the-book",
+        heading: "Create the book and give it a little context",
+        paragraphs: [
+          "From your bookshelf, choose to create a cookbook. Add a title, then use the optional description to explain what the book is for. A short description is enough: Recipes we make when everyone is home, or Mom's cards and the versions we cook now. It gives future contributors a useful starting point.",
+          "Choose a cover color that makes the book easy to spot in your bookshelf. The cover is not a permanent editorial decision; it is simply a visual cue that helps the collection feel distinct when you have more than one book.",
+        ],
+      },
+      {
+        id: "private-or-shared",
+        heading: "Choose Private or Shared with confidence",
+        paragraphs: [
+          "Choose Private if you want to collect, edit, or test recipes on your own first. Only you can access a private cookbook until you turn sharing on. You can make it Shared later from the book's settings, so private is a good default when you are still deciding what the collection should become.",
+          "Choose Shared if you are ready to invite specific people into this particular book. Sharing does not make the book public, and an invitation to one cookbook does not open your other cookbooks. On Free, invite up to three people as Family members. Plus supports unlimited Family invitations and Contributor invitations for people who will add recipes and edit their own.",
+        ],
+      },
+      {
+        id: "add-a-first-few-recipes",
+        heading: "Add a small, useful first set",
+        paragraphs: [
+          "Begin with recipes that someone would genuinely look for this week. One reliable dinner, a favorite breakfast, a dessert everyone requests, or a dish connected to the book's purpose is enough to establish the collection. You can enter them by hand, copy and paste recipe text, or start from photos and files when that is the clearest source.",
+          "Do not wait until every detail is perfect. A recipe can begin with the information you know, then improve after you cook it or ask a relative a question. Add a source, note, or story when it matters, especially when the recipe came from someone else's card, website, or memory.",
+        ],
+      },
+      {
+        id: "shape-it-through-use",
+        heading: "Let use shape the book",
+        paragraphs: [
+          "After adding a few recipes, notice how you look for them. Create or refine categories around real decisions such as Quick Dinners, Baking, Breakfast, or Holidays. Keep them broad at first. A category should make a recipe easier to find, not create another filing task.",
+          "Return to the book after you cook from it. Correct timing, add a photo, record a substitution, or write down the note that explains why the recipe matters. A Home Cooked book is meant to stay alive through cooking, not to be finished before anyone can use it.",
+        ],
+      },
+    ],
+    callout: "Choose Private when you are still collecting. You can turn on sharing later, and sharing one cookbook never makes your other books visible.",
+    quote: "A first cookbook only needs a clear purpose and one recipe worth finding again.",
+  }),
+  guide({
+    slug: "how-to-add-your-first-recipe-to-home-cooked",
+    title: "How to Add Your First Recipe to Home Cooked",
+    description: "Choose the easiest way to bring in a favorite recipe, review what was imported, and save a version that is clear enough to cook and personal enough to keep.",
+    metaDescription: "Add your first recipe to Home Cooked by using manual entry, copy and paste, recipe-card photos, or supported files, then review and save the details.",
+    sections: [
+      {
+        id: "choose-an-easy-first-recipe",
+        heading: "Choose an easy first recipe",
+        paragraphs: [
+          "Start with a dish you know well enough to recognize when something is missing. It might be a weeknight favorite, a handwritten family recipe, or a trusted recipe you saved online. The best first recipe is not necessarily the most impressive one; it is one you will be glad to find again.",
+          "Open the cookbook where the recipe belongs and choose to add a recipe. If you have more than one cookbook, take a moment to confirm the destination before you begin. A recipe can be moved later, but putting it in its natural home makes it easier to return to from the start.",
+        ],
+      },
+      {
+        id: "pick-an-entry-method",
+        heading: "Pick the entry method that matches the source",
+        paragraphs: [
+          "Manual entry works well when you are writing down a recipe from memory or cleaning up a short, reliable source. Add the title, ingredients, directions, and the practical details you know. You can add ingredient rows and instruction steps as you go, so there is no need to force a recipe into one long note.",
+          "Copy and paste is useful for recipe text you already have in a note, message, or webpage. Review the parsed result before saving. For recipe cards, clippings, or pages you want to preserve visually, use photo import. Supported recipe files can also be imported when they already contain recipe data. Choose the method that preserves the original with the least retyping, then review every important detail yourself.",
+        ],
+      },
+      {
+        id: "review-imports-carefully",
+        heading: "Review imported recipes before they become your working version",
+        paragraphs: [
+          "Importing can save time, but it cannot know whether a handwritten fraction, a stained line, or a family abbreviation was read correctly. Compare titles, quantities, units, temperatures, and steps against the original. Treat an import as a draft, especially when the source is handwritten or photographed in low light.",
+          "Keep a helpful photo with the recipe when it shows the finished dish or preserves a meaningful card. If the source came from another cook, cookbook, or website, record the source name or link. A clear source note makes the recipe more trustworthy and helps a future reader understand where it came from.",
+        ],
+      },
+      {
+        id: "make-it-cookable",
+        heading: "Make the recipe easy to cook",
+        paragraphs: [
+          "Use a title that tells you what you are looking at. Grandma's chicken is meaningful, but Grandma's Lemon Chicken with Potatoes is easier to browse and search. Add preparation time, cooking time, servings, a category, and tags when they will help you choose the recipe later; these details can wait if you do not know them yet.",
+          "Write ingredients in the order a cook will use them and split directions into clear steps. If the original says bake until done, preserve that wording in a note or story, then add a tested clarification when you have one. It is better to label an uncertainty than to make a confident guess.",
+        ],
+      },
+      {
+        id: "save-and-return",
+        heading: "Save a useful first version, then return after cooking",
+        paragraphs: [
+          "Save once the recipe has enough information for someone to attempt it. You do not need a professional photo or a complete family history before it belongs in the book. The first saved version gives you a place to collect the missing details instead of losing them in a separate note.",
+          "The next time you cook it, update what you learn: a more accurate timing, the pan size, a substitution that worked, or the story someone remembered. Notes and memories let the recipe keep its history without crowding the instructions. Each revision can make the next cook's experience easier.",
+        ],
+      },
+    ],
+    callout: "An imported recipe is a starting point, not proof. Review every quantity, temperature, and instruction against the source before relying on it.",
+    quote: "The first version gets the recipe safely into the book. Cooking it is how the recipe becomes truly useful.",
+  }),
+  guide({
+    slug: "how-to-plan-meals-and-build-a-grocery-list-in-home-cooked",
+    title: "How to Plan Meals and Build a Grocery List in Home Cooked",
+    description: "Plan the week from recipes you already trust, send their ingredients to a grocery list, and keep the last-minute items in one practical place.",
+    metaDescription: "Use Home Cooked to plan meals for the week, assign recipes to meal slots, import planned ingredients into a grocery list, and shop from a shared list.",
+    sections: [
+      {
+        id: "begin-with-the-week-you-have",
+        heading: "Begin with the week you actually have",
+        paragraphs: [
+          "Meal planning works best when it responds to the week in front of you, not an ideal one. Look at the nights you will be home, the ingredients you already have, and the meals that are realistic to cook. Start with a few dependable recipes rather than trying to assign every meal at once.",
+          "Open Meal Plan from the app navigation. The planner can draw from recipes across your cookbooks, so it is useful when your week includes a family favorite from one book and a weeknight recipe from another. Use the previous and next controls to view a different week, or return to the current week when you are ready to plan now.",
+        ],
+      },
+      {
+        id: "assign-meals",
+        heading: "Assign recipes to the days and meal slots that fit",
+        paragraphs: [
+          "Choose a meal slot on a day, then search or browse for the recipe you want. Add only what is helpful: dinner for three busy nights may be enough, while a weekend might deserve breakfast or a larger project. Change or remove a planned recipe as the week changes; the plan is a working tool, not a commitment.",
+          "Prefer recipes with complete ingredient lists when you plan to send them to groceries. A recipe with a useful title and clear ingredients is enough to start; notes, photos, and extra details can make it easier to choose, but they are not required for planning.",
+        ],
+      },
+      {
+        id: "send-ingredients-to-groceries",
+        heading: "Send this week's ingredients to your grocery list",
+        paragraphs: [
+          "When your current week's meals are set, choose Add to grocery list in the meal planner. You can also open Groceries and choose Import from meal plan. Home Cooked reads the ingredients from the planned recipes and adds items that are not already on your list.",
+          "The import reports what it added and avoids adding an identical item already on the list. It is still worth reviewing the result: pantry staples may already be on hand, and separate recipes can need more of the same ingredient than their individual list entries suggest. Add a manual item whenever your plan depends on something that is not part of a recipe.",
+        ],
+      },
+      {
+        id: "keep-the-list-practical",
+        heading: "Keep the grocery list practical at the store",
+        paragraphs: [
+          "The grocery list groups items by familiar store sections, making it easier to work through a shop without constantly rearranging the list. Add one-off needs with the quick-add field, then check items off as they go into the cart. Clear checked items after a trip, or clear the full list only when you are certain you no longer need it.",
+          "The list remains useful when your connection is unreliable. Changes made while offline are kept on your device and sync when you reconnect. Before relying on a shared or newly imported list, give it a moment to sync so the latest changes are reflected.",
+        ],
+      },
+      {
+        id: "adjust-without-starting-over",
+        heading: "Adjust the plan without starting over",
+        paragraphs: [
+          "Dinner plans change. If you swap a meal after importing, update the plan and review the grocery list rather than assuming it has been rebuilt automatically. Remove or check off items you no longer need, then import the current week's plan again when you want to bring in ingredients that are still missing. Existing matching items are skipped.",
+          "Over time, use the planner to notice which recipes genuinely work for your household. A modest plan that produces a calmer grocery trip is more valuable than a perfectly filled calendar you abandon by Wednesday.",
+        ],
+      },
+    ],
+    callout: "Importing from the meal plan adds missing ingredients; it does not replace a quick review of what you already have or what has changed since you planned.",
+    quote: "A good meal plan makes room for real life and still answers the question: what are we eating tonight?",
+  }),
 ];
 
 guides.forEach((item, index) => {

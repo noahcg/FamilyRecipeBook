@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Pencil, Sparkles, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CreateBookForm } from "@/components/book/CreateBookForm";
@@ -86,6 +87,14 @@ export default async function CreateBookPage() {
                 </li>
               ))}
             </ul>
+            <Link
+              href="/guides/how-to-set-up-your-first-home-cooked-book"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+            >
+              Help setting up your cookbook (opens in a new tab)
+            </Link>
           </div>
         </aside>
       </div>

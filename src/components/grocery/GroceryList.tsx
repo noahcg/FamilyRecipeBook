@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import Link from "next/link";
 import { Plus, ShoppingCart, Trash2, X, Check, CalendarDays, WifiOff } from "lucide-react";
 import { clsx } from "clsx";
 import {
@@ -295,6 +296,14 @@ export function GroceryList({ householdId, initialItems, currentWeekStart }: Pro
           <p className="mt-0.5 text-sm text-ink-muted">
             {unchecked.length} item{unchecked.length !== 1 ? "s" : ""} to grab
           </p>
+          <Link
+            href="/guides/how-to-plan-meals-and-build-a-grocery-list-in-home-cooked#send-ingredients-to-groceries"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+          >
+            Build a list from your meal plan (opens in a new tab)
+          </Link>
         </div>
       </div>
 

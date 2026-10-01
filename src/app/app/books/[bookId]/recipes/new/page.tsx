@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
@@ -46,6 +47,14 @@ export default async function NewRecipePage({ params }: Props) {
           <p className="mt-2 text-sm text-ink-muted">
             Capture the recipe and the story behind it.
           </p>
+          <Link
+            href="/guides/how-to-add-your-first-recipe-to-home-cooked"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+          >
+            Help choosing an entry method (opens in a new tab)
+          </Link>
         </div>
 
         <RecipeForm

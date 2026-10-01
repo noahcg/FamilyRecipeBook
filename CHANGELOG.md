@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.21.0] - 2026-10-01
+
+### Contextual guide access
+
+- Added task-specific guide links to cookbook setup, recipe entry, Meal Plan, and Groceries, preserving in-progress work by opening guides in a new tab.
+- Added a persistent Guides & help card to Settings for browsing the complete guide library.
+
+## [0.20.0] - 2026-10-01
+
+### In-app workflow guides
+
+- Added comprehensive, task-specific guides for setting up a first cookbook, adding a first recipe through manual entry or import, and planning meals with a grocery list.
+- Kept the new guides aligned with the existing sharing and roles guide, including clear Home Cooked actions, practical limits, and review guidance.
+
 ## [0.19.1] - 2026-10-01
 
 ### Plan-aware cookbook creation

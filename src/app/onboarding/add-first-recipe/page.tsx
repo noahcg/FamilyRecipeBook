@@ -42,6 +42,14 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
         </p>
       }
     >
+      <Link
+        href="/guides/how-to-add-your-first-recipe-to-home-cooked"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-5 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+      >
+        Help choosing an entry method (opens in a new tab)
+      </Link>
       <RecipeForm
         bookId={bookId}
         categories={categories}

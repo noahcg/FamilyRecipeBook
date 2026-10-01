@@ -303,6 +303,14 @@ export function MealPlanCalendar({
                 </span>
               )}
             </div>
+            <Link
+              href="/guides/how-to-plan-meals-and-build-a-grocery-list-in-home-cooked"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+            >
+              How meal planning works (opens in a new tab)
+            </Link>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button

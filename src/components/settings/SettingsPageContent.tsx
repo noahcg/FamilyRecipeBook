@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, FileText, Lock, Mail, ShieldCheck } from "lucide-react";
+import { BookOpen, ChevronRight, FileText, Lock, Mail, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { BookCategoriesManager } from "@/components/book/BookCategoriesManager";
@@ -231,7 +231,7 @@ export function GlobalSettingsPageContent({
             <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
               The terms you agreed to and how your data is handled.
             </p>
-            <div className="grid gap-3 lg:grid-cols-3">
+            <div className="grid gap-3 lg:grid-cols-2">
               <Link
                 href="/terms"
                 target="_blank"
@@ -281,6 +281,21 @@ export function GlobalSettingsPageContent({
                 </span>
                 <ChevronRight size={18} className="shrink-0 text-ink-soft" />
               </a>
+              <Link
+                href="/guides"
+                className="recipe-card recipe-card--interactive flex items-center gap-3 p-5 transition-colors hover:bg-green-pale/40"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-green-soft/70 text-green-deep">
+                  <BookOpen size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-green-deep">Guides &amp; help</span>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-ink-muted">
+                    Learn your way around Home Cooked.
+                  </span>
+                </span>
+                <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+              </Link>
             </div>
           </section>
 
