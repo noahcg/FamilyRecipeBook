@@ -30,6 +30,7 @@ import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
 import { RecipeShareDialog } from "./RecipeShareDialog";
 import { RecipeOriginalsDrawer } from "./RecipeOriginalsDrawer";
+import { ReportContentButton } from "@/components/moderation/ReportContentButton";
 import { ServingScaler } from "./ServingScaler";
 import { hasInAppHistory } from "@/components/layout/RouteHistoryTracker";
 import {
@@ -477,6 +478,7 @@ export function RecipeDetail({
                       <Paperclip size={15} strokeWidth={1.75} className="text-ink-soft" />
                       Original recipe
                     </button>
+                    <ReportContentButton targetId={recipe.id} compact />
                     {canEdit && (
                       <Link
                         href={`/app/books/${bookId}/recipes/${recipe.id}/edit`}

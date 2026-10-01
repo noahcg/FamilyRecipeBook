@@ -147,6 +147,10 @@ const privacySections = [
         accountability. Some records may also remain for a limited time in
         backups, logs, or where retention is needed for legal or operational
         reasons.
+        Moderation reports use minimal case references and operational notes; they
+        do not copy recipe text or original media into the moderation record. The
+        final retention periods and reporting process remain subject to legal and
+        privacy review.
       </p>
     ),
   },
