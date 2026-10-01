@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.21.1] - 2026-10-01
+
+### Deployment build reliability
+
+- Switched production builds to Next.js's supported webpack fallback, avoiding the Turbopack `next/font` resolution failure seen in Vercel deployments.
+
 ## [0.21.0] - 2026-10-01
 
 ### Contextual guide access
