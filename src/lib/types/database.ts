@@ -75,7 +75,8 @@ export interface Recipe {
   import_source: string | null;
   import_metadata: Record<string, unknown>;
   nutrition: Record<string, unknown>;
-  created_by: string;
+  created_by: string | null;
+  created_by_display_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -103,7 +104,8 @@ export interface RecipeInstruction {
 export interface RecipeStory {
   id: string;
   recipe_id: string;
-  author_id: string;
+  author_id: string | null;
+  author_display_name?: string | null;
   body: string;
   created_at: string;
 }
@@ -200,9 +202,9 @@ export interface GroceryItem {
 export interface RecipeWithRelations extends Recipe {
   ingredients: RecipeIngredient[];
   instructions: RecipeInstruction[];
-  stories: (RecipeStory & { author: Profile })[];
+  stories: (RecipeStory & { author: Profile | null })[];
   reactions: RecipeReaction[];
-  creator: Profile;
+  creator: Profile | null;
 }
 
 export interface BookWithMembers extends RecipeBook {
