@@ -89,7 +89,7 @@ const termsSections = [
     ),
   },
   {
-    title: "Reporting and Content Safety (Policy Placeholder)",
+    title: "Reporting and Content Safety",
     body: (
       <>
         <p>
@@ -100,9 +100,8 @@ const termsSections = [
         <p>
           We may hide content while reviewing a report, remove only the affected
           content, restrict uploads, remove a member from a shared cookbook, or
-          restrict account access for repeated or serious misuse. We intend to
-          provide an appeal path for reversible decisions. This is a product-policy
-          placeholder and is not final legal terms or counsel-approved language.
+          restrict account access for repeated or serious misuse. Where appropriate,
+          we may provide a way to request review of a reversible decision.
         </p>
       </>
     ),
@@ -171,9 +170,7 @@ const termsSections = [
         </p>
         <p>
           Questions about these Terms can be sent to{" "}
-          <a href={supportMailto}>{supportEmail}</a>. This plain-English page is
-          for practical product use and should not be treated as attorney-drafted
-          legal advice.
+          <a href={supportMailto}>{supportEmail}</a>.
         </p>
       </>
     ),

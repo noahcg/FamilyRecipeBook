@@ -157,9 +157,7 @@ const privacySections = [
         backups, logs, or where retention is needed for legal or operational
         reasons.
         Moderation reports use minimal case references and operational notes; they
-        do not copy recipe text or original media into the moderation record. The
-        final retention periods and reporting process remain subject to legal and
-        privacy review.
+        do not copy recipe text or original media into the moderation record.
         If you cancel Plus, we retain billing records and saved content as needed
         to provide the Free plan, process support requests, prevent fraud,
         reconcile payments, and meet legal or accounting obligations.
@@ -196,9 +194,7 @@ const privacySections = [
         We may update this Privacy Policy as the app, providers, or legal
         requirements change. We will update the date above when we do. Questions
         or privacy requests can be sent to{" "}
-        <a href={privacyMailto}>{privacyEmail}</a>. This plain-English page is
-        practical product information and should not be treated as
-        attorney-drafted legal advice.
+        <a href={privacyMailto}>{privacyEmail}</a>.
       </p>
     ),
   },
