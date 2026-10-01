@@ -89,6 +89,25 @@ const termsSections = [
     ),
   },
   {
+    title: "Reporting and Content Safety (Policy Placeholder)",
+    body: (
+      <>
+        <p>
+          You can report content you believe is inappropriate, harassing, invasive
+          of privacy, infringing, or spam. Reports are handled privately; the
+          reported person is not told who submitted a report.
+        </p>
+        <p>
+          We may hide content while reviewing a report, remove only the affected
+          content, restrict uploads, remove a member from a shared cookbook, or
+          restrict account access for repeated or serious misuse. We intend to
+          provide an appeal path for reversible decisions. This is a product-policy
+          placeholder and is not final legal terms or counsel-approved language.
+        </p>
+      </>
+    ),
+  },
+  {
     title: "Payments, If Applicable",
     body: (
       <p>
