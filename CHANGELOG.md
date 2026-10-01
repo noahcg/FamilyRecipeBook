@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.1] - 2026-10-01
+
+### Plan-aware cookbook creation
+
+- Applied the signed-in account’s effective Free or Plus entitlement to the cookbook-creation screen, so Plus members retain the complete app navigation and see Plus-specific sharing guidance.
+- Clarified the Shared cookbook option for Free members with its three-person Family limit and for Plus members with unlimited Family and Contributor invitations.
+
 ## [0.19.0] - 2026-09-29
 
 ### Dedicated bookshelf

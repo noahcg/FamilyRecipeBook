@@ -11,7 +11,7 @@ import { BOOK_COVER_COLORS } from "@/lib/bookCovers";
 import { createBookSchema, type CreateBookInput } from "@/lib/validators/book";
 import { createBook } from "@/lib/actions/books";
 
-export function CreateBookForm() {
+export function CreateBookForm({ plan }: { plan: "free" | "plus" }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitLocked, setSubmitLocked] = useState(false);
@@ -97,7 +97,10 @@ export function CreateBookForm() {
             {
               value: true,
               label: "Shared",
-              description: "Invite up to 3 people with Family access on Free, or more people and Contributors with Plus.",
+              description:
+                plan === "plus"
+                  ? "Invite as many people as you like, with Family or Contributor access."
+                  : "Invite up to 3 people with Family access. Upgrade to Plus for unlimited sharing and Contributors.",
               icon: Users,
             },
           ].map((option) => {
