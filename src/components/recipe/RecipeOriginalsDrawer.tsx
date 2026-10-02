@@ -39,7 +39,7 @@ export function RecipeOriginalsDrawer({ recipeId, canEdit, onClose }: {
     return () => { active = false; };
   }, [recipeId]);
 
-  // Keep short-lived private links usable while the drawer stays open.
+  // Refresh attachment inventory when the user returns to the drawer.
   useEffect(() => {
     if (busy) return;
     let active = true;
@@ -76,7 +76,7 @@ export function RecipeOriginalsDrawer({ recipeId, canEdit, onClose }: {
         const result = await prepareRecipeOriginalUpload(recipeId, file.name, file.size, file.type);
         if (!result.success) throw new Error(result.error);
         const { error: uploadError } = await supabase.storage.from("recipe-originals")
-          .uploadToSignedUrl(result.data.path, result.data.token, file, { contentType: file.type });
+          .upload(result.data.path, file, { contentType: file.type, upsert: false });
         if (uploadError) throw new Error("Could not upload this file. Please try again.");
         saved++;
       }
@@ -171,7 +171,7 @@ export function RecipeOriginalsDrawer({ recipeId, canEdit, onClose }: {
                     <span className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-line-soft bg-paper-soft">
                       <FileText size={22} strokeWidth={1.5} aria-hidden="true" />
                       {/\.(jpe?g|png|webp)$/i.test(original.name) && (
-                        // Private, short-lived URLs are displayed directly without image optimization.
+                        // Authorization is checked on each uncached image request.
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={original.url} alt="" className="absolute inset-0 size-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />
                       )}

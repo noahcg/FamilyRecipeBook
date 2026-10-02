@@ -317,7 +317,7 @@ async function loadPdf(file: File) {
     "pdfjs-dist/build/pdf.worker.mjs",
     import.meta.url
   ).toString();
-  return pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  return pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
 }
 
 async function parsePdf(file: File): Promise<NormalizedImportedRecipe[]> {

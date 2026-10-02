@@ -148,7 +148,8 @@ export async function getAiAllowance(userId: string) {
 
 export async function consumeAiAllowance(userId: string, quantity = 1) {
   const entitlements = await getEffectiveEntitlements(userId);
-  const supabase = await createClient();
+  // The allowance limit is trusted server configuration, never a client RPC argument.
+  const supabase = createServiceClient();
   const { data, error } = await supabase.rpc("consume_ai_allowance", { target_user_id: userId, target_period_start: currentPeriodStart(), allowance_limit: entitlements.maxAiIdeasPerPeriod, amount: quantity }).single();
   const result = data as { allowed?: boolean; remaining?: number } | null;
   if (error || !result?.allowed) throw new EntitlementError("AI_ALLOWANCE_EXHAUSTED", "You’ve used your AI recipe ideas for this allowance period. Upgrade to Plus for a higher allowance.");

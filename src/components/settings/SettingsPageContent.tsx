@@ -1,3 +1,4 @@
+import { mediaUrl } from "@/lib/media";
 import Link from "next/link";
 import { BookOpen, ChevronRight, FileText, Lock, Mail, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -121,7 +122,7 @@ export function GlobalSettingsPageContent({
                   {profile.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={profile.avatar_url}
+                      src={mediaUrl(profile.avatar_url)}
                       alt={profile.full_name ?? "Profile"}
                       className="h-full w-full rounded-full object-cover"
                     />

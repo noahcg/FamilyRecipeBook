@@ -6,12 +6,12 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
-      },
+    // Private and revocable share media must never enter the shared optimizer cache.
+    remotePatterns: [],
+    localPatterns: [
+      { pathname: "/images/**", search: "" },
+      { pathname: "/guide-*.png", search: "" },
+      { pathname: "/guides-bkg.png", search: "" },
     ],
   },
   // Sign-up and the password flows folded into /sign-in. These paths are in

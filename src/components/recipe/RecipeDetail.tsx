@@ -1,5 +1,6 @@
 "use client";
 
+import { mediaUrl } from "@/lib/media";
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -396,7 +397,7 @@ export function RecipeDetail({
           {recipe.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={recipe.photo_url}
+              src={mediaUrl(recipe.photo_url)}
               alt={recipe.title}
               className="h-full w-full object-cover"
             />

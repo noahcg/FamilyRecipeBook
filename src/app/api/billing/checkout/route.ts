@@ -10,7 +10,8 @@ export async function POST() {
     const price = process.env.STRIPE_PLUS_ANNUAL_PRICE_ID;
     if (!price) return NextResponse.json({ error: "Plus checkout is not configured yet." }, { status: 503 });
     const admin = createServiceClient();
-    const { data: billing } = await admin.from("billing_accounts").select("*").eq("user_id", user.id).maybeSingle();
+    const { data: billing, error: billingError } = await admin.from("billing_accounts").select("*").eq("user_id", user.id).maybeSingle();
+    if (billingError) throw new Error("Could not read billing account");
     if (billing?.grandfathered_plus) {
       return NextResponse.json({ error: "Your account already has lifetime Plus access." }, { status: 409 });
     }
@@ -20,9 +21,10 @@ export async function POST() {
     const stripe = getStripe();
     let customerId = billing?.stripe_customer_id ?? null;
     if (!customerId) {
-      const customer = await stripe.customers.create({ email: user.email ?? undefined, metadata: { home_cooked_user_id: user.id } });
+      const customer = await stripe.customers.create({ email: user.email ?? undefined, metadata: { home_cooked_user_id: user.id } }, { idempotencyKey: `home-cooked-customer-${user.id}` });
       customerId = customer.id;
-      await admin.from("billing_accounts").upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
+      const { error: customerError } = await admin.from("billing_accounts").upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
+      if (customerError) throw new Error("Could not save billing customer mapping");
     }
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

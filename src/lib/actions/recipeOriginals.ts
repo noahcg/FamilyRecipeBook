@@ -36,20 +36,19 @@ export async function listRecipeOriginals(recipeId: string): Promise<ActionResul
   const { data: files, error } = await listFiles(supabase, recipeId);
   if (error) return { success: false, error: "Couldn't load original recipes. Please try again." };
   if (!files.length) return { success: true, data: [] };
-  const { data, error: signError } = await supabase.storage.from(BUCKET).createSignedUrls(files.map((file) => `${recipeId}/${file.name}`), 300);
-  if (signError || !data || data.some((file) => file.error || !file.signedUrl)) return { success: false, error: "Couldn't open original recipes. Please try again." };
-  return { success: true, data: data.map((file, i) => ({ path: `${recipeId}/${files[i].name}`, name: files[i].name.slice(37), url: file.signedUrl! })) };
+  return { success: true, data: files.map((file) => {
+    const path = `${recipeId}/${file.name}`;
+    return { path, name: file.name.slice(37), url: `/api/media/recipe-originals/${path.split("/").map(encodeURIComponent).join("/")}` };
+  }) };
 }
 
-export async function prepareRecipeOriginalUpload(recipeId: string, name: string, size: number, type: string): Promise<ActionResult<{ path: string; token: string }>> {
+export async function prepareRecipeOriginalUpload(recipeId: string, name: string, size: number, type: string): Promise<ActionResult<{ path: string }>> {
   const parsed = recipeOriginalUploadSchema.safeParse({ recipeId, name, size, type });
   if (!parsed.success) return { success: false, error: parsed.error.issues[0].message };
   const supabase = await recipeAccess(recipeId, true);
   if (!supabase) return { success: false, error: "You don't have permission to attach originals to this recipe." };
   const path = `${recipeId}/${crypto.randomUUID()}_${originalFileName(parsed.data.name, type)}`;
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path);
-  if (error || !data) return { success: false, error: "Couldn't prepare the upload. Please try again." };
-  return { success: true, data: { path, token: data.token } };
+  return { success: true, data: { path } };
 }
 
 export async function removeRecipeOriginal(recipeId: string, path: string): Promise<ActionResult> {

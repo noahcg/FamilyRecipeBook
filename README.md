@@ -82,11 +82,13 @@ While the hook is disabled, Supabase falls back to its own built-in templates, w
 
 ### 4. Run database migrations
 
-Apply the SQL migrations in `supabase/migrations/` to your project via the Supabase dashboard SQL editor or the Supabase CLI:
+For a **new empty project**, prepare a uniquely versioned copy of the complete migration chain:
 
 ```bash
-npx supabase db push
+npm run migrations:prepare
 ```
+
+Use the generated SQL directory in an isolated Supabase CLI project. Existing environments require [migration history reconciliation](docs/migration-history.md); the committed historical files contain duplicate numeric prefixes and must not be blindly pushed. Follow [the launch runbook](LAUNCH_RUNBOOK.md) for staging setup, verification, and production promotion.
 
 ### 5. Start the dev server
 
@@ -95,6 +97,8 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+Run `npm run check` for local version, lint, type, test, and build gates. After building, `npm run test:browser` checks desktop Chromium and mobile WebKit. CI also audits production dependencies. These local gates do not replace staging integration tests or a backup restoration rehearsal.
 
 ## Project structure
 

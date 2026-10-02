@@ -1,5 +1,6 @@
 "use client";
 
+import { mediaUrl } from "@/lib/media";
 import { use, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -293,6 +294,7 @@ export default function RecipesPage({ params }: Props) {
     const id = chapterId(category);
     // Let the browser own the hash history entry. Manually calling pushState or
     // replaceState here prevents Next from restoring the list route on Back.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Native hash history preserves chapter Back navigation.
     if (window.location.hash !== `#${id}`) window.location.assign(`#${id}`);
 
     document.getElementById(id)?.scrollIntoView({
@@ -634,7 +636,7 @@ export default function RecipesPage({ params }: Props) {
                         {newestRecipe.photo_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={newestRecipe.photo_url}
+                            src={mediaUrl(newestRecipe.photo_url)}
                             alt={newestRecipe.title}
                             className="h-full w-full object-cover"
                           />

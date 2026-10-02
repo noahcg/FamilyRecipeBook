@@ -1,3 +1,4 @@
+import { mediaUrl } from "@/lib/media";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -384,7 +385,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                   <div className="relative h-44 max-h-[240px] overflow-hidden bg-green-pale min-[425px]:h-48 sm:h-60 lg:h-auto lg:max-h-none lg:min-h-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={featuredImage}
+                      src={mediaUrl(featuredImage)}
                       alt=""
                       className="h-full w-full object-cover"
                       aria-hidden="true"
@@ -429,7 +430,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale">
                         {latestRecipe?.photo_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={latestRecipe.photo_url} alt="" className="h-full w-full object-cover" aria-hidden="true" />
+                          <img src={mediaUrl(latestRecipe.photo_url)} alt="" className="h-full w-full object-cover" aria-hidden="true" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center">
                             <BookOpenFallback />

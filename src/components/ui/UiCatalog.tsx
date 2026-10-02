@@ -401,7 +401,7 @@ export function UiCatalog() {
           id="surfaces"
           eyebrow="05 · Content surfaces"
           title="Warm containers, intentional emphasis."
-          description="All Card, SectionHeader, RecipeCard, and RecipeStoryNote appearances are shown here. Interactive surfaces should look and behave interactive; static cards should remain quiet."
+          description="All Card, SectionHeader, RecipeCard, and RecipeStoryNote appearances are shown here. RecipeCard uploaded photos use the authorized media route; these examples use local demonstration images. Interactive surfaces should look and behave interactive; static cards should remain quiet."
         >
           <div className="space-y-4">
             <div className="grid gap-4 lg:grid-cols-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import { mediaUrl } from "@/lib/media";
 import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1124,7 +1125,7 @@ export function RecipeForm({
               {photoPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={photoPreview}
+                  src={mediaUrl(photoPreview)}
                   alt="Recipe photo preview"
                   className="recipe-image w-full h-full"
                 />

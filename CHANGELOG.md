@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.22.0] - 2026-10-02
+
+### Launch security and reliability
+
+- Updated vulnerable dependencies and disabled PDF JavaScript evaluation.
+- Made uploaded family media private with membership-aware, uncached image delivery, safe public-share handling, upload resizing, and Storage ownership/type/size protections.
+- Added public-link revocation and replaced attachment download/upload capabilities with membership-checked requests.
+- Made recipe and child-list saves transactional so failed creates, edits, or shared saves cannot leave partial recipes.
+- Made Stripe webhook effects and acknowledgements atomic, recoverable on retry, and resistant to stale subscription and payment events.
+- Closed unauthorized household enrollment and client-controlled AI quotas; fixed moderation guards on ordinary recipe/profile updates.
+- Added full migration-chain permission tests, image/billing regression tests, desktop and mobile WebKit smoke checks, and CI release gates.
+- Added environment preflight, migration history reconciliation tooling, and staging/backup/rollback procedures. Deployment and real-device verification remain required before launch.
+
 ## [0.21.1] - 2026-10-01
 
 ### Deployment build reliability
