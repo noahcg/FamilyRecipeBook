@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { isAdminEmail, requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createMemberInviteEmail } from "@/lib/email/memberInviteTemplate";
+import { createAccountDeletionEmail } from "@/lib/email/accountDeletionTemplate";
 import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEmail";
 import { createAccountRecipeArchive } from "@/lib/accountRecipeArchive";
 import type { ActionResult } from "@/lib/types";
@@ -374,11 +375,14 @@ export async function deleteUser(input: { userId: string; ownershipTransfers?: O
   try {
     archive = await createAccountRecipeArchive(target.service, parsed.data.userId, target.email, privateBookIds);
     await target.service.from("account_deletions").update({ archive_status: "created" }).eq("id", deletion.id);
+    const email = createAccountDeletionEmail({
+      recipeCount: archive.recipeCount,
+      archiveFilename: archive.filename,
+      logoUrl: getDefaultLogoUrl(),
+    });
     await sendEmail({
       to: target.email,
-      subject: "Your Home Cooked account and recipe archive",
-      html: `<p>An administrator has initiated permanent deletion of your Home Cooked account.</p><p>Your compact recipe archive is attached. It contains ${archive.recipeCount} recipe${archive.recipeCount === 1 ? "" : "s"} and preserves the recipe fields, ingredients, instructions, stories, and cookbook metadata that will be removed.</p><p>This archive delivery is a required safeguard: deletion will not begin unless this email is sent successfully. The attachment is a gzip-compressed JSON file (<code>.json.gz</code>). Keep it somewhere safe before extracting it with standard archive tools.</p>`,
-      text: `An administrator has initiated permanent deletion of your Home Cooked account. Your compact recipe archive is attached. It contains ${archive.recipeCount} recipe${archive.recipeCount === 1 ? "" : "s"} and preserves the recipe fields, ingredients, instructions, stories, and cookbook metadata that will be removed. This archive delivery is a required safeguard: deletion will not begin unless this email is sent successfully. The attachment is a gzip-compressed JSON file (.json.gz). Keep it somewhere safe before extracting it with standard archive tools.`,
+      ...email,
       attachments: [{
         filename: archive.filename,
         content: archive.content,

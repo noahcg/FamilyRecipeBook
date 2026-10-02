@@ -76,7 +76,7 @@ The Send Email hook is an outbound webhook from Supabase's servers, so it can ne
 
 If step 1 errors, `&create=1` mints the user and a code without sending anything; `/sign-in?email=you@example.com&sent=1` then jumps straight to the code step.
 
-To see the email templates themselves, open `/dev/email-preview/sign-in-code` and `/dev/email-preview/signup-welcome` — they render the real templates with no Supabase involved. Testing genuine delivery of our templates means using a deployed environment, or accepting the production-email tradeoff of a temporary tunnel plus a matching `NEXT_PUBLIC_SITE_URL`.
+To see the email templates themselves, open `/dev/email-preview/sign-in-code`, `/dev/email-preview/signup-welcome`, and `/dev/email-preview/account-deletion` — they render the real templates with no Supabase involved. The account-deletion preview uses sample archive details and sends nothing. Testing genuine delivery of auth templates means using a deployed environment, or accepting the production-email tradeoff of a temporary tunnel plus a matching `NEXT_PUBLIC_SITE_URL`.
 
 While the hook is disabled, Supabase falls back to its own built-in templates, which are link-only and contain no 6-digit code.
 

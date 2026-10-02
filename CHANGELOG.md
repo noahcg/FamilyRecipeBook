@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.1] - 2026-10-02
+
+### Account email consistency
+
+- Branded the account-deletion archive email to match authentication and invitation emails, with clear archive contents, format, and exclusions.
+- Added a development-only preview of the account-deletion email.
+
 ## [0.22.0] - 2026-10-02
 
 ### Launch security and reliability
