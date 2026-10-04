@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
+import { guides } from "../../src/lib/guides/editorial";
 
 // Each route gets its own document: unloading a page during Link prefetch can
 // surface WebKit's canceled-fetch access-control error as a pageerror.
-for (const path of ["/", "/pricing", "/privacy", "/terms", "/guides"]) {
+for (const path of ["/", "/pricing", "/our-story", "/privacy", "/terms", "/guides", "/sign-in", ...guides.map(({ slug }) => `/guides/${slug}`)]) {
   test(`public page ${path} renders without crashes or horizontal overflow`, async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));

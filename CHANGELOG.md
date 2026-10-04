@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.22.3] - 2026-10-04
+
+### Release verification
+
+- Added a repeatable live synthetic smoke test for authentication, cookbook roles, household access, invitations, recipes, photos, deployed routes, and verified cleanup.
+- Expanded browser coverage to every public guide, Our Story, and sign-in validation.
+- Recorded the 1.0 release checks and the production migration and media cutover findings.
+
 ## [0.22.2] - 2026-10-04
 
 ### Public page image loading
