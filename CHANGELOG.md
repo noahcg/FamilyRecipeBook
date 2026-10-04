@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.22.2] - 2026-10-04
+
+### Public page image loading
+
+- Fixed Our Story and Pricing page crashes by allowing their public background images in the image optimizer configuration.
+
 ## [0.22.1] - 2026-10-02
 
 ### Account email consistency

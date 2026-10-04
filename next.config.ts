@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
       { pathname: "/images/**", search: "" },
       { pathname: "/guide-*.png", search: "" },
       { pathname: "/guides-bkg.png", search: "" },
+      { pathname: "/our-story-bkg.png", search: "" },
+      { pathname: "/pricing-bkg.png", search: "" },
     ],
   },
   // Sign-up and the password flows folded into /sign-in. These paths are in
