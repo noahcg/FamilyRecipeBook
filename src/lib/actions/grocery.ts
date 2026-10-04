@@ -10,6 +10,7 @@ import {
   parseQuantity,
 } from "@/lib/grocery/packaging";
 import type { ActionResult, GroceryItem, NearbyStore } from "@/lib/types";
+import { assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
 
 // ─── Category inference ───────────────────────────────────────
 // Isolated so it can be swapped for an AI call later without
@@ -60,6 +61,7 @@ function sortWeekdays(names: Iterable<string>): string[] {
 
 export async function getGroceryDayLabelPref(): Promise<boolean> {
   const user = await requireUser();
+  await assertFeatureAccess(user.id, "grocery");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("user_settings")
@@ -75,6 +77,7 @@ export async function setGroceryDayLabelPref(
   enabled: boolean
 ): Promise<ActionResult> {
   const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
   const { error } = await supabase
     .from("user_settings")
@@ -89,6 +92,8 @@ export async function setGroceryDayLabelPref(
 // ─── Queries ─────────────────────────────────────────────────
 
 export async function getGroceryItems(householdId: string): Promise<GroceryItem[]> {
+  const user = await requireUser();
+  await assertFeatureAccess(user.id, "grocery");
   const supabase = await createClient();
 
   const { data } = await supabase
@@ -110,6 +115,7 @@ export async function addGroceryItem(
   item: { name: string; quantity?: string; unit?: string; notes?: string; category?: string }
 ): Promise<ActionResult<GroceryItem>> {
   const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -139,6 +145,7 @@ export async function toggleGroceryItem(
   checked: boolean
 ): Promise<ActionResult> {
   const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -159,6 +166,8 @@ export async function deleteGroceryItem(
   householdId: string,
   itemId: string
 ): Promise<ActionResult> {
+  const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -172,6 +181,8 @@ export async function deleteGroceryItem(
 }
 
 export async function clearCheckedItems(householdId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -185,6 +196,8 @@ export async function clearCheckedItems(householdId: string): Promise<ActionResu
 }
 
 export async function clearAllItems(householdId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -201,6 +214,7 @@ export async function addRecipeIngredientsToGrocery(
   options: { force?: boolean } = {}
 ): Promise<ActionResult<{ added: number; updated: number; skipped: number; needsConfirmation?: boolean }>> {
   const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
 
   const { data: membership } = await supabase
@@ -344,6 +358,7 @@ export async function importFromMealPlan(
   weekStart: string
 ): Promise<ActionResult<{ added: number; skipped: number }>> {
   const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "grocery"); } catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   const supabase = await createClient();
 
   // Get this week's planned recipes

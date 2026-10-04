@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { redirect } from "next/navigation";
 import { AIRecipeIdeaPanel } from "@/components/recipe/AIRecipeIdeaPanel";
 import { getRecipeAssignmentOptions } from "@/lib/actions/recipes";
 import { canContribute } from "@/lib/permissions";
@@ -13,6 +14,7 @@ export default async function RecipeIdeasPage({ params, searchParams }: Props) {
   const { prompt, surprise } = await searchParams;
   const bookOptions = await getRecipeAssignmentOptions();
   const contributableBooks = bookOptions.filter((book) => canContribute(book.role));
+  if (!contributableBooks.some((book) => book.id === bookId)) redirect("/app/ideas");
 
   return (
     <AppShell bookId={bookId}>

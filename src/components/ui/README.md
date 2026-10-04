@@ -57,3 +57,7 @@ When asked to create UI in this project, follow this contract:
 ## Validation
 
 After a library change, run `npm run lint`, `npm run build`, and inspect `/dev/ui` at mobile and desktop widths. Test dialogs and drawers with keyboard navigation, Escape, and a narrow viewport.
+
+## Private media
+
+`RecipeCard` resolves uploaded Supabase image identifiers through the uncached authorized media route. Keep stable Storage URLs in recipe records; use `mediaUrl` at image display and fetch boundaries. Public recipe pages pass their share ID so only the deliberately shared photo can be served. Never use Next Image optimization or a shared CDN cache for private media.

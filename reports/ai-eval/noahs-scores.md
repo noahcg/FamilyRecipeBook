@@ -20,4 +20,4 @@ generation-vegan-lentil
 
 Model A
 
-score: 
+score:

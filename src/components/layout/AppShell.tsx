@@ -20,7 +20,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { BrandLockup } from "@/components/ui/BrandLockup";
-import { CookbookNavigator } from "@/components/layout/CookbookNavigator";
 import { getVisibleFocusable } from "@/lib/a11y";
 import { useModalFocus } from "@/lib/hooks/useModalFocus";
 import { APP_VERSION } from "@/lib/version";
@@ -64,7 +63,7 @@ interface NavItem {
 // Account-level navigation — the same everywhere, never tied to a cookbook.
 const ACCOUNT_NAV: NavItem[] = [
   { id: "home", href: "/app", icon: Home, label: "Home", exact: true },
-  { id: "recipes", href: "/app/recipes", icon: UtensilsCrossed, label: "My Recipes" },
+  { id: "recipes", href: "/app/recipes", icon: UtensilsCrossed, label: "All Recipes" },
   { id: "ideas", href: "/app/ideas", icon: Sparkles, label: "Ideas" },
   { id: "meal-plan", href: "/app/meal-plan", icon: CalendarDays, label: "Meal Plan" },
   { id: "groceries", href: "/app/groceries", icon: ShoppingCart, label: "Groceries" },
@@ -122,17 +121,18 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
   const sideDrawerRef = useRef<HTMLElement>(null);
   const sideDrawerTitleId = useId();
   useModalFocus({ containerRef: sideDrawerRef, open: mobileSideDrawer?.isOpen ?? false });
-  const [cookbooksMobileOpen, setCookbooksMobileOpen] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
-  const { isAdmin } = useAccount();
+  const { isAdmin, plan } = useAccount();
   const { userId } = useUser();
-  // The active cookbook on book routes comes straight from the URL.
   const navPathname = pathnameReady ? pathname : "";
-  const currentBookId = navPathname.match(/^\/app\/books\/([^/]+)/)?.[1] ?? null;
   const offlineActive = isActivePath(navPathname, "/app/offline");
-  const navItems = offlineCount > 0 || offlineActive ? [...ACCOUNT_NAV, OFFLINE_NAV] : ACCOUNT_NAV;
+  const planNav = plan === "plus"
+    ? ACCOUNT_NAV
+    : ACCOUNT_NAV.filter((item) => item.id !== "recipes" && item.id !== "meal-plan" && item.id !== "groceries");
+  const navItems = offlineCount > 0 || offlineActive ? [...planNav, OFFLINE_NAV] : planNav;
 
   const settingsActive = isActivePath(navPathname, "/app/settings");
+  const bookshelfActive = isActivePath(navPathname, "/app/bookshelf", true);
   const activeMobileId = navItems.find((item) => isActivePath(navPathname, item.href, item.exact))?.id;
 
   useEffect(() => {
@@ -196,11 +196,15 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
             </div>
 
             <div className="mt-2.5 border-y border-line-soft py-2.5">
-              <CookbookNavigator
-                currentBookId={currentBookId}
-                mobileOpen={cookbooksMobileOpen}
-                onMobileOpenChange={setCookbooksMobileOpen}
-              />
+              <Link
+                href="/app/bookshelf"
+                aria-current={bookshelfActive ? "page" : undefined}
+                data-guide-anchor="nav-bookshelf"
+                className={railItemClass(bookshelfActive)}
+              >
+                <Library size={18} strokeWidth={bookshelfActive ? 2.25 : 1.75} />
+                <span className="min-w-0 flex-1 truncate">Bookshelf</span>
+              </Link>
             </div>
           </nav>
         )}
@@ -344,17 +348,21 @@ export function AppShell({ children, lockNav = false, mobileSideDrawer }: AppShe
             })}
 
           {!lockNav && (
-            <button
-              type="button"
-              onClick={() => setCookbooksMobileOpen(true)}
+            <Link
+              href="/app/bookshelf"
               aria-label="Bookshelf"
-              aria-expanded={cookbooksMobileOpen}
+              aria-current={bookshelfActive ? "page" : undefined}
               data-guide-anchor="nav-bookshelf"
-              className="relative flex h-full min-w-[64px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 text-ink-inverse transition-[background-color,color,transform] duration-150 active:translate-y-px hover:bg-green-deep hover:text-ink-inverse focus-visible:outline-none"
+              className={clsx(
+                "relative flex h-full shrink-0 flex-col items-center justify-center gap-0.5 rounded-[24px] px-2 transition-[background-color,color,transform] duration-150 active:translate-y-px focus-visible:outline-none",
+                bookshelfActive
+                  ? "min-w-[92px] bg-white-soft text-green-deep shadow-[inset_0_1px_0_rgba(255,255,255,0.72),0_4px_12px_rgba(14,35,25,0.20)]"
+                  : "min-w-[64px] text-ink-inverse hover:bg-green-deep hover:text-ink-inverse"
+              )}
             >
-              <Library size={19} strokeWidth={1.75} />
+              <Library size={19} strokeWidth={bookshelfActive ? 2.2 : 1.75} />
               <span className="max-w-[84px] truncate text-[10px] font-bold leading-none">Bookshelf</span>
-            </button>
+            </Link>
           )}
 
           {!lockNav && (

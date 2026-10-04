@@ -1,5 +1,6 @@
 "use client";
 
+import { mediaUrl } from "@/lib/media";
 import { useState, useTransition, useCallback, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
@@ -303,6 +304,14 @@ export function MealPlanCalendar({
                 </span>
               )}
             </div>
+            <Link
+              href="/guides/how-to-plan-meals-and-build-a-grocery-list-in-home-cooked"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+            >
+              How meal planning works (opens in a new tab)
+            </Link>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
@@ -520,7 +529,7 @@ export function MealPlanCalendar({
                       {recipe.photo_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={recipe.photo_url}
+                          src={mediaUrl(recipe.photo_url)}
                           alt=""
                           className="h-10 w-10 shrink-0 rounded-lg object-cover"
                         />
@@ -598,7 +607,7 @@ function SlotCell({ meal, isToday, onAdd, onView, onRemove, isPending }: SlotCel
           {meal.recipe.photo_url && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={meal.recipe.photo_url}
+              src={mediaUrl(meal.recipe.photo_url)}
               alt=""
               className="mb-1.5 h-12 w-full rounded-lg object-cover"
             />
@@ -660,7 +669,7 @@ function MealDetail({ bookId, meal, detail, loading, onRemove, isPending }: Meal
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={photo}
+            src={mediaUrl(photo)}
             alt=""
             className="h-40 w-full rounded-xl object-cover"
           />

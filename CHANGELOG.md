@@ -1,5 +1,145 @@
 # Changelog
 
+## [0.22.3] - 2026-10-04
+
+### Release verification
+
+- Added a repeatable live synthetic smoke test for authentication, cookbook roles, household access, invitations, recipes, photos, deployed routes, and verified cleanup.
+- Expanded browser coverage to every public guide, Our Story, and sign-in validation.
+- Recorded the 1.0 release checks and the production migration and media cutover findings.
+
+## [0.22.2] - 2026-10-04
+
+### Public page image loading
+
+- Fixed Our Story and Pricing page crashes by allowing their public background images in the image optimizer configuration.
+
+## [0.22.1] - 2026-10-02
+
+### Account email consistency
+
+- Branded the account-deletion archive email to match authentication and invitation emails, with clear archive contents, format, and exclusions.
+- Added a development-only preview of the account-deletion email.
+
+## [0.22.0] - 2026-10-02
+
+### Launch security and reliability
+
+- Updated vulnerable dependencies and disabled PDF JavaScript evaluation.
+- Made uploaded family media private with membership-aware, uncached image delivery, safe public-share handling, upload resizing, and Storage ownership/type/size protections.
+- Added public-link revocation and replaced attachment download/upload capabilities with membership-checked requests.
+- Made recipe and child-list saves transactional so failed creates, edits, or shared saves cannot leave partial recipes.
+- Made Stripe webhook effects and acknowledgements atomic, recoverable on retry, and resistant to stale subscription and payment events.
+- Closed unauthorized household enrollment and client-controlled AI quotas; fixed moderation guards on ordinary recipe/profile updates.
+- Added full migration-chain permission tests, image/billing regression tests, desktop and mobile WebKit smoke checks, and CI release gates.
+- Added environment preflight, migration history reconciliation tooling, and staging/backup/rollback procedures. Deployment and real-device verification remain required before launch.
+
+## [0.21.1] - 2026-10-01
+
+### Deployment build reliability
+
+- Switched production builds to Next.js's supported webpack fallback, avoiding the Turbopack `next/font` resolution failure seen in Vercel deployments.
+
+## [0.21.0] - 2026-10-01
+
+### Contextual guide access
+
+- Added task-specific guide links to cookbook setup, recipe entry, Meal Plan, and Groceries, preserving in-progress work by opening guides in a new tab.
+- Added a persistent Guides & help card to Settings for browsing the complete guide library.
+
+## [0.20.0] - 2026-10-01
+
+### In-app workflow guides
+
+- Added comprehensive, task-specific guides for setting up a first cookbook, adding a first recipe through manual entry or import, and planning meals with a grocery list.
+- Kept the new guides aligned with the existing sharing and roles guide, including clear Home Cooked actions, practical limits, and review guidance.
+
+## [0.19.1] - 2026-10-01
+
+### Plan-aware cookbook creation
+
+- Applied the signed-in account’s effective Free or Plus entitlement to the cookbook-creation screen, so Plus members retain the complete app navigation and see Plus-specific sharing guidance.
+- Clarified the Shared cookbook option for Free members with its three-person Family limit and for Plus members with unlimited Family and Contributor invitations.
+
+## [0.19.0] - 2026-09-29
+
+### Dedicated bookshelf
+
+- Replaced the Bookshelf navigator drawer with a dedicated, searchable shelf page that presents each cookbook as an accessible illustrated book linked to its existing contents.
+- Added responsive CSS shelves, dynamic cookbook and recipe totals, and empty and no-search-result states while retaining the existing cookbook creation and plan-limit flows.
+
+## [0.18.1] - 2026-09-29
+
+### Empty cookbook controls
+
+- Kept cookbook member management and settings visible before the first recipe is added.
+- Loaded keeper permissions and member totals through the authenticated server path so an empty cookbook reliably shows its setup actions.
+
+## [0.18.0] - 2026-09-29
+
+### Cookbook-first recipe storage
+
+- Made the owned cookbook the visible recipe home for Free accounts, with a 50-recipe cookbook allowance and Bookshelf access on both plans.
+- Reserved the cross-cookbook All Recipes view for Plus and made cookbook destinations explicit in manual and generated-recipe save flows.
+- Moved recipe capacity and Contributor access to the destination cookbook owner's entitlement, so Plus owners sponsor Free Contributors without expanding those Contributors' personal Free accounts.
+- Made existing Contributors read-only when a cookbook owner downgrades and added database coverage for sponsored contributions, Free capacity, and downgrade behavior.
+
+## [0.17.0] - 2026-09-29
+
+### Free cookbook sharing
+
+- Free cookbook owners can invite up to three other people with Family access; active invitations reserve spots.
+- Plus retains unlimited sharing and Contributor invitations. Owner entitlements and limits are enforced in the database, including atomic invitation acceptance.
+- Added sharing allowance and upgrade guidance to member screens, and refreshed pricing, guides, billing, onboarding, settings, and email copy.
+- Preserved existing memberships on downgrade; new invitations follow Free limits.
+- Recorded wording and local review locations in `reports/2026-09-29-free-sharing-copy-review.md`.
+
+## [0.16.2] - 2026-09-29
+
+### Sharing and member roles guide
+
+- Added a guide to Keeper, Contributor, and Family roles, cookbook sharing, invitations, and managing access.
+- Linked the guide from Members and the invitation form, including on mobile.
+- Clarified that Contributors edit their own recipes and removed an unsupported promise of role changes from invitation help.
+
+## [0.16.1] - 2026-09-28
+
+### Conversational public copy
+
+- Used natural contractions in Our Story and the public Guides while preserving their meaning and structure.
+
+## [0.16.0] - 2026-09-28
+
+### Home Cooked Guides
+
+- Added a public, accessible Guides index and ten substantive editorial guide pages for collecting, organizing, preserving, digitizing, and sharing recipes.
+- Added reusable Guide content data, detail-template modules, guide metadata, related links, table of contents, and real pricing/sign-up calls to action.
+- Unified Guides, Pricing, and Our Story around a shared image-backed editorial masthead and replaced card-based public-page layouts with open spreads, dividers, and typographic hierarchy.
+- Rewrote all ten Guides as long-form editorial articles and replaced the mandatory numbered-step presentation with narrative sections and optional supporting lists.
+- Updated the advertised Plus annual price and Stripe setup documentation to $24.99.
+
+## [0.15.2] - 2026-09-24
+
+### Free cookbook creation fix
+
+- Fixed the Free-limit database trigger to use `owner_id` for cookbooks and `created_by` for recipes.
+- Added migration 027 to repair already-migrated databases.
+
+## [0.15.1] - 2026-09-23
+
+### Billing policy disclosures
+
+- Updated the Terms of Service for the Plus subscription, annual renewal, cancellation, Stripe processing, and retained content after downgrade.
+- Updated the Privacy Policy for Stripe billing identifiers, payment processing, and billing-record retention.
+
+## [0.15.0] - 2026-09-23
+
+### Free and Plus billing infrastructure
+
+- Added centralized Free/Plus entitlements, safe limits, and atomic AI allowances.
+- Added Stripe Checkout, Billing Portal, signed idempotent webhook sync, and billing settings.
+- Added database migration 026 for billing state, webhook events, usage, and insert-boundary limits.
+
 ## [0.14.2] - 2026-09-28
 
 ### AI model registry and evaluation
@@ -191,3 +331,8 @@
 
 ### Copy
 - Changed "Add someone to this book" → **"Share this book with someone"** (page heading, onboarding title, and aria-label).
+# 0.15.0
+
+- Added centralized Free/Plus entitlements, safe limits, and atomic AI allowances.
+- Added Stripe Checkout, Billing Portal, signed idempotent webhook sync, and billing settings.
+- Added database migration 026 for billing state, webhook events, usage, and insert-boundary limits.

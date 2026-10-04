@@ -93,7 +93,7 @@ export function createMemberInviteEmail({
                 <div style="margin-top:30px;font-size:12px;line-height:1.4;letter-spacing:0.16em;text-transform:uppercase;color:#8D5E34;font-weight:700;">You have been invited</div>
                 <h1 style="margin:12px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:44px;line-height:0.98;color:#2F4F3F;font-weight:700;">Pull up a chair.</h1>
                 <p style="margin:20px 0 0;max-width:520px;font-size:17px;line-height:1.65;color:#756F64;">
-                  ${safeInviterName} invited you to join <strong style="color:#243128;">${safeCookbookTitle}</strong> as a ${safeRoleLabel}. Open the cookbook to save recipes, share kitchen notes, and keep the good meals easy to find.
+                  ${safeInviterName} invited you to join <strong style="color:#243128;">${safeCookbookTitle}</strong> as a ${safeRoleLabel}. Open the cookbook to browse recipes, react, and add notes and memories.
                 </p>
               </td>
             </tr>
@@ -136,7 +136,7 @@ export function createMemberInviteEmail({
   const text = [
     `${plainInviterName} invited you to ${cookbookTitle} on Home Cooked.`,
     "",
-    `Join as a ${roleLabel} to save recipes, share kitchen notes, and keep the good meals easy to find.`,
+    `Join as a ${roleLabel} to browse recipes, react, and add notes and memories.`,
     "",
     `Accept invitation with this secure invitation link: ${inviteUrl}`,
     "",

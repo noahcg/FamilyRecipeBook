@@ -191,4 +191,3 @@ end;
 $$;
 create trigger protect_cookbook_sharing_identity before update on public.recipe_books
   for each row execute function public.protect_cookbook_sharing_identity();
-

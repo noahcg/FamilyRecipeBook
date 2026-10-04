@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, ChevronDown, Loader2, ShieldOff, ShieldCheck, Trash2 } from "lucide-react";
 import { deleteUser, reinstateUser, suspendUser, type AccountDeletionImpact, type AdminSuspendDuration } from "@/lib/actions/admin";
 
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function UserAccountControls({ userId, email, isSuspended, canManage, deletionImpact }: Props) {
+  const router = useRouter();
   const [duration, setDuration] = useState<AdminSuspendDuration>("168h");
   const [error, setError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -164,7 +166,7 @@ export function UserAccountControls({ userId, email, isSuspended, canManage, del
               onClick={() => run(() => deleteUser({
                 userId,
                 ownershipTransfers: deletionImpact.sharedCookbooks.map((book) => ({ bookId: book.id, newOwnerId: ownershipTransfers[book.id] ?? "" })),
-              }), () => window.location.assign("/app/admin"))}
+              }), () => { router.replace("/app/admin"); router.refresh(); })}
               className="h-10 rounded-full bg-red-700 px-4 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending ? "Deleting…" : "Permanently delete"}

@@ -36,8 +36,8 @@ export function NewBookBanner({ bookId }: Props) {
             Your cookbook is ready
           </p>
           <p className="mt-0.5 max-w-prose text-xs leading-relaxed text-ink-muted">
-            It&rsquo;s private to you. Invite family to add recipes together, or
-            keep it to yourself — change sharing anytime in settings.
+            Invite up to 3 people to view, react, and add memories on Free.
+            Turn on sharing in settings when you&rsquo;re ready.
           </p>
           <div className="mt-2.5 flex flex-wrap gap-2">
             <Link href={`/app/books/${bookId}/members/add`}>

@@ -1,3 +1,4 @@
+import { mediaUrl } from "@/lib/media";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +18,8 @@ import { NewBookBanner } from "@/components/book/NewBookBanner";
 import { Button } from "@/components/ui";
 import { getBookPageData } from "@/lib/actions/books";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
+import { requireUser } from "@/lib/auth";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 import type { Recipe } from "@/lib/types";
 
 interface Props {
@@ -168,15 +171,18 @@ function SectionHeader({
 
 export default async function BookHomePage({ params, searchParams }: Props) {
   const [{ bookId }, { created }] = await Promise.all([params, searchParams]);
-  const [data, householdId] = await Promise.all([
+  const [data, householdId, user] = await Promise.all([
     getBookPageData(bookId),
     getHouseholdId(),
+    requireUser(),
   ]);
   if (!data) notFound();
 
+  const billing = await getEffectiveEntitlements(user.id);
+
   const justCreated = created === "1";
 
-  const { book, recent, favorites } = data;
+  const { book, recent, favorites, canAddRecipes } = data;
   const latestRecipe = (recent as HomeRecipe[])[0] ?? null;
   const hasRecipes = latestRecipe !== null;
   const featuredTitle = latestRecipe?.title ?? "";
@@ -188,7 +194,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
   // Real meal-plan data for Weekly snapshot + Helpful cues
   const weekStart = getMondayOfCurrentWeek();
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const weekMealPlans = householdId
+  const weekMealPlans = billing.plan === "plus" && householdId
     ? await getMealPlanWeek(householdId, weekStart)
     : [];
   const plannedDates = new Set(weekMealPlans.map((m) => m.planned_date));
@@ -330,7 +336,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                         {hasRecipes ? "Recipe pick" : "Welcome"}
                       </SectionEyebrow>
                       <h2
-                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-tight text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
+                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-[1.15] text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
                         style={{ fontFamily: "var(--font-playfair)" }}
                       >
                         {hasRecipes ? featuredTitle : "Your cookbook is ready"}
@@ -350,7 +356,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                             Start cooking
                           </Button>
                         </Link>
-                      ) : (
+                      ) : canAddRecipes ? (
                         <>
                           <Link href={`/app/books/${bookId}/recipes/new`}>
                             <Button variant="primary" size="sm" className="rounded-md">
@@ -365,6 +371,13 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                             </Button>
                           </Link>
                         </>
+                      ) : (
+                        <Link href={`/app/books/${bookId}/recipes`}>
+                          <Button variant="primary" size="sm" className="rounded-md">
+                            <UtensilsCrossed size={17} />
+                            Browse cookbook
+                          </Button>
+                        </Link>
                       )}
                     </div>
                   </div>
@@ -372,7 +385,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                   <div className="relative h-44 max-h-[240px] overflow-hidden bg-green-pale min-[425px]:h-48 sm:h-60 lg:h-auto lg:max-h-none lg:min-h-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={featuredImage}
+                      src={mediaUrl(featuredImage)}
                       alt=""
                       className="h-full w-full object-cover"
                       aria-hidden="true"
@@ -417,7 +430,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale">
                         {latestRecipe?.photo_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={latestRecipe.photo_url} alt="" className="h-full w-full object-cover" aria-hidden="true" />
+                          <img src={mediaUrl(latestRecipe.photo_url)} alt="" className="h-full w-full object-cover" aria-hidden="true" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center">
                             <BookOpenFallback />
@@ -426,7 +439,7 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                       </div>
                       <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
                         <h3
-                          className="block w-full max-w-full text-xl font-bold text-green-deep"
+                          className="block w-full max-w-full text-xl font-bold leading-[1.15] text-green-deep"
                           style={{ fontFamily: "var(--font-playfair)" }}
                         >
                           {latestRecipe?.title}
@@ -454,8 +467,8 @@ export default async function BookHomePage({ params, searchParams }: Props) {
                         <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-muted">
                           Save a recipe and we&rsquo;ll keep the most recent one handy here.
                         </p>
-                        <Link href={`/app/books/${bookId}/recipes/new`} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
-                          Add a recipe <ChevronRight size={15} />
+                        <Link href={canAddRecipes ? `/app/books/${bookId}/recipes/new` : `/app/books/${bookId}/recipes`} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
+                          {canAddRecipes ? "Add a recipe" : "Browse cookbook"} <ChevronRight size={15} />
                         </Link>
                       </div>
                     </div>
@@ -498,8 +511,8 @@ export default async function BookHomePage({ params, searchParams }: Props) {
               <PageSection>
                 <SectionHeader eyebrow="Quick actions" title="Next move" />
                 <div className="mt-4 space-y-1">
-                  <QuickAction href={`/app/books/${bookId}/recipes/new`} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />
-                  <QuickAction href={`/app/books/${bookId}/ideas`} icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />
+                  {canAddRecipes && <QuickAction href={`/app/books/${bookId}/recipes/new`} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />}
+                  {canAddRecipes && <QuickAction href={`/app/books/${bookId}/ideas`} icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />}
                   <QuickAction href="/app/meal-plan" icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
                   <QuickAction href="/app/groceries" icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
                 </div>

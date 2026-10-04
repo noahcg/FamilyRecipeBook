@@ -76,17 +76,19 @@ The Send Email hook is an outbound webhook from Supabase's servers, so it can ne
 
 If step 1 errors, `&create=1` mints the user and a code without sending anything; `/sign-in?email=you@example.com&sent=1` then jumps straight to the code step.
 
-To see the email templates themselves, open `/dev/email-preview/sign-in-code` and `/dev/email-preview/signup-welcome` — they render the real templates with no Supabase involved. Testing genuine delivery of our templates means using a deployed environment, or accepting the production-email tradeoff of a temporary tunnel plus a matching `NEXT_PUBLIC_SITE_URL`.
+To see the email templates themselves, open `/dev/email-preview/sign-in-code`, `/dev/email-preview/signup-welcome`, and `/dev/email-preview/account-deletion` — they render the real templates with no Supabase involved. The account-deletion preview uses sample archive details and sends nothing. Testing genuine delivery of auth templates means using a deployed environment, or accepting the production-email tradeoff of a temporary tunnel plus a matching `NEXT_PUBLIC_SITE_URL`.
 
 While the hook is disabled, Supabase falls back to its own built-in templates, which are link-only and contain no 6-digit code.
 
 ### 4. Run database migrations
 
-Apply the SQL migrations in `supabase/migrations/` to your project via the Supabase dashboard SQL editor or the Supabase CLI:
+For a **new empty project**, prepare a uniquely versioned copy of the complete migration chain:
 
 ```bash
-npx supabase db push
+npm run migrations:prepare
 ```
+
+Use the generated SQL directory in an isolated Supabase CLI project. Existing environments require [migration history reconciliation](docs/migration-history.md); the committed historical files contain duplicate numeric prefixes and must not be blindly pushed. Follow [the launch runbook](LAUNCH_RUNBOOK.md) for staging setup, verification, and production promotion.
 
 ### 5. Start the dev server
 
@@ -95,6 +97,8 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+Run `npm run check` for local version, lint, type, test, and build gates. After building, `npm run test:browser` checks desktop Chromium and mobile WebKit. CI also audits production dependencies. These local gates do not replace staging integration tests or a backup restoration rehearsal.
 
 ## Project structure
 
@@ -126,4 +130,6 @@ src/
 |---|---|
 | **Keeper** | Full access — edit/delete any recipe, manage members, delete book |
 | **Contributor** | Add recipes, edit/delete own recipes, add memories |
-| **Family** | Read-only — browse recipes, add reactions and memories |
+| **Family** | Browse recipes, react, and add notes and memories; cannot add or edit recipes or manage members |
+
+Free accounts can own one cookbook with up to 50 recipes and share it with up to 3 other people as Family members. Pending, unexpired invitations reserve a spot. Plus includes unlimited cookbooks and recipes, an All Recipes view across books, unlimited sharing, and Contributor invitations. The destination cookbook owner’s plan controls recipe capacity and collaboration: recipients can join with free accounts, and a Free recipient may contribute inside a Plus-owned cookbook without expanding or consuming the allowance of their personal Free cookbook.

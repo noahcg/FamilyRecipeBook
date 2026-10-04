@@ -89,7 +89,7 @@ const termsSections = [
     ),
   },
   {
-    title: "Reporting and Content Safety (Policy Placeholder)",
+    title: "Reporting and Content Safety",
     body: (
       <>
         <p>
@@ -100,23 +100,38 @@ const termsSections = [
         <p>
           We may hide content while reviewing a report, remove only the affected
           content, restrict uploads, remove a member from a shared cookbook, or
-          restrict account access for repeated or serious misuse. We intend to
-          provide an appeal path for reversible decisions. This is a product-policy
-          placeholder and is not final legal terms or counsel-approved language.
+          restrict account access for repeated or serious misuse. Where appropriate,
+          we may provide a way to request review of a reversible decision.
         </p>
       </>
     ),
   },
   {
-    title: "Payments, If Applicable",
+    title: "Paid Plans and Billing",
     body: (
-      <p>
-        <BrandName /> may offer paid plans, trials, or optional paid features in
-        the future. If payments are added, the price, renewal terms, cancellation
-        process, and refund rules will be shown before you buy. Until then, no
-        payment terms apply unless they are presented in the product or in a
-        separate written agreement.
-      </p>
+      <>
+        <p>
+          <BrandName /> offers a free plan and an optional Plus subscription. Plus
+          is currently offered at <strong>$24.99 per year</strong>, with the
+          features and limits shown on the pricing page before you subscribe.
+          Prices may change for future renewals, and any change will be shown or
+          communicated as required by law.
+        </p>
+        <p>
+          Plus subscriptions renew annually unless you cancel before the next
+          renewal. Checkout and payment processing are handled by Stripe. You
+          can update payment details, view invoices, or cancel through the
+          Billing Portal available in your account settings. Cancellation stops
+          the next renewal; it does not delete your recipes, cookbooks, or other
+          saved content. Access to Plus features may continue through the paid
+          period and will then follow the Free plan limits.
+        </p>
+        <p>
+          Any refund, credit, tax, or consumer-cancellation rights are governed
+          by the terms shown at checkout and applicable law. For billing help,
+          contact support promptly with the email address on your account.
+        </p>
+      </>
     ),
   },
   {
@@ -155,9 +170,7 @@ const termsSections = [
         </p>
         <p>
           Questions about these Terms can be sent to{" "}
-          <a href={supportMailto}>{supportEmail}</a>. This plain-English page is
-          for practical product use and should not be treated as attorney-drafted
-          legal advice.
+          <a href={supportMailto}>{supportEmail}</a>.
         </p>
       </>
     ),

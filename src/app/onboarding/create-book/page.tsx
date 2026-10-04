@@ -1,8 +1,12 @@
+import Link from "next/link";
 import { Pencil, Sparkles, Users } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CreateBookForm } from "@/components/book/CreateBookForm";
 import { getUserBooks } from "@/lib/actions/books";
 import { requireUser } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
+import { AccountProvider } from "@/lib/context/AccountContext";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
 
 const TIPS = [
@@ -24,10 +28,11 @@ const TIPS = [
 ];
 
 export default async function CreateBookPage() {
-  const [user, books, supabase] = await Promise.all([
-    requireUser(),
+  const user = await requireUser();
+  const [books, supabase, billing] = await Promise.all([
     getUserBooks(),
     createClient(),
+    getEffectiveEntitlements(user.id),
   ]);
 
   const { data: settings } = await supabase
@@ -61,7 +66,7 @@ export default async function CreateBookPage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-8">
         <div className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
-          <CreateBookForm />
+          <CreateBookForm plan={billing.plan} />
         </div>
 
         <aside>
@@ -82,15 +87,25 @@ export default async function CreateBookPage() {
                 </li>
               ))}
             </ul>
+            <Link
+              href="/guides/how-to-set-up-your-first-home-cooked-book"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+            >
+              Help setting up your cookbook (opens in a new tab)
+            </Link>
           </div>
         </aside>
       </div>
     </div>
   );
 
-  if (!navBookId) {
-    return <AppShell lockNav>{content}</AppShell>;
-  }
-
-  return <AppShell bookId={navBookId}>{content}</AppShell>;
+  return (
+    <AccountProvider isAdmin={isAdminEmail(user.email)} plan={billing.plan}>
+      <AppShell bookId={navBookId ?? undefined} lockNav={!navBookId}>
+        {content}
+      </AppShell>
+    </AccountProvider>
+  );
 }

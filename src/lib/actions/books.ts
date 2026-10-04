@@ -14,6 +14,7 @@ import {
   type UpdateBookInput,
 } from "@/lib/validators/book";
 import type { ActionResult, BookMember, BookPreview, BookRole, Profile, Recipe, RecipeBook } from "@/lib/types";
+import { assertCanCreateCookbook, EntitlementError, getBookRecipeAccess } from "@/lib/entitlements";
 
 interface BookPageMember extends BookMember {
   profile: Profile | null;
@@ -86,6 +87,12 @@ export async function createBook(
   input: CreateBookInput
 ): Promise<ActionResult<RecipeBook>> {
   const user = await requireUser();
+  try {
+    await assertCanCreateCookbook(user.id);
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
+  }
   const parsed = createBookSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
@@ -220,6 +227,7 @@ export async function updateBook(
     }
   }
 
+
   const updatePayload = { ...parsed.data, updated_at: new Date().toISOString() };
   let { data: book, error } = await supabase
     .from("recipe_books")
@@ -277,12 +285,40 @@ export async function getUserBooks(): Promise<RecipeBook[]> {
   return data ?? [];
 }
 
+export async function getBookAccessSummary(bookId: string): Promise<{
+  role: BookRole;
+  memberCount: number;
+  canAddRecipes: boolean;
+} | null> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const { data: membership } = await supabase
+    .from("book_members")
+    .select("role")
+    .eq("book_id", bookId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!membership) return null;
+
+  const [{ count }, recipeAccess] = await Promise.all([
+    createServiceClient().from("book_members").select("id", { count: "exact", head: true }).eq("book_id", bookId),
+    getBookRecipeAccess(bookId, user.id),
+  ]);
+
+  return {
+    role: membership.role as BookRole,
+    memberCount: count ?? 0,
+    canAddRecipes: recipeAccess.allowed,
+  };
+}
+
 export interface CookbookNavItem {
   id: string;
   title: string;
   icon: string;
   cover_style: string;
   recipeCount: number;
+  isOwned: boolean;
 }
 
 // Books the user belongs to (each with its recipe count) plus their active
@@ -312,6 +348,7 @@ export async function getCookbookNavData(): Promise<{
     icon: book.icon,
     cover_style: book.cover_style,
     recipeCount: counts.get(book.id) ?? 0,
+    isOwned: book.owner_id === user.id,
   }));
 
   return {
@@ -476,6 +513,23 @@ export async function getFirstBookId(): Promise<string | null> {
   return books[0]?.id ?? null;
 }
 
+// Free recipe storage is the account owner's one eligible cookbook, not a
+// shared book they happen to have selected. Falls back to the first membership
+// for people who have joined a cookbook but have not created their own yet.
+export async function getFreeRecipeBookId(): Promise<string | null> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const { data: owned } = await supabase
+    .from("recipe_books")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return owned?.id ?? getFirstBookId();
+}
+
 export async function redirectToBook() {
   const bookId = await getFirstBookId();
   if (bookId) {
@@ -509,6 +563,7 @@ export async function getBookPageData(bookId: string) {
   const book = bookRes.data as BookPageBook;
   const userMember = book.members?.find((member) => member.user_id === user.id);
   if (!userMember) return null;
+  const recipeAccess = await getBookRecipeAccess(bookId, user.id);
 
   const allRecipes = ((recipesRes.data ?? []) as BookPageRecipe[]).map((recipe) => ({
     ...recipe,
@@ -527,6 +582,7 @@ export async function getBookPageData(bookId: string) {
     book,
     userMember,
     userId: user.id,
+    canAddRecipes: recipeAccess.allowed,
     recent: allRecipes.slice(0, 6),
     favorites,
   };

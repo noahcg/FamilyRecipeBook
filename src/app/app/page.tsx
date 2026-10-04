@@ -1,3 +1,4 @@
+import { mediaUrl } from "@/lib/media";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -11,15 +12,15 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { TimeOfDayHeadline } from "@/components/home/TimeOfDayHeadline";
-import { WelcomeTour } from "@/components/guides/WelcomeTour";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBadge } from "@/components/recipe/CookbookBadge";
 import { Button } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { getFirstBookId } from "@/lib/actions/books";
+import { getFirstBookId, getFreeRecipeBookId } from "@/lib/actions/books";
 import { getAccountRecentRecipes } from "@/lib/actions/recipes";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -129,29 +130,35 @@ export default async function AppHomePage() {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [recent, householdId, firstBookId, favoritesCountRes] = await Promise.all([
+  const [recent, householdId, firstBookId, freeRecipeBookId, favoritesCountRes, billing] = await Promise.all([
     getAccountRecentRecipes(6),
     getHouseholdId(),
     getFirstBookId(),
+    getFreeRecipeBookId(),
     supabase
       .from("recipe_reactions")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("type", "favorite"),
+    getEffectiveEntitlements(user.id),
   ]);
 
   const latestRecipe = recent[0] ?? null;
+  const recipeBookId = billing.plan === "free" ? freeRecipeBookId : firstBookId;
+  const recipeBrowseHref = billing.plan === "plus"
+    ? "/app/recipes"
+    : recipeBookId ? `/app/books/${recipeBookId}/recipes` : "/onboarding/create-book";
   const hasRecipes = latestRecipe !== null;
   const featuredHref = latestRecipe
     ? `/app/books/${latestRecipe.bookId}/recipes/${latestRecipe.id}`
     : "/app/ideas";
   const featuredImage = latestRecipe?.photo_url ?? "/images/entry/add-first.jpg";
-  const addRecipeHref = firstBookId ? `/app/books/${firstBookId}/recipes/new` : "/onboarding/create-book";
+  const addRecipeHref = recipeBookId ? `/app/books/${recipeBookId}/recipes/new` : "/onboarding/create-book";
 
   // Real meal-plan data for Weekly snapshot + Helpful cues
   const weekStart = getMondayOfCurrentWeek();
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const weekMealPlans = householdId ? await getMealPlanWeek(householdId, weekStart) : [];
+  const weekMealPlans = billing.plan === "plus" && householdId ? await getMealPlanWeek(householdId, weekStart) : [];
   const plannedDates = new Set(weekMealPlans.map((m) => m.planned_date));
   const daysWithMeals = weekDates.filter((d) => plannedDates.has(d)).length;
   const totalMealsPlanned = weekMealPlans.length;
@@ -259,19 +266,19 @@ export default async function AppHomePage() {
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
             <div className="space-y-6 xl:-mt-20">
-              <WelcomeTour />
+              {/* The guided tour is temporarily disabled while the app onboarding is refreshed. */}
               <DashboardCard className="overflow-hidden">
                 <div className="grid lg:min-h-[320px] lg:grid-cols-[minmax(0,1fr)_38%]">
                   <div className="flex flex-col justify-between p-3.5 min-[425px]:p-4 sm:p-6">
                     <div>
                       <SectionEyebrow>{hasRecipes ? "Recipe pick" : "Welcome"}</SectionEyebrow>
                       <h2
-                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-tight text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
+                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-[1.15] text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
                         style={{ fontFamily: "var(--font-playfair)" }}
                       >
                         {hasRecipes ? latestRecipe!.title : "Your kitchen is ready"}
                       </h2>
-                      {hasRecipes && (
+                      {hasRecipes && billing.plan === "plus" && (
                         <div className="mt-3">
                           <CookbookBadge title={latestRecipe!.bookTitle} />
                         </div>
@@ -312,7 +319,7 @@ export default async function AppHomePage() {
 
                   <div className="relative h-44 max-h-[240px] overflow-hidden bg-green-pale min-[425px]:h-48 sm:h-60 lg:h-auto lg:max-h-none lg:min-h-full">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={featuredImage} alt="" className="h-full w-full object-cover" aria-hidden="true" />
+                    <img src={mediaUrl(featuredImage)} alt="" className="h-full w-full object-cover" aria-hidden="true" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                     <span className="absolute bottom-4 left-4 rounded-sm bg-card/90 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon backdrop-blur-sm">
                       {hasRecipes ? "Most recent" : "A fresh start"}
@@ -353,7 +360,7 @@ export default async function AppHomePage() {
                       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale">
                         {latestRecipe!.photo_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={latestRecipe!.photo_url} alt="" className="h-full w-full object-cover" aria-hidden="true" />
+                          <img src={mediaUrl(latestRecipe!.photo_url)} alt="" className="h-full w-full object-cover" aria-hidden="true" />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center">
                             <BookOpenFallback />
@@ -361,12 +368,14 @@ export default async function AppHomePage() {
                         )}
                       </div>
                       <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
-                        <h3 className="block w-full max-w-full text-xl font-bold text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
+                        <h3 className="block w-full max-w-full text-xl font-bold leading-[1.15] text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
                           {latestRecipe!.title}
                         </h3>
-                        <div className="mt-1.5">
-                          <CookbookBadge title={latestRecipe!.bookTitle} />
-                        </div>
+                        {billing.plan === "plus" && (
+                          <div className="mt-1.5">
+                            <CookbookBadge title={latestRecipe!.bookTitle} />
+                          </div>
+                        )}
                         <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-muted">
                           {latestRecipe!.description}
                         </p>
@@ -412,7 +421,7 @@ export default async function AppHomePage() {
                     ].map(([label, hint, filter]) => (
                       <Link
                         key={label}
-                        href={`/app/recipes?filter=${filter}`}
+                        href={`${recipeBrowseHref}?filter=${filter}`}
                         className="rounded-sm border border-line-soft bg-white-soft/70 px-3 py-3 text-sm font-bold text-green-deep transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-green-sage/40 hover:bg-green-pale"
                       >
                         {label}
@@ -430,12 +439,14 @@ export default async function AppHomePage() {
                 <div className="mt-4 space-y-1">
                   <QuickAction href={addRecipeHref} icon={<Plus size={19} />} label="Add Recipe" detail="Save something worth finding again" />
                   <QuickAction href="/app/ideas" icon={<Sparkles size={19} />} label="Get Ideas" detail="Turn a loose craving into a recipe" />
-                  <QuickAction href="/app/meal-plan" icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
-                  <QuickAction href="/app/groceries" icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
+                  {billing.plan === "plus" && <>
+                    <QuickAction href="/app/meal-plan" icon={<CalendarDays size={19} />} label="Plan Week" detail="Pick the meals you want ready" />
+                    <QuickAction href="/app/groceries" icon={<ShoppingCart size={19} />} label="Groceries" detail="Review what your recipes need" />
+                  </>}
                 </div>
               </PageSection>
 
-              <PageSection>
+              {billing.plan === "plus" && <PageSection>
                 <SectionHeader eyebrow="Weekly snapshot" title="The week ahead" />
                 {hasAnyMealPlanned ? (
                   <p className="mt-2 text-xl font-bold leading-snug text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
@@ -467,7 +478,7 @@ export default async function AppHomePage() {
                     Plan a meal <ChevronRight size={15} />
                   </Link>
                 )}
-              </PageSection>
+              </PageSection>}
             </aside>
           </div>
         </div>

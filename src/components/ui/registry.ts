@@ -37,7 +37,7 @@ export const UI_LIBRARY = [
     name: "RecipeCard",
     importName: "RecipeCard",
     source: "src/components/ui/RecipeCard.tsx",
-    useWhen: "Showing a recipe in a collection or search result.",
+    useWhen: "Showing a recipe in a collection or search result; uploaded photos resolve through the authorized media route.",
   },
   {
     name: "Badge",

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { isAdminEmail, requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createMemberInviteEmail } from "@/lib/email/memberInviteTemplate";
+import { createAccountDeletionEmail } from "@/lib/email/accountDeletionTemplate";
 import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEmail";
 import { createAccountRecipeArchive } from "@/lib/accountRecipeArchive";
 import type { ActionResult } from "@/lib/types";
@@ -16,6 +17,7 @@ const inviteToBookSchema = z.object({
   role: z.enum(["contributor", "family"]),
 });
 
+const entitlementUserSchema = z.string().uuid();
 const accountActionSchema = z.object({
   userId: z.string().uuid(),
 });
@@ -45,6 +47,40 @@ const suspendDurationLabels: Record<AdminSuspendDuration, string> = {
 const USER_STORAGE_BUCKETS = ["recipe-images", "avatars"] as const;
 
 export type AdminInviteToBookInput = z.infer<typeof inviteToBookSchema>;
+
+export async function setUserGrandfatheredPlus(userId: string, enabled: boolean): Promise<ActionResult> {
+  const adminUser = await requireAdmin();
+  const parsed = entitlementUserSchema.safeParse(userId);
+  if (!parsed.success) return { success: false, error: "User not found." };
+
+  const service = createServiceClient();
+  const { data: targetProfile } = await service.from("profiles").select("id,full_name").eq("id", parsed.data).maybeSingle();
+  if (!targetProfile) return { success: false, error: "User not found." };
+
+  const now = new Date().toISOString();
+  const { error } = await service.from("billing_accounts").upsert({
+    user_id: parsed.data,
+    grandfathered_plus: enabled,
+    grandfathered_at: enabled ? now : undefined,
+    grandfathered_revoked_at: enabled ? null : now,
+  }, { onConflict: "user_id" });
+  if (error) return { success: false, error: error.message };
+
+  const label = targetProfile.full_name?.trim() || parsed.data;
+  await logAdminAction(service, {
+    actorId: adminUser.id,
+    action: enabled ? "grant_grandfathered_plus" : "revoke_grandfathered_plus",
+    targetType: "user",
+    targetId: parsed.data,
+    summary: `${enabled ? "Granted" : "Revoked"} lifetime Plus access for ${label}`,
+    metadata: { userId: parsed.data, grandfatheredPlus: enabled },
+  });
+
+  revalidatePath("/app/admin");
+  revalidatePath(`/app/admin/users/${parsed.data}`);
+  revalidatePath("/app/settings");
+  return { success: true, data: undefined };
+}
 
 function inviterFirstName(fullName?: string | null) {
   const trimmed = fullName?.trim();
@@ -339,11 +375,14 @@ export async function deleteUser(input: { userId: string; ownershipTransfers?: O
   try {
     archive = await createAccountRecipeArchive(target.service, parsed.data.userId, target.email, privateBookIds);
     await target.service.from("account_deletions").update({ archive_status: "created" }).eq("id", deletion.id);
+    const email = createAccountDeletionEmail({
+      recipeCount: archive.recipeCount,
+      archiveFilename: archive.filename,
+      logoUrl: getDefaultLogoUrl(),
+    });
     await sendEmail({
       to: target.email,
-      subject: "Your Home Cooked account and recipe archive",
-      html: `<p>An administrator has initiated permanent deletion of your Home Cooked account.</p><p>Your compact recipe archive is attached. It contains ${archive.recipeCount} recipe${archive.recipeCount === 1 ? "" : "s"} and preserves the recipe fields, ingredients, instructions, stories, and cookbook metadata that will be removed.</p><p>This archive delivery is a required safeguard: deletion will not begin unless this email is sent successfully. The attachment is a gzip-compressed JSON file (<code>.json.gz</code>). Keep it somewhere safe before extracting it with standard archive tools.</p>`,
-      text: `An administrator has initiated permanent deletion of your Home Cooked account. Your compact recipe archive is attached. It contains ${archive.recipeCount} recipe${archive.recipeCount === 1 ? "" : "s"} and preserves the recipe fields, ingredients, instructions, stories, and cookbook metadata that will be removed. This archive delivery is a required safeguard: deletion will not begin unless this email is sent successfully. The attachment is a gzip-compressed JSON file (.json.gz). Keep it somewhere safe before extracting it with standard archive tools.`,
+      ...email,
       attachments: [{
         filename: archive.filename,
         content: archive.content,

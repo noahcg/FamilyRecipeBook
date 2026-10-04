@@ -40,7 +40,7 @@ export function LegalPage({ eyebrow, title, lastUpdated, children }: LegalPagePr
         </h1>
         <p className="mt-2 text-sm text-ink-soft">Last updated: {lastUpdated}</p>
 
-        <div className="legal-prose recipe-card mt-8 space-y-8 p-5 text-[1.02rem] leading-relaxed text-ink-muted sm:p-7">
+        <div className="legal-prose mt-8 space-y-8 border-t border-line pt-8 text-[1.02rem] leading-relaxed text-ink-muted">
           {children}
         </div>
       </main>

@@ -1,3 +1,6 @@
+import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth";
+import { getBookSharingAllowance } from "@/lib/entitlements";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Lock } from "lucide-react";
@@ -14,6 +17,9 @@ export default async function AddMemberOnboardingPage({ searchParams }: Props) {
   const { bookId } = await searchParams;
   if (!bookId) redirect("/onboarding/create-book");
   const book = await getBook(bookId);
+  const user = await requireUser();
+  if (!book || !book.members?.some((member) => member.user_id === user.id && member.role === "keeper")) notFound();
+  const sharingAllowance = await getBookSharingAllowance(bookId).catch(() => null);
 
   return (
     <EntryShell
@@ -21,18 +27,19 @@ export default async function AddMemberOnboardingPage({ searchParams }: Props) {
       title={book?.sharing_enabled ? "Share this book with someone" : "Your private cookbook is ready"}
       description={
         book?.sharing_enabled
-          ? "Invite family to share recipes, memories, and more. They can start adding alongside you right away."
+          ? "Invite family to browse recipes, react, and add notes and memories."
           : "You can turn on sharing later from cookbook settings when you are ready to invite members."
       }
       maxWidth="md"
       sideImageSrc="/images/entry/add-family.jpg"
       sideImageAlt="Family-style dinner table with shared food"
       sideTitle="Bring the people behind the recipes into the book."
-      sideDescription="Invite a contributor for recipe entry or family members who just want to read, react, and remember."
+      sideDescription="Free includes up to 3 people with Family access. With Plus, invite more people and Contributors who can add recipes."
       sideNote="Recipes are better when everyone can add their part."
     >
       {book?.sharing_enabled ? (
         <AddMemberForm
+                sharingAllowance={sharingAllowance}
           bookId={bookId}
           onSuccessRedirect={`/app/books/${bookId}`}
           skipLabel="Skip for now"

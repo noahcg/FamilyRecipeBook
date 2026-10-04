@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookName } from "@/components/book/BookName";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
@@ -6,6 +7,8 @@ import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
 import { listCategories } from "@/lib/actions/categories";
 import { getRecipeAssignmentOptions } from "@/lib/actions/recipes";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
+import { requireUser } from "@/lib/auth";
 import { canContribute } from "@/lib/permissions";
 
 interface Props {
@@ -14,14 +17,19 @@ interface Props {
 
 export default async function NewRecipePage({ params }: Props) {
   const { bookId } = await params;
+  const user = await requireUser();
   const [aiSettings, categories, bookOptions] = await Promise.all([
     getAISettings(),
     listCategories(bookId),
     getRecipeAssignmentOptions(),
   ]);
+  const billing = await getEffectiveEntitlements(user.id);
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
   const contributableBooks = bookOptions.filter((book) => canContribute(book.role));
   if (contributableBooks.length === 0) notFound();
+  if (!contributableBooks.some((book) => book.id === bookId)) {
+    redirect(`/app/books/${contributableBooks[0].id}/recipes/new`);
+  }
 
   return (
     <AppShell bookId={bookId}>
@@ -39,6 +47,14 @@ export default async function NewRecipePage({ params }: Props) {
           <p className="mt-2 text-sm text-ink-muted">
             Capture the recipe and the story behind it.
           </p>
+          <Link
+            href="/guides/how-to-add-your-first-recipe-to-home-cooked"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+          >
+            Help choosing an entry method (opens in a new tab)
+          </Link>
         </div>
 
         <RecipeForm
@@ -46,7 +62,7 @@ export default async function NewRecipePage({ params }: Props) {
           categories={categories}
           bookOptions={contributableBooks}
           hasOpenAIKey={hasOpenAIKey}
-          enablePasteEntry
+          enablePasteEntry={billing.plan === "plus"}
         />
       </div>
     </AppShell>

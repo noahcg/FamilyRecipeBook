@@ -16,13 +16,14 @@ interface IdeaCookViewProps {
   onSave: () => void;
   isSaving: boolean;
   error?: string | null;
+  cookbookTitle: string;
 }
 
 // A cook-from-the-counter view of an unsaved AI recipe idea. It mirrors the
 // saved recipe page (RecipeDetail) layout — hero, meta grid, method + checkable
 // ingredients — so a user can make the idea right away without committing it to
 // a cookbook, then save it from here if they want to keep it.
-export function IdeaCookView({ idea, onClose, onSave, isSaving, error }: IdeaCookViewProps) {
+export function IdeaCookView({ idea, onClose, onSave, isSaving, error, cookbookTitle }: IdeaCookViewProps) {
   const [servingScale, setServingScale] = useState(1);
 
   // The idea's ingredients/instructions are plain AI output; adapt them into the
@@ -93,7 +94,7 @@ export function IdeaCookView({ idea, onClose, onSave, isSaving, error }: IdeaCoo
               disabled={isSaving}
             >
               {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-              Save to Cookbook
+              Save to {cookbookTitle}
             </Button>
           </div>
         </div>
@@ -225,7 +226,7 @@ export function IdeaCookView({ idea, onClose, onSave, isSaving, error }: IdeaCoo
             disabled={isSaving}
           >
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-            Save to Cookbook
+            Save to {cookbookTitle}
           </Button>
           <Button
             type="button"
@@ -238,7 +239,7 @@ export function IdeaCookView({ idea, onClose, onSave, isSaving, error }: IdeaCoo
             Back to idea
           </Button>
           <p className="text-xs text-ink-soft">
-            Saving keeps this recipe in your cookbook with a photo you can edit.
+            Saving keeps this recipe in {cookbookTitle} with a photo you can edit.
           </p>
         </section>
       </div>

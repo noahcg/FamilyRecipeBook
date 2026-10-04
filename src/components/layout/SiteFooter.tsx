@@ -11,7 +11,7 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative z-10 border-t border-line">
+    <footer className="relative z-10 border-t border-line pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
       <div className="mx-auto flex w-full max-w-[1360px] flex-col items-center gap-3 px-4 py-8 text-sm text-ink-muted sm:flex-row sm:justify-between sm:px-8 lg:px-12">
         <p className="text-center sm:text-left">
           &copy; {year}{" "}
@@ -22,6 +22,9 @@ export function SiteFooter() {
           <a href={supportMailto} className="transition hover:text-green-deep">
             Contact
           </a>
+          <Link href="/pricing" className="transition hover:text-green-deep">
+            Pricing
+          </Link>
           <Link href="/terms" className="transition hover:text-green-deep">
             Terms
           </Link>

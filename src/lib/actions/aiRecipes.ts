@@ -22,6 +22,7 @@ import { selectRecipeImage } from "@/lib/actions/pexels";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, Recipe } from "@/lib/types";
+import { consumeAiAllowance, EntitlementError } from "@/lib/entitlements";
 
 async function fetchBookCategoryNames(
   bookId: string,
@@ -327,6 +328,17 @@ export async function generateRecipeIdea(
 
   const user = await requireUser();
 
+  async function consumeOnSuccess(result: ActionResult<AIRecipeIdea>): Promise<ActionResult<AIRecipeIdea>> {
+    if (!result.success) return result;
+    try {
+      await consumeAiAllowance(user.id);
+      return result;
+    } catch (error) {
+      if (error instanceof EntitlementError) return { success: false as const, error: error.message };
+      throw error;
+    }
+  }
+
   // Tell the AI about this cookbook's actual chapters, so suggestions land in
   // the right place (including any custom chapters the user has added).
   const categories = await fetchBookCategoryNames(bookId, user.id);
@@ -345,7 +357,7 @@ export async function generateRecipeIdea(
   if (provider && key) {
     if (provider === "anthropic") {
       const result = await generateWithAnthropic(prompt, categories, key);
-      if (result) return result;
+      if (result) return consumeOnSuccess(result);
     } else {
       const result = await generateWithOpenAI(prompt, categories, key);
       if (result) return result;
@@ -354,11 +366,11 @@ export async function generateRecipeIdea(
 
   // Fall back to server-configured Cloudflare Workers AI
   const cloudflareResult = await generateWithCloudflare(prompt, categories);
-  if (cloudflareResult) return cloudflareResult;
+  if (cloudflareResult) return consumeOnSuccess(cloudflareResult);
 
   // Fall back to server-configured OpenAI key
   const openAIResult = await generateWithOpenAI(prompt, categories);
-  if (openAIResult) return openAIResult;
+  if (openAIResult) return consumeOnSuccess(openAIResult);
 
   return {
     success: false,

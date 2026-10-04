@@ -22,6 +22,7 @@ interface CookbookNavigatorProps {
   currentBookId: string | null;
   mobileOpen: boolean;
   onMobileOpenChange: (open: boolean) => void;
+  plan: "free" | "plus";
 }
 
 /**
@@ -33,6 +34,7 @@ export function CookbookNavigator({
   currentBookId,
   mobileOpen,
   onMobileOpenChange,
+  plan,
 }: CookbookNavigatorProps) {
   // Keep the first render identical to the server. The module cache only
   // exists in the browser and may already be populated after client-side
@@ -81,8 +83,11 @@ export function CookbookNavigator({
   }, [open]);
 
   const books = data?.books ?? [];
-  const activeBookId = currentBookId ?? data?.defaultBookId ?? null;
-  const activeBook = books.find((b) => b.id === activeBookId) ?? null;
+  const activeBookId = currentBookId;
+  const currentBook = books.find((b) => b.id === currentBookId) ?? null;
+  const freePersonalBook = plan === "free" ? books.find((book) => book.isOwned) ?? null : null;
+  const orientationBook = currentBook ?? freePersonalBook;
+  const hasOwnedBook = books.some((book) => book.isOwned);
 
   const select = useCallback((bookId: string) => {
     setDefaultBook(bookId).catch(() => {});
@@ -129,13 +134,23 @@ export function CookbookNavigator({
           );
         })}
 
-        <Link
-          href="/onboarding/create-book"
-          onClick={onNavigate}
-          className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-dashed border-green-sage/55 bg-paper-warm/70 px-3 py-2.5 text-sm font-bold text-green-deep transition-[background-color,border-color,transform] duration-150 hover:-translate-y-px hover:border-green-sage hover:bg-green-pale"
-        >
-          <Plus size={15} /> New Cookbook
-        </Link>
+        {plan === "plus" || !hasOwnedBook ? (
+          <Link
+            href="/onboarding/create-book"
+            onClick={onNavigate}
+            className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-dashed border-green-sage/55 bg-paper-warm/70 px-3 py-2.5 text-sm font-bold text-green-deep transition-[background-color,border-color,transform] duration-150 hover:-translate-y-px hover:border-green-sage hover:bg-green-pale"
+          >
+            <Plus size={15} /> {hasOwnedBook ? "New Cookbook" : "Create Your Cookbook"}
+          </Link>
+        ) : (
+          <Link
+            href="/pricing"
+            onClick={onNavigate}
+            className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-dashed border-green-sage/55 bg-paper-warm/70 px-3 py-2.5 text-sm font-bold text-green-deep transition-[background-color,border-color,transform] duration-150 hover:-translate-y-px hover:border-green-sage hover:bg-green-pale"
+          >
+            <Plus size={15} /> Plus: Create Another Cookbook
+          </Link>
+        )}
       </div>
     );
   }
@@ -157,25 +172,27 @@ export function CookbookNavigator({
       </button>
 
       {/* Active cookbook indicator — which book you're currently viewing. */}
-      {activeBook && (
+      {orientationBook && (
         <div className="mb-6 mt-3">
-          <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-[0.1em] text-ink-soft/70">Viewing</p>
+          <p className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-[0.1em] text-ink-soft/70">
+            {currentBook ? "Viewing" : "Your cookbook"}
+          </p>
           <Link
-            href={`/app/books/${activeBook.id}/recipes`}
+            href={`/app/books/${orientationBook.id}/recipes`}
             className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-md border border-line-soft bg-white-soft/60 px-3 py-2.5 transition-colors hover:border-green-sage/40 hover:bg-green-pale"
           >
             <span className="block w-7 shrink-0 overflow-hidden">
               <BookCoverArt
-                title={activeBook.title}
-                seed={activeBook.id}
-                color={resolveCoverColor(activeBook.cover_style, activeBook.id)}
+                title={orientationBook.title}
+                seed={orientationBook.id}
+                color={resolveCoverColor(orientationBook.cover_style, orientationBook.id)}
                 className="w-7 shrink-0"
               />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-green-deep">{activeBook.title}</span>
+              <span className="block truncate text-sm font-bold text-green-deep">{orientationBook.title}</span>
               <span className="block truncate text-xs font-semibold text-ink-soft">
-                {activeBook.recipeCount} {activeBook.recipeCount === 1 ? "recipe" : "recipes"}
+                {orientationBook.recipeCount} {orientationBook.recipeCount === 1 ? "recipe" : "recipes"}
               </span>
             </span>
           </Link>

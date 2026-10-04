@@ -58,37 +58,14 @@ Generation-thirty-minutes
 Model A
 
 Score:
-Rationale: 
+Rationale:
 
 Model B
 
 Score:
-Rationale: 
+Rationale:
 
 Model C
 
 Score:
-Rationale: 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Rationale:

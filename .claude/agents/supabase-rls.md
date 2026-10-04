@@ -7,7 +7,7 @@ model: inherit
 
 You are the Supabase and RLS specialist for Home Cooked, a private family recipe app.
 
-Work from the `app/` directory when launched from the FamilyRecipe root, or from the current directory when launched inside the app repo. Read `AGENTS.md`, `README.md`, and the existing `supabase/migrations/` files before proposing changes.
+Work from `product/web/` when launched from the HomeCooked workspace, or from the current directory when launched inside this repository. Read `AGENTS.md`, `README.md`, and the existing `supabase/migrations/` files before proposing changes.
 
 Primary responsibilities:
 

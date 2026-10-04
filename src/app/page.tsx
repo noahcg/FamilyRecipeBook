@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, ChefHat, ShoppingCart, Sparkles } from "lucide-react";
-import { BrandLockup } from "@/components/ui/BrandLockup";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 
 function FeatureCopy({
   icon: Icon,
@@ -80,11 +80,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <header className="relative z-20 mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5 lg:px-12 lg:py-8">
-        <Link href="/" className="shrink-0">
-          <BrandLockup className="brand-lockup--homepage" />
-        </Link>
-      </header>
+      <PublicHeader />
 
       <main>
         <section className="relative min-h-[480px] pb-4 pt-8 sm:min-h-[520px] xl:min-h-[560px] xl:pb-6 xl:pt-8">
@@ -140,7 +136,7 @@ export default function LandingPage() {
           <div className="space-y-24 sm:space-y-32 lg:space-y-40">
             <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
               <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
-                <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
+                <div className="relative w-full overflow-hidden">
                   <Image
                     src="/images/home-page/app-landing.png"
                     alt="Home Cooked cookbook home screen with recipes, meal plan, and quick actions"
@@ -157,7 +153,7 @@ export default function LandingPage() {
                   tone="bg-green-soft/80 text-green-deep"
                   titleLead="Your cookbooks,"
                   titleAccent="all in one place."
-                  body="Every recipe, idea, and meal plan lives in your own private cookbook — ready when you are."
+                  body="Every recipe, idea, and meal plan lives in your own private cookbook, ready when you are."
                 />
               </div>
             </div>
@@ -173,7 +169,7 @@ export default function LandingPage() {
                 />
               </div>
               <div className="order-2 flex justify-center lg:justify-end">
-                <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
+                <div className="relative w-full overflow-hidden">
                   <Image
                     src="/images/home-page/ai-ideas.png"
                     alt="The Home Cooked recipe ideas screen, turning a short description into a draft recipe"
@@ -188,7 +184,7 @@ export default function LandingPage() {
 
             <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
               <div className="order-2 flex justify-center lg:order-1 lg:justify-start">
-                <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
+                <div className="relative w-full overflow-hidden">
                   <Image
                     src="/images/home-page/recipe-page.png"
                     alt="A recipe page in Home Cooked showing photo, ingredients, and step-by-step method"
@@ -221,7 +217,7 @@ export default function LandingPage() {
                 />
               </div>
               <div className="order-2 flex justify-center lg:justify-end">
-                <div className="relative w-full overflow-hidden rounded-md border border-[rgba(36,79,59,0.14)] bg-paper shadow-[0_24px_60px_rgba(57,45,25,0.14)]">
+                <div className="relative w-full overflow-hidden">
                   <Image
                     src="/images/home-page/grocery-listing.png"
                     alt="The grocery list in Home Cooked with categorized items and nearby store suggestions"
@@ -247,7 +243,7 @@ export default function LandingPage() {
             </span>
           </h2>
           <p className="mx-auto mt-4 max-w-md text-[1.05rem] leading-relaxed text-ink-muted">
-            It only takes a minute. Save the recipes that matter — and the
+            It only takes a minute. Save the recipes that matter and the
             moments behind them.
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3">

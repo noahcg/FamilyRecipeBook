@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createServiceClient } from "@/lib/supabase/service";
 import { requireUser } from "@/lib/auth";
 import { copyRecipeOriginals } from "@/lib/actions/recipeOriginals";
 import { listCategories, resolveCategoryIdForBook } from "@/lib/actions/categories";
@@ -27,6 +26,7 @@ import type {
   RecipeWithRelations,
 } from "@/lib/types";
 import type { BookCategory } from "@/lib/actions/categories";
+import { assertCanCreateRecipe, assertFeatureAccess, EntitlementError, getBookRecipeAccess } from "@/lib/entitlements";
 
 const RECIPE_SELECT_WITH_CATEGORY =
   "*, category:book_categories!recipes_category_id_fkey(id, name)";
@@ -53,9 +53,20 @@ export async function createRecipe(
   input: CreateRecipeInput
 ): Promise<ActionResult<Recipe>> {
   const user = await requireUser();
+  try {
+    await assertCanCreateRecipe(user.id, bookId);
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
+  }
   const parsed = createRecipeSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  if (parsed.data.import_method || parsed.data.import_source || parsed.data.source_url) {
+    try { await assertFeatureAccess(user.id, "recipe.import"); }
+    catch (error) { if (error instanceof EntitlementError) return { success: false, error: error.message }; throw error; }
   }
 
   const supabase = await createClient();
@@ -68,31 +79,16 @@ export async function createRecipe(
   const { ingredients, instructions, category, ...recipeFields } = parsed.data;
   const category_id = await resolveCategoryIdForBook(bookId, category);
 
-  const { data: recipe, error } = await supabase
-    .from("recipes")
-    .insert({ ...recipeFields, category_id, book_id: bookId, created_by: user.id })
-    .select(RECIPE_SELECT_WITH_CATEGORY)
-    .single();
-
+  const { data, error } = await supabase.rpc("save_recipe_atomic", {
+    p_book_id: bookId,
+    p_recipe_id: null,
+    p_fields: { ...recipeFields, category_id },
+    p_ingredients: ingredients,
+    p_instructions: instructions,
+  });
+  const recipe = data as Recipe | null;
   if (error || !recipe) {
     return { success: false, error: error?.message ?? "Could not create recipe" };
-  }
-
-  if (ingredients.length) {
-    const { error: ingredientsError } = await supabase.from("recipe_ingredients").insert(
-      ingredients.map((ing, i) => ({ ...ing, recipe_id: recipe.id, position: i + 1 }))
-    );
-    if (ingredientsError) {
-      return { success: false, error: ingredientsError.message };
-    }
-  }
-  if (instructions.length) {
-    const { error: instructionsError } = await supabase.from("recipe_instructions").insert(
-      instructions.map((ins, i) => ({ body: ins.body, recipe_id: recipe.id, position: i + 1 }))
-    );
-    if (instructionsError) {
-      return { success: false, error: instructionsError.message };
-    }
   }
 
   // Log activity
@@ -159,6 +155,7 @@ export async function updateRecipe(
       "created_by, title, photo_url, source_name, prep_minutes, cook_minutes, servings"
     )
     .eq("id", recipeId)
+    .eq("book_id", bookId)
     .single();
 
   if (!canEditRecipe(role, existing?.created_by === user.id)) {
@@ -166,51 +163,26 @@ export async function updateRecipe(
   }
 
   const { ingredients, instructions, category, ...recipeFields } = parsed.data;
-  const updatePayload: Record<string, unknown> = {
-    ...recipeFields,
-    updated_at: new Date().toISOString(),
-  };
+  const updatePayload: Record<string, unknown> = { ...recipeFields };
   if (category !== undefined) {
     updatePayload.category_id = await resolveCategoryIdForBook(bookId, category);
   }
 
-  const { data: recipe, error } = await supabase
-    .from("recipes")
-    .update(updatePayload)
-    .eq("id", recipeId)
-    .select(RECIPE_SELECT_WITH_CATEGORY)
-    .single();
-
+  // Header and both replacement lists commit together, or all remain unchanged.
+  const { data, error } = await supabase.rpc("save_recipe_atomic", {
+    p_book_id: bookId,
+    p_recipe_id: recipeId,
+    p_fields: updatePayload,
+    p_ingredients: ingredients ?? null,
+    p_instructions: instructions ?? null,
+  });
+  const recipe = data as Recipe | null;
   if (error || !recipe) {
     return { success: false, error: error?.message ?? "Could not update recipe" };
   }
 
-  // Replace ingredients/instructions if provided
-  if (ingredients) {
-    await supabase.from("recipe_ingredients").delete().eq("recipe_id", recipeId);
-    if (ingredients.length) {
-      const { error: ingredientsError } = await supabase.from("recipe_ingredients").insert(
-        ingredients.map((ing, i) => ({ ...ing, recipe_id: recipeId, position: i + 1 }))
-      );
-      if (ingredientsError) {
-        return { success: false, error: ingredientsError.message };
-      }
-    }
-  }
-  if (instructions) {
-    await supabase.from("recipe_instructions").delete().eq("recipe_id", recipeId);
-    if (instructions.length) {
-      const { error: instructionsError } = await supabase.from("recipe_instructions").insert(
-        instructions.map((ins, i) => ({ body: ins.body, recipe_id: recipeId, position: i + 1 }))
-      );
-      if (instructionsError) {
-        return { success: false, error: instructionsError.message };
-      }
-    }
-  }
-
   // A recipe copied into several cookbooks is stored as independent rows that
-  // the "My Recipes" list merges by content. Mirror this edit onto those copies
+  // the "All Recipes" list merges by content. Mirror this edit onto those copies
   // (in cookbooks the user can edit) so they stay in sync and keep merging into
   // a single badged entry instead of splitting apart.
   if (existing) {
@@ -246,7 +218,7 @@ export async function updateRecipe(
 // Copies are matched on the pre-edit fingerprint (title plus the fields a copy
 // shares verbatim, ignoring description so already-diverged copies still re-
 // converge). Only copies the user has permission to edit are touched; writes go
-// through the service client to cover copies authored by other members.
+// through the authenticated atomic writer so RLS rechecks current access.
 async function syncEditAcrossCopies(params: {
   supabase: Awaited<ReturnType<typeof createClient>>;
   userId: string;
@@ -301,47 +273,20 @@ async function syncEditAcrossCopies(params: {
   );
   if (editable.length === 0) return;
 
-  const service = createServiceClient();
-
   for (const sibling of editable) {
-    const payload: Record<string, unknown> = {
-      ...recipeFields,
-      updated_at: new Date().toISOString(),
-    };
+    const payload: Record<string, unknown> = { ...recipeFields };
     if (category !== undefined) {
       payload.category_id = await resolveCategoryIdForBook(sibling.book_id, category);
     }
-
-    const { error: updateError } = await service
-      .from("recipes")
-      .update(payload)
-      .eq("id", sibling.id);
-    if (updateError) continue;
-
-    if (params.ingredients) {
-      await service.from("recipe_ingredients").delete().eq("recipe_id", sibling.id);
-      if (params.ingredients.length) {
-        await service.from("recipe_ingredients").insert(
-          params.ingredients.map((ing, i) => ({
-            ...ing,
-            recipe_id: sibling.id,
-            position: i + 1,
-          }))
-        );
-      }
-    }
-    if (params.instructions) {
-      await service.from("recipe_instructions").delete().eq("recipe_id", sibling.id);
-      if (params.instructions.length) {
-        await service.from("recipe_instructions").insert(
-          params.instructions.map((ins, i) => ({
-            body: ins.body,
-            recipe_id: sibling.id,
-            position: i + 1,
-          }))
-        );
-      }
-    }
+    // Sync remains best effort, but an individual copy can never lose its
+    // children when replacement fails. RLS also catches membership changes.
+    await supabase.rpc("save_recipe_atomic", {
+      p_book_id: sibling.book_id,
+      p_recipe_id: sibling.id,
+      p_fields: payload,
+      p_ingredients: params.ingredients ?? null,
+      p_instructions: params.instructions ?? null,
+    });
   }
 }
 
@@ -357,14 +302,16 @@ export async function deleteRecipe(
     .from("recipes")
     .select("created_by")
     .eq("id", recipeId)
+    .eq("book_id", bookId)
     .single();
 
-  if (!canDeleteRecipe(role, existing?.created_by === user.id)) {
+  if (!existing || !canDeleteRecipe(role, existing.created_by === user.id)) {
     return { success: false, error: "You don't have permission to delete this recipe." };
   }
 
-  const { error } = await supabase.from("recipes").delete().eq("id", recipeId);
-  if (error) return { success: false, error: error.message };
+  const { data: deleted, error } = await supabase.from("recipes").delete()
+    .eq("id", recipeId).eq("book_id", bookId).select("id").maybeSingle();
+  if (error || !deleted) return { success: false, error: error?.message ?? "Recipe could not be deleted. Your access may have changed." };
 
   revalidatePath(`/app/books/${bookId}`);
   return { success: true, data: undefined };
@@ -394,6 +341,8 @@ export async function getRecipeTransferTargets(
   for (const row of rows) {
     const book = Array.isArray(row.book) ? row.book[0] : row.book;
     if (!book || book.id === currentBookId) continue;
+    const access = await getBookRecipeAccess(book.id, user.id);
+    if (!access.allowed) continue;
     targets.push({ id: book.id, title: book.title, role: row.role });
   }
   return targets.sort((a, b) => a.title.localeCompare(b.title));
@@ -413,13 +362,23 @@ export async function getRecipeAssignmentOptions(): Promise<RecipeAssignmentOpti
     book: { id: string; title: string } | { id: string; title: string }[] | null;
   }[];
 
-  const books = rows
+  const candidateBooks = rows
     .map((row) => {
       const book = Array.isArray(row.book) ? row.book[0] : row.book;
       return book ? { id: book.id, title: book.title, role: row.role } : null;
     })
     .filter((book): book is { id: string; title: string; role: BookRole } => Boolean(book))
     .sort((a, b) => a.title.localeCompare(b.title));
+
+  const accessByBook = await Promise.all(
+    candidateBooks.map(async (book) => ({
+      book,
+      access: await getBookRecipeAccess(book.id, user.id),
+    }))
+  );
+  const books = accessByBook
+    .filter(({ access }) => access.canContribute)
+    .map(({ book }) => book);
 
   const categoriesByBook = await Promise.all(
     books.map(async (book) => ({
@@ -438,7 +397,7 @@ export async function getRecipeAssignmentOptions(): Promise<RecipeAssignmentOpti
 // Duplicate a recipe (and everything attached to it — ingredients,
 // instructions, memories, reactions, and ratings) into another cookbook.
 // The copier owns the new recipe; authored content keeps its original
-// authorship, which requires the service-role client to preserve.
+// authorship through a narrowly authorized database copy transaction.
 export async function copyRecipeToBook(
   sourceBookId: string,
   recipeId: string,
@@ -465,6 +424,13 @@ export async function copyRecipeToBook(
     };
   }
 
+  try {
+    await assertCanCreateRecipe(user.id, targetBookId);
+  } catch (error) {
+    if (error instanceof EntitlementError) return { success: false, error: error.message };
+    throw error;
+  }
+
   const { data: src } = await supabase
     .from("recipes")
     .select(RECIPE_SELECT_WITH_CATEGORY)
@@ -477,131 +443,31 @@ export async function copyRecipeToBook(
     .category?.name ?? null;
   const targetCategoryId = await resolveCategoryIdForBook(targetBookId, sourceCategoryName);
 
-  const [
-    { data: ingredients },
-    { data: instructions },
-    { data: stories },
-    { data: reactions },
-    { data: ratings },
-  ] = await Promise.all([
-    supabase
-      .from("recipe_ingredients")
-      .select("position, quantity, unit, item, note, group_label")
-      .eq("recipe_id", recipeId)
-      .order("position", { ascending: true }),
-    supabase
-      .from("recipe_instructions")
-      .select("position, body")
-      .eq("recipe_id", recipeId)
-      .order("position", { ascending: true }),
-    supabase
-      .from("recipe_stories")
-      .select("author_id, body, created_at")
-      .eq("recipe_id", recipeId),
-    supabase
-      .from("recipe_reactions")
-      .select("user_id, type, created_at")
-      .eq("recipe_id", recipeId),
-    supabase
-      .from("recipe_ratings")
-      .select("user_id, rating, created_at")
-      .eq("recipe_id", recipeId),
-  ]);
-
-  const { data: copy, error: insertError } = await supabase
-    .from("recipes")
-    .insert({
-      book_id: targetBookId,
-      created_by: user.id,
-      title: src.title,
-      description: src.description,
-      photo_url: src.photo_url,
-      photo_source: src.photo_source,
-      photo_author: src.photo_author,
-      photo_author_url: src.photo_author_url,
-      photo_source_url: src.photo_source_url,
-      source_name: src.source_name,
-      story: src.story,
-      prep_minutes: src.prep_minutes,
-      cook_minutes: src.cook_minutes,
-      servings: src.servings,
-      category_id: targetCategoryId,
-      tags: src.tags ?? [],
-    })
-    .select()
-    .single();
-
+  // The source snapshot and every destination database row commit together.
+  // The constrained definer RPC preserves authorship without caller-supplied
+  // collaboration data or unrestricted service-role writes.
+  const { data, error: insertError } = await supabase.rpc("copy_recipe_atomic", {
+    p_source_book_id: sourceBookId,
+    p_recipe_id: recipeId,
+    p_target_book_id: targetBookId,
+    p_category_id: targetCategoryId,
+  });
+  const copy = data as Recipe | null;
   if (insertError || !copy) {
     return { success: false, error: insertError?.message ?? "Could not copy recipe." };
   }
 
   const originalsResult = await copyRecipeOriginals(recipeId, copy.id);
   if (!originalsResult.success) {
-    const { error: rollbackError } = await supabase.from("recipes").delete().eq("id", copy.id);
+    const { data: removed, error: rollbackError } = await supabase.from("recipes").delete()
+      .eq("id", copy.id).eq("book_id", targetBookId).select("id").maybeSingle();
     return {
       success: false,
-      error: rollbackError
+      error: rollbackError || !removed
         ? "The recipe was copied, but its originals could not be preserved. Check the destination cookbook before retrying."
         : "Could not preserve the original files, so the recipe was not copied. Please try again.",
     };
   }
-
-  if (ingredients?.length) {
-    await supabase
-      .from("recipe_ingredients")
-      .insert(ingredients.map((ing) => ({ ...ing, recipe_id: copy.id })));
-  }
-  if (instructions?.length) {
-    await supabase
-      .from("recipe_instructions")
-      .insert(instructions.map((ins) => ({ ...ins, recipe_id: copy.id })));
-  }
-
-  // Memories, reactions, and ratings keep their original author/user, which
-  // RLS would otherwise reject — duplicate them with the service-role client.
-  const hasAuthored =
-    (stories?.length ?? 0) + (reactions?.length ?? 0) + (ratings?.length ?? 0) > 0;
-  if (hasAuthored) {
-    const admin = createServiceClient();
-    if (stories?.length) {
-      await admin.from("recipe_stories").insert(
-        stories.map((s) => ({
-          recipe_id: copy.id,
-          author_id: s.author_id,
-          body: s.body,
-          created_at: s.created_at,
-        }))
-      );
-    }
-    if (reactions?.length) {
-      await admin.from("recipe_reactions").insert(
-        reactions.map((r) => ({
-          recipe_id: copy.id,
-          user_id: r.user_id,
-          type: r.type,
-          created_at: r.created_at,
-        }))
-      );
-    }
-    if (ratings?.length) {
-      await admin.from("recipe_ratings").insert(
-        ratings.map((r) => ({
-          recipe_id: copy.id,
-          user_id: r.user_id,
-          rating: r.rating,
-          created_at: r.created_at,
-        }))
-      );
-    }
-  }
-
-  await supabase.from("activity_events").insert({
-    book_id: targetBookId,
-    recipe_id: copy.id,
-    actor_id: user.id,
-    type: "recipe_created",
-    metadata: { recipe_title: copy.title, copied_from: sourceBookId },
-  });
 
   revalidatePath(`/app/books/${targetBookId}`);
   revalidatePath(`/app/books/${targetBookId}/recipes`);
@@ -634,22 +500,24 @@ export async function moveRecipeToBook(
     .category?.name ?? null;
 
   const isCreator = existing.created_by === user.id;
-  const [sourceRole, targetRole] = await Promise.all([
+  const [sourceRole, targetRole, sourceAccess, targetAccess] = await Promise.all([
     getBookRole(supabase, sourceBookId, user.id),
     getBookRole(supabase, targetBookId, user.id),
+    getBookRecipeAccess(sourceBookId, user.id),
+    getBookRecipeAccess(targetBookId, user.id),
   ]);
 
   // Mirrors the recipes UPDATE policy on both the old and the new row.
   const canRemove =
     canManageBook(sourceRole as BookRole | null) ||
-    (isCreator && canContribute(sourceRole as BookRole | null));
+    (isCreator && canContribute(sourceRole as BookRole | null) && sourceAccess.canContribute);
   if (!canRemove) {
     return { success: false, error: "You don't have permission to move this recipe." };
   }
 
   const canPlace = isCreator
-    ? canContribute(targetRole as BookRole | null)
-    : canManageBook(targetRole as BookRole | null);
+    ? canContribute(targetRole as BookRole | null) && targetAccess.allowed
+    : canManageBook(targetRole as BookRole | null) && targetAccess.allowed;
   if (!canPlace) {
     return {
       success: false,
@@ -662,20 +530,19 @@ export async function moveRecipeToBook(
   // usual fallback to the target's "Other") before flipping book_id.
   const targetCategoryId = await resolveCategoryIdForBook(targetBookId, sourceCategoryName);
 
-  const { error } = await supabase
+  const { data: moved, error } = await supabase
     .from("recipes")
     .update({
       book_id: targetBookId,
       category_id: targetCategoryId,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", recipeId);
-  if (error) return { success: false, error: error.message };
+    .eq("id", recipeId)
+    .eq("book_id", sourceBookId)
+    .select("id").maybeSingle();
+  if (error || !moved) return { success: false, error: error?.message ?? "Recipe could not be moved. Your access may have changed." };
 
-  // The recipe may have belonged to collections in the old book; those links
-  // are no longer valid once it leaves. Best-effort cleanup.
-  const admin = createServiceClient();
-  await admin.from("collection_recipes").delete().eq("recipe_id", recipeId);
+  // Source collection links are removed atomically by the database trigger.
 
   await supabase.from("activity_events").insert({
     book_id: targetBookId,
@@ -841,7 +708,7 @@ export async function getCategoryRecipes(
 
 // Every recipe the user can see, across all their cookbooks, tagged with the
 // cookbook it lives in. RLS scopes `recipes` to the user's books. Powers the
-// global My Recipes page, the Home dashboard, and the cross-book meal-plan
+// global All Recipes page, the Home dashboard, and the cross-book meal-plan
 // recipe picker.
 export async function getAllUserRecipes(): Promise<
   {

@@ -1,5 +1,6 @@
 "use client";
 
+import { mediaUrl } from "@/lib/media";
 import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -828,6 +829,7 @@ export function RecipeForm({
 
     replaceIngredients(parsedRecipe.ingredients);
     replaceInstructions(parsedRecipe.instructions);
+    setValue("import_source", "pasted_text", { shouldDirty: true });
     setRecipeImportedViaUpload(false);
     const parsedDetails = {
       title: parsedRecipe.title,
@@ -1016,6 +1018,12 @@ export function RecipeForm({
           </Select>
         </div>
       )}
+      {!showCookbookPicker && showPasteEntry && entryMode !== "manual" && activeBook && (
+        <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
+          <p className="mt-1 text-sm font-extrabold text-green-deep">{activeBook.title}</p>
+        </div>
+      )}
 
       {showPasteEntry && (
         <div className="mb-6 inline-flex rounded-full border border-line bg-paper-soft p-1 shadow-xs">
@@ -1031,6 +1039,11 @@ export function RecipeForm({
                 type="button"
                 onClick={() => {
                   setEntryMode(mode as "manual" | "paste" | "import");
+                  setValue("import_source", mode === "paste" ? "pasted_text" : "", { shouldDirty: true });
+                  if (mode === "manual") {
+                    setValue("import_method", undefined, { shouldDirty: true });
+                    setValue("import_metadata", {}, { shouldDirty: true });
+                  }
                   if (mode !== "manual") setPhotoImportReviewNotice(null);
                 }}
                 className={clsx(
@@ -1083,6 +1096,12 @@ export function RecipeForm({
             </Select>
           </section>
         )}
+        {!showCookbookPicker && activeBook && (
+          <section className={sectionCardClassName}>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
+            <p className="mt-1 text-sm font-extrabold text-green-deep">{activeBook.title}</p>
+          </section>
+        )}
 
         {/* ── Photo ── */}
         <section className={sectionCardClassName}>
@@ -1106,7 +1125,7 @@ export function RecipeForm({
               {photoPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={photoPreview}
+                  src={mediaUrl(photoPreview)}
                   alt="Recipe photo preview"
                   className="recipe-image w-full h-full"
                 />
@@ -1607,7 +1626,7 @@ export function RecipeForm({
             Cancel
           </Button>
           <Button type="submit" variant="primary" loading={isSubmitting} className="flex-1">
-            {isEdit ? "Save changes" : "Add to this book"}
+            {isEdit ? "Save changes" : `Save to ${activeBook?.title ?? "cookbook"}`}
           </Button>
         </div>
         </div>
@@ -1829,7 +1848,7 @@ export function RecipeForm({
                   className="whitespace-nowrap"
                   disabled={!pasteSummary}
                 >
-                  Add to this book
+                  Save to {activeBook?.title ?? "cookbook"}
                 </Button>
               </div>
             </div>

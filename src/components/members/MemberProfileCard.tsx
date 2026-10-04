@@ -1,3 +1,4 @@
+import { mediaUrl } from "@/lib/media";
 import { clsx } from "clsx";
 import type { MemberWithProfile } from "@/lib/types";
 
@@ -40,7 +41,7 @@ export function MemberProfileCard({
         {profile.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={profile.avatar_url}
+            src={mediaUrl(profile.avatar_url)}
             alt={profile.full_name ?? "Member"}
             className="w-full h-full rounded-full object-cover"
           />

@@ -1,5 +1,6 @@
+import { mediaUrl } from "@/lib/media";
 import Link from "next/link";
-import { ChevronRight, FileText, Lock, Mail, ShieldCheck } from "lucide-react";
+import { BookOpen, ChevronRight, FileText, Lock, Mail, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { BookCategoriesManager } from "@/components/book/BookCategoriesManager";
@@ -9,7 +10,6 @@ import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
-import { GuidesPreference } from "@/components/settings/GuidesPreference";
 import { DeleteAccountSection } from "@/components/settings/DeleteAccountSection";
 import { NameCaptureForm } from "@/components/onboarding/NameCaptureForm";
 import {
@@ -20,6 +20,8 @@ import { supportMailto } from "@/lib/support";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
+import type { BillingStatus } from "@/lib/entitlements";
+import { BillingCard } from "@/components/billing/BillingCard";
 
 interface GlobalSettingsPageContentProps {
   profile: Profile;
@@ -30,6 +32,7 @@ interface GlobalSettingsPageContentProps {
   };
   cloudflareConfigured: boolean;
   groceryDayLabels: boolean;
+  billing: BillingStatus;
 }
 
 interface BookSettingsPageContentProps {
@@ -57,12 +60,18 @@ export function GlobalSettingsPageContent({
   aiSettings,
   cloudflareConfigured,
   groceryDayLabels,
+  billing,
 }: GlobalSettingsPageContentProps) {
   const aiSummary = aiSettings.ai_provider ? "Custom AI key set" : "Default AI";
   const defaultRecipeModel = getCloudflareModelDisplayName(
     resolveCloudflareTaskConfig("recipeGeneration").primary
   );
-  const grocerySummary = groceryDayLabels ? "Grocery day labels on" : "Grocery day labels off";
+  const grocerySummary =
+    billing.plan === "plus"
+      ? groceryDayLabels
+        ? "Grocery day labels on"
+        : "Grocery day labels off"
+      : "Free plan";
   const profileSummary = profile.full_name ?? "Profile";
 
   return (
@@ -90,7 +99,8 @@ export function GlobalSettingsPageContent({
         </header>
 
         <div className="space-y-10">
-          <section className="scroll-mt-6 border-b border-line-soft pb-8">
+          <BillingCard billing={billing} />
+          {billing.plan === "plus" && <section className="scroll-mt-6 border-b border-line-soft pb-8">
             <div className="mb-4 flex items-baseline gap-4">
               <h2
                 className="text-2xl font-bold leading-tight text-green-deep"
@@ -112,7 +122,7 @@ export function GlobalSettingsPageContent({
                   {profile.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={profile.avatar_url}
+                      src={mediaUrl(profile.avatar_url)}
                       alt={profile.full_name ?? "Profile"}
                       className="h-full w-full rounded-full object-cover"
                     />
@@ -142,7 +152,7 @@ export function GlobalSettingsPageContent({
                 </div>
               )}
             </div>
-          </section>
+          </section>}
 
           <section className="scroll-mt-6 border-b border-line-soft pb-8">
             <div className="mb-4 flex items-baseline gap-4">
@@ -209,22 +219,6 @@ export function GlobalSettingsPageContent({
             </div>
           </section>
 
-          <section className="scroll-mt-6 border-b border-line-soft pb-8">
-            <div className="mb-4 flex items-baseline gap-4">
-              <h2
-                className="text-2xl font-bold leading-tight text-green-deep"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                Tips &amp; Guides
-              </h2>
-              <span className="h-px flex-1 bg-line-soft" />
-            </div>
-            <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
-              The short walkthrough hints that appear around the app to help you get started.
-            </p>
-            <GuidesPreference />
-          </section>
-
           <section className="scroll-mt-6 border-b border-line-soft pb-8 last:border-b-0">
             <div className="mb-4 flex items-baseline gap-4">
               <h2
@@ -238,7 +232,7 @@ export function GlobalSettingsPageContent({
             <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
               The terms you agreed to and how your data is handled.
             </p>
-            <div className="grid gap-3 lg:grid-cols-3">
+            <div className="grid gap-3 lg:grid-cols-2">
               <Link
                 href="/terms"
                 target="_blank"
@@ -288,6 +282,21 @@ export function GlobalSettingsPageContent({
                 </span>
                 <ChevronRight size={18} className="shrink-0 text-ink-soft" />
               </a>
+              <Link
+                href="/guides"
+                className="recipe-card recipe-card--interactive flex items-center gap-3 p-5 transition-colors hover:bg-green-pale/40"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-green-soft/70 text-green-deep">
+                  <BookOpen size={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-green-deep">Guides &amp; help</span>
+                  <span className="mt-0.5 block text-sm leading-relaxed text-ink-muted">
+                    Learn your way around Home Cooked.
+                  </span>
+                </span>
+                <ChevronRight size={18} className="shrink-0 text-ink-soft" />
+              </Link>
             </div>
           </section>
 

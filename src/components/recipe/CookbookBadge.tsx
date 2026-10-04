@@ -14,7 +14,7 @@ const BADGE_CLASS =
 
 /**
  * Small pill identifying which cookbook a recipe belongs to. Used across the
- * account-level (global) recipe listings — My Recipes, Favorites, the Home
+ * account-level (global) recipe listings — All Recipes, Favorites, the Home
  * dashboard, search results — so a recipe's location is clear without opening
  * it. Recipes can be reached by either path (global or cookbook), so this only
  * communicates location, it doesn't change the destination.

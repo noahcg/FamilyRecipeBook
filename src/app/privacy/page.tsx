@@ -26,6 +26,13 @@ const privacySections = [
           features can work. Location is used only when you ask to find nearby
           stores or type a location for that search.
         </p>
+        <p>
+          If you subscribe to Plus, Stripe processes your payment. We receive
+          limited billing information such as a Stripe customer or subscription
+          identifier, subscription status, price, billing-period dates, payment
+          outcome, and cancellation settings. Home Cooked does not receive or
+          store your full card number or card security code.
+        </p>
       </>
     ),
   },
@@ -49,9 +56,11 @@ const privacySections = [
           Your cookbook content is shared with the people who have access to that
           cookbook. Outside your invited members, we share information with
           service providers that help run the app, such as authentication,
-          database, storage, email, hosting, AI, image search, and location-search
-          providers. They receive the information needed to perform their
-          services.
+          database, storage, email, hosting, AI, image search, location-search,
+          and payment providers. Stripe receives the information needed to
+          process subscriptions, payments, invoices, and account billing
+          management. See Stripe&apos;s privacy policy for its independent
+          processing practices.
         </p>
         <p>
           Content contributed to a shared cookbook is part of that cookbook. If
@@ -148,9 +157,10 @@ const privacySections = [
         backups, logs, or where retention is needed for legal or operational
         reasons.
         Moderation reports use minimal case references and operational notes; they
-        do not copy recipe text or original media into the moderation record. The
-        final retention periods and reporting process remain subject to legal and
-        privacy review.
+        do not copy recipe text or original media into the moderation record.
+        If you cancel Plus, we retain billing records and saved content as needed
+        to provide the Free plan, process support requests, prevent fraud,
+        reconcile payments, and meet legal or accounting obligations.
       </p>
     ),
   },
@@ -184,9 +194,7 @@ const privacySections = [
         We may update this Privacy Policy as the app, providers, or legal
         requirements change. We will update the date above when we do. Questions
         or privacy requests can be sent to{" "}
-        <a href={privacyMailto}>{privacyEmail}</a>. This plain-English page is
-        practical product information and should not be treated as
-        attorney-drafted legal advice.
+        <a href={privacyMailto}>{privacyEmail}</a>.
       </p>
     ),
   },

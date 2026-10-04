@@ -1,54 +1,25 @@
 import { createClient } from "./supabase/client";
+import { prepareImageUpload } from "./prepareImageUpload";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
-const MAX_SIZE = 8 * 1024 * 1024; // 8 MB
-
-export async function uploadRecipeImage(
-  file: File,
-  userId: string
-): Promise<{ url: string } | { error: string }> {
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { error: "Only JPEG, PNG, or WebP images are supported." };
+async function uploadImage(file: File, userId: string, bucket: "recipe-images" | "avatars", maxDimension: number): Promise<{ url: string } | { error: string }> {
+  try {
+    const { blob, extension } = await prepareImageUpload(file, maxDimension);
+    const path = `${userId}/${crypto.randomUUID()}.${extension}`;
+    const storage = createClient().storage.from(bucket);
+    const { error } = await storage.upload(path, blob, { upsert: false, contentType: blob.type });
+    if (error) return { error: error.message };
+    // Persist the stable object identifier; rendering resolves authorized access.
+    const { data } = storage.getPublicUrl(path);
+    return { url: data.publicUrl };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Image upload failed. Please try again." };
   }
-  if (file.size > MAX_SIZE) {
-    return { error: "Image must be smaller than 8 MB." };
-  }
-
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-  const supabase = createClient();
-  const { error } = await supabase.storage
-    .from("recipe-images")
-    .upload(path, file, { upsert: false });
-
-  if (error) return { error: error.message };
-
-  const { data } = supabase.storage.from("recipe-images").getPublicUrl(path);
-  return { url: data.publicUrl };
 }
 
-export async function uploadAvatar(
-  file: File,
-  userId: string
-): Promise<{ url: string } | { error: string }> {
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { error: "Only JPEG, PNG, or WebP images are supported." };
-  }
-  if (file.size > MAX_SIZE) {
-    return { error: "Image must be smaller than 8 MB." };
-  }
+export async function uploadRecipeImage(file: File, userId: string) {
+  return uploadImage(file, userId, "recipe-images", 1800);
+}
 
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${userId}/avatar.${ext}`;
-
-  const supabase = createClient();
-  const { error } = await supabase.storage
-    .from("avatars")
-    .upload(path, file, { upsert: true });
-
-  if (error) return { error: error.message };
-
-  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-  return { url: data.publicUrl };
+export async function uploadAvatar(file: File, userId: string) {
+  return uploadImage(file, userId, "avatars", 640);
 }

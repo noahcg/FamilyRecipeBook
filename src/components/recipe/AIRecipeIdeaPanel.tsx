@@ -65,6 +65,7 @@ export function AIRecipeIdeaPanel({
   const resolvedBookId = assignmentOptions.some((book) => book.id === selectedBookId)
     ? selectedBookId
     : initialBookId;
+  const selectedBook = assignmentOptions.find((book) => book.id === resolvedBookId) ?? assignmentOptions[0];
   const [prompt, setPrompt] = useState(initialPrompt ?? "");
   const [table, setTable] = useState(defaultIdeaTable);
   const [generatedFor, setGeneratedFor] = useState("");
@@ -139,6 +140,7 @@ export function AIRecipeIdeaPanel({
         onSave={handleSave}
         isSaving={isSaving}
         error={error}
+        cookbookTitle={selectedBook?.title ?? "your cookbook"}
       />
     );
   }
@@ -185,6 +187,12 @@ export function AIRecipeIdeaPanel({
                     </option>
                   ))}
                 </Select>
+              </div>
+            )}
+            {assignmentOptions.length === 1 && selectedBook && (
+              <div className="mt-4 rounded-md border border-line-soft bg-paper-warm px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
+                <p className="mt-1 text-sm font-extrabold text-green-deep">{selectedBook.title}</p>
               </div>
             )}
 
@@ -329,7 +337,7 @@ export function AIRecipeIdeaPanel({
                     disabled={isSaving}
                   >
                     {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                    Save to Cookbook
+                    Save to {selectedBook?.title ?? "Cookbook"}
                   </Button>
                   <p className="text-xs text-ink-soft">
                     Cook it right away, or save it to edit details and the image.

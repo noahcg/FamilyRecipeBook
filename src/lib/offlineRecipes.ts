@@ -1,5 +1,6 @@
 "use client";
 
+import { mediaUrl } from "@/lib/media";
 import type { RecipeWithRelations } from "@/lib/types";
 
 const DB_NAME = "home-cooked-offline";
@@ -81,7 +82,7 @@ async function cacheRecipePhoto(photoUrl: string | null) {
   if (!photoUrl) return {};
 
   try {
-    const response = await fetch(photoUrl, { mode: "cors", credentials: "omit" });
+    const response = await fetch(mediaUrl(photoUrl), { mode: "cors", credentials: "same-origin" });
     if (!response.ok) return {};
 
     const blob = await response.blob();

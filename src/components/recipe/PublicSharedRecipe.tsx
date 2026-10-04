@@ -1,5 +1,6 @@
 "use client";
 
+import { mediaUrl } from "@/lib/media";
 import { useState } from "react";
 import Link from "next/link";
 import { Check, Clock, Heart, Plus } from "lucide-react";
@@ -16,7 +17,7 @@ export function PublicSharedRecipe({ recipe, shareId, authenticated }: { recipe:
       // The URL may be a user-uploaded Supabase image or a remote import, so it
       // cannot be safely constrained to Next Image's configured domains.
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={recipe.photo_url} alt="" className="mb-7 aspect-[16/8] w-full rounded-2xl object-cover shadow-paper" />
+      <img src={mediaUrl(recipe.photo_url, shareId)} alt="" className="mb-7 aspect-[16/8] w-full rounded-2xl object-cover shadow-paper" />
     )}
     {recipe.category?.name && <p className="mb-3 text-xs font-bold uppercase tracking-[0.1em] text-accent-cinnamon">{recipe.category.name}</p>}
     <h1 className="text-4xl font-bold leading-tight text-green-deep sm:text-5xl" style={{ fontFamily: "var(--font-playfair)" }}>{recipe.title}</h1>

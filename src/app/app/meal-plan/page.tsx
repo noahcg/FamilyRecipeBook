@@ -1,8 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { MealPlanCalendar } from "@/components/meal-plan/MealPlanCalendar";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
 import { getAllUserRecipes } from "@/lib/actions/recipes";
+import { assertFeatureAccess, EntitlementError } from "@/lib/entitlements";
+import { requireUser } from "@/lib/auth";
 
 function getMondayOfCurrentWeek(): string {
   const today = new Date();
@@ -14,6 +16,9 @@ function getMondayOfCurrentWeek(): string {
 }
 
 export default async function MealPlanPage() {
+  const user = await requireUser();
+  try { await assertFeatureAccess(user.id, "mealPlanner"); }
+  catch (error) { if (error instanceof EntitlementError) redirect("/pricing"); throw error; }
   const [householdId, recipes] = await Promise.all([getHouseholdId(), getAllUserRecipes()]);
 
   if (!householdId) notFound();

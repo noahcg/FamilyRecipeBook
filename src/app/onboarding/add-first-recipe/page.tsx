@@ -3,6 +3,8 @@ import Link from "next/link";
 import { RecipeForm } from "@/components/recipe/RecipeForm";
 import { getAISettings } from "@/lib/actions/aiSettings";
 import { listCategories } from "@/lib/actions/categories";
+import { getEffectiveEntitlements } from "@/lib/entitlements";
+import { requireUser } from "@/lib/auth";
 import { EntryShell } from "@/components/layout/EntryShell";
 
 interface Props {
@@ -12,10 +14,12 @@ interface Props {
 export default async function AddFirstRecipePage({ searchParams }: Props) {
   const { bookId } = await searchParams;
   if (!bookId) redirect("/onboarding/create-book");
+  const user = await requireUser();
   const [aiSettings, categories] = await Promise.all([
     getAISettings(),
     listCategories(bookId),
   ]);
+  const billing = await getEffectiveEntitlements(user.id);
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
 
   return (
@@ -38,10 +42,19 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
         </p>
       }
     >
+      <Link
+        href="/guides/how-to-add-your-first-recipe-to-home-cooked"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mb-5 inline-flex min-h-11 items-center text-sm font-semibold text-green-deep underline underline-offset-4"
+      >
+        Help choosing an entry method (opens in a new tab)
+      </Link>
       <RecipeForm
         bookId={bookId}
         categories={categories}
         hasOpenAIKey={hasOpenAIKey}
+        enablePasteEntry={billing.plan === "plus"}
         onSuccessRedirect={`/onboarding/add-member?bookId=${bookId}`}
       />
     </EntryShell>
