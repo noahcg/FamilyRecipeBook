@@ -19,6 +19,16 @@ export async function POST() {
       return NextResponse.json({ error: "You already have a Plus subscription. Use Manage Billing in Settings." }, { status: 409 });
     }
     const stripe = getStripe();
+    if (billing?.stripe_subscription_id) {
+      try {
+        const current = await stripe.subscriptions.retrieve(billing.stripe_subscription_id);
+        if (["active", "trialing", "past_due", "unpaid"].includes(current.status)) {
+          return NextResponse.json({ error: "A Plus subscription is still active in billing. Manage it in Settings or contact support before purchasing again." }, { status: 409 });
+        }
+      } catch (error) {
+        if (!(typeof error === "object" && error !== null && "code" in error && error.code === "resource_missing")) throw error;
+      }
+    }
     let customerId = billing?.stripe_customer_id ?? null;
     if (customerId) {
       try {

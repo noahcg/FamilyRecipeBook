@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.9] - 2026-10-05
+
+### Refund and cancellation lifecycle
+
+- Added separate administrator controls for period-end cancellation/reactivation and a reviewed full refund action that validates the Stripe invoice and payment, cancels the subscription immediately, and records an atomic downgrade and audit trail.
+- Reconciled verified full Stripe refund events, protected refunded subscriptions from stale webhook updates and duplicate checkout, added a Stripe billing refresh control, and clarified paid-through and refunded states in Settings.
+- Added billing lifecycle tests and an operator guide for refunds, cancellation, reconciliation, and release setup.
+
 ## [1.0.8] - 2026-10-05
 
 ### Plus refund policy

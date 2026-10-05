@@ -49,6 +49,7 @@ export type BillingStatus = {
   cancel_at_period_end: boolean;
   stripe_customer_id: string | null;
   grandfathered_at: string | null;
+  refunded_at: string | null;
 };
 export class EntitlementError extends Error {
   constructor(public readonly code: "FEATURE_REQUIRES_PLUS" | "RECIPE_LIMIT_REACHED" | "COOKBOOK_LIMIT_REACHED" | "AI_ALLOWANCE_EXHAUSTED", message: string) { super(message); }
@@ -58,15 +59,33 @@ export function planForStatus(status: string | null | undefined): PlanKey {
   return status === "active" || status === "trialing" ? "plus" : "free";
 }
 
+type BillingRecord = {
+  status: string | null;
+  plan: string | null;
+  grandfathered_plus: boolean | null;
+  stripe_subscription_id: string | null;
+  refunded_subscription_id: string | null;
+  cancel_at_period_end: boolean | null;
+  current_period_end: string | null;
+};
+
+export function tierForBillingRecord(data: BillingRecord | null): BillingTier {
+  if (!data) return "free";
+  if (data.grandfathered_plus) return "grandfathered";
+  if (data.refunded_subscription_id && data.refunded_subscription_id === data.stripe_subscription_id) return "free";
+  if (data.cancel_at_period_end && data.current_period_end && new Date(data.current_period_end).getTime() <= Date.now()) return "free";
+  return planForStatus(data.status ?? data.plan);
+}
+
 export async function getEffectiveEntitlements(userId: string): Promise<BillingStatus & { maxCookbooks: number | null; maxRecipes: number | null; maxAiIdeasPerPeriod: number }> {
   const supabase = await createClient();
-  const { data } = await supabase.from("billing_accounts").select("plan,status,current_period_end,cancel_at_period_end,stripe_customer_id,grandfathered_plus,grandfathered_at").eq("user_id", userId).maybeSingle();
-  const tier: BillingTier = data?.grandfathered_plus === true
-    ? "grandfathered"
-    : planForStatus(data?.status ?? data?.plan);
+  const { data } = await supabase.from("billing_accounts").select("plan,status,current_period_end,cancel_at_period_end,stripe_customer_id,stripe_subscription_id,refunded_subscription_id,refunded_at,grandfathered_plus,grandfathered_at").eq("user_id", userId).maybeSingle();
+  if (!data) throw new Error("Billing state could not be loaded.");
+  const refunded = Boolean(data.refunded_subscription_id && data.refunded_subscription_id === data.stripe_subscription_id);
+  const tier = tierForBillingRecord(data);
   const plan: PlanKey = tier === "free" ? "free" : "plus";
   const definition = PLAN_DEFINITIONS[plan];
-  return { plan, tier, status: data?.status ?? "free", current_period_end: data?.current_period_end ?? null, cancel_at_period_end: data?.cancel_at_period_end ?? false, stripe_customer_id: data?.stripe_customer_id ?? null, grandfathered_at: data?.grandfathered_at ?? null, maxCookbooks: definition.maxCookbooks, maxRecipes: definition.maxRecipes, maxAiIdeasPerPeriod: definition.maxAiIdeasPerPeriod };
+  return { plan, tier, status: data?.status ?? "free", current_period_end: data?.current_period_end ?? null, cancel_at_period_end: data?.cancel_at_period_end ?? false, stripe_customer_id: data?.stripe_customer_id ?? null, grandfathered_at: data?.grandfathered_at ?? null, refunded_at: refunded ? data.refunded_at : null, maxCookbooks: definition.maxCookbooks, maxRecipes: definition.maxRecipes, maxAiIdeasPerPeriod: definition.maxAiIdeasPerPeriod };
 }
 
 export async function canUseFeature(userId: string, feature: FeatureKey) {
@@ -107,11 +126,11 @@ export async function getBookRecipeAccess(bookId: string, userId: string): Promi
   }
 
   const [{ data: billing }, { data: oldestBook }, { count }] = await Promise.all([
-    admin.from("billing_accounts").select("status,grandfathered_plus").eq("user_id", book.owner_id).maybeSingle(),
+    admin.from("billing_accounts").select("status,plan,grandfathered_plus,stripe_subscription_id,refunded_subscription_id,cancel_at_period_end,current_period_end").eq("user_id", book.owner_id).maybeSingle(),
     admin.from("recipe_books").select("id").eq("owner_id", book.owner_id).order("created_at", { ascending: true }).order("id", { ascending: true }).limit(1).maybeSingle(),
     admin.from("recipes").select("id", { count: "exact", head: true }).eq("book_id", bookId),
   ]);
-  const ownerHasPlus = billing?.grandfathered_plus === true || billing?.status === "active" || billing?.status === "trialing";
+  const ownerHasPlus = tierForBillingRecord(billing) !== "free";
   const isOwner = book.owner_id === userId;
   const hasRole = membership.role === "keeper" || membership.role === "contributor";
   const isEligibleFreeBook = oldestBook?.id === bookId;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Database, ScrollText, Search, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
+import { tierForBillingRecord } from "@/lib/entitlements";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PushSubscriptionToggle } from "@/components/admin/PushSubscriptionToggle";
 import { AdminShareProfiles } from "./AdminShareProfiles";
@@ -139,7 +140,7 @@ export default async function AdminPage({
       .gte("expires_at", new Date().toISOString()),
     // Emails live in auth.users, not profiles — fetch them to label rows.
     admin.auth.admin.listUsers({ perPage: 1000 }),
-    admin.from("billing_accounts").select("user_id,status,plan,grandfathered_plus").order("updated_at", { ascending: false }),
+    admin.from("billing_accounts").select("user_id,status,plan,grandfathered_plus,stripe_subscription_id,refunded_subscription_id,cancel_at_period_end,current_period_end").order("updated_at", { ascending: false }),
     // Recent privileged actions for the audit log feed.
     admin
       .from("admin_actions")
@@ -164,11 +165,7 @@ export default async function AdminPage({
   const billingByUser = new Map((billingRows ?? []).map((row) => [row.user_id, row]));
   const entitlementRows: AdminEntitlementRow[] = profileRows.map((profile) => {
     const billing = billingByUser.get(profile.id);
-    const tier = billing?.grandfathered_plus
-      ? "grandfathered"
-      : billing?.status === "active" || billing?.status === "trialing" || billing?.plan === "plus"
-        ? "plus"
-        : "free";
+    const tier = tierForBillingRecord(billing ?? null);
     return { id: profile.id, name: profile.full_name ?? "Unnamed profile", email: emailById.get(profile.id) ?? null, tier };
   });
   const shareCookbooks = (allCookbooks ?? [])

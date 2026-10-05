@@ -6,7 +6,7 @@ import ts from "typescript";
 const source = await readFile(new URL("../src/app/api/billing/checkout/route.ts", import.meta.url), "utf8");
 const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } });
 
-async function checkout({ customer, failure, status = "canceled", saveFails = false }) {
+async function checkout({ customer, failure, status = "canceled", stripeStatus = "canceled", saveFails = false }) {
   const calls = [];
   const billing = { stripe_customer_id: "cus_old", stripe_subscription_id: "sub_old", status };
   const admin = { from: () => ({
@@ -14,6 +14,7 @@ async function checkout({ customer, failure, status = "canceled", saveFails = fa
     upsert: async (data) => { calls.push(["save", data]); return { error: saveFails ? new Error("save failed") : null }; },
   }) };
   const stripe = {
+    subscriptions: { retrieve: async () => { calls.push(["subscription"]); return { status: stripeStatus }; } },
     customers: {
       retrieve: async () => { calls.push(["retrieve"]); if (failure) throw failure; return customer; },
       create: async (_, options) => { calls.push(["create", options]); return { id: "cus_new" }; },
@@ -38,24 +39,24 @@ for (const scenario of [{ failure: { code: "resource_missing" } }, { customer: {
   test(`checkout replaces a ${scenario.failure ? "missing" : "deleted"} customer before opening checkout`, async () => {
     const { response, calls } = await checkout(scenario);
     assert.equal(response.status, 200);
-    assert.deepEqual(calls.map(call => call[0]), ["retrieve", "create", "save", "checkout"]);
-    assert.equal(calls[1][1].idempotencyKey, "home-cooked-customer-user_mock-cus_old");
-    assert.equal(calls[2][1].stripe_customer_id, "cus_new");
-    assert.equal(calls[3][1].customer, "cus_new");
+    assert.deepEqual(calls.map(call => call[0]), ["subscription", "retrieve", "create", "save", "checkout"]);
+    assert.equal(calls[2][1].idempotencyKey, "home-cooked-customer-user_mock-cus_old");
+    assert.equal(calls[3][1].stripe_customer_id, "cus_new");
+    assert.equal(calls[4][1].customer, "cus_new");
   });
 }
 
 test("checkout reuses an existing customer", async () => {
   const { response, calls } = await checkout({ customer: { id: "cus_old" } });
   assert.equal(response.status, 200);
-  assert.deepEqual(calls.map(call => call[0]), ["retrieve", "checkout"]);
-  assert.equal(calls[1][1].customer, "cus_old");
+  assert.deepEqual(calls.map(call => call[0]), ["subscription", "retrieve", "checkout"]);
+  assert.equal(calls[2][1].customer, "cus_old");
 });
 
 test("network or authorization failures do not create replacement customers", async () => {
   const { response, calls } = await checkout({ failure: { code: "api_connection_error" } });
   assert.equal(response.status, 500);
-  assert.deepEqual(calls.map(call => call[0]), ["retrieve"]);
+  assert.deepEqual(calls.map(call => call[0]), ["subscription", "retrieve"]);
 });
 
 test("existing subscriptions block checkout before customer recovery", async () => {
@@ -67,5 +68,11 @@ test("existing subscriptions block checkout before customer recovery", async () 
 test("failed mapping saves prevent checkout", async () => {
   const { response, calls } = await checkout({ customer: { deleted: true }, saveFails: true });
   assert.equal(response.status, 500);
-  assert.deepEqual(calls.map(call => call[0]), ["retrieve", "create", "save"]);
+  assert.deepEqual(calls.map(call => call[0]), ["subscription", "retrieve", "create", "save"]);
+});
+
+test("Stripe-active refunded subscription blocks duplicate checkout even when local status is canceled", async () => {
+  const { response, calls } = await checkout({ status: "canceled", stripeStatus: "active" });
+  assert.equal(response.status, 409);
+  assert.deepEqual(calls.map(call => call[0]), ["subscription"]);
 });
