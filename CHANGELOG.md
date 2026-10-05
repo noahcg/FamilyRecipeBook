@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.6] - 2026-10-05
+
+### Recipe list navigation
+
+- Renamed the recipe page’s Back button to All recipes and made it always open the current cookbook’s recipe list, including after editing a recipe.
+
 ## [1.0.5] - 2026-10-05
 
 ### Imported recipe photos

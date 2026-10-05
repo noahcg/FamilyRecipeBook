@@ -3,7 +3,7 @@
 import { mediaUrl } from "@/lib/media";
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,7 +33,6 @@ import { RecipeShareDialog } from "./RecipeShareDialog";
 import { RecipeOriginalsDrawer } from "./RecipeOriginalsDrawer";
 import { ReportContentButton } from "@/components/moderation/ReportContentButton";
 import { ServingScaler } from "./ServingScaler";
-import { hasInAppHistory } from "@/components/layout/RouteHistoryTracker";
 import { useAccount } from "@/lib/context/AccountContext";
 import {
   addRecipeStory,
@@ -142,32 +141,7 @@ export function RecipeDetail({
   const { plan } = useAccount();
   const canUseGrocery = plan === "plus";
   const router = useRouter();
-  const searchParams = useSearchParams();
   const recipesPath = `/app/books/${bookId}/recipes`;
-  const returnTo = searchParams.get("returnTo");
-  const safeReturnPath =
-    returnTo === "/app/recipes" ||
-    returnTo?.startsWith("/app/recipes?") ||
-    returnTo?.startsWith("/app/recipes#") ||
-    returnTo === recipesPath ||
-    returnTo?.startsWith(`${recipesPath}?`) ||
-    returnTo?.startsWith(`${recipesPath}#`)
-      ? returnTo
-      : null;
-
-  // Return to wherever the user came from (All Recipes, Favorites, a cookbook's
-  // list, search…). Fall back to this recipe's cookbook for deep links — e.g. a
-  // shared recipe opened directly, which has no in-app history to return to.
-  function handleBack() {
-    if (safeReturnPath) {
-      router.push(safeReturnPath);
-      return;
-    }
-
-    if (hasInAppHistory()) router.back();
-    else router.push(recipesPath);
-  }
-
   const [storyText, setStoryText] = useState("");
   const [addingStory, setAddingStory] = useState(false);
   const [storyError, setStoryError] = useState<string | null>(null);
@@ -410,14 +384,13 @@ export function RecipeDetail({
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10 lg:rounded-tr-xl" />
         <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-14 pt-4 sm:pt-5 lg:rounded-tr-xl">
           <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-8">
-            <button
-              type="button"
-              onClick={handleBack}
+            <Link
+              href={recipesPath}
               className="inline-flex h-10 items-center gap-2 rounded-full border border-white/35 bg-white-soft/88 px-3 text-sm font-extrabold text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
             >
               <ArrowLeft size={17} strokeWidth={2} />
-              Back
-            </button>
+              All recipes
+            </Link>
 
             <div className="relative flex items-center gap-2">
               <button
