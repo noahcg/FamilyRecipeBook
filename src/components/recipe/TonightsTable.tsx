@@ -3,7 +3,7 @@
 import { useId } from "react";
 import { ChevronRight } from "lucide-react";
 import { Input, Select, Textarea } from "@/components/ui";
-import type { IdeaTable } from "@/lib/ideaTable";
+import { ideaMealTypes, type IdeaTable } from "@/lib/ideaTable";
 
 const diets = ["Gluten free", "Dairy free", "Vegetarian", "Vegan"];
 
@@ -29,6 +29,14 @@ export function TonightsTable({ value, onChange, disabled }: {
       </legend>
 
       <div className="divide-y divide-line-soft">
+        <div className="flex min-h-16 items-center justify-between gap-4 py-2">
+          <label htmlFor={`${tableId}-meal`} className="text-sm font-semibold text-ink">Meal type</label>
+          <div className="w-40 shrink-0">
+            <Select id={`${tableId}-meal`} className="min-h-11 text-sm" value={value.mealType} onChange={event => update({ mealType: event.target.value as IdeaTable["mealType"] })}>
+              {ideaMealTypes.map(mealType => <option key={mealType} value={mealType}>{mealType}</option>)}
+            </Select>
+          </div>
+        </div>
         <div className="flex min-h-16 items-center justify-between gap-4 py-2">
           <label htmlFor={`${tableId}-servings`} className="text-sm font-semibold text-ink">Number of people</label>
           <div className="w-40 shrink-0">

@@ -408,7 +408,7 @@ export function RecipeDetail({
           )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10 lg:rounded-tr-xl" />
-        <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-14 pt-4 sm:pt-5">
+        <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-14 pt-4 sm:pt-5 lg:rounded-tr-xl">
           <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-8">
             <button
               type="button"

@@ -33,18 +33,18 @@ interface AIRecipeIdeaPanelProps {
 // Open-ended prompts for the "Get Inspired" / surprise entry point. One is
 // picked at random each time the panel auto-generates, so every click differs.
 const SURPRISE_PROMPTS = [
+  "A quick, satisfying breakfast to start the day.",
+  "A generous weekend brunch worth sharing.",
+  "A bright, fresh lunch full of vegetables that still feels satisfying.",
+  "A make-ahead lunch that packs well for a busy day.",
   "A cozy, comforting dinner that feels like a treat on an ordinary night.",
-  "A bright, fresh meal full of vegetables that still feels satisfying.",
-  "A slow, generous weekend dinner worth saving in our cookbook.",
   "A quick weeknight dinner I can pull together in under 30 minutes.",
-  "A one-pan or one-pot meal with easy cleanup.",
-  "A hearty soup or stew for a chilly evening.",
-  "A crowd-pleasing dinner the whole family — including picky kids — will eat.",
-  "A make-ahead meal that reheats well for leftovers during the week.",
-  "Something a little outside our usual rotation that's worth trying.",
   "A simple homemade dessert or sweet bake that doesn't take over the day.",
-  "A globally inspired dinner that introduces a new flavor or technique.",
-  "A meal built mostly from pantry staples and whatever's in the fridge.",
+  "A fruit-filled dessert worth saving in our cookbook.",
+  "A satisfying homemade snack for the afternoon.",
+  "A crowd-pleasing appetizer to share around the table.",
+  "A flavorful side dish built mostly from pantry staples.",
+  "A refreshing homemade drink for a relaxed afternoon.",
 ];
 
 export function AIRecipeIdeaPanel({
@@ -163,7 +163,7 @@ export function AIRecipeIdeaPanel({
             Need an Idea?
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-muted">
-            A little inspiration for your people, your budget, and your evening.
+            A little inspiration for your people, your budget, and any meal of the day.
           </p>
         </header>
 
@@ -350,10 +350,10 @@ export function AIRecipeIdeaPanel({
                   <Sparkles size={26} strokeWidth={1.6} />
                 </span>
                 <p className="text-base font-semibold text-ink">
-                  A dinner idea, made around your table
+                  A recipe idea, made around your table
                 </p>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-muted">
-                  Set your budget, dietary needs, and time, then find an idea.
+                  Choose a meal type, budget, dietary needs, and time, then find an idea.
                   You’ll get a full recipe to cook now or keep in your cookbook.
                 </p>
               </div>

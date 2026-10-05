@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.2] - 2026-10-05
+
+### Recipe header corner
+
+- Matched the recipe header controls gradient to the image’s rounded top-right corner so the overlay no longer paints a square corner over it, while keeping the action menu visible outside the header.
+
+## [1.0.1] - 2026-10-05
+
+### Recipe ideas for every meal
+
+- Added a meal-type selector to Ideas for breakfast, brunch, lunch, dinner, dessert, snacks, appetizers, side dishes, and drinks, with an Any meal option.
+- Removed the dinner-only default, broadened surprise inspiration, and made AI instructions honor the requested meal type.
+
 ## [1.0.0] - 2026-10-04
 
 ### Initial production release

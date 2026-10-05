@@ -4,7 +4,7 @@ export type AiMessage = {
 };
 
 export const RECIPE_GENERATION_QUALITY_GUIDANCE =
-  "Write an inviting 1-2 sentence description of the dish's flavor, texture, and occasion. Write a warm 1-3 sentence story about how the dish fits everyday family life, but never invent a person, family history, provenance, award, price, or verified allergy-safety claim. Give every ingredient a practical quantity and unit except an explicitly optional or to-taste item; use notes for preparation such as chopped, sliced, drained, or divided. Never relax a dietary or allergy exclusion, even when a conflicting ingredient appears in the pantry request.";
+  "Support every meal and course, including breakfast, brunch, lunch, dinner, dessert, snacks, appetizers, side dishes, and drinks. Honor the requested meal type rather than assuming dinner. Write an inviting 1-2 sentence description of the dish's flavor, texture, and occasion. Write a warm 1-3 sentence story about how the dish fits everyday family life, but never invent a person, family history, provenance, award, price, or verified allergy-safety claim. Give every ingredient a practical quantity and unit except an explicitly optional or to-taste item; use notes for preparation such as chopped, sliced, drained, or divided. Never relax a dietary or allergy exclusion, even when a conflicting ingredient appears in the pantry request.";
 
 export function formatCategoryList(categories: string[]) {
   if (categories.length === 0) return "Other";
