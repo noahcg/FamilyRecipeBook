@@ -1,6 +1,6 @@
 # 1.0.0 release verification
 
-Updated 2026-10-04. The release candidate is **0.22.3**; `1.0.0` has not been declared. This record uses the Supabase Free plan and synthetic production tests. The owner reported that they have already verified the app on an iPhone and reviewed it with family; device and user acceptance remain the owner's assessment.
+Updated 2026-10-04. The owner intentionally declared **1.0.0** for `main` after the 0.22.3 release candidate passed the production checks below. This record uses the Supabase Free plan and synthetic production tests. The owner reported that they have already verified the app on an iPhone and reviewed it with family; device and user acceptance remain the owner's assessment.
 
 ## Production repair and deployment
 
@@ -23,4 +23,4 @@ Updated 2026-10-04. The release candidate is **0.22.3**; `1.0.0` has not been de
 - **Recovery operations:** The SQL restore and separate object export prove an inexpensive manual backup path, but Storage object reimport, a full application-level restore, backup automation/frequency, and recovery timing have not been verified. No separate staging project or managed PITR is configured in this setup.
 - **Monitoring and acceptance:** No operator alert was triggered end to end. The owner has already done iPhone and family review; any further independent pilot and launch acceptance belong to the owner. Record operational monitoring, support contact, and a manual backup cadence before calling this a stable 1.0 service.
 
-The repaired production app is functionally sound under the synthetic role and core-flow checks above. Keep version `0.22.3` until the owner intentionally accepts the remaining billing, recovery, cache, and monitoring risks for `1.0.0`.
+The repaired production app is functionally sound under the synthetic role and core-flow checks above. The owner chose the 1.0.0 designation with the billing, recovery, cache, and monitoring limits above still recorded for follow-up.
