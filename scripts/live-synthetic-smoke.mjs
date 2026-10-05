@@ -204,6 +204,10 @@ try {
   observe(Boolean(outsiderImage.error), 'outsider cannot read assigned image');
   const anonymousImage = await anonymous.storage.from('recipe-images').download(imagePath);
   observe(Boolean(anonymousImage.error), 'anonymous cannot read assigned image');
+  const legacyPublicUrl = new URL(imageUrl);
+  legacyPublicUrl.searchParams.set('smoke', runId);
+  const legacyPublicImage = await fetch(legacyPublicUrl, { cache: 'no-store' });
+  observe(legacyPublicImage.status !== 200, 'legacy public image URL denies anonymous access', `HTTP ${legacyPublicImage.status}`);
   const deployedMediaUrl = new URL(`/api/media/recipe-images/${imagePath}`, process.env.APP_URL);
   const deployedApp = await fetch(new URL('/app', process.env.APP_URL), { headers: { Cookie: family.cookieHeader() }, redirect: 'manual' });
   observe(deployedApp.status === 200, 'deployed app accepts family session', `HTTP ${deployedApp.status}`);
