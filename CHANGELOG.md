@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.8] - 2026-10-05
+
+### Plus refund policy
+
+- Added a 30-day initial-purchase refund policy to Terms, with a support contact, discretionary refunds after 30 days, paid-period cancellation access, and preservation of statutory rights.
+- Updated the Terms revision date and aligned the existing billing section with the refund policy.
+
 ## [1.0.7] - 2026-10-05
 
 ### Cookbook navigation label
