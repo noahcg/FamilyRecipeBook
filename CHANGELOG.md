@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.10] - 2026-10-05
+
+### Billing button layout
+
+- Kept the Settings billing action on one line in Safari and allowed the plan description to use the remaining card width.
+
 ## [1.0.9] - 2026-10-05
 
 ### Refund and cancellation lifecycle
