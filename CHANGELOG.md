@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.5] - 2026-10-05
+
+### Imported recipe photos
+
+- Automatically select a matching Pexels photo for imported recipes without an included image, with photographer attribution. Preserve included images and allow saving when photo search is unavailable.
+
 ## [1.0.4] - 2026-10-05
 
 ### PDF recipe import

@@ -891,7 +891,26 @@ export function RecipeForm({
         }
         photoUrl = uploaded.url;
       }
-      payload.push(importedRecipeToInput(recipe, photoUrl));
+      const input = importedRecipeToInput(recipe, photoUrl);
+      if (!input.photo_url) {
+        try {
+          const candidates = await searchRecipeImages(
+            input.title,
+            input.ingredients.map((ingredient) => ingredient.item).filter(Boolean)
+          );
+          const auto = candidates[0];
+          if (auto) {
+            input.photo_url = auto.image_url;
+            input.photo_source = "Pexels";
+            input.photo_author = auto.photographer;
+            input.photo_author_url = auto.photographer_url;
+            input.photo_source_url = auto.source_url;
+          }
+        } catch {
+          // An unavailable photo search must not prevent saving the recipe.
+        }
+      }
+      payload.push(input);
     }
 
     const targetBookId = resolvedSelectedBookId || bookId;
