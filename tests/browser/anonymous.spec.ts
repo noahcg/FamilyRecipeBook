@@ -22,6 +22,7 @@ test("mobile public navigation stays above scrolled page content", async ({ page
     await page.goto(path);
     const nav = page.getByRole("navigation", { name: "Mobile public navigation" });
     await expect(nav).toBeVisible();
+    await expect.poll(() => nav.evaluate((element) => element.parentElement === document.body)).toBe(true);
     await page.evaluate(() => window.scrollTo(0, window.innerHeight * 1.5));
     for (const link of await nav.getByRole("link").all()) {
       const box = await link.boundingBox();

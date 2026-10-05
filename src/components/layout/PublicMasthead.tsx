@@ -15,7 +15,7 @@ export function PublicMasthead({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="relative z-30 isolate overflow-hidden bg-cream">
+    <div className="relative isolate overflow-hidden bg-cream">
       <Image src={background} alt="" fill priority sizes="100vw" className="-z-20 object-cover object-center" />
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(247,243,233,.02)_0%,rgba(247,243,233,.06)_72%,var(--color-cream)_100%)]" />
       <PublicHeader />

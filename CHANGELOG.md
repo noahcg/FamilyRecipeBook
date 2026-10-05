@@ -1,18 +1,12 @@
 # Changelog
 
-## [1.0.1] - 2026-10-04
-
-### Public mobile navigation
-
-- Kept the fixed mobile navigation above scrolled content on Our Story, Pricing, and Guides by correcting the shared masthead stacking layer.
-- Added mobile WebKit coverage for navigation hit targets after scrolling across public pages.
-
 ## [1.0.0] - 2026-10-04
 
 ### Initial production release
 
 - Launched Home Cooked 1.0.0 on `main` after live synthetic checks passed for privacy, permissions, recipes, invitations, and deployed core pages; billing reliability was covered by local and CI tests.
 - Completed a Supabase Free-plan database and Storage export, isolated database restore rehearsal, and production media cutover. The release record documents verification results and remaining operational limits.
+- Moved the fixed public mobile navigation outside page stacking contexts so scrolled copy cannot draw over it, with mobile WebKit coverage for the mounted nav and its hit targets.
 
 ## [0.22.3] - 2026-10-04
 
