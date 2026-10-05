@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.4] - 2026-10-05
+
+### PDF recipe import
+
+- Fixed saving PDF recipes without a serving count by leaving unknown servings empty. Applied the same handling to other file imports that report zero servings.
+
 ## [1.0.3] - 2026-10-05
 
 ### Checkout customer recovery

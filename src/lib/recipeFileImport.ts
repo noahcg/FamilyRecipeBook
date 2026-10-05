@@ -82,7 +82,7 @@ function minutesFromDuration(value: unknown) {
 function servingsFrom(value: unknown) {
   const text = stringValue(value);
   const match = text.match(/\b(\d{1,3})\b/);
-  return match ? Number(match[1]) : undefined;
+  return match ? Number(match[1]) || undefined : undefined;
 }
 
 function instructionInputs(value: unknown): InstructionInput[] {
@@ -212,7 +212,7 @@ function parseHtml(text: string, fileName: string) {
     title: parsed.title || title || fileName.replace(/\.[^.]+$/, ""),
     prep_minutes: parsed.prep_minutes,
     cook_minutes: parsed.cook_minutes,
-    servings: parsed.servings,
+    servings: parsed.servings || undefined,
     tags: [],
     ingredients: parsed.ingredients,
     instructions: parsed.instructions,
@@ -231,7 +231,7 @@ function parseText(text: string, fileName: string) {
     title: parsed.title || fileName.replace(/\.[^.]+$/, ""),
     prep_minutes: parsed.prep_minutes,
     cook_minutes: parsed.cook_minutes,
-    servings: parsed.servings,
+    servings: parsed.servings || undefined,
     tags: [],
     ingredients: parsed.ingredients,
     instructions: parsed.instructions,
@@ -269,7 +269,8 @@ function normalizedPdfRecipe(
     story: recipe.story,
     prep_minutes: recipe.prep_minutes,
     cook_minutes: recipe.cook_minutes,
-    servings: recipe.servings,
+    // Extraction uses zero for an unspecified yield; saved recipes omit it.
+    servings: recipe.servings || undefined,
     category: recipe.category,
     tags: recipe.tags,
     ingredients: recipe.ingredients
