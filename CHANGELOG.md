@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.7] - 2026-10-05
+
+### Cookbook navigation label
+
+- Renamed the recipe page’s list link to Cookbook recipes to distinguish it from the global All recipes navigation item.
+
 ## [1.0.6] - 2026-10-05
 
 ### Recipe list navigation

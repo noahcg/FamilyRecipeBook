@@ -389,7 +389,7 @@ export function RecipeDetail({
               className="inline-flex h-10 items-center gap-2 rounded-full border border-white/35 bg-white-soft/88 px-3 text-sm font-extrabold text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
             >
               <ArrowLeft size={17} strokeWidth={2} />
-              All recipes
+              Cookbook recipes
             </Link>
 
             <div className="relative flex items-center gap-2">
