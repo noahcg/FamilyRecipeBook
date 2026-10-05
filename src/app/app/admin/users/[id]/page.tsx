@@ -5,6 +5,8 @@ import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { isAdminEmail } from "@/lib/admin";
 import { UserAccountControls } from "@/components/admin/UserAccountControls";
+import { BillingRefundControls } from "@/components/admin/BillingRefundControls";
+import { getRefundPreview, type RefundPreview } from "@/lib/billingRefund";
 import { getAccountDeletionImpact } from "@/lib/actions/admin";
 
 interface Props {
@@ -98,6 +100,22 @@ export default async function AdminUserDetailPage({ params }: Props) {
         .gte("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
     : { data: [] };
+
+  const { data: billingAccount } = await admin.from("billing_accounts")
+    .select("plan,stripe_customer_id,stripe_subscription_id,status,grandfathered_plus")
+    .eq("user_id", id).maybeSingle();
+  const { data: completedRefund } = billingAccount?.stripe_subscription_id
+    ? await admin.from("billing_refunds").select("refund_id,created_at").eq("subscription_id", billingAccount.stripe_subscription_id).maybeSingle()
+    : { data: null };
+  let refundPreview: RefundPreview | null = null;
+  let refundPreviewError: string | null = null;
+  if (billingAccount?.stripe_customer_id && billingAccount.stripe_subscription_id && !billingAccount.grandfathered_plus) {
+    try {
+      refundPreview = await getRefundPreview(billingAccount.stripe_customer_id, billingAccount.stripe_subscription_id);
+    } catch (error) {
+      refundPreviewError = error instanceof Error ? error.message : "Could not review Stripe billing.";
+    }
+  }
 
   const memberships = (membershipRows ?? []) as MembershipRow[];
   const pendingInvites = (inviteRows ?? []) as PendingInviteRow[];
@@ -193,6 +211,8 @@ export default async function AdminUserDetailPage({ params }: Props) {
             </div>
           </div>
         </section>
+
+        <BillingRefundControls userId={id} preview={refundPreview} status={billingAccount?.status ?? "free"} plan={billingAccount?.plan ?? "free"} error={refundPreviewError} completedRefund={Boolean(completedRefund)} />
 
         <section className="mt-6">
           <UserAccountControls

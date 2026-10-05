@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.10] - 2026-10-05
+
+### Billing button layout
+
+- Kept the Settings billing action on one line in Safari and allowed the plan description to use the remaining card width.
+
+## [1.0.9] - 2026-10-05
+
+### Refund and cancellation lifecycle
+
+- Added separate administrator controls for period-end cancellation/reactivation and a reviewed full refund action that validates the Stripe invoice and payment, cancels the subscription immediately, and records an atomic downgrade and audit trail.
+- Reconciled verified full Stripe refund events, protected refunded subscriptions from stale webhook updates and duplicate checkout, added a Stripe billing refresh control, and clarified paid-through and refunded states in Settings.
+- Added billing lifecycle tests and an operator guide for refunds, cancellation, reconciliation, and release setup.
+
+## [1.0.8] - 2026-10-05
+
+### Plus refund policy
+
+- Added a 30-day initial-purchase refund policy to Terms, with a support contact, discretionary refunds after 30 days, paid-period cancellation access, and preservation of statutory rights.
+- Updated the Terms revision date and aligned the existing billing section with the refund policy.
+
 ## [1.0.7] - 2026-10-05
 
 ### Cookbook navigation label

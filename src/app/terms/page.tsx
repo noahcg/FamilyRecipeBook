@@ -123,13 +123,41 @@ const termsSections = [
           can update payment details, view invoices, or cancel through the
           Billing Portal available in your account settings. Cancellation stops
           the next renewal; it does not delete your recipes, cookbooks, or other
-          saved content. Access to Plus features may continue through the paid
-          period and will then follow the Free plan limits.
+          saved content. Unless a refund is issued, access to Plus features
+          continues through the current paid subscription period and will then
+          follow the Free plan limits.
         </p>
         <p>
-          Any refund, credit, tax, or consumer-cancellation rights are governed
-          by the terms shown at checkout and applicable law. For billing help,
+          Refunds are described below. Any additional credit, tax, or
+          consumer-cancellation rights are governed by applicable law. For billing help,
           contact support promptly with the email address on your account.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "Refunds",
+    body: (
+      <>
+        <p>
+          We want you to be happy with <BrandName />. If you purchase Home Cooked
+          Plus and decide it isn&apos;t right for you, contact us at{" "}
+          <a href={supportMailto}>{supportEmail}</a> within 30 days of your
+          initial purchase for a full refund.
+        </p>
+        <p>
+          After 30 days, subscription payments are generally non-refundable.
+          We may issue refunds at our discretion in cases such as duplicate
+          charges, billing errors, or other exceptional circumstances.
+        </p>
+        <p>
+          Canceling your subscription prevents future renewal charges. Unless a
+          refund is issued, you&apos;ll continue to have access to Plus features
+          through the end of your current paid subscription period.
+        </p>
+        <p>
+          This policy does not limit any cancellation or refund rights you have
+          under applicable law.
         </p>
       </>
     ),
@@ -179,7 +207,7 @@ const termsSections = [
 
 export default function TermsPage() {
   return (
-    <LegalPage eyebrow="Legal" title="Terms of Service" lastUpdated="September 30, 2026">
+    <LegalPage eyebrow="Legal" title="Terms of Service" lastUpdated="October 5, 2026">
       <p>
         These Terms explain the basic rules for using <BrandName />. By creating
         an account or using the service, you agree to these Terms and to our

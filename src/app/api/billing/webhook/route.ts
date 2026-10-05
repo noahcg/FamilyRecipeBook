@@ -5,7 +5,7 @@ import { getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
-function stripeId(value: string | { id: string } | null) {
+function stripeId(value: string | { id?: string } | null | undefined) {
   return typeof value === "string" ? value : value?.id ?? null;
 }
 
@@ -21,6 +21,60 @@ export async function POST(request: Request) {
     const existing = await admin.from("billing_webhook_events").select("processing_status").eq("event_id", event.id).maybeSingle();
     if (existing.error) throw new Error("Could not read webhook status");
     if (existing.data?.processing_status === "processed") return NextResponse.json({ received: true, duplicate: true });
+    if (event.type === "charge.refunded") {
+      const stripe = getStripe();
+      const eventCharge = event.data.object as Stripe.Charge;
+      // Re-read Stripe: a stale or partial event cannot downgrade an account.
+      const charge = await stripe.charges.retrieve(eventCharge.id);
+      const customerId = stripeId(charge.customer);
+      const paymentIntentId = stripeId(charge.payment_intent);
+      if (customerId && paymentIntentId && charge.amount > 0 && charge.amount_refunded === charge.amount) {
+        const payments = await stripe.invoicePayments.list({
+          payment: { type: "payment_intent", payment_intent: paymentIntentId }, status: "paid", limit: 100,
+        });
+        if (payments.has_more || payments.data.length !== 1) throw new Error("Refund payment has ambiguous invoice ownership");
+        const invoiceId = stripeId(payments.data[0].invoice);
+        if (!invoiceId) throw new Error("Refund invoice is missing");
+        const invoice = await stripe.invoices.retrieve(invoiceId);
+        const subscriptionId = stripeId(invoice.parent?.subscription_details?.subscription);
+        if (subscriptionId && stripeId(invoice.customer) === customerId && invoice.amount_paid === charge.amount) {
+          const { data: account, error: accountError } = await admin.from("billing_accounts")
+            .select("user_id,stripe_subscription_id,grandfathered_plus").eq("stripe_customer_id", customerId).maybeSingle();
+          if (accountError) throw new Error("Could not read refund customer mapping");
+          if (account?.stripe_subscription_id === subscriptionId) {
+            if (account.grandfathered_plus) throw new Error("Remove lifetime Plus grant before reconciling refund");
+            const refunds = await stripe.refunds.list({ payment_intent: paymentIntentId, limit: 100 });
+            if (refunds.has_more) throw new Error("Refund history is ambiguous");
+            const accepted = refunds.data.filter((refund) => refund.status === "succeeded" || refund.status === "pending");
+            if (!accepted.length || accepted.reduce((sum, refund) => sum + refund.amount, 0) !== charge.amount) {
+              throw new Error("Full refund could not be verified");
+            }
+            let cancelFailed = false;
+            try {
+              const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+              if (stripeId(subscription.customer) !== customerId) throw new Error("Subscription ownership changed");
+              if (subscription.status !== "canceled") {
+                await stripe.subscriptions.cancel(subscriptionId, { invoice_now: false, prorate: false },
+                  { idempotencyKey: `home-cooked-refund-cancel-${subscriptionId}` });
+              }
+            } catch { cancelFailed = true; }
+            const { error: refundError } = await admin.rpc("complete_billing_refund", {
+              target_user_id: account.user_id,
+              target_subscription_id: subscriptionId,
+              target_customer_id: customerId,
+              target_invoice_id: invoiceId,
+              target_payment_intent_id: paymentIntentId,
+              target_refund_id: accepted[0].id,
+              target_amount: charge.amount,
+              target_currency: charge.currency,
+              target_actor_id: null,
+              target_reason: "Verified Stripe full refund event",
+            });
+            if (refundError || cancelFailed) throw new Error("Refund downgrade or cancellation needs retry");
+          }
+        }
+      }
+    }
     let subscriptionId: string | null = null;
     if (["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"].includes(event.type)) {
       subscriptionId = (event.data.object as Stripe.Subscription).id;

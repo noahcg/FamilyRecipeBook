@@ -66,21 +66,28 @@ test("unknown customers fail closed and payments remain monotonic", async () => 
 });
 
 // Execute the actual route with provider/database boundaries injected.
-async function loadRoute({ status = null, readError = null, rpcError = null, stripeFailure = false } = {}) {
+async function loadRoute({ status = null, readError = null, rpcError = null, stripeFailure = false, signatureFails = false, type = "customer.subscription.updated", fullRefund = true, cancelFailure = false, linkedSubscription = "sub_test" } = {}) {
   const ts = (await import("typescript")).default;
   const source = await readFile(new URL("../src/app/api/billing/webhook/route.ts", import.meta.url), "utf8");
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
   const calls = [];
-  const event = { id: "evt_route", type: "customer.subscription.updated", created: 1790942400, livemode: false, data: { object: { id: "sub_test" } } };
+  const event = { id: "evt_route", type, created: 1790942400, livemode: false, data: { object: { id: type === "charge.refunded" ? "ch_test" : "sub_test" } } };
   const stripe = {
-    webhooks: { constructEvent: () => event },
-    subscriptions: { retrieve: async () => {
+    charges: { retrieve: async () => ({ id: "ch_test", customer: "cus_test", payment_intent: "pi_test", amount: 2499,
+      amount_refunded: fullRefund ? 2499 : 1000, currency: "usd" }) },
+    invoicePayments: { list: async () => ({ has_more: false, data: [{ invoice: "in_test" }] }) },
+    invoices: { retrieve: async () => ({ customer: "cus_test", amount_paid: 2499, parent: { subscription_details: { subscription: "sub_test" } } }) },
+    refunds: { list: async () => ({ has_more: false, data: [{ id: "re_test", amount: 2499, status: "succeeded" }] }) },
+    webhooks: { constructEvent: () => { if (signatureFails) throw new Error("Bad signature"); return event; } },
+    subscriptions: { cancel: async () => { if (cancelFailure) throw new Error("Cancel failed"); calls.push({ name: "stripe_cancel" }); }, retrieve: async () => {
       if (stripeFailure) throw new Error("Provider unavailable");
       return { id: "sub_test", status: "active", customer: "cus_test", items: { data: [] }, cancel_at_period_end: false };
     } },
   };
   const admin = {
-    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: status ? { processing_status: status } : null, error: readError }) }) }) }),
+    from: (table) => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: table === "billing_accounts"
+      ? { user_id: "user_test", stripe_subscription_id: linkedSubscription, grandfathered_plus: false }
+      : status ? { processing_status: status } : null, error: readError }) }) }) }),
     rpc: async (name, args) => { calls.push({ name, args }); return { data: true, error: rpcError }; },
   };
   const exports = {};
@@ -117,4 +124,34 @@ test("webhook route returns retryable failures for database and provider errors"
   for (const options of [{ readError: { message: "offline" } }, { rpcError: { message: "write failed" } }, { stripeFailure: true }]) {
     assert.equal((await loadRoute(options)).response.status, 500);
   }
+});
+
+test("webhook rejects an invalid Stripe signature before touching billing state", async () => {
+  const result = await loadRoute({ signatureFails: true });
+  assert.equal(result.response.status, 400);
+  assert.equal(result.calls.length, 0);
+});
+
+test("signed full-refund webhook validates ownership, cancels, downgrades, and records event", async () => {
+  const result = await loadRoute({ type: "charge.refunded" });
+  assert.equal(result.response.status, 200);
+  assert.equal(result.calls.some((call) => call.name === "stripe_cancel"), true);
+  assert.equal(result.calls.find((call) => call.name === "complete_billing_refund").args.target_user_id, "user_test");
+  assert.equal(result.calls.some((call) => call.name === "apply_billing_webhook"), true);
+});
+test("partial refund never downgrades and cancellation failure remains retryable", async () => {
+  const partial = await loadRoute({ type: "charge.refunded", fullRefund: false });
+  assert.equal(partial.response.status, 200);
+  assert.equal(partial.calls.some((call) => call.name === "complete_billing_refund"), false);
+  const failure = await loadRoute({ type: "charge.refunded", cancelFailure: true });
+  assert.equal(failure.response.status, 500);
+  assert.equal(failure.calls.some((call) => call.name === "complete_billing_refund"), true);
+  assert.equal(failure.calls.some((call) => call.name === "apply_billing_webhook"), false);
+});
+
+test("refund webhook cannot mutate a different linked subscription", async () => {
+  const result = await loadRoute({ type: "charge.refunded", linkedSubscription: "sub_other" });
+  assert.equal(result.response.status, 200);
+  assert.equal(result.calls.some((call) => call.name === "complete_billing_refund"), false);
+  assert.equal(result.calls.some((call) => call.name === "stripe_cancel"), false);
 });
