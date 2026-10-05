@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.3] - 2026-10-05
+
+### Checkout customer recovery
+
+- Recover Plus checkout when the account’s saved Stripe customer no longer exists, saving a replacement customer before creating checkout while preserving the existing subscription guard.
+
 ## [1.0.2] - 2026-10-05
 
 ### Recipe header corner

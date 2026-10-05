@@ -20,8 +20,22 @@ export async function POST() {
     }
     const stripe = getStripe();
     let customerId = billing?.stripe_customer_id ?? null;
+    if (customerId) {
+      try {
+        const customer = await stripe.customers.retrieve(customerId);
+        if (customer.deleted) customerId = null;
+      } catch (error) {
+        // A saved customer may have been deleted or belong to a previous Stripe mode.
+        // Only recover a missing resource; authorization and network failures must fail.
+        if (typeof error === "object" && error !== null && "code" in error && error.code === "resource_missing") {
+          customerId = null;
+        } else {
+          throw error;
+        }
+      }
+    }
     if (!customerId) {
-      const customer = await stripe.customers.create({ email: user.email ?? undefined, metadata: { home_cooked_user_id: user.id } }, { idempotencyKey: `home-cooked-customer-${user.id}` });
+      const customer = await stripe.customers.create({ email: user.email ?? undefined, metadata: { home_cooked_user_id: user.id } }, { idempotencyKey: `home-cooked-customer-${user.id}-${billing?.stripe_customer_id ?? "new"}` });
       customerId = customer.id;
       const { error: customerError } = await admin.from("billing_accounts").upsert({ user_id: user.id, stripe_customer_id: customerId }, { onConflict: "user_id" });
       if (customerError) throw new Error("Could not save billing customer mapping");
