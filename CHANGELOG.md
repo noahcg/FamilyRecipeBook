@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1] - 2026-10-04
+
+### Public mobile navigation
+
+- Kept the fixed mobile navigation above scrolled content on Our Story, Pricing, and Guides by correcting the shared masthead stacking layer.
+- Added mobile WebKit coverage for navigation hit targets after scrolling across public pages.
+
 ## [1.0.0] - 2026-10-04
 
 ### Initial production release

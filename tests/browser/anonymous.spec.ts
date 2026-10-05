@@ -16,6 +16,24 @@ for (const path of ["/", "/pricing", "/our-story", "/privacy", "/terms", "/guide
   });
 }
 
+test("mobile public navigation stays above scrolled page content", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "mobile-webkit");
+  for (const path of ["/", "/our-story", "/pricing", "/guides", `/guides/${guides[0].slug}`]) {
+    await page.goto(path);
+    const nav = page.getByRole("navigation", { name: "Mobile public navigation" });
+    await expect(nav).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, window.innerHeight * 1.5));
+    for (const link of await nav.getByRole("link").all()) {
+      const box = await link.boundingBox();
+      expect(box, `${path}: nav link has a visible hit area`).not.toBeNull();
+      const topmostIsNav = await page.evaluate(({ x, y }) => Boolean(
+        document.elementFromPoint(x, y)?.closest('nav[aria-label="Mobile public navigation"]'),
+      ), { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 });
+      expect(topmostIsNav, `${path}: ${await link.getAttribute("aria-label")} remains above content`).toBe(true);
+    }
+  }
+});
+
 test("sign-in validates email without sending a request", async ({ page }) => {
   await page.goto("/sign-in");
   const requests: string[] = [];
