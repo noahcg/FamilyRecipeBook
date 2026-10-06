@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.0] - 2026-10-05
+
+### Public launch
+
+- Set the public Home Cooked version to 1.0.0. Earlier 1.0.x numbers were used for internal production releases before the public launch; their history is retained below.
+- Included public visitor analytics and completed-signup measurement in the launch baseline.
+
+## Prelaunch production history
+
 ## [1.0.11] - 2026-10-05
 
 ### Public visitor and signup analytics
@@ -72,7 +81,7 @@
 - Added a meal-type selector to Ideas for breakfast, brunch, lunch, dinner, dessert, snacks, appetizers, side dishes, and drinks, with an Any meal option.
 - Removed the dinner-only default, broadened surprise inspiration, and made AI instructions honor the requested meal type.
 
-## [1.0.0] - 2026-10-04
+## Internal 1.0.0 baseline - 2026-10-04
 
 ### Initial production release
 
