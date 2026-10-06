@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 import { ArrowRight, Heart } from "lucide-react";
 import { PublicMasthead } from "@/components/layout/PublicMasthead";
 import { GuideTableOfContents } from "@/components/guides/GuideTableOfContents";
@@ -144,7 +145,7 @@ export function GuideArticle({ guide }: { guide: EditorialGuide }) {
         <article className="min-w-0">
           <OpeningSection guide={guide} />
           <div className="mt-16 space-y-14">
-            {guide.sections.slice(1).map((section, index) => <section id={section.id} key={section.id} className="scroll-mt-8"><EditorialHeading>{section.heading}</EditorialHeading><div className="mt-5 max-w-[48rem] space-y-4 text-[1.06rem] leading-[1.78] text-ink-muted sm:text-[1.12rem]">{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>{section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.04rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.1rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}{index === 0 && <aside className="mt-7 border-y border-green-sage/45 py-6 text-[1.05rem] italic leading-relaxed text-green-deep"><span className="font-bold not-italic">A note to keep close:</span> {guide.callout}</aside>}</section>)}
+            {guide.sections.slice(1).map((section, index) => <section id={section.id} key={section.id} className="scroll-mt-8"><EditorialHeading>{section.heading}</EditorialHeading><div className="mt-5 max-w-[48rem] space-y-4 text-[1.06rem] leading-[1.78] text-ink-muted sm:text-[1.12rem]">{section.paragraphs.map((paragraph, paragraphIndex) => <Fragment key={paragraph}><p>{paragraph}</p>{paragraphIndex === 0 && section.imageUrlExample && <div className="border-y border-line bg-paper-soft px-4 py-4 sm:px-5"><code className="block break-all text-sm leading-relaxed text-ink sm:text-base">https://images.pexels.com/photos/<mark className="rounded bg-accent-terracotta/25 px-0.5 font-bold text-green-deep">{section.imageUrlExample.photoId}</mark>/pexels-photo-<mark className="rounded bg-accent-terracotta/25 px-0.5 font-bold text-green-deep">{section.imageUrlExample.photoId}</mark>.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900&amp;q=80</code></div>}</Fragment>)}</div>{section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.04rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.1rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}{index === 0 && <aside className="mt-7 border-y border-green-sage/45 py-6 text-[1.05rem] italic leading-relaxed text-green-deep"><span className="font-bold not-italic">A note to keep close:</span> {guide.callout}</aside>}</section>)}
           </div>
           <div className="mt-16"><GuideFeature /></div>
         </article>

@@ -10,6 +10,7 @@
 
 ### Public navigation
 
+- Added a Guide on replacing a recipe photo by changing the photo ID in both places in its image URL, with those numbers highlighted in the example.
 - Replaced the dollar sign icon for mobile Pricing navigation with a layers icon representing the Free and Plus plans.
 - Kept the public version at 1.0.0 at the owner's request until they explicitly request a new version.
 
