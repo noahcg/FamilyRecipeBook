@@ -37,7 +37,7 @@ export function AdminEntitlements({ rows }: { rows: AdminEntitlementRow[] }) {
       setConfirming(null);
       const result = await setUserGrandfatheredPlus(row.id, enabled);
       if (!result.success) setMessage(result.error);
-      else router.refresh();
+      router.refresh();
       setWorkingId(null);
     });
   }
