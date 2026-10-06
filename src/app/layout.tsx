@@ -1,46 +1,55 @@
 import type { Metadata, Viewport } from "next";
-import { Caveat, Fraunces, Inter, Kalam, Nunito, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
 import { PublicAnalytics } from "@/components/analytics/PublicAnalytics";
 import "./globals.css";
 
-const playfair = Playfair_Display({
+const playfair = localFont({
+  src: [
+    { path: "../assets/fonts/playfair-normal.woff2", weight: "400 700", style: "normal" },
+    { path: "../assets/fonts/playfair-italic.woff2", weight: "400 700", style: "italic" },
+  ],
   variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  style: ["normal", "italic"],
+  display: "swap",
 });
 
-const nunito = Nunito({
+const nunito = localFont({
+  src: "../assets/fonts/nunito.woff2",
   variable: "--font-nunito",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "400 800",
+  display: "swap",
 });
 
 // Neat, legible handwriting for recipe stories — replaces the harder-to-read
 // Caveat script while keeping the personal, hand-written feel.
-const handwriting = Kalam({
+const handwriting = localFont({
+  src: [
+    { path: "../assets/fonts/kalam-400.woff2", weight: "400" },
+    { path: "../assets/fonts/kalam-700.woff2", weight: "700" },
+  ],
   variable: "--font-handwriting",
-  subsets: ["latin"],
-  weight: ["400", "700"],
+  display: "swap",
 });
 
-const noteHandwriting = Caveat({
+const noteHandwriting = localFont({
+  src: "../assets/fonts/caveat.woff2",
   variable: "--font-note-handwriting",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: "400 500",
+  display: "swap",
 });
 
-const fraunces = Fraunces({
+const fraunces = localFont({
+  src: "../assets/fonts/fraunces.woff2",
   variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: "600 800",
+  display: "swap",
 });
 
-const inter = Inter({
+const inter = localFont({
+  src: "../assets/fonts/inter.woff2",
   variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: "500 800",
+  display: "swap",
 });
 
 const siteUrl =

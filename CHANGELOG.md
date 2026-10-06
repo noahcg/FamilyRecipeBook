@@ -5,6 +5,7 @@
 ### Quality gates
 
 - Updated the locked `source-map-js` dependency to its patched release so the production dependency audit passes.
+- Self-hosted the app fonts so CI and production builds no longer need to fetch Google Fonts during compilation.
 
 ### Public navigation
 
