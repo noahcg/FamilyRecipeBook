@@ -11,6 +11,7 @@ import {
   type VerifyOtpResult,
 } from "@/lib/otp";
 import { emailEntrySchema, otpCodeSchema } from "@/lib/validators/auth";
+import { recordFirstSignIn } from "@/lib/analytics/recordFirstSignIn";
 
 /**
  * Never return `error.message` verbatim from the send step. GoTrue's wording
@@ -143,6 +144,7 @@ export async function verifyEmailOtp(
     type: "email",
   });
   if (error) return { success: false, ...describeVerifyError(error) };
+  await recordFirstSignIn(supabase);
   redirect(getSafeRedirectPath(redirectTo, "/app"));
 }
 

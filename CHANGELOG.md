@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.11] - 2026-10-05
+
+### Public visitor and signup analytics
+
+- Added privacy scoped Vercel page views for public pages and an internal count of completed signups.
+- Counted completed first sign-ins once per new account, excluding unverified email-code requests and existing accounts.
+- Updated the privacy policy to describe the aggregate analytics data.
+
 ## [1.0.10] - 2026-10-05
 
 ### Billing button layout

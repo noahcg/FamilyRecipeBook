@@ -10,7 +10,7 @@ test('complete committed schema and database/Storage access boundaries', async t
   await db.exec(`
     create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create schema storage;
-    create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb default '{}');
+    create table auth.users(id uuid primary key,email text,created_at timestamptz not null default now(),raw_user_meta_data jsonb default '{}');
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     create function auth.role() returns text language sql stable as $$ select current_user::text $$;
     create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
@@ -33,6 +33,15 @@ test('complete committed schema and database/Storage access boundaries', async t
     try{return await fn();}finally{await db.exec('reset role');}
   }
   const owner=await user(),member=await user(),outsider=await user();
+  await t.test('completed signup is counted once after tracking begins',async()=> {
+    const first=await as(owner,()=>db.query('select public.record_first_sign_in() as counted'));
+    const repeat=await as(owner,()=>db.query('select public.record_first_sign_in() as counted'));
+    assert.equal(first.rows[0].counted,true);
+    assert.equal(repeat.rows[0].counted,false);
+    assert.equal((await db.query('select count(*)::int as count from public.signup_conversion_tracking')).rows[0].count,1);
+    await assert.rejects(as(null,()=>db.query('select public.record_first_sign_in()')),/permission denied/);
+    assert.equal((await as(outsider,()=>db.query('select * from public.signup_conversion_tracking'))).rows.length,0);
+  });
   const household=(await db.query('select id from households where owner_id=$1',[owner])).rows[0].id;
   await as(owner,()=>db.query("insert into household_members(household_id,user_id) values ($1,$2)",[household,member]));
   await t.test('outsider cannot self-enroll into another household',async()=> {

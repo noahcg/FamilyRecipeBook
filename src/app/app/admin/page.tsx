@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Database, ScrollText, Search, Users } from "lucide-react";
+import { BookOpen, Database, ScrollText, Search, UserRoundCheck, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { tierForBillingRecord } from "@/lib/entitlements";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -88,6 +88,8 @@ export default async function AdminPage({
     { count: profileCount },
     { count: bookCount },
     { count: recipeCount },
+    { count: completedSignupCount, error: completedSignupError },
+    { data: signupTrackingConfig },
     { data: books },
     { data: profiles },
     { data: allCookbooks },
@@ -100,6 +102,8 @@ export default async function AdminPage({
     admin.from("profiles").select("id", { count: "exact", head: true }),
     admin.from("recipe_books").select("id", { count: "exact", head: true }),
     admin.from("recipes").select("id", { count: "exact", head: true }),
+    admin.from("signup_conversion_tracking").select("user_id", { count: "exact", head: true }),
+    admin.from("signup_conversion_config").select("started_at").eq("singleton", true).maybeSingle(),
     query
       ? admin
           .from("recipe_books")
@@ -229,11 +233,18 @@ export default async function AdminPage({
           </form>
         </div>
 
-        <section className="grid gap-4 md:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-4">
           <StatCard label="Profiles" value={profileCount ?? 0} icon={<Users size={21} />} />
           <StatCard label="Cookbooks" value={bookCount ?? 0} icon={<BookOpen size={21} />} />
           <StatCard label="Recipes" value={recipeCount ?? 0} icon={<Database size={21} />} />
+          {!completedSignupError && <StatCard label="Completed signups" value={completedSignupCount ?? 0} icon={<UserRoundCheck size={21} />} />}
         </section>
+
+        <p className="mt-2 text-xs text-ink-muted">
+          {completedSignupError
+            ? "Signup tracking is unavailable until its database migration is applied."
+            : `Completed signups since ${signupTrackingConfig?.started_at ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(signupTrackingConfig.started_at)) : "tracking began"}. Compare with public visitors in Vercel Web Analytics for the same period and production environment.`}
+        </p>
 
         <section className="mt-4">
           <PushSubscriptionToggle />

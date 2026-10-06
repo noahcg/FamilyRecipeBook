@@ -96,13 +96,15 @@ const privacySections = [
           not used for analytics or advertising.
         </p>
         <p>
-          Hosting and infrastructure providers may create standard server logs
-          for security and reliability. We do not currently use analytics
-          cookies, advertising cookies, tracking pixels, session-replay tools,
-          or similar non-essential tracking technologies. We therefore do not
-          currently display a cookie-consent banner. If that changes, we will
-          update this policy and request consent before activating technologies
-          that require it.
+          We use Vercel Web Analytics to measure visits to public pages. We
+          exclude private cookbook pages and remove query strings before
+          sending page views. We also keep an internal record when a new account
+          completes its first sign-in so we can measure signup conversion. We
+          do not send your email, recipe content, invitation token, or account
+          ID to Vercel Analytics. Vercel Web Analytics does not use analytics
+          cookies. Hosting providers may also create standard
+          server logs for security and reliability. We do not use advertising
+          cookies or session-replay tools.
         </p>
       </>
     ),
@@ -202,7 +204,7 @@ const privacySections = [
 
 export default function PrivacyPage() {
   return (
-    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="September 30, 2026">
+    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="October 5, 2026">
       <p>
         This Privacy Policy explains what <BrandName /> collects, how that
         information is used, and when it is shared. The app is designed for

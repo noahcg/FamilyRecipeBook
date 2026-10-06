@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Fraunces, Inter, Kalam, Nunito, Playfair_Display } from "next/font/google";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
+import { PublicAnalytics } from "@/components/analytics/PublicAnalytics";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -104,6 +105,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col antialiased">
         <ServiceWorkerRegistration />
+        <PublicAnalytics />
         {children}
       </body>
     </html>

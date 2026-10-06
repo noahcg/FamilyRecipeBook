@@ -1,5 +1,16 @@
 # Migration history reconciliation
 
+## Production signup conversion migration (2026-10-05)
+
+`037_signup_conversion_tracking.sql` was applied to the existing production
+project as `20261005220000_signup_conversion_tracking.sql` from an isolated
+migration directory. Source SHA-256:
+`9260637f39ce43c48cc47108431a670bb90afe2b4ecdfc3e395581d9fb6bffda`.
+The isolated dry run listed this file alone. The original `037` filename remains
+in this repository for fresh projects; do not replay it on production. Reconcile
+the remaining older migration filenames before using this repository directory
+for a production `supabase db push`.
+
 Committed migrations include two distinct 026 files and two distinct 027 files.
 The Supabase CLI identifies migrations by numeric version, so these cannot be
 safely pushed as a normal migration directory. Preserve the original files:
