@@ -6,6 +6,7 @@
 
 - Updated the locked `source-map-js` dependency to its patched release so the production dependency audit passes.
 - Self-hosted the app fonts so CI and production builds no longer need to fetch Google Fonts during compilation.
+- Recovered the billing portal customer link from an existing Stripe subscription when the saved customer ID is stale, and showed an actionable account-link error when Stripe cannot find the subscription.
 
 ### Public navigation
 
