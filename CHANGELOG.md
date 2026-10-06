@@ -1,10 +1,11 @@
 # Changelog
 
-## [1.0.1] - 2026-10-05
+## Public launch updates (version held at 1.0.0) - 2026-10-05
 
 ### Public navigation
 
 - Replaced the dollar sign icon for mobile Pricing navigation with a layers icon representing the Free and Plus plans.
+- Kept the public version at 1.0.0 at the owner's request until they explicitly request a new version.
 
 ## [1.0.0] - 2026-10-05
 

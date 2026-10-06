@@ -101,6 +101,6 @@ Before considering a code task complete, run the narrowest relevant check. For b
 ## Release Tracking
 
 - Treat `package.json` as the source of truth for the app version; `src/lib/version.ts` exposes that value in the UI.
-- Before finishing any user-requested app update, decide whether the change should bump the version. User-visible features, behavior changes, schema changes, production fixes, and release prep should update the version and `CHANGELOG.md`.
-- Keep versions below `1.0.0` until launch is explicitly intentional.
+- The owner has explicitly set the public launch version to `1.0.0`. Keep `package.json` and `package-lock.json` at `1.0.0` until the owner explicitly requests a new version; the approximate 36-hour window is not automatic authorization to bump it.
+- Record user-visible features, behavior changes, schema changes, production fixes, and release prep in `CHANGELOG.md` under public launch updates while this version hold is in effect.
 - After changing the version or changelog, run `npm run version:check`.
