@@ -7,6 +7,7 @@ import { isAdminEmail, requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createMemberInviteEmail } from "@/lib/email/memberInviteTemplate";
 import { createAccountDeletionEmail } from "@/lib/email/accountDeletionTemplate";
+import { createLifetimePlusEmail } from "@/lib/email/lifetimePlusTemplate";
 import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEmail";
 import { createAccountRecipeArchive } from "@/lib/accountRecipeArchive";
 import type { ActionResult } from "@/lib/types";
@@ -57,6 +58,13 @@ export async function setUserGrandfatheredPlus(userId: string, enabled: boolean)
   const { data: targetProfile } = await service.from("profiles").select("id,full_name").eq("id", parsed.data).maybeSingle();
   if (!targetProfile) return { success: false, error: "User not found." };
 
+  const { data: existingGrant, error: lookupError } = await service.from("billing_accounts")
+    .select("grandfathered_plus")
+    .eq("user_id", parsed.data)
+    .maybeSingle();
+  if (lookupError) return { success: false, error: lookupError.message };
+  if (existingGrant?.grandfathered_plus === enabled) return { success: true, data: undefined };
+
   const now = new Date().toISOString();
   const { error } = await service.from("billing_accounts").upsert({
     user_id: parsed.data,
@@ -79,6 +87,21 @@ export async function setUserGrandfatheredPlus(userId: string, enabled: boolean)
   revalidatePath("/app/admin");
   revalidatePath(`/app/admin/users/${parsed.data}`);
   revalidatePath("/app/settings");
+  if (enabled) {
+    try {
+      const { data: authUser, error: authError } = await service.auth.admin.getUserById(parsed.data);
+      if (authError || !authUser.user?.email) throw new Error("No email address is available for this user.");
+      const email = createLifetimePlusEmail({
+        accountUrl: `${getAppBaseUrl()}/app/settings`,
+        fullName: targetProfile.full_name,
+        logoUrl: getDefaultLogoUrl(),
+      });
+      await sendEmail({ to: authUser.user.email, ...email });
+    } catch (emailError) {
+      console.error("Could not send lifetime Plus grant email:", emailError);
+      return { success: false, error: "Lifetime Plus access was granted, but the notification email could not be sent." };
+    }
+  }
   return { success: true, data: undefined };
 }
 
