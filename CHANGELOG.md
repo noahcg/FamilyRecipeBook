@@ -4,6 +4,7 @@
 
 ### Quality gates
 
+- Added an admin launch counter for manual lifetime Plus grants to the first 50 completed new signups, with cohort labels in Account tiers.
 - Email members a branded lifetime Plus notification when an administrator grants access, and report delivery failures in the admin panel.
 - Updated the locked `source-map-js` dependency to its patched release so the production dependency audit passes.
 - Self-hosted the app fonts so CI and production builds no longer need to fetch Google Fonts during compilation.

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Database, ScrollText, Search, UserRoundCheck, Users } from "lucide-react";
+import { BookOpen, Crown, Database, ScrollText, Search, UserRoundCheck, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { tierForBillingRecord } from "@/lib/entitlements";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -89,6 +89,7 @@ export default async function AdminPage({
     { count: bookCount },
     { count: recipeCount },
     { count: completedSignupCount, error: completedSignupError },
+    { data: firstSignupRows, error: firstSignupError },
     { data: signupTrackingConfig },
     { data: books },
     { data: profiles },
@@ -96,13 +97,14 @@ export default async function AdminPage({
     { data: allMemberships },
     { data: pendingInviteRows },
     { data: authUsers },
-    { data: billingRows },
+    { data: billingRows, error: billingError },
     { data: auditRows },
   ] = await Promise.all([
     admin.from("profiles").select("id", { count: "exact", head: true }),
     admin.from("recipe_books").select("id", { count: "exact", head: true }),
     admin.from("recipes").select("id", { count: "exact", head: true }),
     admin.from("signup_conversion_tracking").select("user_id", { count: "exact", head: true }),
+    admin.from("signup_conversion_tracking").select("user_id,completed_at").order("completed_at", { ascending: true }).order("user_id", { ascending: true }).limit(50),
     admin.from("signup_conversion_config").select("started_at").eq("singleton", true).maybeSingle(),
     query
       ? admin
@@ -167,11 +169,13 @@ export default async function AdminPage({
     email: emailById.get(profile.id) ?? null,
   }));
   const billingByUser = new Map((billingRows ?? []).map((row) => [row.user_id, row]));
+  const firstSignupIds = new Map((firstSignupRows ?? []).map((row, index) => [row.user_id, index + 1]));
+  const firstSignupGrantCount = (firstSignupRows ?? []).filter((row) => billingByUser.get(row.user_id)?.grandfathered_plus === true).length;
   const entitlementRows: AdminEntitlementRow[] = profileRows.map((profile) => {
     const billing = billingByUser.get(profile.id);
     const tier = tierForBillingRecord(billing ?? null);
-    return { id: profile.id, name: profile.full_name ?? "Unnamed profile", email: emailById.get(profile.id) ?? null, tier };
-  });
+    return { id: profile.id, name: profile.full_name ?? "Unnamed profile", email: emailById.get(profile.id) ?? null, tier, launchSignupNumber: firstSignupIds.get(profile.id) ?? null };
+  }).sort((a, b) => (a.launchSignupNumber ?? Number.MAX_SAFE_INTEGER) - (b.launchSignupNumber ?? Number.MAX_SAFE_INTEGER));
   const shareCookbooks = (allCookbooks ?? [])
     .map((row) => {
       const book = Array.isArray(row.recipe_books)
@@ -245,6 +249,27 @@ export default async function AdminPage({
             ? "Signup tracking is unavailable until its database migration is applied."
             : `Completed signups since ${signupTrackingConfig?.started_at ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(signupTrackingConfig.started_at)) : "tracking began"}. Compare with public visitors in Vercel Web Analytics for the same period and production environment.`}
         </p>
+
+        <section className="mt-5 recipe-card p-5" aria-labelledby="launch-plus-heading">
+          <div className="flex items-center gap-2">
+            <Crown size={18} className="text-accent-cinnamon" />
+            <h2 id="launch-plus-heading" className="text-base font-black text-ink">First 50 Plus grants</h2>
+          </div>
+          {firstSignupError || completedSignupError || billingError ? (
+            <p className="mt-3 text-sm text-danger">The signup or grant count is unavailable. Check the signup tracking migration and billing data, then reload this page.</p>
+          ) : (
+            <>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <StatCard label="Grants remaining" value={Math.max(0, 50 - firstSignupGrantCount)} icon={<Crown size={21} />} />
+                <StatCard label="Granted in first 50" value={firstSignupGrantCount} icon={<UserRoundCheck size={21} />} />
+                <StatCard label="Signups in cohort" value={firstSignupRows?.length ?? 0} icon={<Users size={21} />} />
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-ink-muted">
+                The first 50 completed new sign-ins since tracking began form this cohort. Grants are manual: use Account tiers below for people marked “First 50.” The remaining count falls only when a cohort member has an active lifetime Plus grant; revoking one restores a spot. Paid Plus alone and older grandfathered accounts do not consume a spot.
+              </p>
+            </>
+          )}
+        </section>
 
         <section className="mt-4">
           <PushSubscriptionToggle />

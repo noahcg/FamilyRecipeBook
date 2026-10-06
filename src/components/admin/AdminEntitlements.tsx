@@ -12,6 +12,7 @@ export interface AdminEntitlementRow {
   name: string;
   email: string | null;
   tier: BillingTier;
+  launchSignupNumber: number | null;
 }
 
 export function AdminEntitlements({ rows }: { rows: AdminEntitlementRow[] }) {
@@ -63,6 +64,7 @@ export function AdminEntitlements({ rows }: { rows: AdminEntitlementRow[] }) {
               <div className="min-w-0">
                 <p className="truncate text-sm font-black text-ink">{row.name}</p>
                 <p className="truncate text-xs text-ink-muted">{row.email ?? "No email on file"}</p>
+                {row.launchSignupNumber && <p className="text-xs font-bold text-green-deep">First 50 signup #{row.launchSignupNumber}</p>}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${granted ? "bg-accent-honey/25 text-accent-cinnamon" : paid ? "bg-green-pale text-green-deep" : "bg-card-muted text-ink-muted"}`}>
