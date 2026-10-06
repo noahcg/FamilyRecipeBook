@@ -2,6 +2,10 @@
 
 ## Public launch updates (version held at 1.0.0) - 2026-10-05
 
+### Quality gates
+
+- Updated the locked `source-map-js` dependency to its patched release so the production dependency audit passes.
+
 ### Public navigation
 
 - Replaced the dollar sign icon for mobile Pricing navigation with a layers icon representing the Free and Plus plans.
