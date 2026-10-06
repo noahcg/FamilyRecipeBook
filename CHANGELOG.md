@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] - 2026-10-05
+
+### Public navigation
+
+- Replaced the dollar sign icon for mobile Pricing navigation with a layers icon representing the Free and Plus plans.
+
 ## [1.0.0] - 2026-10-05
 
 ### Public launch

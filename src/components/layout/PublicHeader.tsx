@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { BookOpen, CircleDollarSign, Heart, Home, LogIn } from "lucide-react";
+import { BookOpen, Heart, Home, Layers3, LogIn } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { BrandLockup } from "@/components/ui/BrandLockup";
 
@@ -11,7 +11,7 @@ const links = [
   { href: "/", label: "Home", icon: Home, exact: true },
   { href: "/our-story", label: "Our Story", icon: Heart },
   { href: "/guides", label: "Guides", icon: BookOpen },
-  { href: "/pricing", label: "Pricing", icon: CircleDollarSign },
+  { href: "/pricing", label: "Pricing", icon: Layers3 },
 ];
 
 export function PublicHeader() {
