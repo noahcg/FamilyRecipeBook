@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { clsx } from "clsx";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
+import { displayIngredientAmount } from "@/lib/metricUnits";
+import { useAccount } from "@/lib/context/AccountContext";
 import type { RecipeIngredient } from "@/lib/types";
 
 interface IngredientChecklistProps {
@@ -13,6 +15,7 @@ interface IngredientChecklistProps {
 
 export function IngredientChecklist({ ingredients, className, scaleFactor = 1 }: IngredientChecklistProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const { metricUnits } = useAccount();
 
   function toggle(id: string) {
     setChecked((prev) => {
@@ -26,7 +29,8 @@ export function IngredientChecklist({ ingredients, className, scaleFactor = 1 }:
   function renderItem(ing: RecipeIngredient) {
     const isChecked = checked.has(ing.id);
     const quantity = scaleIngredientQuantity(ing.quantity, scaleFactor);
-    const label = [quantity, ing.unit, ing.item].filter(Boolean).join(" ");
+    const display = displayIngredientAmount(quantity, ing.unit, metricUnits);
+    const label = [display.quantity, display.unit, ing.item].filter(Boolean).join(" ");
 
     return (
       <li key={ing.id}>

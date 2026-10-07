@@ -1,5 +1,7 @@
 import { Fragment } from "react";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
+import { displayIngredientAmount } from "@/lib/metricUnits";
+import { useAccount } from "@/lib/context/AccountContext";
 import { formatDuration } from "@/lib/formatDuration";
 import type { RecipeWithRelations } from "@/lib/types";
 
@@ -13,6 +15,7 @@ function formatMinutes(label: string, minutes: number | null) {
 }
 
 export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipeProps) {
+  const { metricUnits } = useAccount();
   // Only a real, human-written story prints in the handwriting style; a plain
   // description prints as normal text below it.
   const story = recipe.story ?? recipe.stories?.[0]?.body ?? null;
@@ -75,8 +78,7 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
                       <span className="recipe-print-ingredient-text">
                         <span>
                           {[
-                            scaleIngredientQuantity(ingredient.quantity, servingScale),
-                            ingredient.unit,
+                            ...Object.values(displayIngredientAmount(scaleIngredientQuantity(ingredient.quantity, servingScale), ingredient.unit, metricUnits)),
                             ingredient.item,
                           ]
                             .filter(Boolean)

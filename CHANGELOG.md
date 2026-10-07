@@ -1,6 +1,6 @@
 # Changelog
 
-## Public launch updates (version held at 1.0.0) - 2026-10-05
+## [1.0.1] - 2026-10-07
 
 ### Quality gates
 
@@ -12,9 +12,10 @@
 
 ### Public navigation
 
+- Added a per-user metric measurement switch in Settings. Recipe ingredient displays convert familiar volume and weight units while saved family recipes retain their original measurements.
+- Recipe ideas now use the viewer's measurement preference when generating ingredients and cooking temperatures.
 - Added a Guide on replacing a recipe photo by changing the photo ID in both places in its image URL, with those numbers highlighted in the example.
 - Replaced the dollar sign icon for mobile Pricing navigation with a layers icon representing the Free and Plus plans.
-- Kept the public version at 1.0.0 at the owner's request until they explicitly request a new version.
 
 ## [1.0.0] - 2026-10-05
 
