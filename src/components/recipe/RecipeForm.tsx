@@ -29,6 +29,8 @@ import { formatDuration } from "@/lib/formatDuration";
 import { parsePastedRecipe } from "@/lib/recipeTextImport";
 import { importRecipeFiles, type NormalizedImportedRecipe } from "@/lib/recipeFileImport";
 import { useUser } from "@/lib/hooks/useUser";
+import { useAccount } from "@/lib/context/AccountContext";
+import { hasUnitAdjustment, projectRecipeUnits, restoreUneditedSource } from "@/lib/recipeUnitProjection";
 import type { BookCategory } from "@/lib/actions/categories";
 import type { RecipeWithRelations } from "@/lib/types";
 import type { RecipeImageCandidate } from "@/lib/pexelsSearch";
@@ -65,7 +67,10 @@ type IngredientKeypadTarget = {
   field: IngredientKeypadField;
 };
 
-const INGREDIENT_KEYPAD_UNITS = ["tsp", "Tbsp", "oz", "lb", "can", "cup"];
+const INGREDIENT_KEYPAD_UNITS = {
+  imperial: ["tsp", "Tbsp", "oz", "lb", "can", "cup"],
+  metric: ["mL", "L", "g", "kg", "can", "each"],
+} as const;
 const entryGridClassName = "grid gap-8 lg:grid-cols-2 lg:gap-12";
 const entryCardClassName = "rounded-xl border border-line bg-card p-5 shadow-xs";
 // Manual editor sections: one centered column of distinct cards.
@@ -118,7 +123,10 @@ function importedRecipeToInput(recipe: NormalizedImportedRecipe, photoUrl?: stri
     import_method: "file_import",
     source_url: validImportUrl(recipe.source_url),
     import_source: truncateImportValue(recipe.import_source, 100),
-    import_metadata: recipe.import_metadata,
+    import_metadata: {
+      ...recipe.import_metadata,
+      unit_source_v1: { ingredients: recipe.ingredients, instructions: recipe.instructions },
+    },
     nutrition: recipe.nutrition,
     ingredients: recipe.ingredients.length
       ? recipe.ingredients.map((ingredient) => ({
@@ -149,6 +157,7 @@ function ingredientKeypadTargetKey(target: IngredientKeypadTarget | null) {
 function IngredientKeypad({
   containerRef,
   target,
+  metricUnits,
   onInsert,
   onInsertUnit,
   onBackspace,
@@ -158,6 +167,7 @@ function IngredientKeypad({
 }: {
   containerRef: RefObject<HTMLDivElement | null>;
   target: IngredientKeypadTarget;
+  metricUnits: boolean;
   onInsert: (text: string) => void;
   onInsertUnit: (unit: string) => void;
   onBackspace: () => void;
@@ -169,12 +179,13 @@ function IngredientKeypad({
     ["7", "8", "9"],
     ["4", "5", "6"],
     ["1", "2", "3"],
-    ["0", "space", "/"],
+    metricUnits ? ["0", ".", "space"] : ["0", "space", "/"],
   ];
+  const units = metricUnits ? INGREDIENT_KEYPAD_UNITS.metric : INGREDIENT_KEYPAD_UNITS.imperial;
   const unitRows = [
-    INGREDIENT_KEYPAD_UNITS.slice(0, 2),
-    INGREDIENT_KEYPAD_UNITS.slice(2, 4),
-    INGREDIENT_KEYPAD_UNITS.slice(4, 6),
+    units.slice(0, 2),
+    units.slice(2, 4),
+    units.slice(4, 6),
     ["Backspace", "Next"],
   ];
   const activeLabel = target.field === "quantity" ? "quantity" : "unit";
@@ -263,6 +274,7 @@ export function RecipeForm({
   enablePasteEntry = false,
 }: RecipeFormProps) {
   const router = useRouter();
+  const { metricUnits } = useAccount();
   const { userId } = useUser();
   const fileRef = useRef<HTMLInputElement>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
@@ -311,6 +323,15 @@ export function RecipeForm({
   const [draggingIngredientIndex, setDraggingIngredientIndex] = useState<number | null>(null);
   const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState<number | null>(null);
   const importedRecipe = importedRecipes[activeImportedRecipeIndex] ?? null;
+  const initialUnitSource = useMemo(() => recipe ? {
+    ingredients: recipe.ingredients.map((ingredient) => ({
+      quantity: ingredient.quantity ?? "", unit: ingredient.unit ?? "", item: ingredient.item,
+      note: ingredient.note ?? "", group_label: ingredient.group_label ?? null,
+    })),
+    instructions: recipe.instructions.map((instruction) => ({ body: instruction.body })),
+  } : null, [recipe]);
+  const [unitSource, setUnitSource] = useState<Pick<CreateRecipeInput, "ingredients" | "instructions"> | null>(initialUnitSource);
+  const [projectionMetric, setProjectionMetric] = useState(metricUnits);
   const assignmentOptions = useMemo<RecipeAssignmentOption[]>(
     () =>
       bookOptions?.length
@@ -359,17 +380,11 @@ export function RecipeForm({
           import_source: recipe.import_source ?? "",
           import_metadata: recipe.import_metadata ?? {},
           nutrition: recipe.nutrition ?? {},
-          ingredients: recipe.ingredients?.length
-            ? recipe.ingredients.map((i) => ({
-                quantity: i.quantity ?? "",
-                unit: i.unit ?? "",
-                item: i.item,
-                note: i.note ?? "",
-                group_label: i.group_label ?? null,
-              }))
+          ingredients: initialUnitSource?.ingredients.length
+            ? projectRecipeUnits(initialUnitSource, metricUnits).ingredients
             : [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
-          instructions: recipe.instructions?.length
-            ? recipe.instructions.map((i) => ({ body: i.body }))
+          instructions: initialUnitSource?.instructions.length
+            ? projectRecipeUnits(initialUnitSource, metricUnits).instructions
             : [{ body: "" }],
         }
       : {
@@ -784,12 +799,17 @@ export function RecipeForm({
     setValue("servings", importedRecipe.servings || undefined, { shouldDirty: true });
     setValue("category", importedRecipe.category, { shouldDirty: true });
     setValue("tags", importedRecipe.tags, { shouldDirty: true });
-    replaceIngredients(importedRecipe.ingredients);
-    replaceInstructions(importedRecipe.instructions);
+    const source = { ingredients: importedRecipe.ingredients, instructions: importedRecipe.instructions };
+    setUnitSource(source);
+    setProjectionMetric(metricUnits);
+    setValue("import_metadata", { ...getValues("import_metadata"), unit_source_v1: source }, { shouldDirty: true });
+    const projected = projectRecipeUnits(source, metricUnits);
+    replaceIngredients(projected.ingredients);
+    replaceInstructions(projected.instructions);
     setRecipeImportedViaUpload(true);
     setConfirmImportReplace(false);
     setPhotoImportReviewNotice(
-      `We added ${importedRecipe.ingredients.length} ingredient${importedRecipe.ingredients.length === 1 ? "" : "s"} and ${importedRecipe.instructions.length} step${importedRecipe.instructions.length === 1 ? "" : "s"} from your photo. Review the details, choose a category, then save when you’re ready.`
+      `We added ${importedRecipe.ingredients.length} ingredient${importedRecipe.ingredients.length === 1 ? "" : "s"} and ${importedRecipe.instructions.length} step${importedRecipe.instructions.length === 1 ? "" : "s"} from your photo.${hasUnitAdjustment(source, metricUnits) ? ` Measurements appear in your ${metricUnits ? "metric" : "imperial"} preference.` : ""} Review the details, choose a category, then save when you’re ready.`
     );
     setEntryMode("manual");
     window.scrollTo(0, 0);
@@ -827,8 +847,13 @@ export function RecipeForm({
       setValue("servings", parsedRecipe.servings, { shouldDirty: true, shouldValidate: true });
     }
 
-    replaceIngredients(parsedRecipe.ingredients);
-    replaceInstructions(parsedRecipe.instructions);
+    const source = { ingredients: parsedRecipe.ingredients, instructions: parsedRecipe.instructions };
+    setUnitSource(source);
+    setProjectionMetric(metricUnits);
+    setValue("import_metadata", { ...getValues("import_metadata"), unit_source_v1: source }, { shouldDirty: true });
+    const projected = projectRecipeUnits(source, metricUnits);
+    replaceIngredients(projected.ingredients);
+    replaceInstructions(projected.instructions);
     setValue("import_source", "pasted_text", { shouldDirty: true });
     setRecipeImportedViaUpload(false);
     const parsedDetails = {
@@ -840,9 +865,10 @@ export function RecipeForm({
     const hasParsedDetails = Object.values(parsedDetails).some(Boolean);
     setPasteDetails(parsedDetails);
     setPasteSummary(
-      hasParsedDetails
+      (hasParsedDetails
         ? `Parsed recipe details, ${parsedRecipe.ingredients.length} ingredient${parsedRecipe.ingredients.length === 1 ? "" : "s"}, and ${parsedRecipe.instructions.length} step${parsedRecipe.instructions.length === 1 ? "" : "s"}.`
-        : `Parsed ${parsedRecipe.ingredients.length} ingredient${parsedRecipe.ingredients.length === 1 ? "" : "s"} and ${parsedRecipe.instructions.length} step${parsedRecipe.instructions.length === 1 ? "" : "s"}.`
+        : `Parsed ${parsedRecipe.ingredients.length} ingredient${parsedRecipe.ingredients.length === 1 ? "" : "s"} and ${parsedRecipe.instructions.length} step${parsedRecipe.instructions.length === 1 ? "" : "s"}.`) +
+      (hasUnitAdjustment(source, metricUnits) ? ` Measurements appear in your ${metricUnits ? "metric" : "imperial"} preference.` : "")
     );
   }
 
@@ -932,6 +958,9 @@ export function RecipeForm({
 
   async function onSubmit(data: CreateRecipeInput) {
     setServerError(null);
+    const savedFields = unitSource
+      ? restoreUneditedSource(data, unitSource, projectionMetric)
+      : { ingredients: data.ingredients, instructions: data.instructions };
 
     let photoUrl = data.photo_url ?? null;
 
@@ -979,6 +1008,7 @@ export function RecipeForm({
 
     const payload = {
       ...data,
+      ...savedFields,
       ...photoAttribution,
       description,
       photo_url: photoUrl,
@@ -1537,6 +1567,7 @@ export function RecipeForm({
                     <IngredientKeypad
                       containerRef={ingredientKeypadRef}
                       target={activeIngredientKeypad}
+                      metricUnits={metricUnits}
                       onInsert={handleIngredientKeypadInsert}
                       onInsertUnit={handleIngredientKeypadUnit}
                       onBackspace={handleIngredientKeypadBackspace}
@@ -2028,6 +2059,9 @@ export function RecipeForm({
                         {importedRecipe.confidence}.
                         {importSource === "openai" && " Improved with OpenAI."}
                       </p>
+                      {hasUnitAdjustment(importedRecipe, metricUnits) && <p className="mt-1 text-xs text-ink-muted">
+                        Measurements appear in your {metricUnits ? "metric" : "imperial"} preference where supported.
+                      </p>}
                     </div>
                   </div>
                   {importedRecipe.warnings.length > 0 && (
@@ -2290,7 +2324,7 @@ export function RecipeForm({
                           <div>
                             <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-ink-muted">Ingredients</p>
                             <ul className="space-y-1 text-xs text-ink-soft">
-                              {recipe.ingredients.slice(0, 8).map((ingredient, index) => (
+                              {projectRecipeUnits(recipe, metricUnits).ingredients.slice(0, 8).map((ingredient, index) => (
                                 <li key={`${ingredient.item}-${index}`} className="line-clamp-1">
                                   {[ingredient.quantity, ingredient.unit, ingredient.item].filter(Boolean).join(" ")}
                                 </li>
@@ -2300,7 +2334,7 @@ export function RecipeForm({
                           <div>
                             <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-ink-muted">Steps</p>
                             <ol className="space-y-1 text-xs text-ink-soft">
-                              {recipe.instructions.slice(0, 5).map((instruction, index) => (
+                              {projectRecipeUnits(recipe, metricUnits).instructions.slice(0, 5).map((instruction, index) => (
                                 <li key={`${instruction.body}-${index}`} className="line-clamp-2">
                                   {index + 1}. {instruction.body}
                                 </li>

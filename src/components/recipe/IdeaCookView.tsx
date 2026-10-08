@@ -101,16 +101,17 @@ export function IdeaCookView({ idea, onClose, onSave, isSaving, error, cookbookT
         <div className="absolute inset-x-0 bottom-0 pb-8 pt-24">
           <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
             <div className="max-w-4xl text-ink-inverse">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-white/80">
+              <p className="mb-3 truncate text-xs font-bold uppercase tracking-[0.08em] text-white/80">
                 Cooking now{idea.category ? ` · ${idea.category}` : ""}
               </p>
               <h1
-                className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
+                className="line-clamp-2 break-words text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl [overflow-wrap:anywhere]"
                 style={{ fontFamily: "var(--font-playfair)" }}
+                title={idea.title}
               >
                 {idea.title}
               </h1>
-              <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/86">
+              <div className="mt-5 flex max-h-12 flex-wrap items-center gap-x-6 gap-y-2 overflow-hidden text-sm text-white/86">
                 <span className="inline-flex items-center gap-1.5">
                   <Users size={15} />
                   Serves {displayedServings}

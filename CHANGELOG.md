@@ -12,6 +12,11 @@
 
 ### Public navigation
 
+- Imported recipe previews and editors now follow each viewer's metric preference while saving untouched parsed measurements as the source and retaining a structured import snapshot. Metric and imperial recipe views convert supported units and explicit oven temperatures in either direction.
+- Ingredient entry keypad shortcuts now follow the account's unit preference, with metric volume and weight units, count-based units, and decimal entry in metric mode.
+- Constrained recipe hero titles to two lines at responsive sizes so long imported titles cannot cover header actions or overflow the photo.
+- Limited Recipe pick titles on the home and cookbook dashboards to two lines so long imported titles cannot stretch the featured card, with enough line height to keep letter descenders visible.
+- Convert teaspoons using 5 mL per teaspoon, keep useful precision for small metric amounts, and show selectable recipe ingredients with bullets and more room between columns. Show Fahrenheit recipe temperatures in Celsius for metric viewers, including cooking steps and print views.
 - Updated Our Story with Noah’s full founder story, his portrait, and an editorial recipe collage.
 - Added a per-user metric measurement switch in Settings. Recipe ingredient displays convert familiar volume and weight units while saved family recipes retain their original measurements.
 - Recipe ideas now use the viewer's measurement preference when generating ingredients and cooking temperatures.

@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
-import { displayIngredientAmount } from "@/lib/metricUnits";
+import { displayIngredientAmount, displayRecipeTemperatures } from "@/lib/metricUnits";
 import { useAccount } from "@/lib/context/AccountContext";
 import { formatDuration } from "@/lib/formatDuration";
 import type { RecipeWithRelations } from "@/lib/types";
@@ -74,7 +74,7 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
                   )}
                   {group.items.map((ingredient) => (
                     <li key={ingredient.id}>
-                      <span className="recipe-print-checkbox" aria-hidden="true" />
+                      <span className="recipe-print-bullet" aria-hidden="true">•</span>
                       <span className="recipe-print-ingredient-text">
                         <span>
                           {[
@@ -99,7 +99,7 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
               {recipe.instructions.map((instruction, index) => (
                 <li key={instruction.id}>
                   <span className="recipe-print-step-number">{index + 1}</span>
-                  <span>{instruction.body}</span>
+                  <span>{displayRecipeTemperatures(instruction.body, metricUnits)}</span>
                 </li>
               ))}
             </ol>

@@ -269,12 +269,13 @@ export default async function AppHomePage() {
               {/* The guided tour is temporarily disabled while the app onboarding is refreshed. */}
               <DashboardCard className="overflow-hidden">
                 <div className="grid lg:min-h-[320px] lg:grid-cols-[minmax(0,1fr)_38%]">
-                  <div className="flex flex-col justify-between p-3.5 min-[425px]:p-4 sm:p-6">
+                  <div className="flex min-w-0 flex-col justify-between p-3.5 min-[425px]:p-4 sm:p-6">
                     <div>
                       <SectionEyebrow>{hasRecipes ? "Recipe pick" : "Welcome"}</SectionEyebrow>
                       <h2
-                        className="mt-2 max-w-2xl text-[1.35rem] font-bold leading-[1.15] text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl"
+                        className="line-clamp-2 mt-2 max-w-2xl text-[1.35rem] font-bold leading-[1.25] text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl [overflow-wrap:anywhere]"
                         style={{ fontFamily: "var(--font-playfair)" }}
+                        title={hasRecipes ? latestRecipe!.title : undefined}
                       >
                         {hasRecipes ? latestRecipe!.title : "Your kitchen is ready"}
                       </h2>

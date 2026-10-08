@@ -670,20 +670,15 @@ select.input-cookbook:disabled {
 }
 
 .recipe-print-ingredients li {
-  grid-template-columns: 1rem minmax(0, 1fr);
+  grid-template-columns: 0.5rem minmax(0, 1fr);
+}
+
+.recipe-print-bullet {
+  color: var(--color-green-sage);
 }
 
 .recipe-print-steps li {
   grid-template-columns: 1.65rem minmax(0, 1fr);
-}
-
-.recipe-print-checkbox {
-  border: 1.5px solid var(--color-green-sage);
-  border-radius: 999px;
-  display: block;
-  height: 0.9rem;
-  margin-top: 0.25rem;
-  width: 0.9rem;
 }
 
 .recipe-print-step-number {
@@ -821,13 +816,6 @@ select.input-cookbook:disabled {
   .recipe-print-steps li {
     break-inside: avoid;
     margin-bottom: 0.08in;
-  }
-
-  .recipe-print-checkbox {
-    border-color: #8BA888;
-    height: 0.13in;
-    margin-top: 0.035in;
-    width: 0.13in;
   }
 
   .recipe-print-step-number {

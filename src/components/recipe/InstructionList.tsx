@@ -1,4 +1,6 @@
 import { clsx } from "clsx";
+import { useAccount } from "@/lib/context/AccountContext";
+import { displayRecipeTemperatures } from "@/lib/metricUnits";
 import type { RecipeInstruction } from "@/lib/types";
 
 interface InstructionListProps {
@@ -7,6 +9,7 @@ interface InstructionListProps {
 }
 
 export function InstructionList({ instructions, className }: InstructionListProps) {
+  const { metricUnits } = useAccount();
   return (
     <ol className={clsx("space-y-4", className)}>
       {instructions.map((step) => (
@@ -17,7 +20,7 @@ export function InstructionList({ instructions, className }: InstructionListProp
           >
             {step.position}
           </span>
-          <p className="text-sm leading-relaxed text-ink pt-1">{step.body}</p>
+          <p className="text-sm leading-relaxed text-ink pt-1">{displayRecipeTemperatures(step.body, metricUnits)}</p>
         </li>
       ))}
     </ol>
