@@ -6,6 +6,9 @@ import { listCategories } from "@/lib/actions/categories";
 import { getEffectiveEntitlements } from "@/lib/entitlements";
 import { requireUser } from "@/lib/auth";
 import { EntryShell } from "@/components/layout/EntryShell";
+import { AccountProvider } from "@/lib/context/AccountContext";
+import { isAdminEmail } from "@/lib/admin";
+import { createClient } from "@/lib/supabase/server";
 
 interface Props {
   searchParams: Promise<{ bookId?: string }>;
@@ -20,9 +23,12 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
     listCategories(bookId),
   ]);
   const billing = await getEffectiveEntitlements(user.id);
+  const supabase = await createClient();
+  const { data: unitSettings } = await supabase.from("user_settings").select("metric_units").eq("user_id", user.id).maybeSingle();
   const hasOpenAIKey = aiSettings.ai_provider === "openai" && !!aiSettings.ai_api_key;
 
   return (
+    <AccountProvider isAdmin={isAdminEmail(user.email)} plan={billing.plan} initialMetricUnits={unitSettings?.metric_units ?? false}>
     <EntryShell
       eyebrow="Step 2 of 3"
       title="Add your first recipe"
@@ -58,5 +64,6 @@ export default async function AddFirstRecipePage({ searchParams }: Props) {
         onSuccessRedirect={`/onboarding/add-member?bookId=${bookId}`}
       />
     </EntryShell>
+    </AccountProvider>
   );
 }

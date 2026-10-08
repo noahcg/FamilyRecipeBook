@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { TimeOfDayHeadline } from "@/components/home/TimeOfDayHeadline";
 import { AppShell } from "@/components/layout/AppShell";
-import { NewBookBanner } from "@/components/book/NewBookBanner";
 import { Button } from "@/components/ui";
 import { getBookPageData } from "@/lib/actions/books";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
@@ -24,7 +23,6 @@ import type { Recipe } from "@/lib/types";
 
 interface Props {
   params: Promise<{ bookId: string }>;
-  searchParams: Promise<{ created?: string }>;
 }
 
 interface HomeRecipe extends Recipe {
@@ -169,8 +167,8 @@ function SectionHeader({
   );
 }
 
-export default async function BookHomePage({ params, searchParams }: Props) {
-  const [{ bookId }, { created }] = await Promise.all([params, searchParams]);
+export default async function BookHomePage({ params }: Props) {
+  const { bookId } = await params;
   const [data, householdId, user] = await Promise.all([
     getBookPageData(bookId),
     getHouseholdId(),
@@ -179,8 +177,6 @@ export default async function BookHomePage({ params, searchParams }: Props) {
   if (!data) notFound();
 
   const billing = await getEffectiveEntitlements(user.id);
-
-  const justCreated = created === "1";
 
   const { book, recent, favorites, canAddRecipes } = data;
   const latestRecipe = (recent as HomeRecipe[])[0] ?? null;
@@ -280,7 +276,6 @@ export default async function BookHomePage({ params, searchParams }: Props) {
           />
         </div>
         <div className="relative z-10 mx-auto max-w-[1240px]">
-          {justCreated && <NewBookBanner bookId={bookId} />}
           <header className="mb-3">
             <div className="relative min-h-[300px] py-4 min-[425px]:min-h-[340px] min-[425px]:py-5 sm:px-6 lg:min-h-[300px] lg:px-2 lg:py-7">
               <div className="relative max-w-[980px]">

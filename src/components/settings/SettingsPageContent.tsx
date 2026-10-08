@@ -103,7 +103,9 @@ export function GlobalSettingsPageContent({
           <BillingCard billing={billing} />
           <section className="scroll-mt-6 border-b border-line-soft pb-8">
             <h2 className="mb-4 text-2xl font-bold text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Measurements</h2>
-            <UnitPreferencesForm />
+            <div className="recipe-card p-5">
+              <UnitPreferencesForm />
+            </div>
           </section>
           {billing.plan === "plus" && <section className="scroll-mt-6 border-b border-line-soft pb-8">
             <div className="mb-4 flex items-baseline gap-4">

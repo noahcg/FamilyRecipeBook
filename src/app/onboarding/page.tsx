@@ -4,8 +4,10 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui";
 import { JoinInvitationButton } from "@/components/book/JoinInvitationButton";
 import { NameCaptureForm } from "@/components/onboarding/NameCaptureForm";
+import { UnitPreferencesForm } from "@/components/settings/UnitPreferencesForm";
 import { getPendingInvitationsForCurrentUser } from "@/lib/actions/members";
 import { getProfile, requireUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 const ROLE_LABELS: Record<string, string> = {
   contributor: "contributor",
@@ -39,6 +41,8 @@ export default async function OnboardingPage() {
 
   const hasInvites = invitations.length > 0;
   const needsName = !profile?.full_name?.trim();
+  const supabase = await createClient();
+  const { data: unitSettings } = await supabase.from("user_settings").select("metric_units").eq("user_id", user.id).maybeSingle();
 
   return (
     <AppShell lockNav>
@@ -70,6 +74,10 @@ export default async function OnboardingPage() {
                 <NameCaptureForm />
               </section>
             )}
+
+            <section className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
+              <UnitPreferencesForm initialMetricUnits={unitSettings?.metric_units ?? false} />
+            </section>
 
             <section className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
               <h2 className="text-sm font-bold text-ink">
