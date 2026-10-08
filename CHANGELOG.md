@@ -12,6 +12,7 @@
 
 ### Public navigation
 
+- Updated Our Story with Noah’s full founder story, his portrait, and an editorial recipe collage.
 - Added a per-user metric measurement switch in Settings. Recipe ingredient displays convert familiar volume and weight units while saved family recipes retain their original measurements.
 - Recipe ideas now use the viewer's measurement preference when generating ingredients and cooking temperatures.
 - Added a Guide on replacing a recipe photo by changing the photo ID in both places in its image URL, with those numbers highlighted in the example.

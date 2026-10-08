@@ -1,8 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Sacramento } from "next/font/google";
 import { ArrowRight, BookOpen, Heart, House, Leaf, UsersRound } from "lucide-react";
 import { PublicMasthead } from "@/components/layout/PublicMasthead";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import styles from "./OurStoryFounder.module.css";
+
+const sacramento = Sacramento({ weight: "400", subsets: ["latin"], variable: "--font-sacramento", display: "swap" });
 
 export const metadata = {
   title: "Our Story",
@@ -74,14 +78,25 @@ export default function OurStoryPage() {
           </div>
         </section>
 
-        <section className="bg-paper-soft/60">
-          <div className="mx-auto grid w-full max-w-[1120px] gap-10 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[0.72fr_1.28fr] lg:items-start lg:gap-24 lg:px-12 lg:py-28">
-            <div><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent-terracotta">The person behind it</p><StoryHeading className="mt-3">Hi, I&rsquo;m Noah.</StoryHeading></div>
-            <div className="max-w-2xl space-y-5 text-[1.05rem] leading-[1.8] text-ink-muted">
-              <p>I built Home Cooked because it&rsquo;s the recipe app I wanted for myself. I wanted one place for the meals I make often, the recipes I want to remember, and the collections I&rsquo;d be happy to share.</p>
-              <p>I also wanted it to feel less like managing information and more like keeping a personal cookbook. That idea is still at the center of Home Cooked as it grows.</p>
-              <p>There&rsquo;s a lot of care behind the product, and there&rsquo;s still a lot left to build. Thank you for being here early.</p>
-              <div className="pt-1 font-hand text-2xl text-accent-cinnamon">Noah</div>
+        <section className={styles.founder} aria-labelledby="noah-story-heading">
+          <div className={styles.spread}>
+            <div className={styles.heading}>
+              <p className={styles.eyebrow}>The story behind Home Cooked</p>
+              <h2 id="noah-story-heading">Hi, I&rsquo;m Noah.</h2>
+              <p className={styles.intro}>I built Home Cooked because I wanted it to exist.</p>
+              <span className={styles.rule} aria-hidden="true" />
+            </div>
+            <div className={styles.collage}>
+              <Image src="/images/our-story-collage-facing-right.png" alt="Noah facing right beside cookbooks, handwritten recipes, brownies, and a recipe shared by text" width={1301} height={1209} sizes="(min-width: 1100px) 42vw, (min-width: 700px) 70vw, 100vw" className={styles.collageImage} />
+            </div>
+            <div className={styles.story}>
+              <p>My recipes were everywhere: cookbooks with loose printouts tucked inside, browser bookmarks, screenshots, handwritten notes, texts and emails from family, and more recently, recipes I was creating with AI. I wanted one place for all of them, but I didn&rsquo;t want another folder of links. I wanted something that felt like a cookbook of my own.</p>
+              <p>Then I bought a cookbook that made me look at the whole idea differently. It wasn&rsquo;t just a collection of recipes. It told stories about the people behind the food, why they made it, who they made it for, and what those recipes meant to them. I remember holding it and thinking, <strong className="font-bold text-ink">&ldquo;Why can&rsquo;t I make something like this with my own recipes?&rdquo;</strong></p>
+              <p>That idea became Home Cooked.</p>
+              <p>At first, it was simply going to be my own beautiful place to save recipes and share them with people I love. Then it started growing. What if family members could contribute their recipes too? What if a cookbook could become something everyone adds to over time, instead of something owned by just one person?</p>
+              <p>There&rsquo;s a more personal reason that matters to me. My grandmother has been gone for about 20 years, and nobody has her chicken soup recipe. I&rsquo;ll never taste it again. It&rsquo;s a small reminder of how easily a recipe, and a little piece of someone&rsquo;s story, can disappear.</p>
+              <p>Home Cooked still gives me the organized recipe collection I originally wanted. But I hope it can also give families a place to cook from, contribute to, and build together. Something they&rsquo;ll be happy they kept.</p>
+              <p className={`${styles.signature} ${sacramento.variable}`}>Noah</p>
             </div>
           </div>
         </section>
