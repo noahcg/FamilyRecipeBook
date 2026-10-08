@@ -37,7 +37,7 @@ export default async function CreateBookPage() {
 
   const { data: settings } = await supabase
     .from("user_settings")
-    .select("default_book_id")
+    .select("default_book_id, metric_units")
     .eq("user_id", user.id)
     .maybeSingle();
   const defaultBookId = settings?.default_book_id ?? null;
@@ -102,7 +102,7 @@ export default async function CreateBookPage() {
   );
 
   return (
-    <AccountProvider isAdmin={isAdminEmail(user.email)} plan={billing.plan}>
+    <AccountProvider isAdmin={isAdminEmail(user.email)} plan={billing.plan} initialMetricUnits={settings?.metric_units ?? false}>
       <AppShell bookId={navBookId ?? undefined} lockNav={!navBookId}>
         {content}
       </AppShell>

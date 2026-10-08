@@ -1,0 +1,105 @@
+.founder {
+  background: #faf8f1;
+  overflow: hidden;
+}
+
+.spread {
+  display: grid;
+  column-gap: clamp(48px, 4vw, 72px);
+  grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr);
+  grid-template-rows: auto 1fr;
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 72px clamp(48px, 5vw, 88px) 84px;
+}
+
+.heading {
+  grid-column: 2;
+  grid-row: 1;
+  padding: 0;
+}
+
+.eyebrow {
+  color: var(--color-accent-terracotta-dark);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  color: #16473e;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(3.5rem, 4.9vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: 1.08;
+  margin-top: 10px;
+  white-space: nowrap;
+}
+
+.intro {
+  color: #16473e;
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: clamp(1.25rem, 1.85vw, 1.9rem);
+  line-height: 1.3;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+.rule {
+  background: var(--color-accent-terracotta);
+  display: block;
+  height: 2px;
+  margin-top: 14px;
+  width: 66px;
+}
+
+.collage {
+  align-self: start;
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.collageImage {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.story {
+  color: #756f69;
+  font-size: clamp(16px, 1.16vw, 19px);
+  grid-column: 2;
+  grid-row: 2;
+  line-height: 1.28;
+  padding: 18px 0 0;
+}
+
+.story p + p { margin-top: 15px; }
+.story strong { font-weight: 700; }
+.story .signature {
+  color: #955125;
+  font-family: var(--font-sacramento), cursive;
+  font-size: 3.25rem;
+  font-weight: 400;
+  line-height: 1;
+  margin-top: 18px;
+}
+
+@media (max-width: 1099px) {
+  .spread { column-gap: 0; grid-template-columns: 1fr; max-width: 740px; padding: 52px 24px 72px; }
+  .heading { grid-column: 1; grid-row: 1; padding: 0; }
+  .heading h2 { font-size: clamp(3rem, 9vw, 4.75rem); white-space: normal; }
+  .intro { font-size: clamp(1.25rem, 3.3vw, 1.8rem); white-space: normal; }
+  .collage { grid-column: 1; grid-row: 2; margin-top: 24px; }
+  .story { grid-column: 1; grid-row: 3; padding: 36px 0 0; font-size: 17px; line-height: 1.55; }
+}
+
+@media (max-width: 540px) {
+  .spread { padding: 45px 20px 56px; }
+  .eyebrow { font-size: 11px; }
+  .collage { margin-top: 24px; }
+  .story { padding: 32px 0 0; }
+  .story p + p { margin-top: 20px; }
+}

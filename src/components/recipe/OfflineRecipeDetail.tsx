@@ -160,13 +160,14 @@ export function OfflineRecipeDetail({ bookId, recipeId }: OfflineRecipeDetailPro
                   Saved offline
                 </p>
                 <h1
-                  className="text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl"
+                  className="line-clamp-2 break-words text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl [overflow-wrap:anywhere]"
                   style={{ fontFamily: "var(--font-playfair)" }}
+                  title={recipe.title}
                 >
                   {recipe.title}
                 </h1>
-                <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/86">
-                  <span className="font-semibold text-white">From {sourceName}</span>
+                <div className="mt-5 flex max-h-12 flex-wrap items-center gap-x-6 gap-y-2 overflow-hidden text-sm text-white/86">
+                  <span className="max-w-full truncate font-semibold text-white">From {sourceName}</span>
                   <span>Saved {formatDate(record.savedAt)}</span>
                   {displayedServings != null && (
                     <span className="inline-flex items-center gap-1.5">

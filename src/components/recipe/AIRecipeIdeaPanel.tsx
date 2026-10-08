@@ -16,6 +16,8 @@ import {
   type AIRecipeIdea,
 } from "@/lib/actions/aiRecipes";
 import { formatDuration } from "@/lib/formatDuration";
+import { useAccount } from "@/lib/context/AccountContext";
+import { displayIngredientAmount, displayRecipeTemperatures } from "@/lib/metricUnits";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { IdeaCookView } from "@/components/recipe/IdeaCookView";
 
@@ -55,6 +57,7 @@ export function AIRecipeIdeaPanel({
   showCookbookBackLink = false,
 }: AIRecipeIdeaPanelProps) {
   const router = useRouter();
+  const { metricUnits } = useAccount();
   const assignmentOptions = bookOptions?.length
     ? bookOptions
     : [{ id: bookId, title: "This cookbook" }];
@@ -287,7 +290,7 @@ export function AIRecipeIdeaPanel({
                         <li key={`${ingredient.item}-${index}`} className="flex gap-2">
                           <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-sage" />
                           <span>
-                            {[ingredient.quantity, ingredient.unit, ingredient.item]
+                            {[...Object.values(displayIngredientAmount(ingredient.quantity, ingredient.unit, metricUnits)), ingredient.item]
                               .filter(Boolean)
                               .join(" ")}
                             {ingredient.note && (
@@ -309,7 +312,7 @@ export function AIRecipeIdeaPanel({
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-deep text-xs font-bold text-ink-inverse">
                             {index + 1}
                           </span>
-                          <span>{instruction.body}</span>
+                          <span>{displayRecipeTemperatures(instruction.body, metricUnits)}</span>
                         </li>
                       ))}
                     </ol>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { clsx } from "clsx";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
+import { displayIngredientAmount } from "@/lib/metricUnits";
+import { useAccount } from "@/lib/context/AccountContext";
 import type { RecipeIngredient } from "@/lib/types";
 
 interface IngredientChecklistProps {
@@ -12,51 +13,22 @@ interface IngredientChecklistProps {
 }
 
 export function IngredientChecklist({ ingredients, className, scaleFactor = 1 }: IngredientChecklistProps) {
-  const [checked, setChecked] = useState<Set<string>>(new Set());
-
-  function toggle(id: string) {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
+  const { metricUnits } = useAccount();
 
   function renderItem(ing: RecipeIngredient) {
-    const isChecked = checked.has(ing.id);
     const quantity = scaleIngredientQuantity(ing.quantity, scaleFactor);
-    const label = [quantity, ing.unit, ing.item].filter(Boolean).join(" ");
+    const display = displayIngredientAmount(quantity, ing.unit, metricUnits);
+    const label = [display.quantity, display.unit, ing.item].filter(Boolean).join(" ");
 
     return (
-      <li key={ing.id}>
-        <button
-          type="button"
-          onClick={() => toggle(ing.id)}
-          className="group flex w-full items-start gap-3 text-left"
-          aria-pressed={isChecked}
-        >
-          <span
-            className={clsx(
-              "mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-xs border transition-colors",
-              isChecked
-                ? "bg-green-deep border-green-deep"
-                : "border-line group-hover:border-green-sage"
-            )}
-          >
-            {isChecked && (
-              <svg className="w-3 h-3 text-ink-inverse" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </span>
-          <span className={clsx("text-sm leading-normal text-ink transition-opacity", isChecked && "line-through opacity-40")}>
+      <li key={ing.id} className="flex min-w-0 items-start gap-3">
+          <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-sage" />
+          <span className="min-w-0 break-words text-sm leading-normal text-ink">
             {label}
             {ing.note && (
               <span className="text-ink-soft ml-1">({ing.note})</span>
             )}
           </span>
-        </button>
       </li>
     );
   }
@@ -73,7 +45,7 @@ export function IngredientChecklist({ ingredients, className, scaleFactor = 1 }:
 
   if (!groups.some((group) => group.label)) {
     return (
-      <ul className={clsx("grid gap-x-8 gap-y-2 sm:grid-cols-2", className)}>
+      <ul className={clsx("grid gap-x-12 gap-y-2 sm:grid-cols-2", className)}>
         {ingredients.map(renderItem)}
       </ul>
     );
@@ -88,7 +60,7 @@ export function IngredientChecklist({ ingredients, className, scaleFactor = 1 }:
               {group.label}
             </p>
           )}
-          <ul className={clsx("grid gap-x-8 gap-y-2 sm:grid-cols-2", className)}>
+          <ul className={clsx("grid gap-x-12 gap-y-2 sm:grid-cols-2", className)}>
             {group.items.map(renderItem)}
           </ul>
         </div>

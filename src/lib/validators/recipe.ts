@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const recipeNoteSchema = z.string().trim().min(1, "Note cannot be empty.").max(2000, "Note is too long.");
+
 const ingredientSchema = z.object({
   quantity: z.string().max(20).optional(),
   unit: z.string().max(30).optional(),

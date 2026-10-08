@@ -1,5 +1,19 @@
 # Migration history reconciliation
 
+## Production recipe note management migration (2026-10-08)
+
+`039_recipe_note_management.sql` was applied to the existing production project
+as `20261008190000_recipe_note_management.sql` from an isolated migration
+directory. Source SHA-256:
+`dcd80e2c736dbc6e1e5bbadf1436d2a9b91a8b59e127d221e965fb9b93753f41`.
+The isolated dry run listed this file alone. The original `039` filename remains
+in this repository for fresh projects; do not replay it on production. The
+live schema dump after application confirmed the new update/delete policies and
+metadata trigger, and the old delete-own policy was absent. A pre-migration
+logical database backup is stored outside the repository in `private-backups`.
+The other migration-history mismatches below remain unresolved, so do not run
+`supabase db push` from this repository directory against production.
+
 ## Production signup conversion migration (2026-10-05)
 
 `037_signup_conversion_tracking.sql` was applied to the existing production

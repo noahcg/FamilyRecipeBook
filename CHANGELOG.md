@@ -1,6 +1,6 @@
 # Changelog
 
-## Public launch updates (version held at 1.0.0) - 2026-10-05
+## [1.0.1] - 2026-10-07
 
 ### Quality gates
 
@@ -12,9 +12,21 @@
 
 ### Public navigation
 
+- Let note authors and cookbook Keepers edit or delete Family Notes, with Keeper control over unwanted notes from other members.
+- Show every Family Note with its full text, author, and date on recipe pages, and refresh the list after a note is added.
+- Open a new cookbook at its recipe list, where the first-recipe action is available, and remove the creation banner that described Plus sharing as Free.
+- Imported recipe previews and editors now follow each viewer's metric preference while saving untouched parsed measurements as the source and retaining a structured import snapshot. Metric and imperial recipe views convert supported units and explicit oven temperatures in either direction.
+- Ingredient entry keypad shortcuts now follow the account's unit preference, with metric volume and weight units, count-based units, and decimal entry in metric mode.
+- Constrained recipe hero titles to two lines at responsive sizes so long imported titles cannot cover header actions or overflow the photo.
+- Limited Recipe pick titles on the home and cookbook dashboards to two lines so long imported titles cannot stretch the featured card, with enough line height to keep letter descenders visible.
+- Added the unit preference to onboarding and carried the saved choice through cookbook creation and the first-recipe form.
+- Removed nested measurement cards so the preference sits inside a single region in onboarding and Settings.
+- Convert teaspoons using 5 mL per teaspoon, keep useful precision for small metric amounts, and show selectable recipe ingredients with bullets and more room between columns. Show Fahrenheit recipe temperatures in Celsius for metric viewers, including cooking steps and print views.
+- Updated Our Story with Noah’s full founder story, his portrait, and an editorial recipe collage.
+- Added a per-user metric measurement switch in Settings. Recipe ingredient displays convert familiar volume and weight units while saved family recipes retain their original measurements.
+- Recipe ideas now use the viewer's measurement preference when generating ingredients and cooking temperatures.
 - Added a Guide on replacing a recipe photo by changing the photo ID in both places in its image URL, with those numbers highlighted in the example.
 - Replaced the dollar sign icon for mobile Pricing navigation with a layers icon representing the Free and Plus plans.
-- Kept the public version at 1.0.0 at the owner's request until they explicitly request a new version.
 
 ## [1.0.0] - 2026-10-05
 

@@ -1,5 +1,7 @@
 import { Fragment } from "react";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
+import { displayIngredientAmount, displayRecipeTemperatures } from "@/lib/metricUnits";
+import { useAccount } from "@/lib/context/AccountContext";
 import { formatDuration } from "@/lib/formatDuration";
 import type { RecipeWithRelations } from "@/lib/types";
 
@@ -13,6 +15,7 @@ function formatMinutes(label: string, minutes: number | null) {
 }
 
 export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipeProps) {
+  const { metricUnits } = useAccount();
   // Only a real, human-written story prints in the handwriting style; a plain
   // description prints as normal text below it.
   const story = recipe.story ?? recipe.stories?.[0]?.body ?? null;
@@ -71,12 +74,11 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
                   )}
                   {group.items.map((ingredient) => (
                     <li key={ingredient.id}>
-                      <span className="recipe-print-checkbox" aria-hidden="true" />
+                      <span className="recipe-print-bullet" aria-hidden="true">•</span>
                       <span className="recipe-print-ingredient-text">
                         <span>
                           {[
-                            scaleIngredientQuantity(ingredient.quantity, servingScale),
-                            ingredient.unit,
+                            ...Object.values(displayIngredientAmount(scaleIngredientQuantity(ingredient.quantity, servingScale), ingredient.unit, metricUnits)),
                             ingredient.item,
                           ]
                             .filter(Boolean)
@@ -97,7 +99,7 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
               {recipe.instructions.map((instruction, index) => (
                 <li key={instruction.id}>
                   <span className="recipe-print-step-number">{index + 1}</span>
-                  <span>{instruction.body}</span>
+                  <span>{displayRecipeTemperatures(instruction.body, metricUnits)}</span>
                 </li>
               ))}
             </ol>

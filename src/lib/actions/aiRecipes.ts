@@ -12,7 +12,9 @@ import {
   RECIPE_GENERATION_QUALITY_GUIDANCE,
   buildRecipeGenerationMessages,
   formatCategoryList,
+  recipeUnitGuidance,
 } from "@/lib/ai/prompts";
+import { displayIngredientAmount } from "@/lib/metricUnits";
 import {
   buildRecipeIdeaJsonSchema,
   isValidRecipeQuantity,
@@ -122,7 +124,8 @@ function extractJsonObject(text: string) {
 
 async function generateWithCloudflare(
   prompt: string,
-  categories: string[]
+  categories: string[],
+  metricUnits: boolean
 ): Promise<ActionResult<AIRecipeIdea> | null> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const apiToken = process.env.CLOUDFLARE_WORKERS_AI_API_TOKEN;
@@ -131,7 +134,7 @@ async function generateWithCloudflare(
 
   const dynamicSchema = buildRecipeIdeaJsonSchema(categories);
   const result = await runCloudflareTask("recipeGeneration", {
-    messages: buildRecipeGenerationMessages(prompt, categories),
+    messages: buildRecipeGenerationMessages(prompt, categories, metricUnits),
     responseFormat: {
       type: "json_schema",
       json_schema: dynamicSchema,
@@ -174,6 +177,7 @@ async function generateWithCloudflare(
 async function generateWithOpenAI(
   prompt: string,
   categories: string[],
+  metricUnits: boolean,
   overrideKey?: string
 ): Promise<ActionResult<AIRecipeIdea> | null> {
   const apiKey = overrideKey ?? process.env.OPENAI_API_KEY;
@@ -192,7 +196,7 @@ async function generateWithOpenAI(
       input: [
         {
           role: "system",
-          content: `You are a warm, practical family cookbook assistant. Create one realistic, saveable recipe idea from the user's pantry and preferences. Favor common ingredients, clear steps, and family-friendly wording. Do not invent unavailable specialty ingredients unless they are explicitly optional. Choose category from ${categoryList}. ${RECIPE_GENERATION_QUALITY_GUIDANCE}`,
+          content: `You are a warm, practical family cookbook assistant. Create one realistic, saveable recipe idea from the user's pantry and preferences. Favor common ingredients, clear steps, and family-friendly wording. Do not invent unavailable specialty ingredients unless they are explicitly optional. Choose category from ${categoryList}. ${RECIPE_GENERATION_QUALITY_GUIDANCE} ${recipeUnitGuidance(metricUnits)}`,
         },
         {
           role: "user",
@@ -244,6 +248,7 @@ async function generateWithOpenAI(
 async function generateWithAnthropic(
   prompt: string,
   categories: string[],
+  metricUnits: boolean,
   apiKey: string
 ): Promise<ActionResult<AIRecipeIdea> | null> {
   const model = resolveExternalModel("recipeGeneration", "anthropic");
@@ -258,7 +263,7 @@ async function generateWithAnthropic(
     timeoutMs: 30_000,
     body: {
       max_tokens: 2000,
-      system: `You are a warm, practical family cookbook assistant. Use the create_recipe tool to return exactly one realistic, saveable recipe idea. Favor common ingredients, clear steps, and family-friendly wording. Choose category from ${categoryList}. ${RECIPE_GENERATION_QUALITY_GUIDANCE}`,
+      system: `You are a warm, practical family cookbook assistant. Use the create_recipe tool to return exactly one realistic, saveable recipe idea. Favor common ingredients, clear steps, and family-friendly wording. Choose category from ${categoryList}. ${RECIPE_GENERATION_QUALITY_GUIDANCE} ${recipeUnitGuidance(metricUnits)}`,
       messages: [{ role: "user", content: `Pantry request: ${prompt}` }],
       tools: [
         {
@@ -298,14 +303,14 @@ async function generateWithAnthropic(
   return { success: true, data: parsed.data };
 }
 
-async function getUserAISettings(userId: string): Promise<{ provider: string | null; key: string | null }> {
+async function getUserAISettings(userId: string): Promise<{ provider: string | null; key: string | null; metricUnits: boolean }> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("user_settings")
-    .select("ai_provider, ai_api_key")
+    .select("ai_provider, ai_api_key, metric_units")
     .eq("user_id", userId)
     .single();
-  return { provider: data?.ai_provider ?? null, key: data?.ai_api_key ?? null };
+  return { provider: data?.ai_provider ?? null, key: data?.ai_api_key ?? null, metricUnits: data?.metric_units ?? false };
 }
 
 export async function generateRecipeIdea(
@@ -353,24 +358,31 @@ export async function generateRecipeIdea(
   }
 
   // User's own provider/key takes priority
-  const { provider, key } = await getUserAISettings(user.id);
+  const { provider, key, metricUnits } = await getUserAISettings(user.id);
+  const withPreferredUnits = (result: ActionResult<AIRecipeIdea> | null): ActionResult<AIRecipeIdea> | null => {
+    if (!result?.success || !metricUnits) return result;
+    return { success: true, data: { ...result.data, ingredients: result.data.ingredients.map((ingredient) => {
+      const amount = displayIngredientAmount(ingredient.quantity, ingredient.unit, true);
+      return { ...ingredient, quantity: amount.quantity ?? ingredient.quantity, unit: amount.unit ?? ingredient.unit };
+    }) } };
+  };
   if (provider && key) {
     if (provider === "anthropic") {
-      const result = await generateWithAnthropic(prompt, categories, key);
-      if (result) return consumeOnSuccess(result);
+      const result = await generateWithAnthropic(prompt, categories, metricUnits, key);
+      if (result) return consumeOnSuccess(withPreferredUnits(result)!);
     } else {
-      const result = await generateWithOpenAI(prompt, categories, key);
-      if (result) return result;
+      const result = await generateWithOpenAI(prompt, categories, metricUnits, key);
+      if (result) return withPreferredUnits(result)!;
     }
   }
 
   // Fall back to server-configured Cloudflare Workers AI
-  const cloudflareResult = await generateWithCloudflare(prompt, categories);
-  if (cloudflareResult) return consumeOnSuccess(cloudflareResult);
+  const cloudflareResult = await generateWithCloudflare(prompt, categories, metricUnits);
+  if (cloudflareResult) return consumeOnSuccess(withPreferredUnits(cloudflareResult)!);
 
   // Fall back to server-configured OpenAI key
-  const openAIResult = await generateWithOpenAI(prompt, categories);
-  if (openAIResult) return consumeOnSuccess(openAIResult);
+  const openAIResult = await generateWithOpenAI(prompt, categories, metricUnits);
+  if (openAIResult) return consumeOnSuccess(withPreferredUnits(openAIResult)!);
 
   return {
     success: false,

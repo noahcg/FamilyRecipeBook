@@ -51,7 +51,7 @@ export function CreateBookForm({ plan }: { plan: "free" | "plus" }) {
         setServerError(result.error);
         return;
       }
-      router.push(`/app/books/${result.data.id}?created=1`);
+      router.push(`/app/books/${result.data.id}/recipes`);
     } catch (error) {
       setSubmitLocked(false);
       console.error("[CreateBookForm] createBook failed", error);

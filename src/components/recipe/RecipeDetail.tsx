@@ -25,7 +25,7 @@ import {
   Users,
 } from "lucide-react";
 import { clsx } from "clsx";
-import { Button, Dialog } from "@/components/ui";
+import { Button, Dialog, Textarea } from "@/components/ui";
 import { IngredientChecklist } from "./IngredientChecklist";
 import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
@@ -36,6 +36,8 @@ import { ServingScaler } from "./ServingScaler";
 import { useAccount } from "@/lib/context/AccountContext";
 import {
   addRecipeStory,
+  updateRecipeStory,
+  deleteRecipeStory,
   deleteRecipe,
   getRecipeTransferTargets,
   copyRecipeToBook,
@@ -145,6 +147,10 @@ export function RecipeDetail({
   const [storyText, setStoryText] = useState("");
   const [addingStory, setAddingStory] = useState(false);
   const [storyError, setStoryError] = useState<string | null>(null);
+  const [editingNote, setEditingNote] = useState<{ id: string; body: string } | null>(null);
+  const [deletingNote, setDeletingNote] = useState<string | null>(null);
+  const [noteBusy, setNoteBusy] = useState(false);
+  const [noteActionError, setNoteActionError] = useState<string | null>(null);
   const [favorited, setFavorited] = useState(userReactions.favorite);
   const [localRatingSummary, setLocalRatingSummary] = useState(ratingSummary);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -183,32 +189,14 @@ export function RecipeDetail({
   const addedByLabel = `${addedByName}${wasAddedViaUpload ? " (via upload)" : ""}`;
   // Only a real, human-written story gets the handwriting treatment. A plain
   // (often AI-generated) description renders as normal description text below.
-  const story = recipe.story ?? recipe.stories?.[0]?.body ?? null;
-  const noteCount = (recipe.stories?.length ?? 0) + (recipe.story ? 1 : 0);
-  const displayedServings = recipe.servings ? recipe.servings * servingScale : recipe.servings;
+  const story = recipe.story ?? null;
+  const noteCount = recipe.stories?.length ?? 0;
   const addedDate = new Date(recipe.created_at).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
-  const activityItems = [
-    {
-      id: "created",
-      label: `${addedByLabel} added this recipe`,
-      date: addedDate,
-      initials: addedByName.slice(0, 1).toUpperCase(),
-    },
-    ...(recipe.stories ?? []).slice(0, 2).map((storyItem) => ({
-      id: storyItem.id,
-      label: `${storyItem.author?.full_name ?? storyItem.author_display_name ?? "Family"} shared a memory`,
-      date: new Date(storyItem.created_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      initials: (storyItem.author?.full_name ?? storyItem.author_display_name ?? "F").slice(0, 1).toUpperCase(),
-    })),
-  ];
+  const displayedServings = recipe.servings ? recipe.servings * servingScale : recipe.servings;
 
   useEffect(() => {
     if (!groceryMessage) return;
@@ -231,8 +219,35 @@ export function RecipeDetail({
       setStoryError(result.error);
     } else {
       setStoryText("");
+      router.refresh();
     }
     setAddingStory(false);
+  }
+
+  async function handleUpdateNote() {
+    if (!editingNote || noteBusy) return;
+    setNoteBusy(true);
+    setNoteActionError(null);
+    const result = await updateRecipeStory(bookId, recipe.id, editingNote.id, editingNote.body);
+    setNoteBusy(false);
+    if (!result.success) setNoteActionError(result.error);
+    else {
+      setEditingNote(null);
+      router.refresh();
+    }
+  }
+
+  async function handleDeleteNote() {
+    if (!deletingNote || noteBusy) return;
+    setNoteBusy(true);
+    setNoteActionError(null);
+    const result = await deleteRecipeStory(bookId, recipe.id, deletingNote);
+    setNoteBusy(false);
+    if (!result.success) setNoteActionError(result.error);
+    else {
+      setDeletingNote(null);
+      router.refresh();
+    }
   }
 
   async function handleDelete() {
@@ -504,18 +519,19 @@ export function RecipeDetail({
           <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
             <div className="max-w-4xl text-ink-inverse">
               {recipe.category?.name && (
-                <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-white/80">
+                <p className="mb-3 truncate text-xs font-bold uppercase tracking-[0.08em] text-white/80">
                   {recipe.category.name}
                 </p>
               )}
               <h1
-                className="text-4xl font-bold leading-[1.12] sm:text-5xl lg:text-6xl"
+                className="line-clamp-2 break-words text-3xl font-bold leading-[1.25] sm:text-4xl lg:text-5xl [overflow-wrap:anywhere]"
                 style={{ fontFamily: "var(--font-playfair)" }}
+                title={recipe.title}
               >
                 {recipe.title}
               </h1>
-              <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/86">
-                <span className="font-semibold text-white">Added by {addedByLabel}</span>
+              <div className="mt-5 flex max-h-12 flex-wrap items-center gap-x-6 gap-y-2 overflow-hidden text-sm text-white/86">
+                <span className="max-w-full truncate font-semibold text-white">Added by {addedByLabel}</span>
                 <span>{addedDate}</span>
                 {displayedServings != null && (
                   <span className="inline-flex items-center gap-1.5">
@@ -531,7 +547,7 @@ export function RecipeDetail({
                 )}
               </div>
               {recipe.photo_author && recipe.photo_source_url && (
-                <p className="mt-3 text-xs text-white/78">
+                <p className="mt-3 truncate text-xs text-white/78">
                   Photo by{" "}
                   <a
                     href={recipe.photo_author_url ?? recipe.photo_source_url}
@@ -690,7 +706,7 @@ export function RecipeDetail({
               <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">
                 Family notes
               </p>
-              <p className="mt-1 text-sm text-ink-muted">{noteCount} saved</p>
+              <p className="mt-1 text-sm text-ink-muted">{noteCount} {noteCount === 1 ? "note" : "notes"}</p>
             </div>
             <div>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -707,17 +723,34 @@ export function RecipeDetail({
               {storyError && (
                 <p className="mt-2 text-xs text-danger">{storyError}</p>
               )}
-              <div className="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
-                {activityItems.map((item) => (
-                  <div key={item.id} className="flex items-center gap-2 text-sm">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-soft text-xs font-bold text-green-deep">
-                      {item.initials}
-                    </div>
-                    <span className="min-w-0 flex-1 truncate text-ink">{item.label}</span>
-                    <span className="text-xs text-ink-muted">{item.date}</span>
-                  </div>
-                ))}
-              </div>
+              {noteCount > 0 && (
+                <div className="mt-4 space-y-3">
+                  {[...(recipe.stories ?? [])].reverse().map((note) => {
+                    const author = note.author?.full_name ?? note.author_display_name ?? "Family";
+                    return (
+                      <article key={note.id} className="rounded-lg border border-line-soft bg-white-soft/60 p-4">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted">
+                          <span className="font-bold text-green-deep">{author}</span>
+                          <time dateTime={note.created_at}>
+                            {new Date(note.created_at).toLocaleDateString("en-US", {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </time>
+                          {(userRole === "keeper" || note.author_id === userId) && (
+                            <span className="ml-auto flex gap-3">
+                              <button type="button" className="font-semibold text-green-deep underline-offset-2 hover:underline" onClick={() => { setNoteActionError(null); setEditingNote({ id: note.id, body: note.body }); }}>Edit</button>
+                              <button type="button" className="font-semibold text-danger underline-offset-2 hover:underline" onClick={() => { setNoteActionError(null); setDeletingNote(note.id); }}>Delete</button>
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink">{note.body}</p>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -745,6 +778,26 @@ export function RecipeDetail({
       {originalsOpen && (
         <RecipeOriginalsDrawer recipeId={recipe.id} canEdit={canEdit} onClose={() => setOriginalsOpen(false)} />
       )}
+
+      <Dialog open={editingNote !== null} onClose={() => { if (!noteBusy) setEditingNote(null); }} title="Edit note">
+        <div className="space-y-4">
+          <Textarea label="Note" value={editingNote?.body ?? ""} maxLength={2000} onChange={(event) => setEditingNote((current) => current ? { ...current, body: event.target.value } : null)} />
+          {noteActionError && <p role="alert" className="text-sm text-danger">{noteActionError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setEditingNote(null)} disabled={noteBusy}>Cancel</Button>
+            <Button variant="primary" size="sm" onClick={handleUpdateNote} disabled={!editingNote?.body.trim()} loading={noteBusy}>Save note</Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog open={deletingNote !== null} onClose={() => { if (!noteBusy) setDeletingNote(null); }} title="Delete note?">
+        <p className="mb-4 text-sm text-ink-muted">This removes the note for everyone in this cookbook. It cannot be undone.</p>
+        {noteActionError && <p role="alert" className="mb-4 text-sm text-danger">{noteActionError}</p>}
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" size="sm" onClick={() => setDeletingNote(null)} disabled={noteBusy}>Cancel</Button>
+          <Button variant="danger" size="sm" onClick={handleDeleteNote} loading={noteBusy}>Delete note</Button>
+        </div>
+      </Dialog>
 
       <RecipeShareDialog
         open={shareOpen}
