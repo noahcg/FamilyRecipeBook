@@ -15,6 +15,7 @@ import {
 import {
   createRecipeSchema,
   updateRecipeSchema,
+  recipeNoteSchema,
   type CreateRecipeInput,
   type UpdateRecipeInput,
 } from "@/lib/validators/recipe";
@@ -808,7 +809,8 @@ export async function addRecipeStory(
   body: string
 ): Promise<ActionResult> {
   const user = await requireUser();
-  if (!body.trim()) return { success: false, error: "Memory cannot be empty." };
+  const parsed = recipeNoteSchema.safeParse(body);
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
   const role = await getBookRole(supabase, bookId, user.id);
@@ -816,10 +818,58 @@ export async function addRecipeStory(
 
   const { error } = await supabase
     .from("recipe_stories")
-    .insert({ recipe_id: recipeId, author_id: user.id, body: body.trim() });
+    .insert({ recipe_id: recipeId, author_id: user.id, body: parsed.data });
 
   if (error) return { success: false, error: error.message };
 
+  revalidatePath(`/app/books/${bookId}/recipes/${recipeId}`);
+  return { success: true, data: undefined };
+}
+
+export async function updateRecipeStory(
+  bookId: string,
+  recipeId: string,
+  noteId: string,
+  body: string
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const parsed = recipeNoteSchema.safeParse(body);
+  if (!parsed.success) return { success: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const role = await getBookRole(supabase, bookId, user.id);
+  if (!role) return { success: false, error: "Not a member of this book." };
+  const { data: recipe } = await supabase.from("recipes").select("id").eq("id", recipeId).eq("book_id", bookId).single();
+  if (!recipe) return { success: false, error: "Recipe not found." };
+  const { data: note } = await supabase.from("recipe_stories").select("author_id").eq("id", noteId).eq("recipe_id", recipeId).single();
+  if (!note) return { success: false, error: "Note not found." };
+  if (role !== "keeper" && note.author_id !== user.id) return { success: false, error: "You cannot edit this note." };
+
+  const { data, error } = await supabase.from("recipe_stories").update({ body: parsed.data })
+    .eq("id", noteId).eq("recipe_id", recipeId).select("id").single();
+  if (error || !data) return { success: false, error: "Could not save the note. Please try again." };
+  revalidatePath(`/app/books/${bookId}/recipes/${recipeId}`);
+  return { success: true, data: undefined };
+}
+
+export async function deleteRecipeStory(
+  bookId: string,
+  recipeId: string,
+  noteId: string
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const role = await getBookRole(supabase, bookId, user.id);
+  if (!role) return { success: false, error: "Not a member of this book." };
+  const { data: recipe } = await supabase.from("recipes").select("id").eq("id", recipeId).eq("book_id", bookId).single();
+  if (!recipe) return { success: false, error: "Recipe not found." };
+  const { data: note } = await supabase.from("recipe_stories").select("author_id").eq("id", noteId).eq("recipe_id", recipeId).single();
+  if (!note) return { success: false, error: "Note not found." };
+  if (role !== "keeper" && note.author_id !== user.id) return { success: false, error: "You cannot delete this note." };
+
+  const { data, error } = await supabase.from("recipe_stories").delete()
+    .eq("id", noteId).eq("recipe_id", recipeId).select("id").single();
+  if (error || !data) return { success: false, error: "Could not delete the note. Please try again." };
   revalidatePath(`/app/books/${bookId}/recipes/${recipeId}`);
   return { success: true, data: undefined };
 }

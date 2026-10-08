@@ -12,6 +12,8 @@
 
 ### Public navigation
 
+- Let note authors and cookbook Keepers edit or delete Family Notes, with Keeper control over unwanted notes from other members.
+- Show every Family Note with its full text, author, and date on recipe pages, and refresh the list after a note is added.
 - Open a new cookbook at its recipe list, where the first-recipe action is available, and remove the creation banner that described Plus sharing as Free.
 - Imported recipe previews and editors now follow each viewer's metric preference while saving untouched parsed measurements as the source and retaining a structured import snapshot. Metric and imperial recipe views convert supported units and explicit oven temperatures in either direction.
 - Ingredient entry keypad shortcuts now follow the account's unit preference, with metric volume and weight units, count-based units, and decimal entry in metric mode.
