@@ -5,6 +5,8 @@ import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { RecipeCard, EmptyState, CookbookIcon } from "@/components/ui";
 import { MemberProfileCard } from "@/components/members/MemberProfileCard";
 import { RemoveMemberButton } from "@/components/members/RemoveMemberButton";
+import { MemberRoleForm } from "@/components/members/MemberRoleForm";
+import { getBookSharingAllowance } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberWithProfile } from "@/lib/types";
 
@@ -106,6 +108,8 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
     loveCount: r.reactions?.filter((rx) => rx.type === "love").length ?? 0,
   }));
   const activity = (activityRes.data ?? []) as MemberActivity[];
+  const canEditRole = viewerMemberRes.data?.role === "keeper" && member.role !== "keeper";
+  const sharingAllowance = canEditRole ? await getBookSharingAllowance(bookId).catch(() => null) : null;
 
   return (
     <AppShell bookId={bookId}>
@@ -118,8 +122,17 @@ export default async function MemberProfilePage({ params, searchParams }: Props)
           className="mb-6"
         />
 
-        {viewerMemberRes.data?.role === "keeper" && member.role !== "keeper" && (
+        {canEditRole && (
           <div className="mb-6">
+            {sharingAllowance && (
+              <MemberRoleForm
+                bookId={bookId}
+                userId={member.user_id}
+                currentRole={member.role as "family" | "contributor"}
+                isFree={sharingAllowance.isFree}
+              />
+            )}
+            {!sharingAllowance && <p role="alert" className="mb-4 text-sm text-danger">Could not load sharing limits. Refresh to change this member&apos;s role.</p>}
             <RemoveMemberButton bookId={bookId} userId={member.user_id} />
           </div>
         )}
