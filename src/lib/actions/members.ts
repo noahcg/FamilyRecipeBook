@@ -11,7 +11,9 @@ import { getAppBaseUrl, getDefaultLogoUrl, sendEmail } from "@/lib/email/sendEma
 import { canManageMembers } from "@/lib/permissions";
 import {
   inviteMemberSchema,
+  updateMemberRoleSchema,
   type InviteMemberInput,
+  type UpdateMemberRoleInput,
 } from "@/lib/validators/member";
 import type { ActionResult, BookInvitation, MemberWithProfile } from "@/lib/types";
 import { getBookSharingAllowance } from "@/lib/entitlements";
@@ -312,6 +314,62 @@ export async function removeMember(bookId: string, userId: string): Promise<Acti
   if (error) return { success: false, error: error.message };
 
   revalidatePath(`/app/books/${bookId}/members`);
+  revalidatePath(`/app/books/${bookId}/settings`);
+  return { success: true, data: undefined };
+}
+
+export async function updateMemberRole(
+  bookId: string,
+  userId: string,
+  nextRole: UpdateMemberRoleInput
+): Promise<ActionResult> {
+  const user = await requireUser();
+  const parsed = updateMemberRoleSchema.safeParse(nextRole);
+  if (!parsed.success) return { success: false, error: "Choose Family or Contributor access." };
+
+  const supabase = await createClient();
+  if (!canManageMembers(await getBookRole(supabase, bookId, user.id))) {
+    return { success: false, error: "Only the keeper can change member roles." };
+  }
+  if (userId === user.id) {
+    return { success: false, error: "The keeper's role cannot be changed." };
+  }
+
+  const { data: member, error: memberError } = await supabase
+    .from("book_members")
+    .select("role")
+    .eq("book_id", bookId)
+    .eq("user_id", userId)
+    .single();
+  if (memberError || !member || member.role === "keeper") {
+    return { success: false, error: "This member cannot be changed. Refresh the page and try again." };
+  }
+  if (member.role === parsed.data) return { success: true, data: undefined };
+
+  if (parsed.data === "contributor") {
+    try {
+      const allowance = await getBookSharingAllowance(bookId);
+      if (allowance.isFree) {
+        return { success: false, error: "Contributors require Plus. Ask the cookbook owner to upgrade before changing this member's role." };
+      }
+    } catch {
+      return { success: false, error: "Could not check cookbook sharing limits. Please try again." };
+    }
+  }
+
+  const { data: updated, error } = await supabase
+    .from("book_members")
+    .update({ role: parsed.data })
+    .eq("book_id", bookId)
+    .eq("user_id", userId)
+    .eq("role", member.role)
+    .select("user_id")
+    .maybeSingle();
+  if (error) return { success: false, error: error.message };
+  if (!updated) return { success: false, error: "This member changed while you were editing. Refresh the page and try again." };
+
+  revalidatePath(`/app/books/${bookId}/members`);
+  revalidatePath(`/app/books/${bookId}/members/${userId}`);
   revalidatePath(`/app/books/${bookId}/settings`);
   return { success: true, data: undefined };
 }

@@ -576,20 +576,14 @@ export function RecipeDetail({
       <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
         <section className="grid gap-8 border-b border-line-soft py-7 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="max-w-[820px]">
-          {story && (
-            <blockquote className="border-l-2 border-accent-honey pl-5 text-lg leading-relaxed text-accent-cinnamon">
-              <p style={{ fontFamily: "var(--font-hand)" }}>{story}</p>
-            </blockquote>
-          )}
-
           {recipe.description && recipe.description !== story && (
-            <p className={clsx("max-w-3xl text-base leading-relaxed text-ink-muted", story && "mt-5")}>
+            <p className="max-w-3xl text-base leading-relaxed text-ink-muted">
               {recipe.description}
             </p>
           )}
           </div>
 
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-line-soft text-sm lg:border-l lg:pl-8">
+          <dl className="grid self-start grid-cols-2 gap-x-6 gap-y-3 border-line-soft text-sm lg:border-l lg:pl-8">
             <div>
               <dt className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Servings</dt>
               <dd className="mt-1 font-bold text-green-deep">{displayedServings ?? "Family"}</dd>
@@ -699,6 +693,14 @@ export function RecipeDetail({
           </section>
         </aside>
       </div>
+
+        {story && (
+          <section className="border-t border-line-soft py-6" aria-label="Recipe backstory">
+            <blockquote className="border-l-2 border-accent-honey pl-5 text-lg leading-relaxed text-accent-cinnamon">
+              <p style={{ fontFamily: "var(--font-hand)" }}>{story}</p>
+            </blockquote>
+          </section>
+        )}
 
         <section className="border-t border-line-soft py-6">
           <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">

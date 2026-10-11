@@ -71,7 +71,7 @@ const INGREDIENT_KEYPAD_UNITS = {
   imperial: ["tsp", "Tbsp", "oz", "lb", "can", "cup"],
   metric: ["mL", "L", "g", "kg", "can", "each"],
 } as const;
-const entryGridClassName = "grid gap-8 lg:grid-cols-2 lg:gap-12";
+const entryGridClassName = "grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[repeat(2,minmax(0,1fr))] lg:gap-12";
 const entryCardClassName = "rounded-xl border border-line bg-card p-5 shadow-xs";
 // Manual editor sections: one centered column of distinct cards.
 const sectionCardClassName = "rounded-xl border border-line bg-card p-5 shadow-xs sm:p-6";
@@ -1906,7 +1906,7 @@ export function RecipeForm({
         </div>
       ) : (
         <div className={entryGridClassName}>
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <section className={entryCardClassName}>
               <div className={entryCardHeaderClassName}>
                 <span className={entryCardIconClassName}>
@@ -2233,7 +2233,7 @@ export function RecipeForm({
             </section>
           </div>
 
-          <section className="space-y-3">
+          <section className="min-w-0 space-y-3">
             {fileImportRecipes.length === 0 ? (
               <div className="rounded-xl border border-line bg-card p-8 text-center shadow-xs">
                 <p className="text-sm font-bold text-ink">No recipes parsed yet</p>
@@ -2250,7 +2250,7 @@ export function RecipeForm({
                 const selected = selectedImportIds.has(recipe.id);
 
                 return (
-                  <article key={recipe.id} className="rounded-xl border border-line bg-card p-4 shadow-xs">
+                  <article key={recipe.id} className="min-w-0 rounded-xl border border-line bg-card p-4 shadow-xs">
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
@@ -2272,7 +2272,7 @@ export function RecipeForm({
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate text-sm font-bold text-ink">{recipe.title}</h3>
+                          <h3 className="min-w-0 break-words text-sm font-bold text-ink [overflow-wrap:anywhere]">{recipe.title}</h3>
                           {isDuplicate && (
                             <span className="rounded-sm bg-accent-honey/25 px-2 py-0.5 text-[11px] font-bold text-accent-cinnamon">
                               Possible duplicate
@@ -2299,7 +2299,7 @@ export function RecipeForm({
                     </div>
 
                     {expanded && (
-                      <div className="mt-4 grid gap-4 border-t border-line pt-4 text-sm lg:grid-cols-2">
+                      <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 border-t border-line pt-4 text-sm [overflow-wrap:anywhere] lg:grid-cols-[repeat(2,minmax(0,1fr))]">
                         <div className="space-y-3">
                           {recipe.description && <p className="text-ink-soft">{recipe.description}</p>}
                           <div className="grid grid-cols-3 gap-2 text-xs">
@@ -2320,7 +2320,7 @@ export function RecipeForm({
                             </ul>
                           )}
                         </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="grid min-w-0 gap-4 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
                           <div>
                             <p className="mb-1 text-xs font-bold uppercase tracking-[0.06em] text-ink-muted">Ingredients</p>
                             <ul className="space-y-1 text-xs text-ink-soft">

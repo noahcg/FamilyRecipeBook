@@ -4,6 +4,10 @@
 
 ### Quality gates
 
+- Moved recipe backstories into their own section immediately above Family Notes.
+- Kept the recipe servings, cook time, prep time, and scale controls grouped at the top when a backstory makes the intro taller.
+- Let Keepers change an existing cookbook member between Family and Contributor from the member profile, subject to the cookbook's sharing plan.
+- Fixed imported recipe previews on narrow screens so long recipe text wraps within the viewport and vertical scrolling remains available.
 - Added an admin launch counter for manual lifetime Plus grants to the first 50 completed new signups, with cohort labels in Account tiers.
 - Email members a branded lifetime Plus notification when an administrator grants access, and report delivery failures in the admin panel.
 - Updated the locked `source-map-js` dependency to its patched release so the production dependency audit passes.
@@ -12,6 +16,7 @@
 
 ### Public navigation
 
+- Moved Bookshelf into the second navigation position on desktop and mobile, with the same styling and spacing as the other items.
 - Let note authors and cookbook Keepers edit or delete Family Notes, with Keeper control over unwanted notes from other members.
 - Show every Family Note with its full text, author, and date on recipe pages, and refresh the list after a note is added.
 - Open a new cookbook at its recipe list, where the first-recipe action is available, and remove the creation banner that described Plus sharing as Free.
