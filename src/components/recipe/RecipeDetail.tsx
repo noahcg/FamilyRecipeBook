@@ -397,17 +397,17 @@ export function RecipeDetail({
           )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10 lg:rounded-tr-xl" />
-        <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-14 pt-4 sm:pt-5 lg:rounded-tr-xl">
+        <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-8 pt-4 sm:pb-14 sm:pt-5 lg:rounded-tr-xl">
           <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-8">
             <Link
               href={recipesPath}
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/35 bg-white-soft/88 px-3 text-sm font-extrabold text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
+              className="inline-flex h-10 min-w-0 items-center gap-2 rounded-full border border-white/35 bg-white-soft/88 px-3 text-sm font-extrabold text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
             >
               <ArrowLeft size={17} strokeWidth={2} />
-              Cookbook recipes
+              <span className="sm:hidden">Recipes</span><span className="hidden sm:inline">Cookbook recipes</span>
             </Link>
 
-            <div className="relative flex items-center gap-2">
+            <div className="relative flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={handleFavorite}
@@ -515,7 +515,7 @@ export function RecipeDetail({
             </div>
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 to-transparent pb-8 pt-24">
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent pb-6 pt-12 sm:pb-8 sm:pt-24">
           <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
             <div className="max-w-4xl text-ink-inverse">
               {recipe.category?.name && (
@@ -524,54 +524,57 @@ export function RecipeDetail({
                 </p>
               )}
               <h1
-                className="line-clamp-2 break-words text-3xl font-bold leading-[1.25] sm:text-4xl lg:text-5xl [overflow-wrap:anywhere]"
+                className="line-clamp-3 break-words text-3xl font-bold leading-[1.25] sm:text-4xl lg:text-5xl [overflow-wrap:anywhere]"
                 style={{ fontFamily: "var(--font-playfair)" }}
                 title={recipe.title}
               >
                 {recipe.title}
               </h1>
-              <div className="mt-5 flex max-h-12 flex-wrap items-center gap-x-6 gap-y-2 overflow-hidden text-sm text-white/86">
-                <span className="max-w-full truncate font-semibold text-white">Added by {addedByLabel}</span>
-                <span>{addedDate}</span>
-                {displayedServings != null && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Users size={15} />
-                    Serves {displayedServings}
-                  </span>
-                )}
-                {recipe.cook_minutes != null && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Clock size={15} />
-                    {formatDuration(recipe.cook_minutes)}
-                  </span>
-                )}
-              </div>
-              {recipe.photo_author && recipe.photo_source_url && (
-                <p className="mt-3 truncate text-xs text-white/78">
-                  Photo by{" "}
-                  <a
-                    href={recipe.photo_author_url ?? recipe.photo_source_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold text-white underline"
-                  >
-                    {recipe.photo_author}
-                  </a>{" "}
-                  on{" "}
-                  <a
-                    href={recipe.photo_source_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold text-white underline"
-                  >
-                    {recipe.photo_source ?? "Pexels"}
-                  </a>
-                </p>
-              )}
             </div>
           </div>
         </div>
       </header>
+
+      <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line-soft py-4 text-sm text-ink-muted">
+          <span className="max-w-full truncate font-semibold text-ink">Added by {addedByLabel}</span>
+          <span>{addedDate}</span>
+          {displayedServings != null && (
+            <span className="inline-flex items-center gap-1.5">
+              <Users size={15} />
+              Serves {displayedServings}
+            </span>
+          )}
+          {recipe.cook_minutes != null && (
+            <span className="inline-flex items-center gap-1.5">
+              <Clock size={15} />
+              {formatDuration(recipe.cook_minutes)}
+            </span>
+          )}
+        </div>
+        {recipe.photo_author && recipe.photo_source_url && (
+          <p className="mt-2 text-xs text-ink-muted">
+            Photo by{" "}
+            <a
+              href={recipe.photo_author_url ?? recipe.photo_source_url}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-ink underline"
+            >
+              {recipe.photo_author}
+            </a>{" "}
+            on{" "}
+            <a
+              href={recipe.photo_source_url}
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-ink underline"
+            >
+              {recipe.photo_source ?? "Pexels"}
+            </a>
+          </p>
+        )}
+      </div>
 
       <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
         <section className="grid gap-8 border-b border-line-soft py-7 lg:grid-cols-[minmax(0,1fr)_330px] xl:grid-cols-[minmax(0,1fr)_360px]">
