@@ -16,6 +16,7 @@
 
 ### Public navigation
 
+- Gave the free sign-in path a cookbook-focused heading and made the Plus path clearly identify the premium membership.
 - Kept recipe photo headers at a fixed height on mobile and moved recipe details below the photo, giving titles up to three lines without crowding navigation controls.
 - Moved Bookshelf into the second navigation position on desktop and mobile, with the same styling and spacing as the other items.
 - Let note authors and cookbook Keepers edit or delete Family Notes, with Keeper control over unwanted notes from other members.
