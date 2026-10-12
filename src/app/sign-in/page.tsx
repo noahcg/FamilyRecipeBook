@@ -128,9 +128,9 @@ function EmailStep({
 
   return (
     <EntryShell
-      eyebrow={plusIntent ? "Start with Plus" : "Welcome"}
-      title={plusIntent ? "Create your Plus account" : "Create your free account"}
-      description={plusIntent ? "Enter your email and we'll take you straight to secure checkout for Home Cooked Plus. No password to remember." : "Enter your email to create a free Home Cooked account or sign in to your cookbook. No password to remember."}
+      eyebrow={plusIntent ? "All the good stuff" : "Sign in or sign up"}
+      title={plusIntent ? "Unlock Plus membership" : "Your cookbook awaits"}
+      description={plusIntent ? "Enter your email to sign in or create an account, then continue to secure checkout for Home Cooked Plus. No password to remember." : "Sign in to your cookbook or create a free account with your email. No password to remember."}
       maxWidth="md"
       sideImageSrc="/images/entry/sign-in.jpg"
       sideImageAlt="Open recipe notebook on a kitchen counter"
