@@ -2128,7 +2128,7 @@ export function RecipeForm({
                         <p className="mt-1 text-xs leading-relaxed text-ink-muted">
                           Add your OpenAI API key in{" "}
                           <a
-                            href={`/app/books/${bookId}/settings`}
+                            href="/app/settings"
                             className="font-bold text-green-deep underline underline-offset-2"
                           >
                             Settings
