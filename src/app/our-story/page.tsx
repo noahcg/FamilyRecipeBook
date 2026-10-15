@@ -1,12 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Sacramento } from "next/font/google";
 import { ArrowRight, BookOpen, Heart, House, Leaf, UsersRound } from "lucide-react";
 import { PublicMasthead } from "@/components/layout/PublicMasthead";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import styles from "./OurStoryFounder.module.css";
-
-const sacramento = Sacramento({ weight: "400", subsets: ["latin"], variable: "--font-sacramento", display: "swap" });
 
 export const metadata = {
   title: "Our Story",
@@ -96,7 +93,7 @@ export default function OurStoryPage() {
               <p>At first, it was simply going to be my own beautiful place to save recipes and share them with people I love. Then it started growing. What if family members could contribute their recipes too? What if a cookbook could become something everyone adds to over time, instead of something owned by just one person?</p>
               <p>There&rsquo;s a more personal reason that matters to me. My grandmother has been gone for about 20 years, and nobody has her chicken soup recipe. I&rsquo;ll never taste it again. It&rsquo;s a small reminder of how easily a recipe, and a little piece of someone&rsquo;s story, can disappear.</p>
               <p>Home Cooked still gives me the organized recipe collection I originally wanted. But I hope it can also give families a place to cook from, contribute to, and build together. Something they&rsquo;ll be happy they kept.</p>
-              <p className={`${styles.signature} ${sacramento.variable}`}>Noah</p>
+              <Image src="/images/signature.png" alt="Noah’s signature" width={160} height={65} sizes="128px" className={styles.signature} />
             </div>
           </div>
         </section>

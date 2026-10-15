@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, ChefHat, ShoppingCart, Sparkles } from "lucide-react";
+import { BookOpen, ChefHat, ShoppingCart, Sparkles, UsersRound } from "lucide-react";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { Card } from "@/components/ui";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 
 function FeatureCopy({
@@ -108,10 +109,10 @@ export default function LandingPage() {
                   className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-base font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"
                 >
                   <BookOpen aria-hidden="true" size={18} strokeWidth={2} />
-                  Sign in
+                  Start your free cookbook
                 </Link>
                 <p className="text-sm leading-relaxed text-ink-muted sm:ml-1">
-                  New here? We&rsquo;ll help you start your book.
+                  Free to start. <Link href="/pricing" className="underline underline-offset-4 hover:text-green-deep">Plus is $24.99/year.</Link>
                 </p>
               </div>
             </div>
@@ -130,6 +131,29 @@ export default function LandingPage() {
               </span>
             </h2>
           </div>
+        </section>
+
+        <section aria-labelledby="family-heading" className="relative z-10 mx-auto w-full max-w-[1200px] px-4 pb-20 sm:px-8 sm:pb-28 lg:px-12">
+          <Card className="grid items-center gap-8 sm:!p-10 lg:grid-cols-2 lg:gap-14">
+            <div>
+              <UsersRound aria-hidden="true" className="mb-4 text-green-deep" size={32} strokeWidth={1.75} />
+              <h2 id="family-heading" className="text-3xl font-bold leading-tight text-green-deep sm:text-4xl" style={{ fontFamily: "var(--font-playfair)" }}>
+                A family cookbook.<br />
+                <span className="font-semibold italic text-accent-terracotta">Made together.</span>
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-ink-muted sm:text-lg">
+                Save the recipes everyone asks for, invite your family, and keep the memories that make each dish yours.
+              </p>
+              <Link href="/guides/how-to-share-your-home-cooked-book" className="mt-4 inline-flex min-h-11 items-center font-bold text-green-deep underline underline-offset-4">
+                See how sharing works
+              </Link>
+            </div>
+            <ul className="space-y-6 text-base leading-relaxed text-ink-muted">
+              <li><h3 className="font-bold text-green-deep">Invite them to the table</h3><p>On Free, share your cookbook with up to 3 other people. They only need a free account to join.</p></li>
+              <li><h3 className="font-bold text-green-deep">Keep their memories, too</h3><p>Family members can read recipes, react, and add their own notes and memories.</p></li>
+              <li><h3 className="font-bold text-green-deep">Collect recipes together with Plus</h3><p>Invite unlimited people and give Contributors access to add recipes and edit their own.</p></li>
+            </ul>
+          </Card>
         </section>
 
         <section className="relative z-10 mx-auto w-full max-w-[1200px] px-4 pb-20 sm:px-8 sm:pb-28 lg:px-12 lg:pb-36">
@@ -232,6 +256,24 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <section aria-labelledby="questions-heading" className="relative z-10 mx-auto w-full max-w-[960px] px-4 pb-20 sm:px-8 sm:pb-28 lg:px-12">
+          <h2 id="questions-heading" className="text-center text-3xl font-bold text-green-deep sm:text-4xl" style={{ fontFamily: "var(--font-playfair)" }}>Before you start your book</h2>
+          <div className="mt-8 divide-y divide-line-soft">
+            <div className="py-6">
+              <h3 className="text-lg font-bold text-green-deep">Are my recipes private?</h3>
+              <p className="mt-2 leading-relaxed text-ink-muted">Your cookbook is private to you and the people you invite. You can also choose to share individual recipes with a link. <Link href="/privacy" className="text-green-deep underline underline-offset-4">Read our privacy policy.</Link></p>
+            </div>
+            <div className="py-6">
+              <h3 className="text-lg font-bold text-green-deep">Can my family add recipes?</h3>
+              <p className="mt-2 leading-relaxed text-ink-muted">With Plus, you can invite Contributors who can add recipes and edit their own. On Free, up to 3 invited Family members can browse, react, and add notes and memories. <Link href="/guides/how-to-share-your-home-cooked-book" className="text-green-deep underline underline-offset-4">Learn about cookbook roles.</Link></p>
+            </div>
+            <div className="py-6">
+              <h3 className="text-lg font-bold text-green-deep">Can I bring recipes from another app?</h3>
+              <p className="mt-2 leading-relaxed text-ink-muted">Yes. Plus includes imports from websites, PDFs, Paprika, and more. You can also paste a recipe and let Home Cooked organize it for you. <Link href="/pricing" className="text-green-deep underline underline-offset-4">Compare Free and Plus.</Link></p>
+            </div>
+          </div>
+        </section>
+
         <section className="relative z-10 mx-auto w-full max-w-[1140px] px-4 pb-24 text-center sm:px-8 sm:pb-28 lg:px-12 lg:pb-32">
           <h2
             className="text-[clamp(2rem,4.5vw,3rem)] font-bold leading-[1.05] text-green-deep"
@@ -252,10 +294,10 @@ export default function LandingPage() {
               className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-green-forest-dark px-6 text-base font-extrabold text-ink-inverse shadow-[var(--shadow-card)] transition hover:bg-green-deep"
             >
               <BookOpen aria-hidden="true" size={18} strokeWidth={2} />
-              Sign in
+              Start your free cookbook
             </Link>
             <p className="text-sm leading-relaxed text-ink-muted">
-              New here? We&rsquo;ll help you start your book.
+              Free to start. <Link href="/pricing" className="underline underline-offset-4 hover:text-green-deep">Plus is $24.99/year.</Link>
             </p>
           </div>
         </section>

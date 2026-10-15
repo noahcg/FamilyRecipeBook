@@ -39,6 +39,12 @@
 
 ### Public launch
 
+- Corrected the recipe import OpenAI key prompt to link to app Settings instead of cookbook settings.
+
+- Replaced the Our Story founder signature font with Noah’s supplied signature image.
+
+- Clarified homepage account creation and pricing, highlighted family cookbook collaboration, and answered common privacy, sharing, and import questions.
+
 - Set the public Home Cooked version to 1.0.0. Earlier 1.0.x numbers were used for internal production releases before the public launch; their history is retained below.
 - Included public visitor analytics and completed-signup measurement in the launch baseline.
 
