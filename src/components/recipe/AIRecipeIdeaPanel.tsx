@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 import { Button, Select } from "@/components/ui";
 import {
-  generateRecipeIdea,
   saveRecipeIdea,
   type AIRecipeIdea,
 } from "@/lib/actions/aiRecipes";
+import { readSse, type RecipePreview } from "@/lib/ai/stream";
 import { formatDuration } from "@/lib/formatDuration";
 import { useAccount } from "@/lib/context/AccountContext";
 import { displayIngredientAmount, displayRecipeTemperatures } from "@/lib/metricUnits";
@@ -74,35 +74,70 @@ export function AIRecipeIdeaPanel({
   const [generatedFor, setGeneratedFor] = useState("");
   const [idea, setIdea] = useState<AIRecipeIdea | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isGenerating, startGenerating] = useTransition();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [preview, setPreview] = useState<RecipePreview | null>(null);
+  const generationAbort = useRef<AbortController | null>(null);
   const [isSaving, startSaving] = useTransition();
   const [cookOpen, setCookOpen] = useState(false);
   const didAutoGenerate = useRef(false);
 
-  function handleGenerate(nextPrompt = prompt) {
+  useEffect(() => () => {
+    generationAbort.current?.abort();
+    generationAbort.current = null;
+    didAutoGenerate.current = false;
+  }, []);
+
+  async function handleGenerate(nextPrompt = prompt) {
+    if (generationAbort.current || isSaving) return;
     const trimmed = buildIdeaTablePrompt(nextPrompt, table);
     const summary = describeIdeaTable(table);
+    const abort = new AbortController();
+    generationAbort.current = abort;
     setPrompt(nextPrompt);
     setError(null);
-    // A fresh idea replaces whatever was open in the cook view.
+    setPreview(null);
+    setIsGenerating(true);
     setCookOpen(false);
-    startGenerating(async () => {
-      try {
-        const result = await generateRecipeIdea(trimmed, resolvedBookId);
-        if (!result.success) {
-          setError(result.error);
-          return;
-        }
-        setIdea(result.data);
-        setGeneratedFor(summary);
-      } catch {
-        setError("We couldn’t generate an idea. Please try again.");
+    try {
+      const response = await fetch("/api/recipe-ideas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: trimmed, bookId: resolvedBookId }),
+        signal: abort.signal,
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || "We couldn’t generate an idea. Please try again.");
       }
-    });
+      if (!response.body) throw new Error("The connection ended. Please try again.");
+      let completed = false;
+      await readSse(response.body, (data) => {
+        const event = JSON.parse(data);
+        if (event.type === "preview") setPreview(event.data);
+        if (event.type === "error") throw new Error(event.error);
+        if (event.type === "complete") {
+          completed = true;
+          setIdea(event.data);
+          setGeneratedFor(summary);
+          setPreview(null);
+        }
+      });
+      if (!completed) throw new Error("The connection ended before your recipe was ready. Please try again.");
+    } catch (error) {
+      if (!abort.signal.aborted) setError(error instanceof Error ? error.message : "We couldn’t generate an idea. Please try again.");
+    } finally {
+      if (generationAbort.current === abort) {
+        generationAbort.current = null;
+        if (!abort.signal.aborted) {
+          setPreview(null);
+          setIsGenerating(false);
+        }
+      }
+    }
   }
 
   function handleSave() {
-    if (!idea) return;
+    if (!idea || isGenerating) return;
     setError(null);
     startSaving(async () => {
       try {
@@ -247,7 +282,39 @@ export function AIRecipeIdeaPanel({
               <span className="h-px flex-1 bg-line-soft" />
             </div>
 
-            {isGenerating ? (
+            {isGenerating && preview ? (
+              <div aria-busy="true">
+                <p role="status" className="mb-4 flex items-center gap-2 text-sm font-semibold text-green-deep">
+                  <Loader2 size={16} className="animate-spin" />
+                  Building your recipe…
+                </p>
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Draft in progress</p>
+                <h3 className="mt-2 text-3xl font-bold leading-tight text-green-deep lg:text-4xl" style={{ fontFamily: "var(--font-playfair)" }}>{preview.title}</h3>
+                {preview.description && <p className="mt-3 text-sm leading-relaxed text-ink-muted">{preview.description}</p>}
+                <p className="mt-4 text-xs text-ink-soft">Wait for the finished recipe before cooking. Ingredients and steps may still change.</p>
+                <div className="mt-6 grid gap-8 md:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+                  <div>
+                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Ingredients</p>
+                    <ul className="space-y-2 text-sm leading-relaxed text-ink">
+                      {preview.ingredients.map((ingredient, index) => <li key={index}>
+                        {[...Object.values(displayIngredientAmount(ingredient.quantity, ingredient.unit, metricUnits)), ingredient.item].filter(Boolean).join(" ")}
+                        {ingredient.note && <span className="text-ink-soft"> ({ingredient.note})</span>}
+                      </li>)}
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Method</p>
+                    <ol className="space-y-3 text-sm leading-relaxed text-ink">
+                      {preview.instructions.map((instruction, index) => <li key={index} className="flex gap-3"><span className="font-bold text-green-deep">{index + 1}.</span><span>{displayRecipeTemperatures(instruction.body, metricUnits)}</span></li>)}
+                    </ol>
+                  </div>
+                </div>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Button variant="primary" disabled><ChefHat size={16} />Make it now</Button>
+                  <Button variant="secondary" disabled><Check size={16} />Save to {selectedBook?.title ?? "Cookbook"}</Button>
+                </div>
+              </div>
+            ) : isGenerating ? (
               <div role="status" className="flex min-h-[430px] flex-col items-center justify-center gap-4 rounded-xl border border-line-soft bg-paper-warm p-6 text-center">
                 <Loader2 size={28} className="animate-spin text-green-deep" />
                 <p className="font-semibold text-green-deep">Finding inspiration for your table…</p>

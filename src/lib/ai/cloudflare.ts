@@ -1,4 +1,5 @@
 import "server-only";
+import { readSse } from "@/lib/ai/stream";
 
 import {
   cloudflareModelRequestOptions,
@@ -53,6 +54,8 @@ type RunCloudflareTaskOptions = {
     type: "json_schema";
     json_schema: JsonSchema;
   };
+  onText?: (text: string) => void;
+  signal?: AbortSignal;
   requestId?: string;
   fetchImpl?: typeof fetch;
   logger?: Pick<Console, "info" | "warn">;
@@ -118,6 +121,7 @@ function logAttempt(
     model: CloudflareModelId;
     promptVersion: string;
     durationMs: number;
+    firstTokenMs?: number;
     requestId: string;
     success: boolean;
     category?: AiFailureCategory;
@@ -142,6 +146,7 @@ async function runAttempt(
 ): Promise<CloudflareTaskResult> {
   const startedAt = Date.now();
   const fetchImpl = options.fetchImpl ?? fetch;
+  let firstTokenMs: number | undefined;
   const logger = options.logger ?? console;
 
   try {
@@ -154,18 +159,52 @@ async function runAttempt(
           "content-type": "application/json",
         },
         cache: "no-store",
-        signal: AbortSignal.timeout(timeoutMs),
+        signal: options.signal
+          ? AbortSignal.any([options.signal, AbortSignal.timeout(timeoutMs)])
+          : AbortSignal.timeout(timeoutMs),
         body: JSON.stringify({
-          messages: options.messages,
+          // Workers AI JSON mode buffers the result and does not support streaming.
+          // Preserve the contract in the prompt and validate the final output locally.
+          messages: options.onText && options.responseFormat
+            ? options.messages.map((message, index) => index === 0 && message.role === "system"
+              ? { ...message, content: `${message.content} Match this JSON Schema exactly: ${JSON.stringify(options.responseFormat!.json_schema)}` }
+              : message)
+            : options.messages,
+          ...(options.onText ? { stream: true } : {}),
           max_tokens: maxOutputTokens,
           ...cloudflareModelRequestOptions(model),
-          ...(options.responseFormat
+          ...(options.responseFormat && !options.onText
             ? { response_format: options.responseFormat }
             : {}),
         }),
       }
     );
-    const body = await response.text();
+    let body: string;
+    if (response.ok && options.onText && response.headers.get("content-type")?.includes("text/event-stream")) {
+      if (!response.body) throw new Error("Missing model stream");
+      let output = "";
+      let finished = false;
+      let usage: Record<string, unknown> | undefined;
+      await readSse(response.body, (data) => {
+        if (data === "[DONE]") { finished = true; return; }
+        const event = JSON.parse(data);
+        if (event.error || event.success === false || event.errors?.length) throw new Error("Model stream failed");
+        const delta = event.response ?? event.choices?.[0]?.delta?.content;
+        if (typeof delta === "string" && delta) {
+          firstTokenMs ??= Date.now() - startedAt;
+          output += delta;
+          if (output.length > 32_000) throw new Error("Model output too large");
+          options.onText!(output);
+        }
+        usage = event.usage ?? usage;
+        if (event.choices?.[0]?.finish_reason) finished = true;
+      });
+      if (!finished) throw new Error("Incomplete model stream");
+      body = JSON.stringify({ success: true, result: { response: output, usage } });
+    } else {
+      // Some supported overrides return a complete JSON envelope even with stream=true.
+      body = await response.text();
+    }
     const durationMs = Date.now() - startedAt;
 
     if (!response.ok) {
@@ -272,6 +311,7 @@ async function runAttempt(
       durationMs,
       requestId,
       success: true,
+      firstTokenMs,
       usage,
       usedFallback,
     });

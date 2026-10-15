@@ -1,4 +1,5 @@
 import "server-only";
+import { readSse } from "@/lib/ai/stream";
 
 import { getAiPromptVersion, type AiTask } from "@/lib/ai/modelRegistry";
 import type { AiFailureCategory, AiUsage } from "@/lib/ai/cloudflare";
@@ -28,6 +29,8 @@ type ExternalAiRequest = {
   apiKey: string;
   body: Record<string, unknown>;
   timeoutMs: number;
+  onText?: (text: string) => void;
+  signal?: AbortSignal;
   requestId?: string;
   fetchImpl?: typeof fetch;
   logger?: Pick<Console, "info">;
@@ -64,6 +67,7 @@ export async function runExternalAiRequest(
 ): Promise<ExternalAiResult> {
   const requestId = options.requestId ?? crypto.randomUUID();
   const startedAt = Date.now();
+  let firstTokenMs: number | undefined;
   const logger = options.logger ?? console;
   const promptVersion = getAiPromptVersion(options.task);
   const headers: Record<string, string> = { "content-type": "application/json" };
@@ -82,10 +86,12 @@ export async function runExternalAiRequest(
       method: "POST",
       headers,
       cache: "no-store",
-      signal: AbortSignal.timeout(options.timeoutMs),
-      body: JSON.stringify({ ...options.body, model: options.model }),
+      signal: options.signal
+        ? AbortSignal.any([options.signal, AbortSignal.timeout(options.timeoutMs)])
+        : AbortSignal.timeout(options.timeoutMs),
+      body: JSON.stringify({ ...options.body, model: options.model, ...(options.onText ? { stream: true } : {}) }),
     });
-    const durationMs = Date.now() - startedAt;
+    let durationMs = Date.now() - startedAt;
     if (!response.ok) {
       const category = classifyStatus(response.status);
       logger.info("[ai-model-request]", {
@@ -103,8 +109,58 @@ export async function runExternalAiRequest(
 
     let json: unknown;
     try {
-      json = await response.json();
+      if (options.onText && response.headers.get("content-type")?.includes("text/event-stream")) {
+        if (!response.body) throw new Error("Missing provider stream");
+        let text = "";
+        let completed = false;
+        const tools = new Map<number, { name: string; text: string }>();
+        let usage: Record<string, unknown> = {};
+        await readSse(response.body, (data) => {
+          if (data === "[DONE]") return;
+          const event = JSON.parse(data);
+          if (event.type === "error" || event.error || ["response.failed", "response.incomplete"].includes(event.type)) {
+            throw new Error("Provider stream failed");
+          }
+          let delta: string | undefined;
+          if (options.provider === "openai") {
+            if (event.type === "response.output_text.delta") delta = event.delta;
+            if (event.type === "response.completed") {
+              if (!event.response || event.response.status !== "completed") throw new Error("Incomplete response");
+              json = event.response;
+              completed = true;
+            }
+          } else {
+            if (event.type === "message_start") usage = event.message?.usage ?? {};
+            if (event.type === "content_block_start" && event.content_block?.type === "tool_use") {
+              tools.set(event.index, { name: event.content_block.name, text: "" });
+            }
+            if (event.type === "content_block_delta" && event.delta?.type === "input_json_delta") {
+              const tool = tools.get(event.index);
+              if (tool) {
+                tool.text += event.delta.partial_json;
+                if (tool.name === "create_recipe") delta = event.delta.partial_json;
+              }
+            }
+            if (event.type === "message_delta") usage = { ...usage, ...event.usage };
+            if (event.type === "message_stop") {
+              json = { content: [...tools.values()].map((tool) => ({ type: "tool_use", name: tool.name, input: JSON.parse(tool.text) })), usage };
+              completed = true;
+            }
+          }
+          if (typeof delta === "string" && delta) {
+            firstTokenMs ??= Date.now() - startedAt;
+            text += delta;
+            if (text.length > 32_000) throw new Error("Provider output too large");
+            options.onText!(text);
+          }
+        });
+        if (!completed) throw new Error("Truncated provider stream");
+      } else {
+        json = await response.json();
+      }
+      durationMs = Date.now() - startedAt;
     } catch {
+      durationMs = Date.now() - startedAt;
       logger.info("[ai-model-request]", {
         task: options.task,
         provider: options.provider,
@@ -127,6 +183,7 @@ export async function runExternalAiRequest(
       durationMs,
       requestId,
       success: true,
+      firstTokenMs,
       usage,
     });
     return { success: true, json, requestId, durationMs, usage };

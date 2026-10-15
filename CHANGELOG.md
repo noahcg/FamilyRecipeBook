@@ -4,6 +4,8 @@
 
 ### Quality gates
 
+- Recipe ideas now appear progressively as the AI writes, with cooking and saving enabled only after the complete recipe passes validation. Retained the existing model, recipe quality guidance, access checks, and usage limits; added safe timing metadata for first content and completion. Personal OpenAI and Anthropic keys also stream recipe previews while retaining their structured-output/tool contracts. Streamed Cloudflare requests omit incompatible provider JSON mode and include the schema in the prompt, with strict final validation retained.
+
 - Moved recipe backstories into their own section immediately above Family Notes.
 - Kept the recipe servings, cook time, prep time, and scale controls grouped at the top when a backstory makes the intro taller.
 - Let Keepers change an existing cookbook member between Family and Contributor from the member profile, subject to the cookbook's sharing plan.
