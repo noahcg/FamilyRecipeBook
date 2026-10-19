@@ -17,7 +17,7 @@ const PROVIDERS: { id: AIProvider; label: string; placeholder: string; hint: str
     id: "openai",
     label: "OpenAI",
     placeholder: "sk-...",
-    hint: "Enables smarter recipe ideas and optional photo import cleanup.",
+    hint: "Enables recipe ideas and direct reading of printed or handwritten recipe photos.",
   },
   {
     id: "anthropic",

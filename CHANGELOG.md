@@ -2,6 +2,15 @@
 
 ## [1.0.1] - 2026-10-07
 
+### Public launch updates
+
+- Fixed photo import requests failing with React's “Maximum array nesting exceeded” error by sending page objects instead of nested arrays of encoded image strings; verified with the installed React decoder.
+- Photo imports now preserve original images within a shared upload budget and use GPT-5.4 Mini with original-detail input by default. AI output constraints now match recipe field limits, and printed quantities stay separate from handwritten annotations.
+- Free photo reading corrects page tilt and reconstructs strongly detected ingredient/method columns, with an explicit review warning. Wrapped ingredients, unpunctuated numbered steps and fraction ranges retain their structure.
+- Photo imports can read printed or handwritten pages directly with a personal OpenAI API key, with clear opt-in, billing information, and retry options even when free reading fails. Improved transcription guidance preserves fractions, ingredient groups, page order, and uncertain-text warnings.
+- Preserved more text detail for free on-device OCR, fixed mixed fractions, punctuated ingredients, cooking steps mistaken for metadata, and combined hour/minute timings. Local OCR no longer labels heuristic parsing as high confidence.
+- Fixed multi-page AI import request limits, enforced image size validation, and made failed requests recoverable without losing the existing draft.
+
 ### Quality gates
 
 - Moved recipe backstories into their own section immediately above Family Notes.
