@@ -287,11 +287,12 @@ export function RecipeForm({
   const [confirmImportReplace, setConfirmImportReplace] = useState(false);
   const [photoImportReviewNotice, setPhotoImportReviewNotice] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
-  const [preparedImportImages, setPreparedImportImages] = useState<string[]>([]);
+  const [importFiles, setImportFiles] = useState<File[]>([]);
+  const [photoImportMode, setPhotoImportMode] = useState<"local" | "openai">("local");
+  const photoImportBusy = useRef(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [isImprovingImport, setIsImprovingImport] = useState(false);
   const [isImportDragging, setIsImportDragging] = useState(false);
   const [importSource, setImportSource] = useState<"local" | "openai" | null>(null);
   const [recipeImportedViaUpload, setRecipeImportedViaUpload] = useState(
@@ -677,33 +678,49 @@ export function RecipeForm({
     setValue("photo_source_url", candidate.source_url, { shouldDirty: true });
   }
 
-  async function importRecipePhotos(files: File[]) {
-    if (!files.length) return;
+  async function importRecipePhotos(files: File[], mode = photoImportMode, preserveResult = false) {
+    if (!files.length || photoImportBusy.current) return;
+    photoImportBusy.current = true;
 
     setImportFileName(files.map((file) => file.name).join(", "));
-    setImportedRecipes([]);
+    if (!preserveResult) {
+      setImportedRecipes([]);
+      setImportSource(null);
+    }
     setActiveImportedRecipeIndex(0);
     setConfirmImportReplace(false);
     setPhotoImportReviewNotice(null);
     setImportError(null);
-    setPreparedImportImages([]);
-    setImportSource(null);
+    setImportFiles(files);
     setImportProgress(0);
     setImportStatus("Preparing photo");
     setIsImporting(true);
 
     try {
-      const imageDataUrls = await Promise.all(files.map(prepareRecipeImportImage));
-      setPreparedImportImages(imageDataUrls);
-      const result = await importRecipesWithLocalOcr(imageDataUrls, (progress) => {
-        setImportStatus(progress.status);
-        setImportProgress(progress.progress);
-      });
-      setImportedRecipes(result);
-      setImportSource("local");
+      const imageDataUrls: string[] = [];
+      for (const file of files) imageDataUrls.push(await prepareRecipeImportImage(file, mode, files.length));
+      if (mode === "openai") {
+        setImportStatus("OpenAI is reading your recipe pages");
+        setImportProgress(35);
+        // Page objects break up large arrays for React's Server Action decoder.
+        const result = await improveRecipeImportWithOpenAI({ bookId, pages: imageDataUrls.map((dataUrl) => ({ dataUrl })) });
+        if (!result.success) throw new Error(result.error);
+        setImportedRecipes([result.data]);
+      } else {
+        const result = await importRecipesWithLocalOcr(imageDataUrls, (progress) => {
+          setImportStatus(progress.status);
+          setImportProgress(progress.progress);
+        });
+        if (!result.some((recipe) => recipe.ingredients.some((ingredient) => ingredient.item.trim()) && recipe.instructions.some((step) => step.body.trim()))) {
+          throw new Error("We could not read both ingredients and steps. Try a closer, brighter photo or read it with OpenAI.");
+        }
+        setImportedRecipes(result);
+      }
+      setImportSource(mode);
     } catch (error) {
       setImportError(error instanceof Error ? error.message : "Could not import that recipe photo.");
     } finally {
+      photoImportBusy.current = false;
       setIsImporting(false);
       setImportStatus(null);
       if (importFileRef.current) importFileRef.current.value = "";
@@ -742,23 +759,7 @@ export function RecipeForm({
   }
 
   async function handleImproveImport() {
-    if (!preparedImportImages.length || isImprovingImport) return;
-
-    setIsImprovingImport(true);
-    setImportError(null);
-
-    const result = await improveRecipeImportWithOpenAI(bookId, preparedImportImages);
-    setIsImprovingImport(false);
-
-    if (!result.success) {
-      setImportError(result.error);
-      return;
-    }
-
-    setImportedRecipes([result.data]);
-    setActiveImportedRecipeIndex(0);
-    setConfirmImportReplace(false);
-    setImportSource("openai");
+    await importRecipePhotos(importFiles, "openai", true);
   }
 
   function formHasContent() {
@@ -1915,10 +1916,27 @@ export function RecipeForm({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-ink">Import from cookbook photo</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Choose recipe pages in reading order (up to four). Free OCR runs in your
-                    browser first; you can improve the combined result with your own OpenAI API key.
+                    Choose up to four pages of one recipe in reading order. For handwriting or
+                    complex layouts, try reading the photos directly with OpenAI.
                   </p>
                 </div>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <Select
+                  label="Read recipe photos with"
+                  value={photoImportMode}
+                  onChange={(event) => setPhotoImportMode(event.target.value as "local" | "openai")}
+                  disabled={isImporting}
+                >
+                  <option value="local">Free on this device — printed recipes</option>
+                  <option value="openai" disabled={!hasOpenAIKey}>OpenAI with my key — handwriting and complex pages</option>
+                </Select>
+                <p className="text-xs leading-relaxed text-ink-muted">
+                  Free reading stays in your browser. Choosing OpenAI sends these photos to
+                  OpenAI using your saved API key; API usage is billed to your OpenAI account.
+                  {!hasOpenAIKey && <> Add an OpenAI API key in <a href="/app/settings" target="_blank" rel="noopener noreferrer" className="font-bold text-green-deep underline underline-offset-2">Settings (new tab)</a>, then reload this page before choosing photos.</>}
+                </p>
               </div>
 
               <div
@@ -1985,7 +2003,7 @@ export function RecipeForm({
                 )}
               </div>
               {isImporting && (
-                <div className="mt-3">
+                <div className="mt-3" role="status" aria-live="polite">
                   <div className="h-1.5 overflow-hidden rounded-full bg-card-muted">
                     <div
                       className="h-full rounded-full bg-green-deep transition-[width]"
@@ -2002,14 +2020,28 @@ export function RecipeForm({
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
+                disabled={isImporting}
                 onChange={handleImportImageChange}
                 className="sr-only"
               />
 
               {importError && (
-                <div className="mt-3 flex gap-2 rounded-md border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+                <div role="alert" className="mt-3 flex gap-2 rounded-md border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
                   <AlertTriangle size={16} className="mt-0.5 shrink-0" strokeWidth={1.8} />
                   <p>{importError}</p>
+                </div>
+              )}
+
+              {importFiles.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {hasOpenAIKey && (
+                    <Button type="button" variant="secondary" size="sm" onClick={handleImproveImport} disabled={isImporting}>
+                      {importSource === "openai" ? "Read again with OpenAI" : "Read with OpenAI"}
+                    </Button>
+                  )}
+                  <Button type="button" variant="secondary" size="sm" onClick={() => importRecipePhotos(importFiles, "local", true)} disabled={isImporting}>
+                    Retry free reading
+                  </Button>
                 </div>
               )}
 
@@ -2057,7 +2089,7 @@ export function RecipeForm({
                         Found {importedRecipe.ingredients.length} ingredients and{" "}
                         {importedRecipe.instructions.length} steps. Confidence:{" "}
                         {importedRecipe.confidence}.
-                        {importSource === "openai" && " Improved with OpenAI."}
+                        {importSource === "openai" && " Read directly with OpenAI."}
                       </p>
                       {hasUnitAdjustment(importedRecipe, metricUnits) && <p className="mt-1 text-xs text-ink-muted">
                         Measurements appear in your {metricUnits ? "metric" : "imperial"} preference where supported.
@@ -2091,6 +2123,7 @@ export function RecipeForm({
                           variant="primary"
                           size="sm"
                           onClick={() => applyImportedRecipe(true)}
+                          disabled={isImporting}
                           className="flex-1"
                         >
                           Replace &amp; review
@@ -2103,41 +2136,13 @@ export function RecipeForm({
                       variant="primary"
                       size="sm"
                       onClick={() => applyImportedRecipe()}
+                      disabled={isImporting}
                       className="mt-3 w-full"
                     >
                       Review &amp; save recipe
                     </Button>
                   )}
-                  {preparedImportImages.length > 0 && importSource !== "openai" && importedRecipes.length === 1 && (
-                    hasOpenAIKey ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleImproveImport}
-                        loading={isImprovingImport}
-                        className="mt-2 w-full"
-                      >
-                        Improve with OpenAI
-                      </Button>
-                    ) : (
-                      <div className="mt-3 rounded-md border border-accent-honey/35 bg-paper-warm/70 p-3">
-                        <p className="text-xs font-bold text-green-deep">
-                          Want better extraction?
-                        </p>
-                        <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-                          Add your OpenAI API key in{" "}
-                          <a
-                            href="/app/settings"
-                            className="font-bold text-green-deep underline underline-offset-2"
-                          >
-                            Settings
-                          </a>
-                          . Your key is only used when you choose to improve an import.
-                        </p>
-                      </div>
-                    )
-                  )}
+
                 </div>
               )}
             </section>

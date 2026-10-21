@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 import packageJson from "./package.json";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // A 2800 KiB image budget across up to four pages becomes ~3.83 MB as base64.
+    // Leave room for action serialization while staying below hosting limits.
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   async headers() {
     return [{
       source: "/:path*",

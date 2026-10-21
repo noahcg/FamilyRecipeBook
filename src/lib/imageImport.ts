@@ -1,7 +1,7 @@
 import { type ImportedRecipe } from "@/lib/recipeImportSchema";
 
 const MAX_IMPORT_BYTES = 700 * 1024;
-const MAX_IMPORT_DIMENSION = 1800;
+const MAX_IMPORT_DIMENSION = 3000;
 const MIN_IMPORT_DIMENSION = 1100;
 
 export type { ImportedRecipe } from "@/lib/recipeImportSchema";
@@ -48,16 +48,41 @@ function canvasToDataUrl(canvas: HTMLCanvasElement, quality: number) {
 
 function byteSizeFromDataUrl(dataUrl: string) {
   const encoded = dataUrl.split(",")[1] ?? "";
-  return Math.ceil((encoded.length * 3) / 4);
+  const padding = encoded.endsWith("==") ? 2 : encoded.endsWith("=") ? 1 : 0;
+  return (encoded.length * 3) / 4 - padding;
 }
 
-export async function prepareRecipeImportImage(file: File) {
+export async function prepareRecipeImportImage(file: File, mode: "local" | "openai" = "openai", pageCount = 4) {
   if (!file.type.startsWith("image/")) {
     throw new Error("Choose a photo of the recipe page.");
   }
 
   const sourceDataUrl = await readFileAsDataUrl(file);
   const image = await loadImage(sourceDataUrl);
+  const maxBytes = Math.floor((MAX_IMPORT_BYTES * 4) / Math.max(1, Math.min(4, pageCount)));
+
+  // Local OCR has no upload limit. Avoid discarding fine print and fractions
+  // merely to fit the separate AI request budget.
+  if (mode === "local") {
+    const scale = Math.min(1, 3000 / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Could not prepare that image.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  }
+
+  // Spend the total request budget on the selected pages. A single dense page
+  // should not lose detail to a byte allowance reserved for four pages.
+  if (/^image\/(jpeg|png|webp)$/.test(file.type)
+    && Math.max(image.width, image.height) <= MAX_IMPORT_DIMENSION
+    && byteSizeFromDataUrl(sourceDataUrl) <= maxBytes) {
+    return sourceDataUrl;
+  }
 
   let maxDimension = MAX_IMPORT_DIMENSION;
   let quality = 0.82;
@@ -73,20 +98,22 @@ export async function prepareRecipeImportImage(file: File) {
 
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Could not prepare that image.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
     context.drawImage(image, 0, 0, width, height);
 
     quality = 0.82;
     while (quality >= 0.58) {
       const dataUrl = canvasToDataUrl(canvas, quality);
       bestDataUrl = dataUrl;
-      if (byteSizeFromDataUrl(dataUrl) <= MAX_IMPORT_BYTES) return dataUrl;
+      if (byteSizeFromDataUrl(dataUrl) <= maxBytes) return dataUrl;
       quality -= 0.08;
     }
 
     maxDimension -= 250;
   }
 
-  if (byteSizeFromDataUrl(bestDataUrl) > MAX_IMPORT_BYTES * 1.3) {
+  if (byteSizeFromDataUrl(bestDataUrl) > maxBytes) {
     throw new Error("That photo is too large to import. Try cropping closer to the recipe text.");
   }
 
@@ -218,6 +245,39 @@ function stripInstructionMarker(line: string) {
   return line.replace(/^(?:step\s+\d+|\d{1,2}[\).:-])\s*/i, "").trim();
 }
 
+function normalizeBareInstructionNumbers(lines: string[]) {
+  // A bare number can also be an ingredient quantity. Require a sequence
+  // beginning at 1 and instruction-like text before treating it as a step.
+  const candidates = lines.flatMap((line, index) => {
+    const match = line.match(/^(\d{1,2})\s+([A-Za-z].*)$/);
+    if (!match) return [];
+    const body = match[2];
+    const firstWord = body.match(/^[A-Za-z]+/)?.[0].toLowerCase() ?? "";
+    if (COMMON_UNITS.has(firstWord)) return [];
+    const instructionOpening = /^(?:in|using|with|when|once|after|before|while|divide|roll|shape|transfer|let|set|sift|sprinkle|spread|knead|brush|arrange|drain|toss|turn|continue)\b/i.test(body);
+    if (!isStepLine(body) && !instructionOpening) return [];
+    return [{ index, number: Number(match[1]), body }];
+  });
+  const normalized = [...lines];
+  for (let start = 0; start < candidates.length; start += 1) {
+    if (candidates[start].number !== 1) continue;
+    let end = start + 1;
+    let hasConsecutivePair = false;
+    while (end < candidates.length) {
+      const gap = candidates[end].number - candidates[end - 1].number;
+      if (gap < 1 || gap > 3) break;
+      if (gap === 1) hasConsecutivePair = true;
+      end += 1;
+    }
+    if (!hasConsecutivePair) continue;
+    for (const candidate of candidates.slice(start, end)) {
+      normalized[candidate.index] = `${candidate.number}. ${candidate.body}`;
+    }
+    start = end - 1;
+  }
+  return normalized;
+}
+
 function stripIngredientMarker(line: string) {
   return line.replace(/^[-•*]\s*/, "").trim();
 }
@@ -236,6 +296,7 @@ const FRACTION_GLYPHS: Record<string, string> = {
 
 function normalizeQuantity(quantity: string) {
   return quantity
+    .replace(/(\d)([¼½¾⅓⅔⅛⅜⅝⅞])/g, "$1 $2")
     .replace(/[¼½¾⅓⅔⅛⅜⅝⅞]/g, (fraction) => FRACTION_GLYPHS[fraction] ?? fraction)
     .replace(/\s*-\s*/g, "-")
     .trim();
@@ -300,9 +361,8 @@ const COMMON_UNITS = new Set([
 
 function parseIngredientLine(line: string): ImportedRecipe["ingredients"][number] {
   const cleaned = stripIngredientMarker(line);
-  const match = cleaned.match(
-    /^((?:\d+\s+)?(?:\d+(?:[./]\d+)?|[¼½¾⅓⅔⅛⅜⅝⅞])(?:\s*[-–]\s*(?:\d+(?:[./]\d+)?|[¼½¾⅓⅔⅛⅜⅝⅞]))?|[¼½¾⅓⅔⅛⅜⅝⅞]|(?:\d+\s*)?[¼½¾⅓⅔⅛⅜⅝⅞]|one|two|three|four|five|six|seven|eight|nine|ten)\s+([a-zA-Z]+\.?)?\s*(.*)$/
-  );
+  const quantity = "(?:\\d+\\s+\\d+/\\d+|\\d+\\s*[¼½¾⅓⅔⅛⅜⅝⅞]|\\d+(?:[./]\\d+)?|[¼½¾⅓⅔⅛⅜⅝⅞]|one|two|three|four|five|six|seven|eight|nine|ten)";
+  const match = cleaned.match(new RegExp(`^(${quantity}(?:\\s*(?:[-–]|\\bto\\b)\\s*${quantity})?)\\s+([a-zA-Z]+\\.?)?\\s*(.*)$`, "i"));
 
   if (!match?.[1]) {
     return { quantity: "", unit: "", item: cleaned, note: "", group_label: null };
@@ -385,11 +445,13 @@ function joinInstructionLines(lines: string[]) {
 }
 
 function looksLikeMetadata(line: string) {
-  return /^(prep|cook|total|active|inactive|serves|servings|yield|makes|ready in)\b/i.test(line);
+  // Bare cooking verbs belong to the method, including "Bake 20 minutes".
+  return /^(?:(?:prep|total|active|inactive)(?:\s+time)?\s*[:\-]?\s*\d|(?:prep|cook|bake|total|active|inactive)\s+time\b|(?:cook|bake)\s*:\s*\d|(?:serves|servings|yield|makes|ready in)\s*[:\-]?\s*\d)/i.test(line);
 }
 
 function hasQuantityCue(line: string) {
-  return /^[-•*]?\s*(?:(?:\d+\s+)?\d+(?:[./]\d+)?|[¼½¾⅓⅔⅛⅜⅝⅞]+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i.test(line);
+  return /^[-•*]?\s*(?:(?:\d+\s+)?\d+(?:[./]\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\b/i.test(line)
+    || /^[-•*]?\s*[¼½¾⅓⅔⅛⅜⅝⅞]+(?=\s|$)/.test(line);
 }
 
 function hasUnitCue(line: string) {
@@ -427,7 +489,7 @@ function ingredientScore(line: string) {
 
 function looksLikeIngredient(line: string, fromExplicitSection = false) {
   const score = ingredientScore(line);
-  return fromExplicitSection ? score >= 1 && !looksLikeProse(line) : score >= 3;
+  return fromExplicitSection ? score >= 1 && (!looksLikeProse(line) || hasQuantityCue(line)) : score >= 3;
 }
 
 // Cookbook recipes commonly divide a single ingredient list into components.
@@ -454,21 +516,40 @@ function cleanGroupLabel(line: string) {
 }
 
 function buildGroupedIngredients(lines: string[], fromExplicitSection: boolean) {
-  const ingredients: ImportedRecipe["ingredients"] = [];
+  const groupedLines: { text: string; group: string | null }[] = [];
   let currentGroup: string | null = null;
+  let canContinue = false;
 
   for (const line of lines) {
-    if (isSectionHeading(line, ["ingredients", "ingredient"]) || looksLikeMetadata(line)) continue;
-    if (isIngredientGroupHeading(line)) {
-      currentGroup = cleanGroupLabel(line) || null;
+    if (isSectionHeading(line, ["ingredients", "ingredient"]) || looksLikeMetadata(line)) {
+      canContinue = false;
       continue;
     }
-    if (!looksLikeIngredient(line, fromExplicitSection)) continue;
-    const ingredient = parseIngredientLine(line);
-    if (ingredient.item) ingredients.push({ ...ingredient, group_label: currentGroup });
+    if (isIngredientGroupHeading(line)) {
+      currentGroup = cleanGroupLabel(line) || null;
+      canContinue = false;
+      continue;
+    }
+    const previous = groupedLines.at(-1);
+    const standaloneSeasoning = /^(?:salt|(?:freshly ground\s+)?(?:(?:black|white)\s+)?pepper)\b/i.test(line)
+      || /\b(?:to taste|as needed|for serving|for greasing)\b/i.test(line);
+    const continuation = canContinue && previous && !hasQuantityCue(line) && !/^[-•*]/.test(line)
+      && !hasUnitCue(line) && !isStepLine(line) && !standaloneSeasoning
+      && (/^[a-z(,]/.test(line) || /[,(-]$/.test(previous.text) || /\([^)]*$/.test(previous.text));
+    if (continuation) {
+      previous.text = `${previous.text} ${line}`;
+      continue;
+    }
+    if (!looksLikeIngredient(line, fromExplicitSection)) {
+      canContinue = false;
+      continue;
+    }
+    groupedLines.push({ text: line, group: currentGroup });
+    canContinue = true;
   }
 
-  return ingredients.slice(0, 80);
+  return groupedLines.map(({ text, group }) => ({ ...parseIngredientLine(text), group_label: group }))
+    .filter((ingredient) => ingredient.item).slice(0, 80);
 }
 
 function findIngredientRunStart(lines: string[]) {
@@ -592,7 +673,7 @@ function parseMinutes(lines: string[], labels: string[]) {
   const labelPattern = labels.join("|");
   const compactText = lines.join(" ");
   const patterns = [
-    new RegExp(`\\b(?:${labelPattern})\\s*(?:time)?\\s*[:\\-]?\\s*(\\d+)\\s*(min|mins|minute|minutes|hr|hrs|hour|hours)?\\b`, "i"),
+    new RegExp(`\\b(?:${labelPattern})\\s*(?:time)?\\s*[:\\-]?\\s*(\\d+)\\s*(minutes?|mins?|hours?|hrs?)?\\b(?:\\s*(?:and\\s*)?(\\d+)\\s*(?:minutes?|mins?)\\b)?`, "i"),
     new RegExp(`\\b(\\d+)\\s*(min|mins|minute|minutes|hr|hrs|hour|hours)\\s*(?:${labelPattern})\\b`, "i"),
   ];
 
@@ -600,7 +681,7 @@ function parseMinutes(lines: string[], labels: string[]) {
   if (!match) return 0;
   const value = Number(match[1]);
   const unit = match[2]?.toLowerCase() ?? "";
-  return unit.startsWith("h") ? value * 60 : value;
+  return unit.startsWith("h") ? value * 60 + Number(match[3] ?? 0) : value;
 }
 
 function parseServings(lines: string[]) {
@@ -622,7 +703,7 @@ function parseServings(lines: string[]) {
 }
 
 export function parseRecipeText(text: string): ImportedRecipe {
-  const lines = normalizeOcrText(text);
+  const lines = normalizeBareInstructionNumbers(normalizeOcrText(text));
   const warnings: string[] = [];
 
   if (lines.length < 4) {
@@ -654,7 +735,7 @@ export function parseRecipeText(text: string): ImportedRecipe {
     tags: [],
     ingredients: ingredients.length ? ingredients : [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
     instructions: instructions.length ? instructions.slice(0, 80) : [{ body: "" }],
-    confidence: warnings.length ? "medium" : "high",
+    confidence: !ingredients.length || !instructions.length ? "low" : "medium",
     warnings,
   };
 }
@@ -692,7 +773,7 @@ export async function extractRecipeTextWithLocalOcr(
     });
     const pages: string[] = [];
     for (const imageDataUrl of ocrSections) {
-      const result = await worker.recognize(imageDataUrl, {}, { blocks: true });
+      const result = await worker.recognize(imageDataUrl, { rotateAuto: true }, { blocks: true });
       const text = result.data.text.trim();
       if (text) pages.push(text);
       currentSection += 1;
@@ -734,9 +815,21 @@ export async function importRecipesWithLocalOcr(
       tessedit_pageseg_mode: PSM.AUTO,
       preserve_interword_spaces: "1",
     });
-    const result = await worker.recognize(imageDataUrls[0], {}, { blocks: true });
+    const result = await worker.recognize(imageDataUrls[0], { rotateAuto: true }, { blocks: true });
+    if (!result.data.text.trim()) {
+      throw new Error("No readable recipe text was found. Try a brighter, closer photo or read it with OpenAI.");
+    }
     const splitColumns = splitIndependentlyTitledRecipeColumns(result.data.blocks);
-    if (!splitColumns) return [parseRecipeText(result.data.text)];
+    if (!splitColumns) {
+      const { recipeTextFromOcrLayout } = await import("@/lib/recipeOcrLayout");
+      const columnText = recipeTextFromOcrLayout(result.data.blocks);
+      const recipe = parseRecipeText(columnText ?? result.data.text);
+      if (columnText) {
+        recipe.confidence = "low";
+        recipe.warnings.push("Columns were reconstructed from the photo. Check every quantity, wrapped ingredient and step against the original.");
+      }
+      return [recipe];
+    }
 
     const recipes = splitColumns.map(parseRecipeText);
     const completeRecipes = recipes.filter(

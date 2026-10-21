@@ -80,7 +80,7 @@ const externalModelRegistry = {
   },
   recipePhotoImport: {
     openai: {
-      defaultModel: "gpt-4.1-mini",
+      defaultModel: "gpt-5.4-mini",
       overrideEnv: "OPENAI_RECIPE_OCR_MODEL",
     },
   },
@@ -91,7 +91,7 @@ const taskPromptVersions: Record<AiTask, string> = {
   recipeDescription: "recipe-description-v1",
   recipeImageSearchQuery: "recipe-image-search-v1",
   recipeImageRanking: "recipe-image-ranking-v1",
-  recipePhotoImport: "recipe-photo-import-v1",
+  recipePhotoImport: "recipe-photo-import-v3",
 };
 
 type Env = Record<string, string | undefined>;

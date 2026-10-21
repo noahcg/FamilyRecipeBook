@@ -216,7 +216,7 @@ export function GlobalSettingsPageContent({
                 <p className="mb-1 text-sm font-semibold text-ink">Use your own API key</p>
                 <p className="mb-4 text-sm leading-relaxed text-ink-muted">
                   If you have your own key, it will be used instead of the default for recipe ideas,
-                  and it can power optional OpenAI cleanup after free photo OCR.
+                  and an OpenAI key also lets you read recipe photos directly, including handwriting. Choose OpenAI when importing; API usage is billed to your OpenAI account.
                 </p>
                 <AISettingsForm
                   currentProvider={aiSettings.ai_provider}
