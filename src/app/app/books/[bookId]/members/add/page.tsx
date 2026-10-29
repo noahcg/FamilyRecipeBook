@@ -21,7 +21,7 @@ const ROLE_GUIDE = [
   },
   {
     label: "Contributor",
-    description: "Can add recipes, edit their own, and add notes and memories.",
+    description: "Can add recipes, edit their own, and invite people if the keeper allows it.",
     icon: BookOpen,
   },
   {
@@ -35,7 +35,8 @@ export default async function AddMemberPage({ params }: Props) {
   const { bookId } = await params;
   const book = await getBook(bookId);
   const user = await requireUser();
-  if (!book || !book.members?.some((member) => member.user_id === user.id && member.role === "keeper")) notFound();
+  const role = book?.members?.find((member) => member.user_id === user.id)?.role;
+  if (!book || !(role === "keeper" || (role === "contributor" && book.contributors_can_invite))) notFound();
   const sharingAllowance = await getBookSharingAllowance(bookId).catch(() => null);
 
   return (
@@ -99,13 +100,13 @@ export default async function AddMemberPage({ params }: Props) {
             icon={<Lock size={28} />}
             title="Sharing is off"
             description="Turn on sharing for this cookbook before inviting members."
-            action={
+            action={role === "keeper" ? (
               <Link href={`/app/books/${bookId}/settings`}>
                 <Button variant="primary" size="sm">
                   <Settings size={14} /> Open settings
                 </Button>
               </Link>
-            }
+            ) : undefined}
           />
         )}
       </div>

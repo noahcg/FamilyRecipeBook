@@ -6,7 +6,7 @@ import { Link2, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cancelShareableInvitation, type PendingShareableInvitation } from "@/lib/actions/shareableInvitations";
 
-export function PendingShareableInvitations({ bookId, invitations }: { bookId: string; invitations: PendingShareableInvitation[] }) {
+export function PendingShareableInvitations({ bookId, invitations, inviterNames }: { bookId: string; invitations: PendingShareableInvitation[]; inviterNames: Record<string, string> }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -38,7 +38,7 @@ export function PendingShareableInvitations({ bookId, invitations }: { bookId: s
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-green-pale text-green-deep"><Link2 size={17} /></span>
               <div>
                 <p className="text-sm font-bold text-green-deep">Invitation link</p>
-                <p className="mt-0.5 text-xs text-ink-muted">{invite.role === "family" ? "Family" : "Contributor"} · expires {new Date(invite.expires_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                <p className="mt-0.5 text-xs text-ink-muted">Created by {inviterNames[invite.invited_by] || "a former member"} · {invite.role === "family" ? "Family" : "Contributor"} · expires {new Date(invite.expires_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
               </div>
             </div>
             <Button type="button" variant="secondary" size="sm" disabled={pendingId !== null} loading={pendingId === invite.id} onClick={() => cancel(invite.id)}><X size={14} /> Cancel</Button>

@@ -188,7 +188,7 @@ export type BookSharingAllowance = {
   remaining: number | null;
 };
 
-// The RPC checks Keeper access and returns only sharing limits, never the
+// The RPC checks invitation access and returns only sharing limits, never the
 // owner's private billing account. Missing migrations/errors fail closed.
 export async function getBookSharingAllowance(bookId: string): Promise<BookSharingAllowance> {
   const supabase = await createClient();

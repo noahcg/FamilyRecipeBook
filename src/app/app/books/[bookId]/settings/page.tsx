@@ -18,7 +18,7 @@ export default async function BookSettingsPage({ params }: Props) {
   ]);
 
   const [bookRes, bookPrefsRes, memberRes, settingsRes, sharedMemberRes, pendingInviteRes] = await Promise.all([
-    supabase.from("recipe_books").select("title,sharing_enabled").eq("id", bookId).single(),
+    supabase.from("recipe_books").select("title,sharing_enabled,contributors_can_invite").eq("id", bookId).single(),
     supabase.from("recipe_books").select("cover_style,sharing_enabled").eq("id", bookId).single(),
     supabase
       .from("book_members")
@@ -56,6 +56,7 @@ export default async function BookSettingsPage({ params }: Props) {
       bookTitle={bookRes.data.title}
       bookCoverStyle={bookPrefsRes.data?.cover_style ?? "sage"}
       sharingEnabled={bookRes.data.sharing_enabled ?? false}
+      contributorsCanInvite={bookRes.data.contributors_can_invite ?? false}
       sharingBlockerCount={(sharedMemberRes.count ?? 0) + (pendingInviteRes.count ?? 0)}
       isDefaultBook={settingsRes.data?.default_book_id === bookId}
       bookPreferencesReady={!bookPrefsRes.error && !settingsRes.error}

@@ -31,7 +31,7 @@ test('complete committed schema and database/Storage access boundaries', async t
     await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id||'']);
     await db.query("select set_config('request.jwt.claim.role',$1,false)",[role]);
     await db.exec(`set role ${role}`);
-    try{return await fn();}finally{await db.exec('reset role');}
+    try{return await fn();}finally{await db.exec("reset role; select set_config('request.jwt.claim.sub','',false); select set_config('request.jwt.claim.role','',false)");}
   }
   const owner=await user(),member=await user(),outsider=await user();
   await t.test('completed signup is counted once after tracking begins',async()=> {
@@ -123,7 +123,7 @@ test('complete committed schema and database/Storage access boundaries', async t
     assert.equal((await db.query('select role from book_members where book_id=$1 and user_id=$2',[book,contributor])).rows[0].role,'contributor');
     for(const actor of [family,contributor,await user(),null]) {
       assert.equal((await as(actor,()=>db.query('select * from book_invitation_links where book_id=$1',[book]))).rows.length,0);
-      await assert.rejects(create(actor),/Only the keeper|permission denied/);
+      await assert.rejects(create(actor),/permission to invite|permission denied/);
       await assert.rejects(cancel(actor,third.id),/Only the keeper|permission denied/);
     }
     assert.equal((await as(keeper,()=>db.query('select * from book_invitation_links where book_id=$1',[book]))).rows.length,4);
@@ -133,6 +133,32 @@ test('complete committed schema and database/Storage access boundaries', async t
       assert.equal((await db.query('update book_invitation_links set cancelled_at=null where id=$1 returning id',[second.id])).rows.length,0);
       assert.equal((await db.query('delete from book_invitation_links where id=$1 returning id',[third.id])).rows.length,0);
     });
+  });
+  await t.test('Keeper controls Contributor invitation access across both methods', async () => {
+    const keeper=await user(), contributor=await user(), family=await user(), outsider=await user(), book=randomUUID();
+    await db.query("update billing_accounts set status='active',plan='plus' where user_id=$1",[keeper]);
+    await db.query("insert into recipe_books(id,title,owner_id,sharing_enabled) values ($1,'Delegation',$2,true)",[book,keeper]);
+    await db.query("insert into book_members(book_id,user_id,role) values ($1,$2,'contributor'),($1,$3,'family')",[book,contributor,family]);
+    const createLink=actor=>as(actor,()=>db.query("select * from create_book_invitation_link($1,'contributor')",[book]));
+    const createEmail=(actor,inviter=actor)=>as(actor,()=>db.query("insert into book_invitations(book_id,email,role,token,invited_by,expires_at) values ($1,$2,'family',$3,$4,now()+interval '7 days') returning id",[book,`${randomUUID()}@example.com`,randomUUID(),inviter]));
+    await assert.rejects(createLink(contributor),/permission to invite/);
+    await assert.rejects(createEmail(contributor),/row-level security/);
+    await as(keeper,()=>db.query('update recipe_books set contributors_can_invite=true where id=$1',[book]));
+    await createEmail(contributor);
+    const link=(await createLink(contributor)).rows[0];
+    assert.equal(link.invited_by,contributor);
+    assert.equal((await as(keeper,()=>db.query('select invited_by from book_invitation_links where id=$1',[link.id]))).rows[0].invited_by,contributor);
+    await assert.rejects(createEmail(contributor,keeper),/row-level security/);
+    for(const actor of [family,outsider,null]) {
+      await assert.rejects(createLink(actor),/permission to invite|permission denied/);
+      await assert.rejects(createEmail(actor, actor || outsider),/row-level security|permission denied/);
+    }
+    await assert.rejects(as(contributor,()=>db.query('select cancel_book_invitation_link($1)',[link.id])),/Only the keeper/);
+    assert.equal((await as(contributor,()=>db.query('update recipe_books set contributors_can_invite=false where id=$1 returning id',[book]))).rows.length,0);
+    await as(keeper,()=>db.query('update recipe_books set contributors_can_invite=false where id=$1',[book]));
+    await assert.rejects(createLink(contributor),/permission to invite/);
+    await assert.rejects(createEmail(contributor),/row-level security/);
+    await as(keeper,()=>db.query('select cancel_book_invitation_link($1)',[link.id]));
   });
   await t.test('link acceptance rolls back consumption when sharing or current entitlement disallows joining',async()=> {
     const keeper=await user(),recipient=await user(),book=randomUUID();
