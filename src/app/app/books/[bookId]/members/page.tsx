@@ -32,7 +32,7 @@ const ROLE_GUIDE = [
   },
   {
     label: "Contributor",
-    description: "Can add recipes, edit their own, and add notes and memories.",
+    description: "Can add recipes, edit their own, and invite people if the keeper allows it.",
     icon: BookOpen,
   },
   {
@@ -61,7 +61,7 @@ export default async function MembersPage({ params }: Props) {
       .eq("book_id", bookId),
     supabase
       .from("recipe_books")
-      .select("sharing_enabled")
+      .select("sharing_enabled,contributors_can_invite")
       .eq("id", bookId)
       .single(),
     getPendingBookInvitations(bookId),
@@ -72,7 +72,9 @@ export default async function MembersPage({ params }: Props) {
   const pendingLinks = pendingLinksResult.success ? pendingLinksResult.data : [];
   const sharingAllowance = userRole === "keeper" ? await getBookSharingAllowance(bookId).catch(() => null) : null;
   const sharingEnabled = bookRes.data?.sharing_enabled ?? false;
+  const canInvite = userRole === "keeper" || (userRole === "contributor" && bookRes.data?.contributors_can_invite);
   const pendingCount = pendingInvites.length + pendingLinks.length;
+  const inviterNames = Object.fromEntries(members.map((member) => [member.user_id, member.profile?.full_name?.trim() || "a cookbook member"]));
   const countMap: Record<string, number> = {};
   for (const r of recipeCounts.data ?? []) {
     if (!r.created_by) continue;
@@ -109,14 +111,13 @@ export default async function MembersPage({ params }: Props) {
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
                 {memberSummary}
-                <span className="mx-2 text-line">|</span>
-                {pendingSummary}
+                {userRole === "keeper" && <><span className="mx-2 text-line">|</span>{pendingSummary}</>}
                 <span className="mx-2 text-line">|</span>
                 {contributorSummary}
               </p>
             </div>
 
-            {userRole === "keeper" && sharingEnabled && (
+            {canInvite && sharingEnabled && (
               <Link href={`/app/books/${bookId}/members/add`} className="shrink-0">
                 <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 sm:w-auto">
                   <Plus size={17} /> Add Someone
@@ -175,9 +176,9 @@ export default async function MembersPage({ params }: Props) {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_340px]">
             <div className="min-w-0 space-y-10">
               {userRole === "keeper" && pendingInvites.length > 0 && (
-                <PendingInvitationsList bookId={bookId} invitations={pendingInvites} />
+                <PendingInvitationsList bookId={bookId} invitations={pendingInvites} inviterNames={inviterNames} />
               )}
-              {userRole === "keeper" && <PendingShareableInvitations bookId={bookId} invitations={pendingLinks} />}
+              {userRole === "keeper" && <PendingShareableInvitations bookId={bookId} invitations={pendingLinks} inviterNames={inviterNames} />}
               {userRole === "keeper" && !pendingLinksResult.success && <p role="alert" className="text-sm text-danger">Could not load invitation links. Refresh to try again.</p>}
               {ROLE_SECTIONS.map(({ role, label }) => {
                 const group = grouped[role] ?? [];

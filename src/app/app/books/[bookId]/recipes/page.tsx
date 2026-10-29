@@ -18,7 +18,7 @@ import { BookName } from "@/components/book/BookName";
 import { BookMembersDrawer } from "@/components/book/BookMembersDrawer";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/formatDuration";
-import { canContribute, canManageMembers, canView } from "@/lib/permissions";
+import { canContribute, canView } from "@/lib/permissions";
 import { getBookAccessSummary } from "@/lib/actions/books";
 import type { BookRole } from "@/lib/types";
 
@@ -259,7 +259,7 @@ export default function RecipesPage({ params }: Props) {
     ? `${recipeAllowance.used} of ${recipeAllowance.recipe_limit ?? 50} recipes · ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`
     : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`;
   const canAddRecipes = canContribute(userRole) && canEffectivelyContribute;
-  const canManageBookMembers = canManageMembers(userRole);
+  const canManageBookMembers = canView(userRole);
   const canOpenBookSettings = canView(userRole);
   const toolbarActionCount = [canAddRecipes, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
 
@@ -456,7 +456,7 @@ export default function RecipesPage({ params }: Props) {
                   {canManageBookMembers && (
                     <Link href={`/app/books/${bookId}/members`} className="min-w-0">
                       <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
-                        <Users size={17} /> Manage Members
+                        <Users size={17} /> Members
                       </Button>
                     </Link>
                   )}
@@ -503,7 +503,7 @@ export default function RecipesPage({ params }: Props) {
                   {canManageBookMembers && (
                     <Link href={`/app/books/${bookId}/members`}>
                       <Button variant="secondary" size="sm">
-                        <Users size={14} /> Manage members
+                        <Users size={14} /> Members
                       </Button>
                     </Link>
                   )}

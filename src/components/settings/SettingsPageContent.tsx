@@ -41,6 +41,7 @@ interface BookSettingsPageContentProps {
   bookTitle: string;
   bookCoverStyle: string;
   sharingEnabled: boolean;
+  contributorsCanInvite: boolean;
   sharingBlockerCount: number;
   isDefaultBook: boolean;
   bookPreferencesReady: boolean;
@@ -366,6 +367,7 @@ export function BookSettingsPageContent({
   bookTitle,
   bookCoverStyle,
   sharingEnabled,
+  contributorsCanInvite,
   sharingBlockerCount,
   isDefaultBook,
   bookPreferencesReady,
@@ -425,6 +427,7 @@ export function BookSettingsPageContent({
                     <SharingSettingsForm
                       bookId={bookId}
                       sharingEnabled={sharingEnabled}
+                      contributorsCanInvite={contributorsCanInvite}
                       blockerCount={sharingBlockerCount}
                     />
                   ) : (

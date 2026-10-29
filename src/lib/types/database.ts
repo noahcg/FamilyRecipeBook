@@ -20,6 +20,7 @@ export interface RecipeBook {
   cover_style: string;
   icon: string;
   sharing_enabled: boolean;
+  contributors_can_invite: boolean;
   creation_token: string | null;
   owner_id: string;
   created_at: string;

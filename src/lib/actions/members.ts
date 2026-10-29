@@ -20,7 +20,7 @@ import { getBookSharingAllowance } from "@/lib/entitlements";
 
 export type PendingBookInvitation = Pick<
   BookInvitation,
-  "id" | "email" | "role" | "expires_at" | "created_at"
+  "id" | "email" | "role" | "expires_at" | "created_at" | "invited_by"
 >;
 
 export interface InvitationLookup {
@@ -84,10 +84,9 @@ export async function inviteMember(
   }
 
   const supabase = await createClient();
-  const role = await getBookRole(supabase, bookId, user.id);
-
-  if (!canManageMembers(role)) {
-    return { success: false, error: "Only the keeper can invite members." };
+  const { data: canInvite } = await supabase.rpc("can_invite_to_book", { target_book_id: bookId, target_user_id: user.id });
+  if (!canInvite) {
+    return { success: false, error: "You do not have permission to invite people to this cookbook." };
   }
 
   try {
@@ -261,7 +260,7 @@ export async function getPendingBookInvitations(bookId: string): Promise<Pending
   const supabase = await createClient();
   const { data } = await supabase
     .from("book_invitations")
-    .select("id,email,role,expires_at,created_at")
+    .select("id,email,role,expires_at,created_at,invited_by")
     .eq("book_id", bookId)
     .is("accepted_at", null)
     .gte("expires_at", new Date().toISOString())

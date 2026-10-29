@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.5] - 2026-10-29
+
+### Updates
+
+- Let Keepers allow Contributors to invite people by email or single-use link. Keepers retain control of sharing, invitations, and members, and can see who created each pending invitation.
+
 ## [1.0.4] - 2026-10-29
 
 ### Security

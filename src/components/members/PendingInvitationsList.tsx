@@ -8,6 +8,7 @@ import { cancelInvitation, type PendingBookInvitation } from "@/lib/actions/memb
 interface PendingInvitationsListProps {
   bookId: string;
   invitations: PendingBookInvitation[];
+  inviterNames: Record<string, string>;
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -18,6 +19,7 @@ const ROLE_LABEL: Record<string, string> = {
 export function PendingInvitationsList({
   bookId,
   invitations,
+  inviterNames,
 }: PendingInvitationsListProps) {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export function PendingInvitationsList({
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-green-deep">{invite.email}</p>
                 <p className="mt-0.5 text-xs text-ink-muted">
-                  {ROLE_LABEL[invite.role] ?? invite.role} · expires{" "}
+                  Invited by {inviterNames[invite.invited_by] || "a former member"} · {ROLE_LABEL[invite.role] ?? invite.role} · expires{" "}
                   {new Date(invite.expires_at).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",

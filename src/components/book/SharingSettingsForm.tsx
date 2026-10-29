@@ -9,25 +9,28 @@ import { updateBook } from "@/lib/actions/books";
 interface SharingSettingsFormProps {
   bookId: string;
   sharingEnabled: boolean;
+  contributorsCanInvite: boolean;
   blockerCount: number;
 }
 
 export function SharingSettingsForm({
   bookId,
   sharingEnabled,
+  contributorsCanInvite,
   blockerCount,
 }: SharingSettingsFormProps) {
   const [enabled, setEnabled] = useState(sharingEnabled);
+  const [allowContributors, setAllowContributors] = useState(contributorsCanInvite);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const isDirty = enabled !== sharingEnabled;
+  const isDirty = enabled !== sharingEnabled || allowContributors !== contributorsCanInvite;
   const disablePrivateSave = !enabled && blockerCount > 0;
 
   async function handleSave() {
     if (!isDirty || disablePrivateSave) return;
     setSaving(true);
     setMessage(null);
-    const result = await updateBook(bookId, { sharing_enabled: enabled });
+    const result = await updateBook(bookId, { sharing_enabled: enabled, contributors_can_invite: allowContributors });
     setSaving(false);
     setMessage(result.success ? "Sharing settings saved." : result.error);
   }
@@ -80,6 +83,13 @@ export function SharingSettingsForm({
           );
         })}
       </div>
+
+      {enabled && (
+        <label className="flex items-start gap-3 text-sm text-ink">
+          <input type="checkbox" className="mt-1" checked={allowContributors} onChange={(event) => { setAllowContributors(event.target.checked); setMessage(null); }} />
+          <span><span className="font-bold">Allow Contributors to invite people</span><span className="mt-1 block text-ink-muted">Contributors can invite Family members and other Contributors. You can still manage all invitations and members.</span></span>
+        </label>
+      )}
 
       {disablePrivateSave && (
         <div className="rounded-lg border border-accent-honey/45 bg-paper-warm/60 p-4">

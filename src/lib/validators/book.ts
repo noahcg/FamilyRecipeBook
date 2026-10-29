@@ -19,7 +19,7 @@ export const createBookSchema = z.object({
   sharing_enabled: bookFields.sharing_enabled.optional(),
 });
 
-export const updateBookSchema = z.object(bookFields).partial();
+export const updateBookSchema = z.object({ ...bookFields, contributors_can_invite: z.boolean() }).partial();
 
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;

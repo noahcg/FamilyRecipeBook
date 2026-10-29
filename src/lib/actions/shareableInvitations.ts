@@ -18,6 +18,7 @@ export interface PendingShareableInvitation {
   role: "family" | "contributor";
   expires_at: string;
   created_at: string;
+  invited_by: string;
 }
 
 export interface ShareableInvitationPreview {
@@ -48,8 +49,11 @@ export async function createShareableInvitation(
 ): Promise<ActionResult<{ url: string; expires_at: string }>> {
   const parsedRole = updateMemberRoleSchema.safeParse(role);
   if (!parsedRole.success) return { success: false, error: "Choose Family or Contributor access." };
-  const supabase = await keeperClient(bookId);
-  if (!supabase) return { success: false, error: "Only the cookbook keeper can create invitation links." };
+  const user = await getUser();
+  if (!user || !idSchema.safeParse(bookId).success) return { success: false, error: "You do not have permission to invite people to this cookbook." };
+  const supabase = await createClient();
+  const { data: canInvite } = await supabase.rpc("can_invite_to_book", { target_book_id: bookId, target_user_id: user.id });
+  if (!canInvite) return { success: false, error: "You do not have permission to invite people to this cookbook." };
 
   let baseUrl: string;
   try {
@@ -74,7 +78,7 @@ export async function getPendingShareableInvitations(bookId: string): Promise<Ac
   const supabase = await keeperClient(bookId);
   if (!supabase) return { success: false, error: "Only the cookbook keeper can view invitation links." };
   const { data, error } = await supabase.from("book_invitation_links")
-    .select("id,role,expires_at,created_at")
+    .select("id,role,expires_at,created_at,invited_by")
     .eq("book_id", bookId).is("accepted_at", null).is("cancelled_at", null)
     .gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false });
   if (error) return { success: false, error: "Could not load invitation links. Please try again." };
