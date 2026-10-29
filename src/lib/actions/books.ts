@@ -54,7 +54,7 @@ async function getSharingBlockers(
   supabase: Awaited<ReturnType<typeof createClient>>,
   bookId: string
 ) {
-  const [memberRes, inviteRes] = await Promise.all([
+  const [memberRes, inviteRes, linkRes] = await Promise.all([
     supabase
       .from("book_members")
       .select("id", { count: "exact", head: true })
@@ -66,11 +66,18 @@ async function getSharingBlockers(
       .eq("book_id", bookId)
       .is("accepted_at", null)
       .gte("expires_at", new Date().toISOString()),
+    supabase
+      .from("book_invitation_links")
+      .select("id", { count: "exact", head: true })
+      .eq("book_id", bookId)
+      .is("accepted_at", null)
+      .is("cancelled_at", null)
+      .gt("expires_at", new Date().toISOString()),
   ]);
 
-  if (memberRes.error || inviteRes.error) {
+  if (memberRes.error || inviteRes.error || linkRes.error) {
     return {
-      error: memberRes.error?.message ?? inviteRes.error?.message ?? "Could not check sharing status.",
+      error: memberRes.error?.message ?? inviteRes.error?.message ?? linkRes.error?.message ?? "Could not check sharing status.",
       memberCount: 0,
       inviteCount: 0,
     };
@@ -79,7 +86,7 @@ async function getSharingBlockers(
   return {
     error: null,
     memberCount: memberRes.count ?? 0,
-    inviteCount: inviteRes.count ?? 0,
+    inviteCount: (inviteRes.count ?? 0) + (linkRes.count ?? 0),
   };
 }
 

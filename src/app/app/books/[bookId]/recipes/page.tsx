@@ -15,6 +15,7 @@ import {
 import { AppShell } from "@/components/layout/AppShell";
 import { EmptyState, Button } from "@/components/ui";
 import { BookName } from "@/components/book/BookName";
+import { BookMembersDrawer } from "@/components/book/BookMembersDrawer";
 import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/formatDuration";
 import { canContribute, canManageMembers, canView } from "@/lib/permissions";
@@ -257,7 +258,6 @@ export default function RecipesPage({ params }: Props) {
   const recipeSummary = recipeAllowance?.is_free
     ? `${recipeAllowance.used} of ${recipeAllowance.recipe_limit ?? 50} recipes · ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`
     : `${recipes.length} ${recipes.length === 1 ? "recipe" : "recipes"} across ${chapters.length || 0} ${chapters.length === 1 ? "chapter" : "chapters"}`;
-  const memberSummary = `${memberCount} ${memberCount === 1 ? "member" : "members"}`;
   const canAddRecipes = canContribute(userRole) && canEffectivelyContribute;
   const canManageBookMembers = canManageMembers(userRole);
   const canOpenBookSettings = canView(userRole);
@@ -394,11 +394,15 @@ export default function RecipesPage({ params }: Props) {
             >
               <BookName />
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
-              {activeFilterDetails ? activeFilterDetails.description : recipeSummary}
-              <span className="mx-2 text-line">|</span>
-              {memberSummary}
-            </p>
+            <div className="mt-2 flex max-w-2xl flex-wrap items-center gap-x-2 text-sm leading-relaxed text-ink-muted">
+              <span>{activeFilterDetails ? activeFilterDetails.description : recipeSummary}</span>
+              {!loading && canView(userRole) && (
+                <span className="inline-flex items-center gap-1">
+                  <span aria-hidden="true" className="text-line">|</span>
+                  <BookMembersDrawer key={bookId} bookId={bookId} memberCount={memberCount} />
+                </span>
+              )}
+            </div>
             {activeFilterDetails && (
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className="rounded-sm bg-green-deep px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-ink-inverse">

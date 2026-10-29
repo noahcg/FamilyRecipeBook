@@ -4,7 +4,7 @@ import { getBookSharingAllowance } from "@/lib/entitlements";
 import { BookOpen, Crown, Lock, Mail, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import { AddMemberForm } from "@/components/book/AddMemberForm";
+import { InvitationMethodTabs } from "@/components/members/InvitationMethodTabs";
 import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { getBook } from "@/lib/actions/books";
 import { Button, EmptyState } from "@/components/ui";
@@ -57,12 +57,7 @@ export default async function AddMemberPage({ params }: Props) {
         {book?.sharing_enabled ? (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-8">
             <div className="rounded-xl border border-line-soft bg-card p-5 sm:p-6">
-              <AddMemberForm
-                sharingAllowance={sharingAllowance}
-                bookId={bookId}
-                bookTitle={book?.title}
-                onSuccessRedirect={`/app/books/${bookId}/members`}
-              />
+              <InvitationMethodTabs bookId={bookId} bookTitle={book.title} sharingAllowance={sharingAllowance} />
             </div>
 
             <aside className="space-y-5">
@@ -90,10 +85,10 @@ export default async function AddMemberPage({ params }: Props) {
                   <Mail size={16} strokeWidth={1.75} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-ink">Sent by email</p>
+                  <p className="text-sm font-semibold text-ink">Inviting someone</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-                    We&rsquo;ll email an invitation. They join the book as soon as
-                    they accept using the email address you invited.
+                    Send an email invitation or share a single-use link in a message.
+                    They join after accepting the invitation.
                   </p>
                 </div>
               </div>
