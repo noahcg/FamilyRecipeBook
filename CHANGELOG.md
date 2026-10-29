@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.3] - 2026-10-29
+
+### Updates
+
+- Added single-use invitation links Keepers can copy or share in a text. Links expire after seven days, reserve a sharing spot, can be canceled, and let recipients sign in with their own email before choosing to join. Email invitations remain available.
+
+## [1.0.2] - 2026-10-29
+
+### Updates
+
+- Made the cookbook member count open a quiet member drawer, so Keepers, Contributors, and Family can see everyone’s name and role without leaving the recipe list. The count uses a subtle green text and underline hover effect with no background change.
+- Ended the stale public launch version hold and restored version bumps and dated changelog entries for completed app updates.
+
 ## [1.0.1] - 2026-10-07
 
 ### Public launch updates

@@ -12,7 +12,7 @@ test('complete committed schema and database/Storage access boundaries', async t
     create schema auth; create schema storage;
     create table auth.users(id uuid primary key,email text,created_at timestamptz not null default now(),raw_user_meta_data jsonb default '{}');
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
-    create function auth.role() returns text language sql stable as $$ select current_user::text $$;
+    create function auth.role() returns text language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claim.role',true),''),current_user::text) $$;
     create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
     create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text references storage.buckets(id),name text,owner uuid);
     alter table storage.objects enable row level security;
@@ -29,6 +29,7 @@ test('complete committed schema and database/Storage access boundaries', async t
   async function user() { const id=randomUUID(); await db.query('insert into auth.users(id,email) values ($1,$2)',[id,`${id}@example.com`]); return id; }
   async function as(id,fn,role=id?'authenticated':'anon') {
     await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id||'']);
+    await db.query("select set_config('request.jwt.claim.role',$1,false)",[role]);
     await db.exec(`set role ${role}`);
     try{return await fn();}finally{await db.exec('reset role');}
   }
@@ -61,6 +62,98 @@ test('complete committed schema and database/Storage access boundaries', async t
     }
     await as(owner,()=>db.query('delete from household_members where household_id=$1 and user_id=$2',[household,member]));
     for(const table of ['grocery_items','meal_plans']) assert.equal((await as(member,()=>db.query(`select * from ${table} where household_id=$1`,[household]))).rows.length,0);
+  });
+  await t.test('cookbook roster exposes names and roles to every member, but not outsiders or removed members',async()=> {
+    const keeper=await user(),contributor=await user(),family=await user(),unrelated=await user();
+    const book=randomUUID(),otherBook=randomUUID();
+    await db.query("update billing_accounts set status='active',plan='plus' where user_id=$1",[keeper]);
+    await db.query("insert into recipe_books(id,title,owner_id,sharing_enabled) values ($1,'Roster',$2,true)",[book,keeper]);
+    await db.query("insert into recipe_books(id,title,owner_id) values ($1,'Other cookbook',$2)",[otherBook,unrelated]);
+    await db.query("insert into book_members(book_id,user_id,role) values ($1,$2,'contributor'),($1,$3,'family')",[book,contributor,family]);
+    for (const [id,name] of [[keeper,'Test Keeper'],[contributor,'Test Contributor'],[family,'Test Family']]) {
+      await db.query('update profiles set full_name=$2 where id=$1',[id,name]);
+    }
+    const roster=()=>db.query('select bm.user_id,bm.role,p.full_name from book_members bm left join profiles p on p.id=bm.user_id where bm.book_id=$1 order by bm.role',[book]);
+    for(const actor of [keeper,contributor,family]) {
+      const {rows}=await as(actor,roster);
+      assert.deepEqual(rows.map(row=>[row.role,row.full_name]),[['contributor','Test Contributor'],['family','Test Family'],['keeper','Test Keeper']]);
+    }
+    for(const actor of [unrelated,null]) assert.equal((await as(actor,roster)).rows.length,0);
+    await db.query('delete from book_members where book_id=$1 and user_id=$2',[book,family]);
+    assert.equal((await as(family,roster)).rows.length,0);
+  });
+  await t.test('single-use invitation links reserve seats, enforce roles and remain private',async()=> {
+    const keeper=await user(),family=await user(),contributor=await user(),outsider=await user();
+    const book=randomUUID();
+    await db.query("insert into recipe_books(id,title,owner_id,sharing_enabled) values ($1,'Link invitations',$2,true)",[book,keeper]);
+    const create=(actor=keeper,role='family')=>as(actor,()=>db.query('select * from create_book_invitation_link($1,$2)',[book,role]));
+    const accept=(actor,token)=>as(actor,()=>db.query('select accept_book_invitation_link($1) as book_id',[token]));
+    const cancel=(actor,id)=>as(actor,()=>db.query('select cancel_book_invitation_link($1)',[id]));
+    const seats=async()=> (await db.query('select book_sharing_seats($1) as n',[book])).rows[0].n;
+    const first=(await create()).rows[0];
+    assert.match(first.token,/^[0-9a-f]{64}$/);
+    assert.equal(new Date(first.expires_at)-new Date(first.created_at),7*24*60*60*1000);
+    await assert.rejects(create(keeper,'keeper'),/Choose Family or Contributor/);
+    await assert.rejects(create(keeper,'contributor'),/Family members only/);
+    await assert.rejects(accept(null,first.token),/permission denied/);
+    await assert.rejects(accept(keeper,first.token),/already a member/);
+    assert.equal((await db.query('select accepted_at from book_invitation_links where id=$1',[first.id])).rows[0].accepted_at,null);
+    const second=(await create()).rows[0],third=(await create()).rows[0];
+    assert.equal(await seats(),3);
+    await assert.rejects(create(),/3 free sharing spots/);
+    await assert.rejects(db.query("insert into book_invitations(book_id,email,role,token,invited_by,expires_at) values ($1,$2,'family',$3,$4,now()+interval '7 days')",[book,`${outsider}@example.com`,randomUUID(),keeper]),/3 free sharing spots/);
+    assert.equal((await accept(family,first.token)).rows[0].book_id,book);
+    assert.equal(await seats(),3);
+    await assert.rejects(accept(outsider,first.token),/invalid or has expired/);
+    await cancel(keeper,second.id);
+    await assert.rejects(accept(outsider,second.token),/invalid or has expired/);
+    assert.equal(await seats(),2);
+    // Existing email invitations and links share the same seat budget, including
+    // acceptance at capacity without charging the email reservation twice.
+    const emailToken=randomUUID();
+    await db.query("insert into book_invitations(book_id,email,role,token,invited_by,expires_at) values ($1,$2,'family',$3,$4,now()+interval '7 days')",[book,`${outsider}@example.com`,emailToken,keeper]);
+    await as(outsider,()=>db.query('select accept_book_invitation($1)',[emailToken]));
+    assert.equal(await seats(),3);
+    await db.query("update book_invitation_links set expires_at=now()-interval '1 second' where id=$1",[third.id]);
+    await assert.rejects(accept(contributor,third.token),/invalid or has expired/);
+    assert.equal(await seats(),2);
+    await db.query('update billing_accounts set grandfathered_plus=true where user_id=$1',[keeper]);
+    const contributorInvite=(await create(keeper,'contributor')).rows[0];
+    await accept(contributor,contributorInvite.token);
+    assert.equal((await db.query('select role from book_members where book_id=$1 and user_id=$2',[book,contributor])).rows[0].role,'contributor');
+    for(const actor of [family,contributor,await user(),null]) {
+      assert.equal((await as(actor,()=>db.query('select * from book_invitation_links where book_id=$1',[book]))).rows.length,0);
+      await assert.rejects(create(actor),/Only the keeper|permission denied/);
+      await assert.rejects(cancel(actor,third.id),/Only the keeper|permission denied/);
+    }
+    assert.equal((await as(keeper,()=>db.query('select * from book_invitation_links where book_id=$1',[book]))).rows.length,4);
+    // Even with generic test table grants, RLS has no direct mutation policies.
+    await as(keeper,async()=> {
+      await assert.rejects(db.query("insert into book_invitation_links(book_id,role,invited_by) values ($1,'family',$2)",[book,keeper]),/row-level security/);
+      assert.equal((await db.query('update book_invitation_links set cancelled_at=null where id=$1 returning id',[second.id])).rows.length,0);
+      assert.equal((await db.query('delete from book_invitation_links where id=$1 returning id',[third.id])).rows.length,0);
+    });
+  });
+  await t.test('link acceptance rolls back consumption when sharing or current entitlement disallows joining',async()=> {
+    const keeper=await user(),recipient=await user(),book=randomUUID();
+    await db.query("update billing_accounts set status='active',plan='plus' where user_id=$1",[keeper]);
+    await db.query("insert into recipe_books(id,title,owner_id,sharing_enabled) values ($1,'Link entitlement',$2,true)",[book,keeper]);
+    const create=async(role='family')=>(await as(keeper,()=>db.query('select * from create_book_invitation_link($1,$2)',[book,role]))).rows[0];
+    const accept=link=>as(recipient,()=>db.query('select accept_book_invitation_link($1)',[link.token]));
+    const contributorLink=await create('contributor'),familyLink=await create();
+    await db.query("update recipe_books set sharing_enabled=false where id=$1",[book]);
+    await assert.rejects(create(),/Turn on sharing/);
+    await assert.rejects(accept(familyLink),/Sharing is turned off/);
+    await db.query("update recipe_books set sharing_enabled=true where id=$1",[book]);
+    await create(); await create();
+    await db.query("update billing_accounts set status='canceled',plan='free' where user_id=$1",[keeper]);
+    await assert.rejects(accept(contributorLink),/Contributor invitation needs Plus/);
+    await assert.rejects(accept(familyLink),/3 free sharing spots/);
+    assert.equal((await db.query('select accepted_at from book_invitation_links where id=$1',[familyLink.id])).rows[0].accepted_at,null);
+    assert.equal((await db.query('select * from book_members where book_id=$1 and user_id=$2',[book,recipient])).rows.length,0);
+    // The creator restriction mirrors the existing email-invitation policy.
+    await as(null,()=>db.query('update profiles set moderation_upload_restricted=true where id=$1',[keeper]),'service_role');
+    await assert.rejects(create(),/unavailable for this account/);
   });
   await t.test('recipe originals enforce real Storage RLS and revoke removed members',async()=> {
     const book=randomUUID(),recipe=randomUUID(),contributor=await user();

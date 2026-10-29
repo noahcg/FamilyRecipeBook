@@ -7,7 +7,9 @@ import { BookName } from "@/components/book/BookName";
 import { Button, EmptyState } from "@/components/ui";
 import { MemberProfileCard } from "@/components/members/MemberProfileCard";
 import { PendingInvitationsList } from "@/components/members/PendingInvitationsList";
+import { PendingShareableInvitations } from "@/components/members/PendingShareableInvitations";
 import { getBookMembers, getPendingBookInvitations } from "@/lib/actions/members";
+import { getPendingShareableInvitations } from "@/lib/actions/shareableInvitations";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { MemberWithProfile } from "@/lib/types";
@@ -45,7 +47,7 @@ export default async function MembersPage({ params }: Props) {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [members, memberRes, recipeCounts, bookRes, pendingInvites] = await Promise.all([
+  const [members, memberRes, recipeCounts, bookRes, pendingInvites, pendingLinksResult] = await Promise.all([
     getBookMembers(bookId),
     supabase
       .from("book_members")
@@ -63,12 +65,14 @@ export default async function MembersPage({ params }: Props) {
       .eq("id", bookId)
       .single(),
     getPendingBookInvitations(bookId),
+    getPendingShareableInvitations(bookId),
   ]);
 
   const userRole = memberRes.data?.role ?? null;
+  const pendingLinks = pendingLinksResult.success ? pendingLinksResult.data : [];
   const sharingAllowance = userRole === "keeper" ? await getBookSharingAllowance(bookId).catch(() => null) : null;
   const sharingEnabled = bookRes.data?.sharing_enabled ?? false;
-  const pendingCount = pendingInvites.length;
+  const pendingCount = pendingInvites.length + pendingLinks.length;
   const countMap: Record<string, number> = {};
   for (const r of recipeCounts.data ?? []) {
     if (!r.created_by) continue;
@@ -173,6 +177,8 @@ export default async function MembersPage({ params }: Props) {
               {userRole === "keeper" && pendingInvites.length > 0 && (
                 <PendingInvitationsList bookId={bookId} invitations={pendingInvites} />
               )}
+              {userRole === "keeper" && <PendingShareableInvitations bookId={bookId} invitations={pendingLinks} />}
+              {userRole === "keeper" && !pendingLinksResult.success && <p role="alert" className="text-sm text-danger">Could not load invitation links. Refresh to try again.</p>}
               {ROLE_SECTIONS.map(({ role, label }) => {
                 const group = grouped[role] ?? [];
                 if (group.length === 0) return null;
