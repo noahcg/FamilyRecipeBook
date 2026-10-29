@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.4] - 2026-10-29
+
+### Security
+
+- Updated Next.js, Zod, and transitive PDF and Stripe dependencies to resolve production dependency advisories.
+
 ## [1.0.3] - 2026-10-29
 
 ### Updates
