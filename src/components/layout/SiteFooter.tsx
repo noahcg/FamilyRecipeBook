@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { appVersion } from "@/lib/version";
 import { supportMailto } from "@/lib/support";
+import { CookieSettingsLink } from "@/components/analytics/ConsentAnalytics";
 
 /**
  * Site-wide footer for public/marketing surfaces (landing page + legal pages).
@@ -18,7 +19,7 @@ export function SiteFooter() {
           <span className="font-semibold text-green-deep">Home Cooked</span>.
           Made with love. <span className="whitespace-nowrap">v{appVersion}</span>
         </p>
-        <nav className="flex items-center gap-5">
+        <nav className="flex flex-wrap items-center justify-center gap-5">
           <a href={supportMailto} className="transition hover:text-green-deep">
             Contact
           </a>
@@ -31,6 +32,7 @@ export function SiteFooter() {
           <Link href="/privacy" className="transition hover:text-green-deep">
             Privacy
           </Link>
+          <CookieSettingsLink />
         </nav>
       </div>
     </footer>

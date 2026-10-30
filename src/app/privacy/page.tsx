@@ -92,18 +92,31 @@ const privacySections = [
           <code>sessionStorage</code>, and limited offline browser storage to
           remember app state, support offline recipes and grocery features, and
           preserve sign-in-flow state such as an email-code resend cooldown.
-          These browser-storage items support core product functionality and are
-          not used for analytics or advertising.
+          These browser-storage items support core product functionality. We
+          also use local storage to remember your analytics preference, as
+          described below.
         </p>
         <p>
-          We use Vercel Web Analytics to measure visits to public pages. We
+          With your permission, we use Google Analytics 4 and Vercel Web
+          Analytics to understand visits to public pages. Google and Vercel
+          receive analytics data and may process it in other countries. You can accept or reject analytics and change your
+          choice using Cookie settings. We store your choice in first-party
+          browser storage for 180 days. If you accept, Google Analytics may set
+          first-party cookies named <code>_ga</code> and <code>_ga_*</code>.
+          Their duration depends on our settings and your browser. When you
+          withdraw permission, we attempt to remove the Google Analytics
+          cookies that this site can access.
+        </p>
+        <p>
+          With your permission, Vercel Web Analytics measures visits to public pages. We
           exclude private cookbook pages and remove query strings before
           sending page views. Guide action clicks record the guide, action placement,
-          and destination without campaign values or personal details. We also keep an internal record when a new account
+          and destination without campaign values or personal details. Vercel
+          Web Analytics does not use analytics cookies. Separately from these
+          optional analytics services, we keep an internal record when a new account
           completes its first sign-in so we can measure signup conversion. We
           do not send your email, recipe content, invitation token, or account
-          ID to Vercel Analytics. Vercel Web Analytics does not use analytics
-          cookies. Hosting providers may also create standard
+          ID to Vercel Analytics. Hosting providers may also create standard
           server logs for security and reliability. We do not use advertising
           cookies or session-replay tools.
         </p>
@@ -205,7 +218,7 @@ const privacySections = [
 
 export default function PrivacyPage() {
   return (
-    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="October 5, 2026">
+    <LegalPage eyebrow="Privacy" title="Privacy Policy" lastUpdated="October 30, 2026">
       <p>
         This Privacy Policy explains what <BrandName /> collects, how that
         information is used, and when it is shared. The app is designed for

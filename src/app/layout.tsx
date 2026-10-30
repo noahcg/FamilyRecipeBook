@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
-import { PublicAnalytics } from "@/components/analytics/PublicAnalytics";
+import { ConsentAnalytics } from "@/components/analytics/ConsentAnalytics";
+import { Suspense } from "react";
 import "./globals.css";
 
 const playfair = localFont({
@@ -114,7 +115,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col antialiased">
         <ServiceWorkerRegistration />
-        <PublicAnalytics />
+        <Suspense><ConsentAnalytics /></Suspense>
         {children}
       </body>
     </html>
