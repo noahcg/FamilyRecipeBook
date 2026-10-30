@@ -23,6 +23,7 @@ import type { Profile } from "@/lib/types";
 import type { AIProvider } from "@/lib/types/database";
 import type { BillingStatus } from "@/lib/entitlements";
 import { BillingCard } from "@/components/billing/BillingCard";
+import { CookieSettingsLink } from "@/components/analytics/ConsentAnalytics";
 
 interface GlobalSettingsPageContentProps {
   profile: Profile;
@@ -240,6 +241,9 @@ export function GlobalSettingsPageContent({
             <p className="mb-5 max-w-2xl text-sm leading-relaxed text-ink-muted">
               The terms you agreed to and how your data is handled.
             </p>
+            <div className="mb-5 text-sm text-ink-muted">
+              <CookieSettingsLink />
+            </div>
             <div className="grid gap-3 lg:grid-cols-2">
               <Link
                 href="/terms"

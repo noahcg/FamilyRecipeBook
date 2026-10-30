@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.6] - 2026-10-30
+
+### Updates
+
+- Moved cookie settings into the app's Settings page so the control no longer overlaps navigation.
+
 ## [1.1.5] - 2026-10-30
 
 ### Updates

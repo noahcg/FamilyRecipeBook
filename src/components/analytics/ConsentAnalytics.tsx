@@ -103,10 +103,8 @@ export function ConsentAnalytics() {
     setOpen(false);
     if (next === "rejected" && persisted && (document.getElementById("hc-ga") || document.querySelector('script[src*="/_vercel/insights/"]'))) location.reload();
   }
-  const footerPresent = ["/", "/pricing", "/privacy", "/terms", "/our-story", "/guides"].includes(path) || path.startsWith("/guides/");
   return <>
     <PublicAnalytics allowed={ready && choice === "accepted"} />
-    {!footerPresent && <div className="fixed bottom-1 left-2 z-40 rounded-sm bg-card px-2 text-xs text-ink-muted"><CookieSettingsLink /></div>}
     {ready && (open || (process.env.NODE_ENV === "production" && choice === null)) && <section aria-label="Analytics cookie preferences" className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-xl rounded-md border border-line bg-card p-4 text-ink shadow-lg sm:left-auto sm:right-6">
       <p className="font-bold">Analytics preferences</p>
       <p className="mt-1 text-sm">Optional Google Analytics and Vercel Web Analytics help us understand visits to public pages. Google and Vercel receive analytics data if you accept. Your choice is saved for 180 days. You can change it in Cookie settings. See our <a href="/privacy" className="underline">privacy policy</a>.</p>
