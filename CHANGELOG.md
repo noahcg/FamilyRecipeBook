@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.6] - 2026-10-30
+
+### Updates
+
+- Show the cookbook title in text-message previews for active invitation links.
+
 ## [1.0.5] - 2026-10-29
 
 ### Updates

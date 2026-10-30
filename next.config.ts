@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import packageJson from "./package.json";
 
 const nextConfig: NextConfig = {
+  // Messaging previews can use ordinary browser user agents and only read the
+  // initial head, so wait for dynamic metadata before sending HTML.
+  htmlLimitedBots: /.*/,
   experimental: {
     // A 2800 KiB image budget across up to four pages becomes ~3.83 MB as base64.
     // Leave room for action serialization while staying below hosting limits.

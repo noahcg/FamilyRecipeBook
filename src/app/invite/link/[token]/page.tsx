@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+import { cache } from "react";
 import { ChefHat } from "lucide-react";
 import { EntryShell } from "@/components/layout/EntryShell";
 import { JoinShareableInvitationButton } from "@/components/members/JoinShareableInvitationButton";
@@ -8,10 +10,30 @@ import { lookupShareableInvitation } from "@/lib/actions/shareableInvitations";
 import { getUser } from "@/lib/auth";
 import { InviteUnavailable } from "../../[token]/states";
 
+const getInvitation = cache(lookupShareableInvitation);
+
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  const invitation = await getInvitation(token);
+  const title = invitation ? `You're invited to ${invitation.cookbookTitle}` : "Cookbook invitation";
+  const description = invitation
+    ? `Join ${invitation.cookbookTitle} on Home Cooked.`
+    : "Open your invitation to join a cookbook on Home Cooked.";
+  const image = { url: "/opengraph-image", width: 1200, height: 630, alt: "Home Cooked family recipe book preview" };
+
+  return {
+    title,
+    description,
+    robots: { index: false, follow: false },
+    openGraph: { type: "website", siteName: "Home Cooked", title, description, images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image.url] },
+  };
+}
+
 export default async function ShareableInvitePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const nextPath = `/invite/link/${token}`;
-  const [invitation, user] = await Promise.all([lookupShareableInvitation(token), getUser()]);
+  const [invitation, user] = await Promise.all([getInvitation(token), getUser()]);
   if (!invitation) {
     return <InviteUnavailable nextPath={nextPath} message="This invitation link has expired, has already been used, or is no longer available. Ask the cookbook keeper for a new link." />;
   }
