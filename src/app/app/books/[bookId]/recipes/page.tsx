@@ -10,6 +10,7 @@ import {
   Plus,
   Search,
   Settings,
+  Share2,
   Users,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
@@ -148,6 +149,7 @@ export default function RecipesPage({ params }: Props) {
   const [memberCount, setMemberCount] = useState(0);
   const [userRole, setUserRole] = useState<BookRole | null>(null);
   const [canEffectivelyContribute, setCanEffectivelyContribute] = useState(false);
+  const [canInvite, setCanInvite] = useState(false);
   const [recipeAllowance, setRecipeAllowance] = useState<RecipeAllowanceRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
@@ -204,6 +206,7 @@ export default function RecipesPage({ params }: Props) {
       setRecipeAllowance((allowanceRes.data as RecipeAllowanceRow | null) ?? null);
       setUserRole(accessSummary?.role ?? null);
       setCanEffectivelyContribute(accessSummary?.canAddRecipes ?? false);
+      setCanInvite(accessSummary?.canInvite ?? false);
       setLoading(false);
     }
 
@@ -212,6 +215,7 @@ export default function RecipesPage({ params }: Props) {
         setMemberCount(0);
         setUserRole(null);
         setCanEffectivelyContribute(false);
+        setCanInvite(false);
         setRecipeAllowance(null);
         setLoading(false);
       }
@@ -261,7 +265,7 @@ export default function RecipesPage({ params }: Props) {
   const canAddRecipes = canContribute(userRole) && canEffectivelyContribute;
   const canManageBookMembers = canView(userRole);
   const canOpenBookSettings = canView(userRole);
-  const toolbarActionCount = [canAddRecipes, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
+  const toolbarActionCount = [canAddRecipes, canInvite, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
 
   useEffect(() => {
     if (loading) return;
@@ -420,7 +424,7 @@ export default function RecipesPage({ params }: Props) {
             role="toolbar"
             aria-label="Cookbook actions"
           >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
               <div className="relative min-w-0 flex-1">
                 <Search
                   size={16}
@@ -442,27 +446,35 @@ export default function RecipesPage({ params }: Props) {
                   className={[
                     toolbarActionCount === 1 ? "sm:grid-cols-1" : "",
                     toolbarActionCount === 2 ? "sm:grid-cols-2" : "",
-                    toolbarActionCount >= 3 ? "sm:grid-cols-3" : "",
-                    "grid gap-3 lg:flex lg:w-auto lg:shrink-0",
+                    toolbarActionCount === 3 ? "sm:grid-cols-3" : "",
+                    toolbarActionCount >= 4 ? "grid-cols-2 sm:grid-cols-4" : "",
+                    "grid gap-2 xl:flex xl:w-auto xl:shrink-0",
                   ].join(" ")}
                 >
                   {canAddRecipes && (
                     <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
-                      <Button variant="primary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                      <Button variant="primary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
                         <Plus size={17} /> Add Recipe
+                      </Button>
+                    </Link>
+                  )}
+                  {canInvite && (
+                    <Link href={`/app/books/${bookId}/members/add`} className="min-w-0">
+                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
+                        <Share2 size={17} /> Share
                       </Button>
                     </Link>
                   )}
                   {canManageBookMembers && (
                     <Link href={`/app/books/${bookId}/members`} className="min-w-0">
-                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
                         <Users size={17} /> Members
                       </Button>
                     </Link>
                   )}
                   {canOpenBookSettings && (
                     <Link href={`/app/books/${bookId}/settings`} className="min-w-0">
-                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-5 lg:w-auto">
+                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
                         <Settings size={17} /> Book Settings
                       </Button>
                     </Link>

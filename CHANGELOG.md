@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2026-10-30
+
+### Updates
+
+- Added a Share button to the cookbook toolbar for members who can invite people.
+
 ## [1.1.0] - 2026-10-30
 
 ### Updates
