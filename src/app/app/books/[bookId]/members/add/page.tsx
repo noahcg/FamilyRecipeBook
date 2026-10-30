@@ -88,7 +88,7 @@ export default async function AddMemberPage({ params }: Props) {
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-ink">Inviting someone</p>
                   <p className="mt-0.5 text-xs leading-relaxed text-ink-muted">
-                    Send an email invitation or share a single-use link in a message.
+                    Send an email invitation or share a link with a group in a message.
                     They join after accepting the invitation.
                   </p>
                 </div>

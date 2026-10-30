@@ -35,7 +35,7 @@ export default async function ShareableInvitePage({ params }: { params: Promise<
   const nextPath = `/invite/link/${token}`;
   const [invitation, user] = await Promise.all([getInvitation(token), getUser()]);
   if (!invitation) {
-    return <InviteUnavailable nextPath={nextPath} message="This invitation link has expired, has already been used, or is no longer available. Ask the cookbook keeper for a new link." />;
+    return <InviteUnavailable nextPath={nextPath} message="This invitation link has expired or is no longer available. Ask the cookbook keeper for a new link." />;
   }
 
   const roleLabel = invitation.role === "contributor" ? "contributor" : "family member";

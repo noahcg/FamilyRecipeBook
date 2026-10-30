@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0] - 2026-10-30
+
+### Updates
+
+- Share one cookbook invitation link with a group. Free cookbook spots are checked as people join, while Plus cookbooks can welcome the group without a guest limit. Existing single-use links keep their original behavior.
+
 ## [1.0.6] - 2026-10-30
 
 ### Updates
