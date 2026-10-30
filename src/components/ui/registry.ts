@@ -79,7 +79,7 @@ export const UI_LIBRARY = [
     name: "BookCoverArt",
     importName: "BookCoverArt",
     source: "src/components/ui/BookCoverArt.tsx",
-    useWhen: "Displaying a cookbook cover with the shared art treatment.",
+    useWhen: "Displaying a decorative cookbook cover with its title and shared physical-book treatment.",
   },
   {
     name: "CookbookIcon",

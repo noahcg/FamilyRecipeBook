@@ -1,6 +1,6 @@
 // Shared cookbook cover colors. The cover art renders the book body in one of
-// these colors with white initials, so every value is dark/saturated enough to
-// keep white lettering legible.
+// these colors with light lettering, so every value is dark/saturated enough to
+// keep the title legible.
 export interface BookCoverColor {
   label: string;
   hex: string;

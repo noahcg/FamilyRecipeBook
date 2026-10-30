@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.3] - 2026-10-30
+
+### Updates
+
+- Refreshed cookbook covers with personalized titles, framed covers, and visible page edges across the app. Books rest evenly on each shelf, with recipe counts on their covers.
+
 ## [1.1.2] - 2026-10-30
 
 ### Updates
