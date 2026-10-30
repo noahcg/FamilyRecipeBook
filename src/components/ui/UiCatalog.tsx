@@ -502,6 +502,13 @@ export function UiCatalog() {
                 ))}
               </div>
             </Example>
+            <Example title="BookCoverArt · title lengths and sizes">
+              <div className="flex flex-wrap items-end gap-6">
+                <BookCoverArt title="Family Table" seed="short" className="w-9" />
+                <BookCoverArt title="Nana’s Cooking Book" seed="medium" className="w-24" />
+                <BookCoverArt title="Our family recipes, stories, and favorite traditions from generations past" seed="long" className="w-40" />
+              </div>
+            </Example>
             <Example title="CookbookIcon · every supported name">
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:grid-cols-9">
                 {cookbookIconCatalog.map((icon) => (
