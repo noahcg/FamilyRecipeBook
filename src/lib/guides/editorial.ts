@@ -3,6 +3,7 @@ export type GuideSection = {
   heading: string;
   paragraphs: string[];
   bullets?: string[];
+  table?: { caption: string; headers: [string, string]; rows: [string, string][] };
   imageUrlExample?: { photoId: string };
 };
 
@@ -14,6 +15,7 @@ export type EditorialGuide = {
   metaDescription: string;
   pinterestDescription: string;
   sections: GuideSection[];
+  image?: { src: string; alt: string; credit: string; source: string };
   callout: string;
   quote: string;
   related: string[];
@@ -151,7 +153,7 @@ export const guides: EditorialGuide[] = [
         id: "before-it-is-a-cookbook",
         heading: "A family cookbook begins before it looks like one",
         paragraphs: [
-          "A family cookbook rarely begins with a tidy table of contents. It begins with a recipe card pushed to the back of a drawer, a screenshot someone meant to sort, or a dish one relative makes from memory. Another recipe may be folded inside an old cookbook, while the version everyone actually uses lives in a text thread. None of these pieces looks like a collection on its own.",
+          "Gather cards, messages, PDFs, and links, choose a theme, then make a simple table of contents and a consistent working format. Add the people and stories behind each recipe and invite relatives to check the details. A family cookbook rarely begins with a tidy table of contents. It begins with a recipe card pushed to the back of a drawer, a screenshot someone meant to sort, or a dish one relative makes from memory. Another recipe may be folded inside an old cookbook, while the version everyone actually uses lives in a text thread. None of these pieces looks like a collection on its own.",
           "Bring them together and a pattern starts to appear. There are the meals that show up every week, the cake requested for every birthday, and the dishes that belong to a particular person or season. Creating a digital family cookbook is the work of noticing that pattern, then giving it a home without polishing away the details that made the recipes worth keeping.",
         ],
       },
@@ -200,7 +202,7 @@ export const guides: EditorialGuide[] = [
         id: "shape-the-book",
         heading: "Shape the cookbook around real meals",
         paragraphs: [
-          "Sections should help someone decide what to cook. Begin with broad names people already use, such as Weeknight Dinners, Baking, Holidays, Breakfast, and Family Favorites. Add a narrower section only when several recipes genuinely belong together. Too many categories turn browsing into a filing exercise.",
+          "Draft a table of contents with a few broad sections, then place each recipe where a reader would first look. Review the list for gaps and duplicates before adding more categories. Sections should help someone decide what to cook. Begin with broad names people already use, such as Weeknight Dinners, Baking, Holidays, Breakfast, and Family Favorites. Add a narrower section only when several recipes genuinely belong together. Too many categories turn browsing into a filing exercise.",
           "Recipe titles need the same balance of clarity and character. Grandma's Chicken may be meaningful to the family, but Grandma's Lemon Chicken with Potatoes will be easier to find later. Keep affectionate names, then add enough description to make search and browsing work. Consistent naming also makes duplicate versions easier to notice.",
           "Look at the cookbook as a whole before calling it finished. Is there a long stretch of desserts but no main dish anyone cooks? Are three versions of the same casserole competing for attention? Keep the version people use, attach the earlier one when its history matters, and leave room for the collection to reflect ordinary meals as well as celebrations.",
         ],
@@ -211,7 +213,7 @@ export const guides: EditorialGuide[] = [
         paragraphs: [
           "The most useful family cookbook isn't frozen on the day it's assembled. Recipes change when someone discovers the right pan size, takes a helpful photo, or writes down the timing that used to live only in memory. Invite those corrections and additions. They are signs that the collection is being cooked from rather than merely admired.",
           "Sharing can happen gradually. Start with the people who contributed recipes or are most likely to use them. Ask them to check names, ingredients, and family details. Their corrections may reveal another version or another story, which is easier to handle when the cookbook is understood as a living collection.",
-          "Home Cooked is organized around cookbooks rather than a single endless recipe feed. It gives recipes, notes, photos, and source details one place to live, then lets you share an individual recipe or invite family into a cookbook when that suits the collection. The technology should stay in the background. The real measure of success is whether someone can find the dish they remember and cook it again.",
+          "On Home Cooked Free, invite up to three Family members to browse, react, and add notes and memories. Plus also lets you invite Contributors who can add recipes and edit their own. Home Cooked is organized around cookbooks rather than a single endless recipe feed. It gives recipes, notes, photos, and source details one place to live, then lets you share an individual recipe or invite family into a cookbook when that suits the collection. The technology should stay in the background. The real measure of success is whether someone can find the dish they remember and cook it again.",
         ],
       },
     ],
@@ -744,7 +746,7 @@ export const guides: EditorialGuide[] = [
         id: "handwriting-in-the-kitchen",
         heading: "Sometimes the handwriting is what you recognize first",
         paragraphs: [
-          "Maybe the recipe is only six lines long. There's a butter stain in one corner, a measurement crossed out twice, and a note in the margin that becomes smaller as it runs out of room. Before reading the title, you know whose handwriting it is. The card feels familiar because it spent years in a kitchen you remember.",
+          "Collect the cards, photograph or scan both sides, transcribe the original wording, and verify uncertain measurements. Record who shared each recipe, back up the files, and ask before sharing personal stories. Maybe the recipe is only six lines long. There's a butter stain in one corner, a measurement crossed out twice, and a note in the margin that becomes smaller as it runs out of room. Before reading the title, you know whose handwriting it is. The card feels familiar because it spent years in a kitchen you remember.",
           "The phrase Grandma's handwritten recipes is familiar, but these objects may come from a grandfather, parent, aunt, neighbor, friend, or anyone whose food became part of your life. Preserving them means caring for two things at once: the physical evidence of that person and the practical knowledge needed to make the dish again.",
         ],
       },
@@ -761,7 +763,7 @@ export const guides: EditorialGuide[] = [
         id: "make-a-faithful-image",
         heading: "Photograph the card before trying to interpret it",
         paragraphs: [
-          "Place the recipe on a plain surface in soft, even light. Keep the camera directly above it, include every edge, and check the focus on the smallest writing. Photograph the back and any insert, even if it seems blank at first. Faint pencil and old impressions can hide until the image is enlarged.",
+          "Ask relatives where cards and notebooks are kept and which fragile items need attention first. Borrow originals only with permission and keep a record of their owner. Place the recipe on a plain surface in soft, even light. Keep the camera directly above it, include every edge, and check the focus on the smallest writing. Photograph the back and any insert, even if it seems blank at first. Faint pencil and old impressions can hide until the image is enlarged.",
           "Take an overall image before close details. If the ink is faded, make a second copy with careful contrast adjustments while preserving the untouched original file. Don't crop away stains, torn edges, crossed-out lines, or notes simply because they aren't part of the formal instructions.",
           "Use filenames that connect the image to a person and recipe when known. Back up the files in more than one place and share a copy with another trusted family member. A digital image is only safer than the card when people can still locate and open it.",
         ],
@@ -797,7 +799,7 @@ export const guides: EditorialGuide[] = [
         id: "return-it-to-use",
         heading: "Let the recipe leave the box without replacing the card",
         paragraphs: [
-          "Organize the typed recipe, original images, attribution, and notes in a collection people can browse. Use a searchable title while retaining the familiar family name. Place the recipe in the section where someone is most likely to look for it, and keep backups of the original files outside the working cookbook.",
+          "Ask contributors before sharing personal photographs or stories, and agree on attribution and who may see the collection. Keep the physical card in its protective storage; store digital copies in separate locations and periodically check that they open. Organize the typed recipe, original images, attribution, and notes in a collection people can browse. Use a searchable title while retaining the familiar family name. Place the recipe in the section where someone is most likely to look for it, and keep backups of the original files outside the working cookbook.",
           "Home Cooked can bring the practical recipe and its private source attachments together, then make the recipe or cookbook available to family when you choose. A relative can cook from the clear version while still seeing the handwriting that gave it context.",
           "Digitizing a handwritten recipe isn't a way to retire the original or declare the work complete. It's a way to let the knowledge travel while the card remains safely cared for. The recipe has been preserved when someone can read it, understand where it came from, and put it back on the table.",
         ],
@@ -956,10 +958,127 @@ export const guides: EditorialGuide[] = [
     callout: "Importing from the meal plan adds missing ingredients; it does not replace a quick review of what you already have or what has changed since you planned.",
     quote: "A good meal plan makes room for real life and still answers the question: what are we eating tonight?",
   }),
+  guide({
+    slug: "thanksgiving-side-dishes",
+    image: { src: "/images/guide-thanksgiving-sides.jpg", alt: "A roast dinner with vegetables and side dishes on a Thanksgiving table", credit: "www.kaboompics.com", source: "https://www.pexels.com/photo/foods-on-the-table-5718019/" },
+    title: "Thanksgiving Side Dishes & Family Favorites",
+    description: "Plan Thanksgiving sides that fit your guests and your oven, with a sample menu, portion guide, and practical countdown.",
+    metaDescription: "Plan Thanksgiving side dishes with a balanced sample menu, portions by guest count, an oven-space example, and a preparation timeline.",
+    sections: [
+      {
+        id: "balance-the-table",
+        heading: "Choose sides that work together",
+        paragraphs: [
+          "Start with the family favorites people would miss, then fill gaps in flavor and texture. Choose a mix of oven, stovetop, and cold dishes so the main course does not compete with every side for the same space.",
+          "For a small table, two or three sides may be plenty. A larger gathering may enjoy more variety, but each extra dish adds preparation and serving work. Choose what fits your guests, equipment, and time.",
+        ],
+      },
+      {
+        id: "sample-menu",
+        heading: "A balanced menu to make your own",
+        paragraphs: ["Here is one way to combine familiar comforts with fresh contrast. These are menu ideas, not recipes; swap in the dishes your household loves and check that they suit your guests."],
+        bullets: [
+          "Comforting: mashed potatoes made on the stovetop, plus your family's favorite stuffing or casserole if oven space permits.",
+          "Fresh: green beans prepared on the stovetop or a crisp salad dressed just before serving.",
+          "Tart: cranberry sauce to balance richer dishes; choose a version your recipe allows you to make ahead.",
+          "Make-ahead: a chilled vegetable salad or a casserole assembled in advance when its recipe and storage instructions allow it.",
+        ],
+      },
+      {
+        id: "guests-and-portions",
+        heading: "Estimate portions for your table",
+        paragraphs: [
+          "With a main course and several sides, start with approximately ½ cup of each side per adult. The table estimates the total for one side dish, not the whole menu. Multiply by the number of sides only if you need the combined volume; compare each total with that recipe's yield.",
+          "Adjust for your guests: children may eat smaller portions, hearty appetites or a particularly popular favorite may need more, and a table with many sides may need less of each. Add extra if you want leftovers. Bread is separate; one or two rolls per person is a starting point.",
+          "Ask about allergies, dietary needs, and cross-contact before choosing dishes. Check stocks, butter, and packaged ingredients, and use separate utensils where needed. Offer a substantial option for guests who cannot eat the main dish.",
+        ],
+        table: {
+          caption: "Approximate amount of one side at ½ cup per adult",
+          headers: ["Adults", "Amount per side"],
+          rows: [["4", "2 cups"], ["6", "3 cups"], ["8", "4 cups"], ["10", "5 cups"], ["12", "6 cups"]],
+        },
+      },
+      {
+        id: "oven-space",
+        heading: "Make an oven plan before you shop",
+        paragraphs: [
+          "List each dish's oven temperature, cooking time, pan size, and serving time. Put the main dish on the schedule first; then work backward from the meal to see when racks are available. Do not assume crowded pans cook on the same schedule as a single pan.",
+          "If the oven is full, choose one side for the stovetop and another to serve cold or at room temperature when its recipe allows. A family favorite can still have the oven; another dish may be easier to replace or ask a guest to bring.",
+        ],
+      },
+      {
+        id: "oven-example",
+        heading: "A worked example for a 5 p.m. meal",
+        paragraphs: [
+          "Imagine a host serving eight adults, a main dish, and four sides. The main dish occupies the oven for most of the afternoon. This is a planning illustration, not a cooking or food-safety prescription: use your own recipes' times, temperatures, and safe-storage instructions, along with current food-safety guidance.",
+          "The host budgets about 4 cups of each side as a starting point, adjusts for known favorites, and checks each recipe's yield. The casserole gets the available oven window after the main dish comes out, only if its actual recipe and the schedule fit.",
+        ],
+        bullets: [
+          "Before the day: prepare cranberry sauce ahead if its recipe permits; plan it as a cold side.",
+          "Afternoon: reserve the oven for the main dish and use the stovetop for mashed potatoes and green beans.",
+          "After the main dish comes out: use the available oven space for the casserole if it can finish by serving time. If not, choose another stovetop or cold side, or arrange for a guest to bring it ready to serve.",
+          "Before 5 p.m.: follow each recipe's safe handling and serving instructions, move the sides to their serving dishes, and allow a little buffer for delays.",
+        ],
+      },
+      {
+        id: "simple-timeline",
+        heading: "A sides preparation timeline",
+        paragraphs: ["Work backward from your serving time. Make-ahead steps depend on the particular recipe and safe storage; use this as a checklist to adapt, not a fixed cooking schedule."],
+        bullets: [
+          "One week before: confirm the guest count and dietary needs; choose the sides, collect recipes, and ask what guests plan to bring.",
+          "Five or six days before: compare recipe yields with your portions, check the pantry, and make a shopping list. Map the oven, stovetop, refrigerator, and equipment space.",
+          "Two or three days before: shop and make any sauces or cold dishes that your recipes allow you to prepare and store ahead.",
+          "The day before: wash or prep vegetables and assemble dishes only where the recipe allows; label serving dishes and utensils.",
+          "Thanksgiving morning: review the schedule and ingredients, then prepare any make-ahead components according to their recipes.",
+          "Before serving: follow your oven plan, finish stovetop and fresh sides, transfer everything to serving dishes, and leave a small buffer for the unexpected.",
+        ],
+      },
+      {
+        id: "host-checklist",
+        heading: "A quick host checklist",
+        paragraphs: ["A short check before shopping can save a scramble when the main dish is already in the oven."],
+        bullets: [
+          "Confirm the guest count, allergies, dietary needs, and any cross-contact precautions.",
+          "Collect recipes and compare their yields with the amount you want of each side.",
+          "Check oven racks, temperatures, stovetop burners, pans, and refrigerator space.",
+          "Set aside serving dishes and a suitable utensil for each side, including separate utensils where needed.",
+          "Confirm what guests are bringing, when it will arrive, and whether it needs oven or refrigerator space.",
+        ],
+      },
+    ],
+    callout: "Choose the favorites first, then use one fresh or tart side and one make-ahead dish to make the whole menu easier.",
+    quote: "A thoughtful table leaves room for the favorites and the people around it.",
+  }),
+  guide({
+    slug: "holiday-recipe-planning",
+    image: { src: "/images/guide-holiday-planning.jpg", alt: "A person writes in a notebook beside a basket of vegetables", credit: "Katya Wolf", source: "https://www.pexels.com/photo/close-up-of-writing-on-a-notebook-8715599/" },
+    title: "The Holiday Recipe Planning Guide",
+    description: "Work backward from the meal with a practical countdown for guests, recipes, shopping, make-ahead prep, and the day itself.",
+    metaDescription: "Plan a holiday meal with a guest and dietary checklist, shopping and prep countdown, and an example kitchen schedule.",
+    sections: [
+      { id: "start-with-guests", heading: "Start with the people and the meal", paragraphs: ["Choose the date, serving time, and approximate guest count. Ask about allergies and dietary needs early, including whether separate preparation or utensils are needed. Decide what you will cook, what guests will bring, and who will handle drinks and cleanup.", "Collect the actual recipes in one place and note their yields. Pick a manageable mix of favorites and dishes that can be prepared ahead. If a guest brings a dish, confirm whether it needs oven space or refrigeration." ] },
+      { id: "make-a-working-plan", heading: "Turn recipes into a shopping and kitchen plan", paragraphs: ["For each dish, record its ingredients, yield, active preparation time, oven temperature, cooking time, and equipment. Combine quantities for the shopping list, check the pantry, and add non-recipe essentials such as foil, ice, and storage containers.", "Mark perishable items for a later shop and check pickup or delivery arrangements early. Leave room in the refrigerator for prepared food. In Home Cooked, meal planning and grocery lists are Plus features; a paper list works just as well for this planning exercise." ] },
+      { id: "countdown", heading: "A practical holiday countdown", paragraphs: ["Adapt this checklist to the recipes, guest count, and food-storage guidance for your meal."], bullets: ["One to two weeks ahead: confirm guests, dietary requirements, menu, contributions, and equipment.", "Several days ahead: collect recipes, make a combined shopping list, and buy shelf-stable ingredients.", "One or two days ahead: shop for perishables, prepare dishes that keep safely, and set the table if useful.", "The day before: review the oven schedule, label serving dishes, and make space in the refrigerator.", "The day of: cook and reheat according to the recipes, check temperatures where appropriate, and ask for help with serving and cleanup."] },
+      { id: "example-schedule", heading: "Example schedule for a 5 p.m. meal", paragraphs: ["This is an example of how to organize the day, not a cooking-time or food-safety prescription. Substitute the actual times and temperatures from your recipes; work backward from 5 p.m. and build in a buffer."], bullets: ["Morning: check the menu, prepare a cold side, and set out labeled serving dishes.", "1 p.m.: begin the longest recipe at the time its instructions require.", "3 p.m.: prepare stovetop sides and check the remaining oven schedule.", "4 p.m.: finish fresh dishes and reheat make-ahead food following safe instructions.", "4:45 p.m.: transfer dishes to serving plates, enlist helpers, and put out utensils.", "5 p.m.: serve; refrigerate leftovers promptly according to food-safety guidance."] },
+      { id: "after-the-meal", heading: "Make next time easier", paragraphs: ["Note what ran short, what was left over, and which timing changes helped. Keep those observations with the recipes or menu so the next host can start with a useful record. Ask before adding personal stories or sharing someone else's recipe beyond the group." ] },
+    ],
+    callout: "The most useful schedule starts with the serving time and includes a little room for the unexpected.",
+    quote: "A little planning gives everyone more time at the table.",
+  }),
 ];
 
 guides.forEach((item, index) => {
-  item.related = [guides[(index + 1) % guides.length].slug, guides[(index + 3) % guides.length].slug, guides[(index + 6) % guides.length].slug];
+  const pool = index < 15 ? guides.slice(0, 15) : guides;
+  item.related = [pool[(index + 1) % pool.length].slug, pool[(index + 3) % pool.length].slug, pool[(index + 6) % pool.length].slug];
 });
+
+// Keep the established related links and add editorially relevant connections.
+const topicLinks: Record<string, string[]> = {
+  "thanksgiving-side-dishes": ["holiday-recipe-planning"],
+  "holiday-recipe-planning": ["thanksgiving-side-dishes", "how-to-plan-meals-and-build-a-grocery-list-in-home-cooked"],
+  "how-to-preserve-handwritten-family-recipes": ["how-to-turn-old-recipe-cards-into-a-digital-cookbook", "how-to-create-a-digital-family-cookbook"],
+  "how-to-create-a-digital-family-cookbook": ["how-to-preserve-handwritten-family-recipes", "how-to-share-your-home-cooked-book"],
+};
+for (const item of guides) item.related = [...new Set([...item.related, ...(topicLinks[item.slug] ?? [])])].filter((slug) => slug !== item.slug);
 
 export const guideBySlug = new Map(guides.map((item) => [item.slug, item]));

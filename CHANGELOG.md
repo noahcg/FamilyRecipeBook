@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4] - 2026-10-30
+
+### Updates
+
+- Added practical Thanksgiving sides and holiday planning guides, with dedicated photos, and expanded existing family cookbook and handwritten recipe guidance. The Thanksgiving guide includes a sample menu, portion table, oven plan, and host checklist.
+- Added a public sitemap and privacy-conscious guide CTA measurement while carrying campaign parameters to guide destinations.
+
 ## [1.1.3] - 2026-10-30
 
 ### Updates

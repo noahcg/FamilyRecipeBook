@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { ArrowRight, Heart } from "lucide-react";
 import { PublicMasthead } from "@/components/layout/PublicMasthead";
+import { GuideCtaLink } from "@/components/guides/GuideCtaLink";
 import { GuideTableOfContents } from "@/components/guides/GuideTableOfContents";
 import type { EditorialGuide } from "@/lib/guides/editorial";
 import { guideBySlug } from "@/lib/guides/editorial";
@@ -88,31 +89,32 @@ function OpeningSection({ guide }: { guide: EditorialGuide }) {
       <EditorialHeading>{section.heading}</EditorialHeading>
       <div className="mt-5 max-w-[48rem] space-y-4 text-[1.08rem] leading-[1.72] text-ink-muted sm:text-[1.18rem]">{section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}</div>
       {section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.05rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.12rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}
-      <div className="relative mt-8">
+      <div className="relative mt-8 print:hidden">
         <div className="relative aspect-[16/8.7] min-h-[20rem]">
-          <Image src="/guide-recipes.png" alt="Family recipes gathered around an open cookbook" fill sizes="(min-width: 1024px) 800px, 100vw" className="object-cover object-[66%_center]" />
+          <Image src={guide.image?.src ?? "/guide-recipes.png"} alt={guide.image?.alt ?? "Family recipes gathered around an open cookbook"} fill sizes="(min-width: 1024px) 800px, 100vw" className={guide.image ? "object-cover object-center" : "object-cover object-[66%_center]"} />
         </div>
-        <div className="absolute -bottom-10 left-3 z-10 grid aspect-[1105/1423] w-[13rem] place-items-center rotate-[-2deg] bg-[url('/paper-texture.png')] bg-[length:100%_100%] bg-no-repeat px-5 py-7 text-center drop-shadow-[0_10px_12px_rgba(54,42,28,0.22)] sm:-bottom-12 sm:left-6 sm:w-[15.5rem] sm:px-7 sm:py-8">
+        {!guide.image && <div className="absolute -bottom-10 left-3 z-10 grid aspect-[1105/1423] w-[13rem] place-items-center rotate-[-2deg] bg-[url('/paper-texture.png')] bg-[length:100%_100%] bg-no-repeat px-5 py-7 text-center drop-shadow-[0_10px_12px_rgba(54,42,28,0.22)] sm:-bottom-12 sm:left-6 sm:w-[15.5rem] sm:px-7 sm:py-8">
           <div className="rotate-[-4deg]">
             <p className="text-[1.05rem] font-medium leading-[1.22] text-green-deep sm:text-[1.3rem]" style={{ fontFamily: "var(--font-note-handwriting)" }}>{guide.quote}</p>
             <Heart aria-hidden="true" className="mx-auto mt-2 text-accent-terracotta" size={20} />
           </div>
-        </div>
+        </div>}
       </div>
+      {guide.image && <p className="mt-2 text-right text-xs text-ink-muted print:hidden">Photo by <a href={guide.image.source} className="underline underline-offset-2">{guide.image.credit} on Pexels</a></p>}
     </section>
   );
 }
 
-function GuideFeature() {
+function GuideFeature({ slug }: { slug: string }) {
   return (
-    <section id="home-cooked" className="scroll-mt-8 border-y border-line py-10 sm:py-14">
+    <section id="home-cooked" className="print:hidden scroll-mt-8 border-y border-line py-10 sm:py-14">
       <div className="grid items-center gap-8 lg:grid-cols-[.95fr_1.05fr] lg:gap-12">
         <div className="relative aspect-[4/3]"><Image src="/images/home-page/app-landing.png" alt="Home Cooked cookbook collection interface" fill sizes="(min-width: 1024px) 35vw, 100vw" className="object-cover object-left" /></div>
         <div>
           <p className="text-xs font-extrabold uppercase tracking-[.2em] text-accent-terracotta">A simpler way to keep everything together</p>
           <h2 className="mt-3 text-[clamp(2.2rem,4vw,3.4rem)] font-bold leading-[1.04] text-green-deep" style={display}>Give the recipes you love a real home</h2>
           <p className="mt-4 text-[1.05rem] leading-relaxed text-ink-muted">Home Cooked lets you collect recipes into cookbooks, add the notes that make them yours, and share individual recipes or a whole cookbook when the plan and your family’s needs make that a good fit.</p>
-          <Link href="/sign-in" className="mt-6 inline-flex min-h-12 items-center gap-2 border-b-2 border-accent-terracotta text-sm font-extrabold text-green-deep">Create your cookbook <ArrowRight aria-hidden="true" size={17} /></Link>
+          <GuideCtaLink slug={slug} placement="midpoint" href="/sign-in" className="mt-6 inline-flex min-h-12 items-center gap-2 border-b-2 border-accent-terracotta text-sm font-extrabold text-green-deep">Keep your family recipes together <ArrowRight aria-hidden="true" size={17} /></GuideCtaLink>
         </div>
       </div>
     </section>
@@ -121,18 +123,18 @@ function GuideFeature() {
 
 function RelatedGuides({ guide }: { guide: EditorialGuide }) {
   const related = guide.related.map((slug) => guideBySlug.get(slug)).filter((item): item is EditorialGuide => Boolean(item));
-  return <section aria-labelledby="related-guides"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-accent-terracotta">Keep exploring</p><h2 id="related-guides" className="mt-2 text-[clamp(2.25rem,4vw,3.5rem)] font-bold text-green-deep" style={display}>Related guides</h2><div className="mt-6 border-b border-line">{related.map((item) => <GuideCard key={item.slug} guide={item} />)}</div></section>;
+  return <section className="print:hidden" aria-labelledby="related-guides"><p className="text-xs font-extrabold uppercase tracking-[.2em] text-accent-terracotta">Keep exploring</p><h2 id="related-guides" className="mt-2 text-[clamp(2.25rem,4vw,3.5rem)] font-bold text-green-deep" style={display}>Related guides</h2><div className="mt-6 border-b border-line">{related.map((item) => <GuideCard key={item.slug} guide={item} />)}</div></section>;
 }
 
-function GuideCta() {
+function GuideCta({ slug }: { slug: string }) {
   return (
-    <section className="relative isolate overflow-hidden border-y border-line px-6 py-16 text-center sm:px-10 lg:py-20">
+    <section className="print:hidden relative isolate overflow-hidden border-y border-line px-6 py-16 text-center sm:px-10 lg:py-20">
       <Image src="/guides-bkg.png" alt="" fill sizes="1200px" className="-z-20 object-cover object-[58%_center]" />
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-paper-soft/38" />
       <p className="text-xs font-extrabold uppercase tracking-[.2em] text-accent-terracotta">For the recipes worth keeping</p>
       <h2 className="mx-auto mt-3 max-w-3xl text-[clamp(2.5rem,5vw,4.5rem)] font-bold leading-[.98] text-green-deep" style={display}>Ready to give your recipes a home?</h2>
       <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink-muted sm:text-lg">Organize the recipes you love into beautiful cookbooks you can keep and share.</p>
-      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/pricing" className="inline-flex min-h-12 items-center justify-center border-b-2 border-green-deep px-5 text-sm font-extrabold text-green-deep">View Pricing</Link><Link href="/sign-in" className="inline-flex min-h-12 items-center justify-center gap-2 border-b-2 border-accent-terracotta px-5 text-sm font-extrabold text-green-deep">Get Started Free <ArrowRight aria-hidden="true" size={17} /></Link></div>
+      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><GuideCtaLink slug={slug} placement="final" href="/pricing" className="inline-flex min-h-12 items-center justify-center border-b-2 border-green-deep px-5 text-sm font-extrabold text-green-deep">View Pricing</GuideCtaLink><GuideCtaLink slug={slug} placement="final" href="/sign-in" className="inline-flex min-h-12 items-center justify-center gap-2 border-b-2 border-accent-terracotta px-5 text-sm font-extrabold text-green-deep">Start your family cookbook <ArrowRight aria-hidden="true" size={17} /></GuideCtaLink></div>
     </section>
   );
 }
@@ -143,15 +145,15 @@ export function GuideArticle({ guide }: { guide: EditorialGuide }) {
       <div className="grid gap-10 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-14">
         <GuideTableOfContents guide={guide} />
         <article className="min-w-0">
+          <Link href="/guides" className="mb-6 inline-flex min-h-11 items-center font-bold text-green-deep underline underline-offset-4">All guides</Link>
           <OpeningSection guide={guide} />
           <div className="mt-16 space-y-14">
-            {guide.sections.slice(1).map((section, index) => <section id={section.id} key={section.id} className="scroll-mt-8"><EditorialHeading>{section.heading}</EditorialHeading><div className="mt-5 max-w-[48rem] space-y-4 text-[1.06rem] leading-[1.78] text-ink-muted sm:text-[1.12rem]">{section.paragraphs.map((paragraph, paragraphIndex) => <Fragment key={paragraph}><p>{paragraph}</p>{paragraphIndex === 0 && section.imageUrlExample && <div className="border-y border-line bg-paper-soft px-4 py-4 sm:px-5"><code className="block break-all text-sm leading-relaxed text-ink sm:text-base">https://images.pexels.com/photos/<mark className="rounded bg-accent-terracotta/25 px-0.5 font-bold text-green-deep">{section.imageUrlExample.photoId}</mark>/pexels-photo-<mark className="rounded bg-accent-terracotta/25 px-0.5 font-bold text-green-deep">{section.imageUrlExample.photoId}</mark>.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900&amp;q=80</code></div>}</Fragment>)}</div>{section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.04rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.1rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}{index === 0 && <aside className="mt-7 border-y border-green-sage/45 py-6 text-[1.05rem] italic leading-relaxed text-green-deep"><span className="font-bold not-italic">A note to keep close:</span> {guide.callout}</aside>}</section>)}
+            {guide.sections.slice(1).map((section, index) => <section id={section.id} key={section.id} className="scroll-mt-8"><EditorialHeading>{section.heading}</EditorialHeading><div className="mt-5 max-w-[48rem] space-y-4 text-[1.06rem] leading-[1.78] text-ink-muted sm:text-[1.12rem]">{section.paragraphs.map((paragraph, paragraphIndex) => <Fragment key={paragraph}><p>{paragraph}</p>{paragraphIndex === 0 && section.imageUrlExample && <div className="border-y border-line bg-paper-soft px-4 py-4 sm:px-5"><code className="block break-all text-sm leading-relaxed text-ink sm:text-base">https://images.pexels.com/photos/<mark className="rounded bg-accent-terracotta/25 px-0.5 font-bold text-green-deep">{section.imageUrlExample.photoId}</mark>/pexels-photo-<mark className="rounded bg-accent-terracotta/25 px-0.5 font-bold text-green-deep">{section.imageUrlExample.photoId}</mark>.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900&amp;q=80</code></div>}</Fragment>)}</div>{section.bullets && <ul className="mt-6 max-w-[46rem] list-disc space-y-2 pl-6 text-[1.04rem] leading-relaxed text-ink-muted marker:text-green-sage sm:text-[1.1rem]">{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}{section.table && <table className="mt-6 w-full max-w-[38rem] border-collapse text-left text-base leading-relaxed text-ink-muted"><caption className="mb-3 text-left font-bold text-green-deep">{section.table.caption}</caption><thead><tr>{section.table.headers.map((header) => <th key={header} scope="col" className="border-b border-line px-3 py-3 font-bold text-green-deep first:pl-0">{header}</th>)}</tr></thead><tbody>{section.table.rows.map(([label, value]) => <tr key={label}><th scope="row" className="border-b border-line py-3 pr-3 font-bold text-green-deep">{label}</th><td className="border-b border-line px-3 py-3">{value}</td></tr>)}</tbody></table>}{index === 0 && <aside className="mt-7 border-y border-green-sage/45 py-6 text-[1.05rem] italic leading-relaxed text-green-deep"><span className="font-bold not-italic">A note to keep close:</span> {guide.callout}</aside>}{index === Math.floor((guide.sections.length - 1) / 2) - 1 && <div className="mt-14"><GuideFeature slug={guide.slug} /></div>}</section>)}
           </div>
-          <div className="mt-16"><GuideFeature /></div>
         </article>
       </div>
       <div className="mt-20"><RelatedGuides guide={guide} /></div>
-      <div className="mt-20"><GuideCta /></div>
+      <div className="mt-20"><GuideCta slug={guide.slug} /></div>
     </main>
   );
 }
