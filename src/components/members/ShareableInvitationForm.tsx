@@ -61,7 +61,8 @@ export function ShareableInvitationForm({ bookId, sharingAllowance }: { bookId: 
     <section className="space-y-4">
       <div>
         <h2 className="text-lg font-bold text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Share a link</h2>
-        <p className="mt-1 text-sm leading-relaxed text-ink-muted">Create a link to send in a text or message. Anyone with the link can use it once, so share it with someone you trust. It expires after 7 days.</p>
+        <p className="mt-1 text-sm leading-relaxed text-ink-muted">Share one link with your group. Anyone with the link can join, so share it only with people you trust. It expires after 7 days.</p>
+        {sharingAllowance?.isFree && <p className="mt-2 text-sm leading-relaxed text-ink-muted">People fill the cookbook’s available Family spots as they join. The link itself does not reserve a spot.</p>}
       </div>
       {url ? (
         <div className="space-y-3">
@@ -75,12 +76,12 @@ export function ShareableInvitationForm({ bookId, sharingAllowance }: { bookId: 
         </div>
       ) : (
         <>
-          <Select label="Their role" value={role} onChange={(event) => setRole(event.target.value as "family" | "contributor")}>
+          <Select label="Role for people joining" value={role} onChange={(event) => setRole(event.target.value as "family" | "contributor")}>
             <option value="family">Family</option>
             {!sharingAllowance?.isFree && <option value="contributor">Contributor</option>}
           </Select>
-          <Button type="button" variant="secondary" loading={loading} disabled={!sharingAllowance || !sharingAllowance.canShare || sharingAllowance.remaining === 0} onClick={createLink}><Link2 size={16} /> Create invitation link</Button>
-          {sharingAllowance?.remaining === 0 && <p className="text-sm text-ink-muted">All sharing spots are in use. Cancel a pending invitation or remove a member to free a spot.</p>}
+          <Button type="button" variant="secondary" loading={loading} disabled={!sharingAllowance || !sharingAllowance.canShare} onClick={createLink}><Link2 size={16} /> Create invitation link</Button>
+          {sharingAllowance?.remaining === 0 && <p className="text-sm text-ink-muted">All sharing spots are in use. People can join when a spot opens or the owner upgrades to Plus.</p>}
         </>
       )}
       {message && <p role="status" className="text-sm text-green-deep">{message}</p>}

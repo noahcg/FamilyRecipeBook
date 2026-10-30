@@ -296,6 +296,7 @@ export async function getBookAccessSummary(bookId: string): Promise<{
   role: BookRole;
   memberCount: number;
   canAddRecipes: boolean;
+  canInvite: boolean;
 } | null> {
   const user = await requireUser();
   const supabase = await createClient();
@@ -307,15 +308,17 @@ export async function getBookAccessSummary(bookId: string): Promise<{
     .maybeSingle();
   if (!membership) return null;
 
-  const [{ count }, recipeAccess] = await Promise.all([
+  const [{ count }, recipeAccess, invitationAccess] = await Promise.all([
     createServiceClient().from("book_members").select("id", { count: "exact", head: true }).eq("book_id", bookId),
     getBookRecipeAccess(bookId, user.id),
+    supabase.rpc("can_invite_to_book", { target_book_id: bookId, target_user_id: user.id }),
   ]);
 
   return {
     role: membership.role as BookRole,
     memberCount: count ?? 0,
     canAddRecipes: recipeAccess.allowed,
+    canInvite: invitationAccess.data === true,
   };
 }
 

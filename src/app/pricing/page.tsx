@@ -98,7 +98,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
         <section aria-label="How cookbook sharing works" className="mx-auto max-w-[960px] px-4 pb-10 text-sm leading-relaxed text-ink-muted sm:px-8 sm:pb-12 lg:px-0">
           <h2 className="font-bold text-green-deep">A place at the table, even on Free</h2>
           <p className="mt-2">Share your free cookbook with 3 other people. You are not counted in that limit. Family members can browse recipes, react, and add notes and memories. They cannot add or edit recipes or manage members.</p>
-          <p className="mt-2">The cookbook owner’s plan sets the sharing limits. Guests only need a free account, and joining someone else’s cookbook does not use their allowance to create one of their own. Members and pending invitations count toward the limit. Canceling an invitation, letting it expire, or removing a member frees a spot.</p>
+          <p className="mt-2">The cookbook owner’s plan sets the sharing limits. Guests only need a free account, and joining someone else’s cookbook does not use their allowance to create one of their own. Members and pending email invitations count toward the limit; group links do not reserve spots. Canceling an email invitation, letting it expire, or removing a member frees a spot.</p>
           <p className="mt-2">With Plus, invite as many people as you like and choose Contributor access for anyone who will add recipes and edit their own.</p>
         </section>
       </main>

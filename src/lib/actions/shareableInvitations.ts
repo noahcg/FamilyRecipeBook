@@ -19,6 +19,7 @@ export interface PendingShareableInvitation {
   expires_at: string;
   created_at: string;
   invited_by: string;
+  link_type: "single" | "group";
 }
 
 export interface ShareableInvitationPreview {
@@ -78,7 +79,7 @@ export async function getPendingShareableInvitations(bookId: string): Promise<Ac
   const supabase = await keeperClient(bookId);
   if (!supabase) return { success: false, error: "Only the cookbook keeper can view invitation links." };
   const { data, error } = await supabase.from("book_invitation_links")
-    .select("id,role,expires_at,created_at,invited_by")
+    .select("id,role,expires_at,created_at,invited_by,link_type")
     .eq("book_id", bookId).is("accepted_at", null).is("cancelled_at", null)
     .gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false });
   if (error) return { success: false, error: "Could not load invitation links. Please try again." };

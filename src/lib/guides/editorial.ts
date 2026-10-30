@@ -75,7 +75,7 @@ export const guides: EditorialGuide[] = [
         paragraphs: [
           "Open the cookbook's Members page and select Add Someone. Enter the person's email address. Free invitations use the Family role; with Plus, choose Contributor or Family. Select Send invitation and Home Cooked emails them an invitation.",
           "Ask them to open the invitation and sign in or create an account using the same email address you invited. After they accept, they'll have access to that book's recipes with the role you chose.",
-          "Invitations expire after seven days. Pending, unexpired invitations reserve a spot in your Free sharing limit. Canceling an invitation, letting it expire, or removing a member frees a spot. If someone hasn't joined, check the pending invitations on Members and confirm the email address with them. If an invitation has expired, send a new one. If it went to the wrong address, cancel the pending invitation and send a new one.",
+          "You can also create one link to share with a group. Anyone with the link can join, so share it with people you trust. Links expire after seven days and can be canceled from Members. Free cookbooks have three Family spots, filled as people join; group links do not reserve spots. Pending email invitations reserve spots. Canceling an email invitation, letting it expire, or removing a member frees a spot.",
         ],
       },
       {

@@ -137,7 +137,7 @@ export default async function MembersPage({ params }: Props) {
         {sharingAllowance?.isFree && (
           <p className="mb-6 text-sm text-ink-muted">
             {sharingAllowance.canShare
-              ? `${sharingAllowance.used} of 3 sharing spots used, including pending invitations. Free invitations include Family access.`
+              ? `${sharingAllowance.used} of 3 sharing spots used, including pending email and single-use invitations. Group links do not reserve spots. Free invitations include Family access.`
               : "Free sharing is available on your oldest cookbook. Existing members keep access to this cookbook."} {" "}
             <Link href="/pricing" className="font-semibold text-green-deep underline underline-offset-4">Get Plus to invite more people or Contributors</Link>
           </p>

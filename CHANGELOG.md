@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.1.2] - 2026-10-30
+
+### Updates
+
+- Refined the cookbook toolbar on mobile with compact, easy-to-scan actions.
+
+## [1.1.1] - 2026-10-30
+
+### Updates
+
+- Added a Share button to the cookbook toolbar for members who can invite people.
+
+## [1.1.0] - 2026-10-30
+
+### Updates
+
+- Share one cookbook invitation link with a group. Free cookbook spots are checked as people join, while Plus cookbooks can welcome the group without a guest limit. Existing single-use links keep their original behavior.
+
+## [1.0.6] - 2026-10-30
+
+### Updates
+
+- Show the cookbook title in text-message previews for active invitation links.
+
 ## [1.0.5] - 2026-10-29
 
 ### Updates
