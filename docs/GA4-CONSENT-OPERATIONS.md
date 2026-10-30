@@ -1,0 +1,33 @@
+# GA4 consent: operator and legal review required
+
+Do not enable the measurement ID until the owner has reviewed and published an appropriate privacy notice and verified the property settings and browser behavior. This document is a draft, not legal advice. No deployment or policy publication is part of this change.
+
+## Current behavior and policy
+
+GA is optional and only runs in production builds with `NEXT_PUBLIC_VERCEL_ENV=production` and a valid `NEXT_PUBLIC_GA_MEASUREMENT_ID`. The rule is opt-in everywhere, including the EEA, UK, US and unknown locations. There are no approved no-banner jurisdictions. No geo headers or IP addresses are read, so spoofed headers, VPNs, local development and shared caches cannot grant collection. Before adding exceptions, obtain an owner/counsel-approved country and subdivision allowlist, establish the deployment's header trust boundary, use uncached per-visitor resolution and add tests. Vercel documents [geo headers](https://vercel.com/docs/headers/request-headers) and [cache behavior](https://vercel.com/docs/caching/cdn-cache); these do not establish a legal rule.
+
+The versioned `hc:analytics-consent` localStorage record contains only choice, notice version and timestamp, expires after 180 days, and is device/browser-specific. This period is a proposal for review, not a legal conclusion. Failed storage limits the choice to the current document. A rejection disables the tag, attempts to remove first-party `_ga` and `_ga_*` cookies at root path and applicable parent domains, and reloads if the tag was loaded. The browser cannot remove inaccessible or differently scoped cookies. A cross-tab storage change disables and reloads a previously active tag. A network request already in flight cannot be recalled. No denial update is sent to Google after withdrawal because it could generate a ping.
+
+Vercel Web Analytics for public pages and its guide CTA event use the same opt-in preference as GA. Its URLs are sanitized as before. A version 1 acceptance requires a new choice because the notice now includes Vercel; an unexpired version 1 rejection remains respected. Withdrawal blocks the Vercel event callback immediately and reloads when the preference was persisted. Requests already in flight cannot be recalled. The internal first-sign-in counter remains independent of this preference; counsel should review the notice and that practice.
+
+## Draft notice text for owner and counsel
+
+With permission Home Cooked uses Google Analytics 4 and Vercel Web Analytics to understand visits to public pages. Google and Vercel receive analytics data and may process it in other countries. Visitors can accept or reject analytics and change their choice through Cookie settings. The first-party preference is stored for 180 days. If accepted, Google may set first-party `_ga` and `_ga_<stream>` cookies; Google's defaults are generally two years for `_ga` and two years for the stream cookie, subject to property configuration and browser limits. Withdrawal attempts to remove accessible GA cookies. The owner should verify transfer arrangements, property retention, actual cookie durations, business identity and contact details before publishing the policy.
+
+## Setup and measurement
+
+1. Create or select a GA4 property and web data stream, obtain its measurement ID, and set `NEXT_PUBLIC_GA_MEASUREMENT_ID` only in the intended Vercel production environment. Ensure Vercel exposes `NEXT_PUBLIC_VERCEL_ENV`; restart/rebuild and redeploy after changing public build variables. Use a separate test property for production-like testing. Local development and Vercel previews do not load GA; no production geo override exists.
+2. In GA Admin review [Google signals](https://support.google.com/analytics/answer/9445345), advertising personalization, data sharing, retention, regional settings and integrations. Disable advertising features and avoid linking Ads. Code flags do not replace property settings.
+3. In the web stream turn off enhanced measurement, including history-based page views, site search, outbound clicks, forms, scroll and other automatic events. Google notes history page views are configured independently of `send_page_view`: [enhanced measurement](https://support.google.com/analytics/answer/9216061). Confirm no other Google tags, linked destinations or automatic collection features are active. The tag disables automatic config page views, sets fixed title/referrer and sends only sanitized public page views. Verify in the network inspector that automatic GA events also contain no sensitive data before launch. GA processing and report availability may be delayed; Basic Consent Mode excludes nonconsenting visits.
+
+| Event | Trigger | Parameters |
+| --- | --- | --- |
+| `page_view` | Accepted visitor enters an allowed public pathname or navigates to a different pathname | Fixed public route, fixed title, empty referrer; all guide paths use `/guides/article` |
+
+There are no GA funnel events yet: no outbound Pinterest action was found, the sign-in flow combines login and signup, and a reliable one-time client-side account creation completion signal was not established. Do not interpret sign-in as signup. Vercel `guide_cta_click` uses the same consent; the server signup count is separate. Query-only navigation does not add a GA view.
+
+## Launch verification
+
+- In an isolated production-like Vercel deployment with a test property and no real personal data, inspect Network and cookies before a choice, after ignore/reject, acceptance, reload, expiry, withdrawal, reacceptance, and cross-tab rejection. Confirm no Google requests before acceptance or after withdrawal, including delayed/automatic events. Use [Tag Assistant](https://developers.google.com/tag-platform/security/guides/consent-debugging), DebugView and Realtime to inspect consent order, advertising denial, one tag and one page view per navigation.
+- Test browser back/forward, query-only changes, public-to-private navigation, direct private routes, blocked localStorage, multiple tabs, keyboard access, mobile layout and cookie removal. Inspect all request fields, including automatic events, for sensitive URLs, query strings, referrers and titles. GA settings must be corrected before release if any leak is found.
+- Owner/counsel must approve the notice and expiration, region rules, provider and transfer arrangements, property retention and settings, relevant US obligations and Google's terms. Review geolocation uncertainty before enabling any regional exception. Verify real Vercel environment and build configuration, and publish the approved policy separately.

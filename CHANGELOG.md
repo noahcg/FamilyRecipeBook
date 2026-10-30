@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.5] - 2026-10-30
+
+### Updates
+
+- Added optional analytics consent controls for Google Analytics and Vercel Web Analytics, with a conservative opt-in setup.
+
 ## [1.1.4] - 2026-10-30
 
 ### Updates
