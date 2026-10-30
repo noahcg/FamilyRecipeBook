@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.2] - 2026-10-30
+
+### Updates
+
+- Refined the cookbook toolbar on mobile with compact, easy-to-scan actions.
+
 ## [1.1.1] - 2026-10-30
 
 ### Updates

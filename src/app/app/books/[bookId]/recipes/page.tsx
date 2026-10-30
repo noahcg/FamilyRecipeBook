@@ -420,7 +420,7 @@ export default function RecipesPage({ params }: Props) {
           </div>
 
           <div
-            className="mt-6 rounded-lg border border-line-soft bg-card/75 p-3 shadow-[var(--shadow-paper)]"
+            className={`mt-6 rounded-lg border border-line-soft bg-card/75 p-3 shadow-[var(--shadow-paper)] ${showContents ? "pr-8 lg:pr-3" : ""}`}
             role="toolbar"
             aria-label="Cookbook actions"
           >
@@ -444,38 +444,38 @@ export default function RecipesPage({ params }: Props) {
               {toolbarActionCount > 0 && (
                 <div
                   className={[
-                    toolbarActionCount === 1 ? "sm:grid-cols-1" : "",
-                    toolbarActionCount === 2 ? "sm:grid-cols-2" : "",
-                    toolbarActionCount === 3 ? "sm:grid-cols-3" : "",
-                    toolbarActionCount >= 4 ? "grid-cols-2 sm:grid-cols-4" : "",
-                    "grid gap-2 xl:flex xl:w-auto xl:shrink-0",
+                    toolbarActionCount === 1 ? "grid-cols-1" : "",
+                    toolbarActionCount === 2 ? "grid-cols-2" : "",
+                    toolbarActionCount === 3 ? "grid-cols-3" : "",
+                    toolbarActionCount >= 4 ? "grid-cols-4" : "",
+                    "grid gap-1 sm:gap-2 xl:flex xl:w-auto xl:shrink-0",
                   ].join(" ")}
                 >
                   {canAddRecipes && (
-                    <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0">
-                      <Button variant="primary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
-                        <Plus size={17} /> Add Recipe
+                    <Link href={`/app/books/${bookId}/recipes/new`} className="min-w-0" aria-label="Add Recipe">
+                      <Button variant="primary" size="md" className="h-16 w-full flex-col gap-1 rounded-md px-1 text-xs sm:h-12 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm xl:w-auto">
+                        <Plus size={17} /> <span className="sm:hidden">Add</span><span className="hidden sm:inline">Add Recipe</span>
                       </Button>
                     </Link>
                   )}
                   {canInvite && (
                     <Link href={`/app/books/${bookId}/members/add`} className="min-w-0">
-                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
-                        <Share2 size={17} /> Share
+                      <Button variant="secondary" size="md" className="h-16 w-full flex-col gap-1 rounded-md border-transparent bg-transparent px-1 text-xs sm:h-12 sm:flex-row sm:gap-2 sm:border-line sm:bg-card sm:px-3 sm:text-sm xl:w-auto">
+                        <Share2 size={17} /> <span>Share</span>
                       </Button>
                     </Link>
                   )}
                   {canManageBookMembers && (
                     <Link href={`/app/books/${bookId}/members`} className="min-w-0">
-                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
-                        <Users size={17} /> Members
+                      <Button variant="secondary" size="md" className="h-16 w-full flex-col gap-1 rounded-md border-transparent bg-transparent px-1 text-xs sm:h-12 sm:flex-row sm:gap-2 sm:border-line sm:bg-card sm:px-3 sm:text-sm xl:w-auto">
+                        <Users size={17} /> <span>Members</span>
                       </Button>
                     </Link>
                   )}
                   {canOpenBookSettings && (
-                    <Link href={`/app/books/${bookId}/settings`} className="min-w-0">
-                      <Button variant="secondary" size="md" className="h-12 w-full rounded-md px-3 text-sm xl:w-auto">
-                        <Settings size={17} /> Book Settings
+                    <Link href={`/app/books/${bookId}/settings`} className="min-w-0" aria-label="Book Settings">
+                      <Button variant="secondary" size="md" className="h-16 w-full flex-col gap-1 rounded-md border-transparent bg-transparent px-1 text-xs sm:h-12 sm:flex-row sm:gap-2 sm:border-line sm:bg-card sm:px-3 sm:text-sm xl:w-auto">
+                        <Settings size={17} /> <span className="sm:hidden">Settings</span><span className="hidden sm:inline">Book Settings</span>
                       </Button>
                     </Link>
                   )}
