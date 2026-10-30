@@ -98,7 +98,8 @@ const privacySections = [
         <p>
           We use Vercel Web Analytics to measure visits to public pages. We
           exclude private cookbook pages and remove query strings before
-          sending page views. We also keep an internal record when a new account
+          sending page views. Guide action clicks record the guide, action placement,
+          and destination without campaign values or personal details. We also keep an internal record when a new account
           completes its first sign-in so we can measure signup conversion. We
           do not send your email, recipe content, invitation token, or account
           ID to Vercel Analytics. Vercel Web Analytics does not use analytics

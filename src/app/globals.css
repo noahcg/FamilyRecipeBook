@@ -849,3 +849,12 @@ select.input-cookbook:disabled {
     margin-top: 0;
   }
 }
+
+@media print {
+  .guide-page header, .guide-page footer, .guide-page nav, .guide-page aside,
+  .guide-page img { display: none !important; }
+  .guide-page > div:first-child > section { min-height: 0; padding: 0 0 1rem; }
+  .guide-page main, .guide-page article { max-width: none; padding: 0; }
+  .guide-page main > div { display: block; }
+  .guide-page section { break-inside: avoid; }
+}
