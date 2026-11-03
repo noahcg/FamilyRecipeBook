@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.12] - 2026-11-03
+
+### Updates
+
+- Let each person pin their own home-page recipe instead of featuring the latest addition.
+
+## [1.1.11] - 2026-11-03
+
+### Updates
+
+- Kept cookbook chapters in their saved settings order in the table of contents and recipe list.
+
 ## [1.1.10] - 2026-11-03
 
 ### Updates

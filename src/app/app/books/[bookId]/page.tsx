@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Heart,
   Plus,
-  Refrigerator,
   ShoppingCart,
   Sparkles,
   UtensilsCrossed,
@@ -19,15 +18,11 @@ import { getBookPageData } from "@/lib/actions/books";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
 import { requireUser } from "@/lib/auth";
 import { getEffectiveEntitlements } from "@/lib/entitlements";
-import type { Recipe } from "@/lib/types";
+import { getHomeRecipe } from "@/lib/actions/homeRecipe";
+import { HomeRecipeButton } from "@/components/recipe/HomeRecipeButton";
 
 interface Props {
   params: Promise<{ bookId: string }>;
-}
-
-interface HomeRecipe extends Recipe {
-  creator: { full_name: string } | null;
-  loveCount?: number;
 }
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -169,17 +164,18 @@ function SectionHeader({
 
 export default async function BookHomePage({ params }: Props) {
   const { bookId } = await params;
-  const [data, householdId, user] = await Promise.all([
+  const [data, householdId, user, homeRecipe] = await Promise.all([
     getBookPageData(bookId),
     getHouseholdId(),
     requireUser(),
+    getHomeRecipe(),
   ]);
   if (!data) notFound();
 
   const billing = await getEffectiveEntitlements(user.id);
 
-  const { book, recent, favorites, canAddRecipes } = data;
-  const latestRecipe = (recent as HomeRecipe[])[0] ?? null;
+  const { book, favorites, canAddRecipes } = data;
+  const latestRecipe = homeRecipe?.bookId === bookId ? homeRecipe : null;
   const hasRecipes = latestRecipe !== null;
   const featuredTitle = latestRecipe?.title ?? "";
   const featuredHref = latestRecipe
@@ -216,12 +212,7 @@ export default async function BookHomePage({ params }: Props) {
         body: "Open the meal plan if you need to swap something.",
       };
 
-  const recipeCue = !hasRecipes
-    ? {
-        title: "Your cookbook is empty.",
-        body: "Add a recipe everyone asks for so the book can start growing.",
-      }
-    : totalFavorites === 0
+  const recipeCue = totalFavorites === 0
     ? {
         title: "No favorites marked yet.",
         body: "Save the recipes you'll cook again so they're easy to find.",
@@ -328,36 +319,38 @@ export default async function BookHomePage({ params }: Props) {
                   <div className="flex min-w-0 flex-col justify-between p-3.5 min-[425px]:p-4 sm:p-6">
                     <div>
                       <SectionEyebrow>
-                        {hasRecipes ? "Recipe pick" : "Welcome"}
+                        {hasRecipes ? "Your home recipe" : "Make it yours"}
                       </SectionEyebrow>
                       <h2
                         className="line-clamp-2 mt-2 max-w-2xl text-[1.35rem] font-bold leading-[1.25] text-green-deep min-[425px]:text-2xl sm:text-3xl lg:text-4xl [overflow-wrap:anywhere]"
                         style={{ fontFamily: "var(--font-playfair)" }}
                         title={hasRecipes ? featuredTitle : undefined}
                       >
-                        {hasRecipes ? featuredTitle : "Your cookbook is ready"}
+                        {hasRecipes ? featuredTitle : homeRecipe ? "Your home recipe is in another cookbook" : "Choose your home recipe"}
                       </h2>
                       <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-muted min-[425px]:mt-3">
                         {hasRecipes
-                          ? "A practical choice to get you cooking without digging through the whole book. Open it, adjust what you need, and keep moving."
-                          : "Save the dishes your family keeps asking for, or ask for an idea to get the first page started."}
+                          ? "You chose this recipe for your home page. Change it whenever you like."
+                          : homeRecipe
+                            ? "Open a recipe in this cookbook to replace your current home recipe."
+                            : "Open a recipe and pin it to your home page. Only you choose what appears."}
                       </p>
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-3 min-[425px]:mt-5">
                       {hasRecipes ? (
-                        <Link href={featuredHref}>
+                        <><Link href={featuredHref}>
                           <Button variant="primary" size="sm" className="rounded-md">
                             <UtensilsCrossed size={17} />
                             Start cooking
                           </Button>
-                        </Link>
+                        </Link><HomeRecipeButton recipeId={latestRecipe!.id} initialPinned /></>
                       ) : canAddRecipes ? (
                         <>
-                          <Link href={`/app/books/${bookId}/recipes/new`}>
+                          <Link href={`/app/books/${bookId}/recipes`}>
                             <Button variant="primary" size="sm" className="rounded-md">
-                              <Plus size={17} />
-                              Add a recipe
+                              <UtensilsCrossed size={17} />
+                              Browse recipes
                             </Button>
                           </Link>
                           <Link href={`/app/books/${bookId}/ideas`}>
@@ -388,14 +381,14 @@ export default async function BookHomePage({ params }: Props) {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                     <span className="absolute bottom-4 left-4 rounded-sm bg-card/90 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon backdrop-blur-sm">
-                      {hasRecipes ? "Featured recipe" : "A fresh start"}
+                      {hasRecipes ? "Pinned by you" : "A fresh start"}
                     </span>
                   </div>
                 </div>
               </DashboardCard>
 
-              <div className="grid gap-9 border-y border-line-soft py-9 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-10">
-                <section className="border-line-soft lg:border-r lg:pr-10">
+              <div className="border-y border-line-soft py-9">
+                <section >
                   <SectionHeader eyebrow="Smart kitchen notes" title="Helpful cues" />
                   <div className="mt-5 space-y-5">
                     <div className="flex gap-4">
@@ -419,57 +412,6 @@ export default async function BookHomePage({ params }: Props) {
                   </div>
                 </section>
 
-                <section className="lg:pl-1">
-                  <SectionHeader eyebrow="Pick up where you left off" title="Continue cooking" />
-                  {hasRecipes ? (
-                    <div className="mt-5 flex w-full min-w-0 max-w-full flex-nowrap items-start gap-5 overflow-hidden">
-                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale">
-                        {latestRecipe?.photo_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={mediaUrl(latestRecipe.photo_url)} alt="" className="h-full w-full object-cover" aria-hidden="true" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <BookOpenFallback />
-                          </div>
-                        )}
-                      </div>
-                      <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
-                        <h3
-                          className="block w-full max-w-full text-xl font-bold leading-[1.15] text-green-deep"
-                          style={{ fontFamily: "var(--font-playfair)" }}
-                        >
-                          {latestRecipe?.title}
-                        </h3>
-                        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-muted">
-                          {latestRecipe?.description}
-                        </p>
-                        <Link href={featuredHref} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
-                          Continue <ChevronRight size={15} />
-                        </Link>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-5 flex w-full min-w-0 max-w-full flex-nowrap items-start gap-5 overflow-hidden">
-                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-green-pale flex items-center justify-center">
-                        <BookOpenFallback />
-                      </div>
-                      <div className="w-[calc(100%-6.25rem)] min-w-0 max-w-[calc(100%-6.25rem)] overflow-hidden">
-                        <h3
-                          className="block w-full max-w-full text-xl font-bold text-green-deep"
-                          style={{ fontFamily: "var(--font-playfair)" }}
-                        >
-                          Nothing to continue yet
-                        </h3>
-                        <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-muted">
-                          Save a recipe and we&rsquo;ll keep the most recent one handy here.
-                        </p>
-                        <Link href={canAddRecipes ? `/app/books/${bookId}/recipes/new` : `/app/books/${bookId}/recipes`} className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-green-deep hover:underline">
-                          {canAddRecipes ? "Add a recipe" : "Browse cookbook"} <ChevronRight size={15} />
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </section>
               </div>
 
               <PageSection>
@@ -558,8 +500,4 @@ export default async function BookHomePage({ params }: Props) {
       </div>
     </AppShell>
   );
-}
-
-function BookOpenFallback() {
-  return <Refrigerator size={28} strokeWidth={1.3} className="text-green-sage" />;
 }
