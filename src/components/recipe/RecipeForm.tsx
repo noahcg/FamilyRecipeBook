@@ -162,7 +162,6 @@ function IngredientKeypad({
   onInsertUnit,
   onBackspace,
   onNext,
-  onManual,
   onClose,
 }: {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -172,7 +171,6 @@ function IngredientKeypad({
   onInsertUnit: (unit: string) => void;
   onBackspace: () => void;
   onNext: () => void;
-  onManual: () => void;
   onClose: () => void;
 }) {
   const numberRows = [
@@ -203,13 +201,6 @@ function IngredientKeypad({
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onManual}
-              className="rounded-sm border border-line bg-white-soft px-2.5 py-1.5 text-[11px] font-extrabold text-green-deep transition hover:bg-green-pale"
-            >
-              Manual
-            </button>
             <button
               type="button"
               onClick={onClose}
@@ -320,7 +311,6 @@ export function RecipeForm({
   const [isFileParsing, setIsFileParsing] = useState(false);
   const [isSavingImport, setIsSavingImport] = useState(false);
   const [activeIngredientKeypad, setActiveIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
-  const [manualIngredientKeypad, setManualIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
   const [draggingIngredientIndex, setDraggingIngredientIndex] = useState<number | null>(null);
   const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState<number | null>(null);
   const importedRecipe = importedRecipes[activeImportedRecipeIndex] ?? null;
@@ -476,7 +466,6 @@ export function RecipeForm({
 
   function addIngredientHeading() {
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     const newIndex = getValues("ingredients")?.length ?? 0;
     addIngredient({ quantity: "", unit: "", item: "", note: "", group_label: "" });
     window.setTimeout(() => {
@@ -488,7 +477,6 @@ export function RecipeForm({
   // last row, carrying that section's heading so it joins the right group.
   function addIngredientToSection(afterIndex: number, label: string | null) {
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     insertIngredient(afterIndex + 1, { quantity: "", unit: "", item: "", note: "", group_label: label });
     window.setTimeout(() => {
       document.getElementById(`ingredient-${afterIndex + 1}-item`)?.focus();
@@ -500,7 +488,6 @@ export function RecipeForm({
   // so heading runs stay contiguous.
   function handleIngredientDragStart(index: number) {
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     setDraggingIngredientIndex(index);
   }
 
@@ -552,7 +539,6 @@ export function RecipeForm({
       if (keypadElement?.contains(target) || activeFieldElement?.contains(target)) return;
 
       setActiveIngredientKeypad(null);
-      setManualIngredientKeypad(null);
     }
 
     document.addEventListener("mousedown", handlePointerDown);
@@ -573,9 +559,6 @@ export function RecipeForm({
   function activateIngredientKeypad(index: number, field: IngredientKeypadField) {
     const target = { index, field };
     setActiveIngredientKeypad(target);
-    setManualIngredientKeypad((current) =>
-      ingredientKeypadTargetKey(current) === ingredientKeypadTargetKey(target) ? current : null
-    );
   }
 
   function ingredientKeypadFieldName(target: IngredientKeypadTarget) {
@@ -606,7 +589,6 @@ export function RecipeForm({
 
     if (activeIngredientKeypad.field === "quantity") {
       setActiveIngredientKeypad(null);
-      setManualIngredientKeypad(null);
       focusIngredientField(activeIngredientKeypad.index, "item");
       return;
     }
@@ -628,20 +610,12 @@ export function RecipeForm({
     if (activeIngredientKeypad.field === "quantity") {
       const nextTarget = { index: activeIngredientKeypad.index, field: "unit" as const };
       setActiveIngredientKeypad(nextTarget);
-      setManualIngredientKeypad(null);
       focusIngredientField(activeIngredientKeypad.index, "unit");
       return;
     }
 
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     focusIngredientField(activeIngredientKeypad.index, "item");
-  }
-
-  function enableManualIngredientKeypad() {
-    if (!activeIngredientKeypad) return;
-    setManualIngredientKeypad(activeIngredientKeypad);
-    focusIngredientField(activeIngredientKeypad.index, activeIngredientKeypad.field);
   }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -1541,8 +1515,6 @@ export function RecipeForm({
                         ingredientKeypadTargetKey(activeIngredientKeypad) === `${index}-quantity` && "border-green-sage bg-card"
                       )}
                       placeholder="Qty"
-                      inputMode={ingredientKeypadTargetKey(manualIngredientKeypad) === `${index}-quantity` ? "text" : "none"}
-                      readOnly={ingredientKeypadTargetKey(manualIngredientKeypad) !== `${index}-quantity`}
                       onFocus={() => activateIngredientKeypad(index, "quantity")}
                       {...register(`ingredients.${index}.quantity`)}
                     />
@@ -1553,8 +1525,6 @@ export function RecipeForm({
                         ingredientKeypadTargetKey(activeIngredientKeypad) === `${index}-unit` && "border-green-sage bg-card"
                       )}
                       placeholder="Unit"
-                      inputMode={ingredientKeypadTargetKey(manualIngredientKeypad) === `${index}-unit` ? "text" : "none"}
-                      readOnly={ingredientKeypadTargetKey(manualIngredientKeypad) !== `${index}-unit`}
                       onFocus={() => activateIngredientKeypad(index, "unit")}
                       {...register(`ingredients.${index}.unit`)}
                     />
@@ -1567,7 +1537,6 @@ export function RecipeForm({
                         aria-label={`Ingredient ${index + 1} name, required`}
                         onFocus={() => {
                           setActiveIngredientKeypad(null);
-                          setManualIngredientKeypad(null);
                         }}
                         {...register(`ingredients.${index}.item`)}
                       />
@@ -1583,7 +1552,6 @@ export function RecipeForm({
                       type="button"
                       onClick={() => {
                         setActiveIngredientKeypad(null);
-                        setManualIngredientKeypad(null);
                         removeIngredient(index);
                       }}
                       className="mt-3 text-ink-soft hover:text-danger transition-colors"
@@ -1601,10 +1569,8 @@ export function RecipeForm({
                       onInsertUnit={handleIngredientKeypadUnit}
                       onBackspace={handleIngredientKeypadBackspace}
                       onNext={handleIngredientKeypadNext}
-                      onManual={enableManualIngredientKeypad}
                       onClose={() => {
                         setActiveIngredientKeypad(null);
-                        setManualIngredientKeypad(null);
                       }}
                     />
                   )}
