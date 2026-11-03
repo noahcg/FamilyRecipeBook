@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.8] - 2026-11-03
+
+### Updates
+
+- Improved OpenAI photo imports by retrying responses cut short by the output limit and identifying content-filter interruptions.
+
 ## [1.1.7] - 2026-11-03
 
 ### Updates

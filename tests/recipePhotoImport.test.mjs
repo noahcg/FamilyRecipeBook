@@ -82,7 +82,7 @@ async function actionHarness({ role = "contributor", settings = { ai_provider: "
       return chain;
     } }) },
     "@/lib/permissions": permissions,
-    "@/lib/ai/external": { runExternalAiRequest: async (request) => { requests.push(request); return response ?? { success: true, json: { output: [{ content: [{ text: JSON.stringify(recipe) }] }] } }; } },
+    "@/lib/ai/external": { runExternalAiRequest: async (request) => { requests.push(request); return (Array.isArray(response) ? response[requests.length - 1] : response) ?? { success: true, json: { output: [{ content: [{ text: JSON.stringify(recipe) }] }] } }; } },
     "@/lib/ai/modelRegistry": { resolveExternalModel: () => model },
     "@/lib/ai/throttle": { consumeAiTaskThrottle: () => !throttled },
     "@/lib/recipeImportSchema": schema,
@@ -136,6 +136,24 @@ test("provider errors have useful recovery messages and malformed recipes are re
     const h = await actionHarness({ response: { success: true, json } });
     assert.equal((await h.run()).success, false);
   }
+});
+
+test("photo import retries token-limited output once and ignores non-message text", async () => {
+  const incomplete = { success: true, json: { status: "incomplete", incomplete_details: { reason: "max_output_tokens" }, output_text: '{"title":' } };
+  const recipe = imageImport.parseRecipeText(text);
+  const completed = { success: true, json: { status: "completed", output: [
+    { type: "reasoning", content: [{ type: "reasoning_text", text: "Not JSON" }] },
+    { type: "message", content: [{ type: "output_text", text: JSON.stringify(recipe) }] },
+  ] } };
+  const h = await actionHarness({ response: [incomplete, completed] });
+  assert.equal((await h.run()).success, true);
+  assert.deepEqual(h.requests.map((request) => request.body.max_output_tokens), [10_000, 20_000]);
+  const exhausted = await actionHarness({ response: [incomplete, incomplete] });
+  assert.match((await exhausted.run()).error, /fewer pages/);
+  assert.equal(exhausted.requests.length, 2);
+  const filtered = await actionHarness({ response: { success: true, json: { status: "incomplete", incomplete_details: { reason: "content_filter" }, output_text: '{"title":' } } });
+  assert.match((await filtered.run()).error, /content filter/);
+  assert.equal(filtered.requests.length, 1);
 });
 
 const formSource = await readFile(new URL("../src/components/recipe/RecipeForm.tsx", import.meta.url), "utf8");

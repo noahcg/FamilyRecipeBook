@@ -39,15 +39,23 @@ function extractOutputText(response: unknown) {
   if (!Array.isArray(output)) return null;
 
   for (const item of output) {
+    if (!item || typeof item !== "object" || (item.type && item.type !== "message")) continue;
     const content = (item as { content?: unknown })?.content;
     if (!Array.isArray(content)) continue;
     for (const part of content) {
+      if (!part || typeof part !== "object" || (part.type && part.type !== "output_text")) continue;
       const text = (part as { text?: unknown })?.text;
       if (typeof text === "string") return text;
     }
   }
 
   return null;
+}
+
+function isOutputLimitResponse(response: unknown) {
+  if (!response || typeof response !== "object") return false;
+  const value = response as { status?: unknown; incomplete_details?: { reason?: unknown } };
+  return value.status === "incomplete" && value.incomplete_details?.reason === "max_output_tokens";
 }
 
 export async function improveRecipeImportWithOpenAI(
@@ -99,9 +107,9 @@ export async function improveRecipeImportWithOpenAI(
 
   const model = resolveExternalModel("recipePhotoImport", "openai");
   const supportsOriginalDetail = /^gpt-5\.4-mini(?:$|-)/.test(model);
-  const result = await runExternalAiRequest({
+  const requestOptions = {
     task: "recipePhotoImport",
-    provider: "openai",
+    provider: "openai" as const,
     model,
     apiKey: settings.ai_api_key,
     timeoutMs: 45_000,
@@ -140,7 +148,17 @@ export async function improveRecipeImportWithOpenAI(
         },
       },
     },
-  });
+  } as const;
+
+  let result = await runExternalAiRequest(requestOptions);
+  // A token-limited response can contain truncated JSON even with a strict schema.
+  // Retry only that explicit condition; other failures should not incur another charge.
+  if (result.success && isOutputLimitResponse(result.json)) {
+    result = await runExternalAiRequest({
+      ...requestOptions,
+      body: { ...requestOptions.body, max_output_tokens: 20_000 },
+    });
+  }
 
   if (!result.success) {
     const errors: Partial<Record<typeof result.category, string>> = {
@@ -155,34 +173,50 @@ export async function improveRecipeImportWithOpenAI(
     };
   }
 
+  const response = result.json && typeof result.json === "object"
+    ? result.json as { status?: unknown; incomplete_details?: { reason?: unknown } }
+    : null;
+  if (response?.status === "incomplete") {
+    const reason = response.incomplete_details?.reason;
+    const category = reason === "max_output_tokens" ? "output_limit" : reason === "content_filter" ? "content_filter" : "incomplete";
+    console.info(`[recipe-photo-import-response] category=${category} requestId=${result.requestId}`);
+    return { success: false, error: reason === "max_output_tokens"
+      ? "OpenAI couldn't finish reading these pages. Try fewer pages at a time or use free on-device reading."
+      : reason === "content_filter"
+      ? "OpenAI's content filter interrupted this import. Try free on-device reading."
+      : "OpenAI couldn't finish reading these pages. Try again or use free on-device reading." };
+  }
+
   const outputText = extractOutputText(result.json);
   if (!outputText) {
+    console.info("[recipe-photo-import-response]", { requestId: result.requestId, category: "missing_output" });
     return { success: false, error: "OpenAI did not return recipe text." };
   }
 
+  let parsedJson: unknown;
   try {
-    const parsedJson = JSON.parse(outputText) as unknown;
-    const parsed = importedRecipeSchema.safeParse(parsedJson);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: "OpenAI returned an incomplete recipe. Try a clearer, closer photo.",
-      };
-    }
-
-    const normalized = normalizeImportedRecipe(parsed.data);
-    if (!normalized.ingredients.length || !normalized.instructions.length) {
-      return {
-        success: false,
-        error: "OpenAI could not find both ingredients and steps.",
-      };
-    }
-
-    return { success: true, data: normalized };
+    parsedJson = JSON.parse(outputText) as unknown;
   } catch {
+    console.info("[recipe-photo-import-response]", { requestId: result.requestId, category: "invalid_json" });
+    return { success: false, error: "OpenAI returned an unreadable response. Try again or use free on-device reading." };
+  }
+
+  const parsed = importedRecipeSchema.safeParse(parsedJson);
+  if (!parsed.success) {
+    console.info("[recipe-photo-import-response]", { requestId: result.requestId, category: "invalid_recipe" });
     return {
       success: false,
-      error: "OpenAI returned unreadable data. Try again with a clearer photo.",
+      error: "OpenAI returned an incomplete recipe. Try again or use free on-device reading.",
     };
   }
+
+  const normalized = normalizeImportedRecipe(parsed.data);
+  if (!normalized.ingredients.length || !normalized.instructions.length) {
+    return {
+      success: false,
+      error: "OpenAI could not find both ingredients and steps.",
+    };
+  }
+
+  return { success: true, data: normalized };
 }
