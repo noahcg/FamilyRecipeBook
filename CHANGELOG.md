@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.14] - 2026-11-03
+
+### Updates
+
+- Let cookbook keepers choose a custom upload or a recipe photo for invitation link previews, with a default card and privacy notice.
+
 ## [1.1.13] - 2026-11-03
 
 ### Updates

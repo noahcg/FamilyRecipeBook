@@ -8,6 +8,7 @@ import { BookDangerZone } from "@/components/book/BookDangerZone";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
 import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
+import { ShareCardForm } from "@/components/book/ShareCardForm";
 import { AISettingsForm } from "@/components/settings/AISettingsForm";
 import { GroceryPreferencesForm } from "@/components/settings/GroceryPreferencesForm";
 import { UnitPreferencesForm } from "@/components/settings/UnitPreferencesForm";
@@ -50,6 +51,12 @@ interface BookSettingsPageContentProps {
   isKeeper: boolean;
   canManageCategories: boolean;
   categories: BookCategory[];
+  shareCardRecipeId: string | null;
+  shareCardCustomPath: string | null;
+  shareCardUserId: string;
+  shareCardRecipes: { id: string; title: string; photo_url: string }[];
+  shareCardReady: boolean;
+  shareCardNeedsReview: boolean;
 }
 
 function getInitials(name: string | null) {
@@ -379,6 +386,12 @@ export function BookSettingsPageContent({
   isKeeper,
   canManageCategories,
   categories,
+  shareCardRecipeId,
+  shareCardCustomPath,
+  shareCardUserId,
+  shareCardRecipes,
+  shareCardReady,
+  shareCardNeedsReview,
 }: BookSettingsPageContentProps) {
   const sharingSummary = sharingEnabled ? "Sharing on" : "Private";
   const defaultSummary = isDefaultBook ? "Default cookbook" : "Not default";
@@ -427,6 +440,7 @@ export function BookSettingsPageContent({
               <div className="recipe-card p-5">
                 <div className="space-y-6">
                   <RenameBookForm bookId={bookId} currentTitle={bookTitle} />
+                  {shareCardReady ? <ShareCardForm bookId={bookId} bookTitle={bookTitle} userId={shareCardUserId} initialRecipeId={shareCardRecipeId} initialCustomPath={shareCardCustomPath} recipes={shareCardRecipes} needsReview={shareCardNeedsReview} /> : <p className="text-sm text-ink-muted">Sharing images need the latest database migrations (046 and 047).</p>}
                   {sharingPreferencesReady ? (
                     <SharingSettingsForm
                       bookId={bookId}
