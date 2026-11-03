@@ -31,6 +31,7 @@ import { InstructionList } from "./InstructionList";
 import { OfflineRecipeButton } from "./OfflineRecipeButton";
 import { RecipeShareDialog } from "./RecipeShareDialog";
 import { RecipeOriginalsDrawer } from "./RecipeOriginalsDrawer";
+import { HomeRecipeButton } from "./HomeRecipeButton";
 import { ReportContentButton } from "@/components/moderation/ReportContentButton";
 import { ServingScaler } from "./ServingScaler";
 import { useAccount } from "@/lib/context/AccountContext";
@@ -61,6 +62,7 @@ interface RecipeDetailProps {
   userId: string;
   userReactions: UserReactions;
   ratingSummary: RecipeRatingSummary;
+  homeRecipePinned: boolean;
 }
 
 function StarRatingControl({
@@ -139,6 +141,7 @@ export function RecipeDetail({
   userId,
   userReactions,
   ratingSummary,
+  homeRecipePinned,
 }: RecipeDetailProps) {
   const { plan } = useAccount();
   const canUseGrocery = plan === "plus";
@@ -536,6 +539,7 @@ export function RecipeDetail({
       </header>
 
       <div className="mx-auto max-w-[1320px] px-4 sm:px-5 lg:px-8">
+        <div className="pt-4"><HomeRecipeButton recipeId={recipe.id} initialPinned={homeRecipePinned} /></div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line-soft py-4 text-sm text-ink-muted">
           <span className="max-w-full truncate font-semibold text-ink">Added by {addedByLabel}</span>
           <span>{addedDate}</span>

@@ -5,6 +5,7 @@ import { getRecipe } from "@/lib/actions/recipes";
 import { getReactionData, getRecipeRatingSummary } from "@/lib/actions/reactions";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { getHomeRecipe } from "@/lib/actions/homeRecipe";
 
 interface Props {
   params: Promise<{ bookId: string; recipeId: string }>;
@@ -21,7 +22,7 @@ export default async function RecipeDetailPage({ params }: Props) {
 
   if (!recipe || recipe.book_id !== bookId) notFound();
 
-  const [{ userReactions }, ratingSummary, memberRes, contributionRes] = await Promise.all([
+  const [{ userReactions }, ratingSummary, memberRes, contributionRes, homeRecipe] = await Promise.all([
     getReactionData(recipeId, user.id),
     getRecipeRatingSummary(recipeId, user.id),
     supabase
@@ -31,6 +32,7 @@ export default async function RecipeDetailPage({ params }: Props) {
       .eq("user_id", user.id)
       .single(),
     supabase.rpc("can_contribute_to_book", { book_uuid: bookId, user_uuid: user.id }),
+    getHomeRecipe(),
   ]);
 
   const storedRole = memberRes.data?.role ?? null;
@@ -45,6 +47,7 @@ export default async function RecipeDetailPage({ params }: Props) {
         userId={user.id}
         userReactions={userReactions}
         ratingSummary={ratingSummary}
+        homeRecipePinned={homeRecipe?.id === recipe.id}
       />
     </AppShell>
   );

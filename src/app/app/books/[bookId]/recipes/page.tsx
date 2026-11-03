@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/client";
 import { formatDuration } from "@/lib/formatDuration";
 import { canContribute, canView } from "@/lib/permissions";
 import { getBookAccessSummary } from "@/lib/actions/books";
+import { groupRecipesByChapter } from "@/lib/chapterContents";
 import type { BookRole } from "@/lib/types";
 
 interface Props {
@@ -44,6 +45,7 @@ interface RecipeListItem {
   cook_minutes: number | null;
   servings: number | null;
   category: string | null;
+  categoryPosition: number | null;
   created_at: string;
   creator: { full_name: string | null } | { full_name: string | null }[] | null;
   reactions: RecipeReaction[] | null;
@@ -164,7 +166,7 @@ export default function RecipesPage({ params }: Props) {
       const recipesRequest = supabase
         .from("recipes")
         .select(
-          "*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type), ingredients:recipe_ingredients(id), instructions:recipe_instructions(id), category:book_categories!recipes_category_id_fkey(name)"
+          "*, creator:profiles!created_by(full_name), reactions:recipe_reactions(type), ingredients:recipe_ingredients(id), instructions:recipe_instructions(id), category:book_categories!recipes_category_id_fkey(name, position)"
         )
         .eq("book_id", bookId)
         .order("created_at", { ascending: false });
@@ -193,10 +195,11 @@ export default function RecipesPage({ params }: Props) {
 
       const nextRecipes = ((recipesRes.data ?? []) as unknown as (Omit<
         RecipeListItem,
-        "category" | "loveCount"
-      > & { category: { name: string } | null })[]).map((recipe) => ({
+        "category" | "categoryPosition" | "loveCount"
+      > & { category: { name: string; position: number } | null })[]).map((recipe) => ({
         ...recipe,
         category: recipe.category?.name ?? null,
+        categoryPosition: recipe.category?.position ?? null,
         loveCount: recipe.reactions?.filter((reaction) => reaction.type === "love").length ?? 0,
       }));
 
@@ -240,20 +243,7 @@ export default function RecipesPage({ params }: Props) {
   }, [activeFilter, query, recipes]);
 
   const chapters = useMemo(() => {
-    const grouped = new Map<string, RecipeListItem[]>();
-
-    for (const recipe of filtered) {
-      const category = recipe.category?.trim() || UNCATEGORIZED;
-      grouped.set(category, [...(grouped.get(category) ?? []), recipe]);
-    }
-
-    return Array.from(grouped.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([category, items], index) => ({
-        category,
-        number: String(index + 1).padStart(2, "0"),
-        recipes: items.sort((a, b) => a.title.localeCompare(b.title)),
-      }));
+    return groupRecipesByChapter(filtered, UNCATEGORIZED);
   }, [filtered]);
 
   const newestRecipe = recipes[0] ?? null;

@@ -34,6 +34,24 @@ test('complete committed schema and database/Storage access boundaries', async t
     try{return await fn();}finally{await db.exec("reset role; select set_config('request.jwt.claim.sub','',false); select set_config('request.jwt.claim.role','',false)");}
   }
   const owner=await user(),member=await user(),outsider=await user();
+  await t.test('home recipe selection is private and only its owner can change it',async()=> {
+    const book=randomUUID(), first=randomUUID(), second=randomUUID();
+    await db.query("insert into recipe_books(id,title,owner_id,sharing_enabled) values ($1,'Home recipe',$2,true)",[book,owner]);
+    await db.query("insert into book_members(book_id,user_id,role) values ($1,$2,'family')",[book,member]);
+    await db.query("insert into recipes(id,book_id,title,created_by) values ($1,$3,'First',$4),($2,$3,'Second',$4)",[first,second,book,owner]);
+    await as(member,()=>db.query('insert into user_settings(user_id,home_recipe_id) values ($1,$2) on conflict (user_id) do update set home_recipe_id=excluded.home_recipe_id',[member,first]));
+    for (const actor of [owner,outsider,null]) {
+      assert.equal((await as(actor,()=>db.query('select home_recipe_id from user_settings where user_id=$1',[member]))).rows.length,0);
+      assert.equal((await as(actor,()=>db.query('update user_settings set home_recipe_id=$2 where user_id=$1 returning user_id',[member,second]))).rows.length,0);
+    }
+    assert.equal((await as(member,()=>db.query('select home_recipe_id from user_settings where user_id=$1',[member]))).rows[0].home_recipe_id,first);
+    await as(member,()=>db.query('update user_settings set home_recipe_id=$2 where user_id=$1',[member,second]));
+    assert.equal((await as(member,()=>db.query('select home_recipe_id from user_settings where user_id=$1',[member]))).rows[0].home_recipe_id,second);
+    await db.query('delete from book_members where book_id=$1 and user_id=$2',[book,member]);
+    assert.equal((await as(member,()=>db.query('select id from recipes where id=$1',[second]))).rows.length,0);
+    await db.query('delete from recipes where id=$1',[second]);
+    assert.equal((await as(member,()=>db.query('select home_recipe_id from user_settings where user_id=$1',[member]))).rows[0].home_recipe_id,null);
+  });
   await t.test('completed signup is counted once after tracking begins',async()=> {
     const first=await as(owner,()=>db.query('select public.record_first_sign_in() as counted'));
     const repeat=await as(owner,()=>db.query('select public.record_first_sign_in() as counted'));
