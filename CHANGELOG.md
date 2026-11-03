@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.10] - 2026-11-03
+
+### Updates
+
+- Made ingredient quantities and units editable immediately while keeping the custom keypad available.
+
+## [1.1.9] - 2026-11-03
+
+### Updates
+
+- Added controls to reorder recipe steps while editing, including on mobile.
+
 ## [1.1.8] - 2026-11-03
 
 ### Updates

@@ -5,7 +5,7 @@ import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, GripVertical, ImagePlus, Plus, Search, Trash2, WandSparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, GripVertical, ImagePlus, Plus, Search, Trash2, WandSparkles, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Select, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
@@ -162,7 +162,6 @@ function IngredientKeypad({
   onInsertUnit,
   onBackspace,
   onNext,
-  onManual,
   onClose,
 }: {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -172,7 +171,6 @@ function IngredientKeypad({
   onInsertUnit: (unit: string) => void;
   onBackspace: () => void;
   onNext: () => void;
-  onManual: () => void;
   onClose: () => void;
 }) {
   const numberRows = [
@@ -203,13 +201,6 @@ function IngredientKeypad({
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onManual}
-              className="rounded-sm border border-line bg-white-soft px-2.5 py-1.5 text-[11px] font-extrabold text-green-deep transition hover:bg-green-pale"
-            >
-              Manual
-            </button>
             <button
               type="button"
               onClick={onClose}
@@ -320,7 +311,6 @@ export function RecipeForm({
   const [isFileParsing, setIsFileParsing] = useState(false);
   const [isSavingImport, setIsSavingImport] = useState(false);
   const [activeIngredientKeypad, setActiveIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
-  const [manualIngredientKeypad, setManualIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
   const [draggingIngredientIndex, setDraggingIngredientIndex] = useState<number | null>(null);
   const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState<number | null>(null);
   const importedRecipe = importedRecipes[activeImportedRecipeIndex] ?? null;
@@ -422,8 +412,36 @@ export function RecipeForm({
     fields: instructions,
     append: addInstruction,
     remove: removeInstruction,
+    move: moveInstruction,
     replace: replaceInstructions,
   } = useFieldArray({ control, name: "instructions" });
+  const [stepAnnouncement, setStepAnnouncement] = useState("");
+
+  function updateInstructionOrder(from: number, to: number) {
+    moveInstruction(from, to);
+    setUnitSource((source) => {
+      if (!source) return source;
+      const steps = Array.from({ length: instructions.length }, (_, index) =>
+        source.instructions[index] ?? { body: "" }
+      );
+      const [step] = steps.splice(from, 1);
+      steps.splice(to, 0, step);
+      return { ...source, instructions: steps };
+    });
+    setStepAnnouncement(`Step ${from + 1} moved to position ${to + 1} of ${instructions.length}.`);
+  }
+
+  function deleteInstruction(index: number) {
+    removeInstruction(index);
+    setUnitSource((source) => {
+      if (!source) return source;
+      const steps = Array.from({ length: instructions.length }, (_, stepIndex) =>
+        source.instructions[stepIndex] ?? { body: "" }
+      );
+      steps.splice(index, 1);
+      return { ...source, instructions: steps };
+    });
+  }
 
   const selectedCategory = useWatch({ control, name: "category" });
   const watchedTitle = useWatch({ control, name: "title" });
@@ -448,7 +466,6 @@ export function RecipeForm({
 
   function addIngredientHeading() {
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     const newIndex = getValues("ingredients")?.length ?? 0;
     addIngredient({ quantity: "", unit: "", item: "", note: "", group_label: "" });
     window.setTimeout(() => {
@@ -460,7 +477,6 @@ export function RecipeForm({
   // last row, carrying that section's heading so it joins the right group.
   function addIngredientToSection(afterIndex: number, label: string | null) {
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     insertIngredient(afterIndex + 1, { quantity: "", unit: "", item: "", note: "", group_label: label });
     window.setTimeout(() => {
       document.getElementById(`ingredient-${afterIndex + 1}-item`)?.focus();
@@ -472,7 +488,6 @@ export function RecipeForm({
   // so heading runs stay contiguous.
   function handleIngredientDragStart(index: number) {
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     setDraggingIngredientIndex(index);
   }
 
@@ -524,7 +539,6 @@ export function RecipeForm({
       if (keypadElement?.contains(target) || activeFieldElement?.contains(target)) return;
 
       setActiveIngredientKeypad(null);
-      setManualIngredientKeypad(null);
     }
 
     document.addEventListener("mousedown", handlePointerDown);
@@ -545,9 +559,6 @@ export function RecipeForm({
   function activateIngredientKeypad(index: number, field: IngredientKeypadField) {
     const target = { index, field };
     setActiveIngredientKeypad(target);
-    setManualIngredientKeypad((current) =>
-      ingredientKeypadTargetKey(current) === ingredientKeypadTargetKey(target) ? current : null
-    );
   }
 
   function ingredientKeypadFieldName(target: IngredientKeypadTarget) {
@@ -578,7 +589,6 @@ export function RecipeForm({
 
     if (activeIngredientKeypad.field === "quantity") {
       setActiveIngredientKeypad(null);
-      setManualIngredientKeypad(null);
       focusIngredientField(activeIngredientKeypad.index, "item");
       return;
     }
@@ -600,20 +610,12 @@ export function RecipeForm({
     if (activeIngredientKeypad.field === "quantity") {
       const nextTarget = { index: activeIngredientKeypad.index, field: "unit" as const };
       setActiveIngredientKeypad(nextTarget);
-      setManualIngredientKeypad(null);
       focusIngredientField(activeIngredientKeypad.index, "unit");
       return;
     }
 
     setActiveIngredientKeypad(null);
-    setManualIngredientKeypad(null);
     focusIngredientField(activeIngredientKeypad.index, "item");
-  }
-
-  function enableManualIngredientKeypad() {
-    if (!activeIngredientKeypad) return;
-    setManualIngredientKeypad(activeIngredientKeypad);
-    focusIngredientField(activeIngredientKeypad.index, activeIngredientKeypad.field);
   }
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -1513,8 +1515,6 @@ export function RecipeForm({
                         ingredientKeypadTargetKey(activeIngredientKeypad) === `${index}-quantity` && "border-green-sage bg-card"
                       )}
                       placeholder="Qty"
-                      inputMode={ingredientKeypadTargetKey(manualIngredientKeypad) === `${index}-quantity` ? "text" : "none"}
-                      readOnly={ingredientKeypadTargetKey(manualIngredientKeypad) !== `${index}-quantity`}
                       onFocus={() => activateIngredientKeypad(index, "quantity")}
                       {...register(`ingredients.${index}.quantity`)}
                     />
@@ -1525,8 +1525,6 @@ export function RecipeForm({
                         ingredientKeypadTargetKey(activeIngredientKeypad) === `${index}-unit` && "border-green-sage bg-card"
                       )}
                       placeholder="Unit"
-                      inputMode={ingredientKeypadTargetKey(manualIngredientKeypad) === `${index}-unit` ? "text" : "none"}
-                      readOnly={ingredientKeypadTargetKey(manualIngredientKeypad) !== `${index}-unit`}
                       onFocus={() => activateIngredientKeypad(index, "unit")}
                       {...register(`ingredients.${index}.unit`)}
                     />
@@ -1539,7 +1537,6 @@ export function RecipeForm({
                         aria-label={`Ingredient ${index + 1} name, required`}
                         onFocus={() => {
                           setActiveIngredientKeypad(null);
-                          setManualIngredientKeypad(null);
                         }}
                         {...register(`ingredients.${index}.item`)}
                       />
@@ -1555,7 +1552,6 @@ export function RecipeForm({
                       type="button"
                       onClick={() => {
                         setActiveIngredientKeypad(null);
-                        setManualIngredientKeypad(null);
                         removeIngredient(index);
                       }}
                       className="mt-3 text-ink-soft hover:text-danger transition-colors"
@@ -1573,10 +1569,8 @@ export function RecipeForm({
                       onInsertUnit={handleIngredientKeypadUnit}
                       onBackspace={handleIngredientKeypadBackspace}
                       onNext={handleIngredientKeypadNext}
-                      onManual={enableManualIngredientKeypad}
                       onClose={() => {
                         setActiveIngredientKeypad(null);
-                        setManualIngredientKeypad(null);
                       }}
                     />
                   )}
@@ -1621,18 +1615,18 @@ export function RecipeForm({
                 </span>
               )}
             </p>
+            <p className="sr-only" aria-live="polite" aria-atomic="true">{stepAnnouncement}</p>
             <div className="space-y-3">
               {instructions.map((field, index) => (
-                <div key={field.id} className="flex gap-2 items-start">
-                  <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-ink-inverse shrink-0 mt-2.5"
-                    style={{ background: "var(--color-deep-green)" }}
-                  >
-                    {index + 1}
-                  </span>
-                  <div className="flex-1">
+                <div key={field.id} className="flex items-start gap-1">
+                  <div className="flex w-11 shrink-0 flex-col items-center">
+                    <span className="mt-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-green-deep text-xs font-bold text-ink-inverse">
+                      {index + 1}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
                     <textarea
-                      className="input-cookbook w-full text-sm min-h-16 resize-none"
+                      className="input-cookbook w-full text-sm min-h-22 resize-none pointer-coarse:min-h-33"
                       placeholder={`Step ${index + 1}`}
                       required
                       aria-label={`Step ${index + 1}, required`}
@@ -1646,14 +1640,17 @@ export function RecipeForm({
                     )}
                   </div>
                   {instructions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeInstruction(index)}
-                      className="mt-3 text-ink-soft hover:text-danger transition-colors"
-                      aria-label="Remove step"
-                    >
-                      <Trash2 size={14} strokeWidth={1.75} />
-                    </button>
+                    <div className="flex shrink-0 flex-col items-center" role="group" aria-label={`Actions for step ${index + 1}`}>
+                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === 0} onClick={() => updateInstructionOrder(index, index - 1)} aria-label={`Move step ${index + 1} up`}>
+                          <ArrowUp size={14} strokeWidth={1.75} aria-hidden="true" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === instructions.length - 1} onClick={() => updateInstructionOrder(index, index + 1)} aria-label={`Move step ${index + 1} down`}>
+                          <ArrowDown size={14} strokeWidth={1.75} aria-hidden="true" />
+                        </Button>
+                      <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-danger active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" onClick={() => deleteInstruction(index)} aria-label={`Remove step ${index + 1}`}>
+                        <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               ))}
