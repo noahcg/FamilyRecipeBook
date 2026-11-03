@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.9] - 2026-11-03
+
+### Updates
+
+- Added controls to reorder recipe steps while editing, including on mobile.
+
 ## [1.1.8] - 2026-11-03
 
 ### Updates

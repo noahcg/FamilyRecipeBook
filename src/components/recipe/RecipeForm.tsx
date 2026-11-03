@@ -5,7 +5,7 @@ import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, GripVertical, ImagePlus, Plus, Search, Trash2, WandSparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, Camera, CheckCircle2, ChevronDown, ClipboardPaste, FileUp, GripVertical, ImagePlus, Plus, Search, Trash2, WandSparkles, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button, Input, Select, Textarea } from "@/components/ui";
 import { improveRecipeImportWithOpenAI } from "@/lib/actions/recipeImageImport";
@@ -422,8 +422,36 @@ export function RecipeForm({
     fields: instructions,
     append: addInstruction,
     remove: removeInstruction,
+    move: moveInstruction,
     replace: replaceInstructions,
   } = useFieldArray({ control, name: "instructions" });
+  const [stepAnnouncement, setStepAnnouncement] = useState("");
+
+  function updateInstructionOrder(from: number, to: number) {
+    moveInstruction(from, to);
+    setUnitSource((source) => {
+      if (!source) return source;
+      const steps = Array.from({ length: instructions.length }, (_, index) =>
+        source.instructions[index] ?? { body: "" }
+      );
+      const [step] = steps.splice(from, 1);
+      steps.splice(to, 0, step);
+      return { ...source, instructions: steps };
+    });
+    setStepAnnouncement(`Step ${from + 1} moved to position ${to + 1} of ${instructions.length}.`);
+  }
+
+  function deleteInstruction(index: number) {
+    removeInstruction(index);
+    setUnitSource((source) => {
+      if (!source) return source;
+      const steps = Array.from({ length: instructions.length }, (_, stepIndex) =>
+        source.instructions[stepIndex] ?? { body: "" }
+      );
+      steps.splice(index, 1);
+      return { ...source, instructions: steps };
+    });
+  }
 
   const selectedCategory = useWatch({ control, name: "category" });
   const watchedTitle = useWatch({ control, name: "title" });
@@ -1621,18 +1649,18 @@ export function RecipeForm({
                 </span>
               )}
             </p>
+            <p className="sr-only" aria-live="polite" aria-atomic="true">{stepAnnouncement}</p>
             <div className="space-y-3">
               {instructions.map((field, index) => (
-                <div key={field.id} className="flex gap-2 items-start">
-                  <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-ink-inverse shrink-0 mt-2.5"
-                    style={{ background: "var(--color-deep-green)" }}
-                  >
-                    {index + 1}
-                  </span>
-                  <div className="flex-1">
+                <div key={field.id} className="flex items-start gap-1">
+                  <div className="flex w-11 shrink-0 flex-col items-center">
+                    <span className="mt-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-green-deep text-xs font-bold text-ink-inverse">
+                      {index + 1}
+                    </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
                     <textarea
-                      className="input-cookbook w-full text-sm min-h-16 resize-none"
+                      className="input-cookbook w-full text-sm min-h-22 resize-none pointer-coarse:min-h-33"
                       placeholder={`Step ${index + 1}`}
                       required
                       aria-label={`Step ${index + 1}, required`}
@@ -1646,14 +1674,17 @@ export function RecipeForm({
                     )}
                   </div>
                   {instructions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeInstruction(index)}
-                      className="mt-3 text-ink-soft hover:text-danger transition-colors"
-                      aria-label="Remove step"
-                    >
-                      <Trash2 size={14} strokeWidth={1.75} />
-                    </button>
+                    <div className="flex shrink-0 flex-col items-center" role="group" aria-label={`Actions for step ${index + 1}`}>
+                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === 0} onClick={() => updateInstructionOrder(index, index - 1)} aria-label={`Move step ${index + 1} up`}>
+                          <ArrowUp size={14} strokeWidth={1.75} aria-hidden="true" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === instructions.length - 1} onClick={() => updateInstructionOrder(index, index + 1)} aria-label={`Move step ${index + 1} down`}>
+                          <ArrowDown size={14} strokeWidth={1.75} aria-hidden="true" />
+                        </Button>
+                      <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-danger active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" onClick={() => deleteInstruction(index)} aria-label={`Remove step ${index + 1}`}>
+                        <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               ))}
