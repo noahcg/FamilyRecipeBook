@@ -453,7 +453,13 @@ export async function deleteUser(input: { userId: string; ownershipTransfers?: O
           if (referencesError) return fail("Could not verify recipe image references. The account was not deleted.", "storage_status");
           for (const recipe of referenced ?? []) referencedUrls.add(recipe.photo_url);
         }
-        pathsToRemove = paths.filter((_, index) => !referencedUrls.has(urls[index]));
+        const cardPaths = new Set<string | null>();
+        for (const pathBatch of chunks(paths)) {
+          const { data: referencedCards, error: cardError } = await target.service.from("recipe_books").select("share_card_custom_path").in("share_card_custom_path", pathBatch);
+          if (cardError) return fail("Could not verify sharing image references. The account was not deleted.", "storage_status");
+          for (const book of referencedCards ?? []) cardPaths.add(book.share_card_custom_path);
+        }
+        pathsToRemove = paths.filter((path, index) => !referencedUrls.has(urls[index]) && !cardPaths.has(path));
       }
       try {
         await removeStoragePaths(target.service, bucket, pathsToRemove);

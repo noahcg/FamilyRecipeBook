@@ -60,7 +60,10 @@ export async function deleteAccount(): Promise<ActionResult> {
           return { success: false, error: "Could not verify your recipe images. Please try again." };
         }
         const referencedUrls = new Set((referenced ?? []).map((recipe) => recipe.photo_url));
-        pathsToRemove = paths.filter((path, index) => !referencedUrls.has(urls[index]));
+        const { data: cardReferences, error: cardError } = await service.from("recipe_books").select("share_card_custom_path").in("share_card_custom_path", paths);
+        if (cardError) return { success: false, error: "Could not verify your sharing images. Please try again." };
+        const cardPaths = new Set((cardReferences ?? []).map((book) => book.share_card_custom_path));
+        pathsToRemove = paths.filter((path, index) => !referencedUrls.has(urls[index]) && !cardPaths.has(path));
       }
       const { error: removeError } = pathsToRemove.length
         ? await service.storage.from(bucket).remove(pathsToRemove)

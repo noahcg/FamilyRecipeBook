@@ -8,6 +8,7 @@ import { Button } from "@/components/ui";
 import { signOut } from "@/lib/actions/auth";
 import { lookupShareableInvitation } from "@/lib/actions/shareableInvitations";
 import { getUser } from "@/lib/auth";
+import { getInvitationShareCard } from "@/lib/shareCard";
 import { InviteUnavailable } from "../../[token]/states";
 
 const getInvitation = cache(lookupShareableInvitation);
@@ -19,7 +20,8 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const description = invitation
     ? `Join ${invitation.cookbookTitle} on Home Cooked.`
     : "Open your invitation to join a cookbook on Home Cooked.";
-  const image = { url: "/opengraph-image", width: 1200, height: 630, alt: "Home Cooked family recipe book preview" };
+  const card = invitation ? await getInvitationShareCard(token) : null;
+  const image = { url: card ? `/invite/link/${token}/card` : "/opengraph-image", width: 1200, height: 630, alt: card ? `${card.title} cookbook invitation` : "Home Cooked family recipe book preview" };
 
   return {
     title,
