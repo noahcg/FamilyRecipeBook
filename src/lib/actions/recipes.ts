@@ -1,5 +1,7 @@
 "use server";
 
+import { recipeSaveError, recipeSaveRpc } from "@/lib/instructionGroupSave";
+
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
@@ -80,7 +82,8 @@ export async function createRecipe(
   const { ingredients, instructions, category, ...recipeFields } = parsed.data;
   const category_id = await resolveCategoryIdForBook(bookId, category);
 
-  const { data, error } = await supabase.rpc("save_recipe_atomic", {
+  const saveRpc = recipeSaveRpc(instructions);
+  const { data, error } = await supabase.rpc(saveRpc, {
     p_book_id: bookId,
     p_recipe_id: null,
     p_fields: { ...recipeFields, category_id },
@@ -89,7 +92,7 @@ export async function createRecipe(
   });
   const recipe = data as Recipe | null;
   if (error || !recipe) {
-    return { success: false, error: error?.message ?? "Could not create recipe" };
+    return { success: false, error: recipeSaveError(error, saveRpc, "Could not create recipe") };
   }
 
   // Log activity
@@ -170,7 +173,8 @@ export async function updateRecipe(
   }
 
   // Header and both replacement lists commit together, or all remain unchanged.
-  const { data, error } = await supabase.rpc("save_recipe_atomic", {
+  const saveRpc = recipeSaveRpc(instructions);
+  const { data, error } = await supabase.rpc(saveRpc, {
     p_book_id: bookId,
     p_recipe_id: recipeId,
     p_fields: updatePayload,
@@ -179,7 +183,7 @@ export async function updateRecipe(
   });
   const recipe = data as Recipe | null;
   if (error || !recipe) {
-    return { success: false, error: error?.message ?? "Could not update recipe" };
+    return { success: false, error: recipeSaveError(error, saveRpc, "Could not update recipe") };
   }
 
   // A recipe copied into several cookbooks is stored as independent rows that
@@ -235,7 +239,7 @@ async function syncEditAcrossCopies(params: {
   recipeFields: Record<string, unknown>;
   category: string | undefined;
   ingredients?: { item: string; [key: string]: unknown }[];
-  instructions?: { body: string }[];
+  instructions?: { body: string; group_label?: string | null }[];
 }): Promise<void> {
   const { supabase, userId, editedRecipeId, preEdit, recipeFields, category } = params;
 
@@ -281,7 +285,7 @@ async function syncEditAcrossCopies(params: {
     }
     // Sync remains best effort, but an individual copy can never lose its
     // children when replacement fails. RLS also catches membership changes.
-    await supabase.rpc("save_recipe_atomic", {
+    await supabase.rpc(recipeSaveRpc(params.instructions), {
       p_book_id: sibling.book_id,
       p_recipe_id: sibling.id,
       p_fields: payload,

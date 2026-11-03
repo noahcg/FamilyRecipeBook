@@ -1,3 +1,4 @@
+import { parsePastedInstructions } from "@/lib/recipeTextImport";
 import { type ImportedRecipe } from "@/lib/recipeImportSchema";
 
 const MAX_IMPORT_BYTES = 700 * 1024;
@@ -713,11 +714,13 @@ export function parseRecipeText(text: string): ImportedRecipe {
   const { title, descriptionLines, ingredientLines, instructionLines, hasIngredientHeading } = splitRecipeLines(lines);
   const ingredients = buildGroupedIngredients(ingredientLines, hasIngredientHeading);
 
-  const instructions = joinInstructionLines(
-    instructionLines
-      .filter((line) => !isSectionHeading(line, ["instructions", "directions", "method", "preparation"]))
-      .filter((line) => !looksLikeMetadata(line))
-  ).map((body) => ({ body }));
+  const instructionText = instructionLines
+    .filter((line) => !isSectionHeading(line, ["instructions", "directions", "method", "preparation"]))
+    .filter((line) => !looksLikeMetadata(line));
+  const groupedInstructions = parsePastedInstructions(instructionText.join("\n"));
+  const instructions = groupedInstructions.some((step) => step.group_label)
+    ? groupedInstructions.map((step) => ({ body: step.body, group_label: step.group_label ?? null }))
+    : joinInstructionLines(instructionText).map((body) => ({ body, group_label: null }));
 
   if (!ingredients.length) warnings.push("No clear ingredient list was found.");
   if (!instructions.length) warnings.push("No clear steps were found.");
@@ -734,7 +737,7 @@ export function parseRecipeText(text: string): ImportedRecipe {
     category: "",
     tags: [],
     ingredients: ingredients.length ? ingredients : [{ quantity: "", unit: "", item: "", note: "", group_label: null }],
-    instructions: instructions.length ? instructions.slice(0, 80) : [{ body: "" }],
+    instructions: instructions.length ? instructions.slice(0, 80) : [{ body: "", group_label: null }],
     confidence: !ingredients.length || !instructions.length ? "low" : "medium",
     warnings,
   };

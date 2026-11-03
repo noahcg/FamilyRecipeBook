@@ -59,6 +59,17 @@ test('recipe saves are atomic and retain authenticated permissions', async t => 
     assert.equal((await db.query('select item from recipe_ingredients where recipe_id=$1',[recipe.id])).rows[0].item,'Flour');
     assert.equal((await db.query('select body from recipe_instructions where recipe_id=$1',[recipe.id])).rows[0].body,'Bake');
   });
+  await t.test('grouped instruction saves persist headings and enforce the same permissions', async () => {
+    const saveGrouped = (actor) => as(actor, () => db.query(
+      'select save_recipe_with_instruction_groups($1,$2,$3::jsonb,$4::jsonb,$5::jsonb)',
+      [book, recipe.id, '{}', null, JSON.stringify([{body:'Mix',group_label:'Dough'},{body:'Glaze',group_label:'Icing'}])]
+     ));
+    await assert.rejects(saveGrouped(outsider), /unavailable|cannot be edited|permission/);
+    await saveGrouped(owner);
+    assert.deepEqual((await db.query('select body,group_label from recipe_instructions where recipe_id=$1 order by position',[recipe.id])).rows,
+      [{body:'Mix',group_label:'Dough'},{body:'Glaze',group_label:'Icing'}]);
+    await rpc(owner,recipe.id,{},null,[{body:'Bake'}]);
+  });
   await t.test('Contributor writes own recipes; Keeper edits others; removal revokes writes',async()=>{
     const contributor=await user();
     await db.query("update billing_accounts set plan='plus',status='active' where user_id=$1",[owner]);

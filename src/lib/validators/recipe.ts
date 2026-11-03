@@ -16,6 +16,10 @@ const ingredientSchema = z.object({
 });
 
 const instructionSchema = z.object({
+  group_label: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? null : value),
+    z.string().max(100).nullish()
+  ),
   body: z.string().min(1, "Step cannot be empty").max(2000),
 });
 

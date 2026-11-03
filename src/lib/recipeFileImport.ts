@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import Papa from "papaparse";
 import { extractRecipeTextWithLocalOcr, parseRecipeText } from "@/lib/imageImport";
-import { cleanGroupLabel, isIngredientGroupHeading, parseIngredientLine, parsePastedRecipe } from "@/lib/recipeTextImport";
+import { cleanGroupLabel, isIngredientGroupHeading, parseIngredientLine, parsePastedInstructions, parsePastedRecipe } from "@/lib/recipeTextImport";
 import type { IngredientInput, InstructionInput } from "@/lib/validators/recipe";
 
 export type ImportRecipeImage = {
@@ -85,24 +85,22 @@ function servingsFrom(value: unknown) {
   return match ? Number(match[1]) || undefined : undefined;
 }
 
-function instructionInputs(value: unknown): InstructionInput[] {
+function instructionInputs(value: unknown, group: string | null = null): InstructionInput[] {
   if (Array.isArray(value)) {
-    return value
-      .map((step) => {
-        if (typeof step === "string") return step;
-        if (step && typeof step === "object") return stringValue((step as Record<string, unknown>).text ?? (step as Record<string, unknown>).name);
-        return "";
-      })
-      .map((body) => body.replace(/^\d+[\).:-]\s*/, "").trim())
-      .filter(Boolean)
-      .map((body) => ({ body }));
+    if (value.every((step) => typeof step === "string")) {
+      return parsePastedInstructions(value.join("\n")).map((step) => ({ ...step, group_label: step.group_label ?? group }));
+    }
+    return value.flatMap((step) => instructionInputs(step, group));
   }
-
-  return stringValue(value)
-    .split(/\n+|\r+|(?:\s+)(?=\d+[\).]\s+)/)
-    .map((body) => body.replace(/^\d+[\).:-]\s*/, "").trim())
-    .filter(Boolean)
-    .map((body) => ({ body }));
+  if (value && typeof value === "object") {
+    const step = value as Record<string, unknown>;
+    const nested = step.itemListElement ?? step.steps;
+    if (nested) return instructionInputs(nested, stringValue(step.name) || group);
+    const body = stringValue(step.text ?? step.body ?? step.name).replace(/^\d+[\).:-]\s*/, "").trim();
+    const label = stringValue(step.group_label) || group;
+    return body ? [{ body, group_label: label }] : [];
+  }
+  return typeof value === "string" ? parsePastedInstructions(value).map((step) => ({ ...step, group_label: step.group_label ?? group })) : [];
 }
 
 function ingredientInputs(value: unknown): IngredientInput[] {

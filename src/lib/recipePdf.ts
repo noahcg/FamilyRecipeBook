@@ -1,5 +1,6 @@
 "use client";
 
+import { instructionNumbers } from "@/lib/instructionNumbering";
 import { jsPDF } from "jspdf";
 import { formatDuration } from "@/lib/formatDuration";
 import type { RecipeWithRelations } from "@/lib/types";
@@ -94,8 +95,10 @@ export async function createRecipePdf(recipe: RecipeWithRelations): Promise<File
     text([ingredient.quantity, ingredient.unit, ingredient.item, ingredient.note ? `(${ingredient.note})` : null].filter(Boolean).join(" "), 10, "normal", 4);
   }
   heading("Instructions");
+  const stepNumbers = instructionNumbers(recipe.instructions);
   recipe.instructions.forEach((instruction, index) => {
-    text(`${index + 1}. ${instruction.body}`, 10, "normal", 1);
+    if (instruction.group_label && (index === 0 || recipe.instructions[index - 1].group_label !== instruction.group_label)) text(instruction.group_label, 10, "bold");
+    text(`${stepNumbers[index]}. ${instruction.body}`, 10, "normal", 1);
     y += 2;
   });
 

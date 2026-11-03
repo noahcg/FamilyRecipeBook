@@ -14,7 +14,8 @@ async function load(path, dependencies = {}, globals = {}) {
   Function("exports", "require", ...Object.keys(globals), compiled)(exports, (name) => dependencies[name] ?? require(name), ...Object.values(globals));
   return exports;
 }
-const imageImport = await load("../src/lib/imageImport.ts");
+const textImportForImage = await load("../src/lib/recipeTextImport.ts");
+const imageImport = await load("../src/lib/imageImport.ts", { "@/lib/recipeTextImport": textImportForImage });
 const schema = await load("../src/lib/recipeImportSchema.ts");
 const permissions = await load("../src/lib/permissions.ts");
 const text = `Family pancakes
@@ -57,7 +58,7 @@ test("local OCR retains 3000px lossless text; AI images stay within the exact up
   } };
   class Image { width = 4000; height = 3000; set src(value) { this.onload(); } }
   class FileReader { readAsDataURL() { this.result = "data:image/png;base64,AAAA"; this.onload(); } }
-  const { prepareRecipeImportImage } = await load("../src/lib/imageImport.ts", {}, { Image, FileReader, document: { createElement: () => canvas } });
+  const { prepareRecipeImportImage } = await load("../src/lib/imageImport.ts", { "@/lib/recipeTextImport": textImportForImage }, { Image, FileReader, document: { createElement: () => canvas } });
   const file = new File(["image"], "page.png", { type: "image/png" });
   await prepareRecipeImportImage(file, "local");
   assert.deepEqual(encodings[0], { type: "image/png", quality: undefined, width: 3000, height: 2250 });
@@ -215,7 +216,7 @@ test("single photos keep original bytes while four pages share the request budge
   class Image { width = 1774; height = 2191; set src(value) { this.onload(); } }
   class FileReader { readAsDataURL() { this.result = source; this.onload(); } }
   const canvas = { getContext: () => ({ fillRect() {}, drawImage() {} }), toDataURL: () => { encodings++; return image; } };
-  const { prepareRecipeImportImage } = await load("../src/lib/imageImport.ts", {}, { Image, FileReader, document: { createElement: () => canvas } });
+  const { prepareRecipeImportImage } = await load("../src/lib/imageImport.ts", { "@/lib/recipeTextImport": textImportForImage }, { Image, FileReader, document: { createElement: () => canvas } });
   const file = new File(["image"], "page.jpg", { type: "image/jpeg" });
   assert.equal(await prepareRecipeImportImage(file, "openai", 1), source);
   assert.equal(encodings, 0);

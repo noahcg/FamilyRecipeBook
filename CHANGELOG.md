@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.13] - 2026-11-03
+
+### Updates
+
+- Added instruction headings for editing, importing, sharing, and printing recipes with multiple components, with step numbers restarting under each heading and a clear save error if the required database update is missing.
+
 ## [1.1.12] - 2026-11-03
 
 ### Updates

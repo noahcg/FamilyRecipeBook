@@ -51,6 +51,7 @@ export function IdeaCookView({ idea, onClose, onSave, isSaving, error, cookbookT
         recipe_id: "idea",
         position: index + 1,
         body: instruction.body,
+        group_label: null,
         created_at: "",
       })),
     [idea.instructions]

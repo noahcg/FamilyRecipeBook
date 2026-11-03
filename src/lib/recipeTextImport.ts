@@ -416,10 +416,32 @@ export function parsePastedIngredients(text: string): IngredientInput[] {
   );
 }
 
+export function isInstructionGroupHeading(line: string) {
+  const trimmed = line.trim();
+  if (!trimmed || hasInstructionMarker(trimmed) || isStandaloneInstructionMarker(trimmed)) return false;
+  return isIngredientGroupHeading(trimmed) && !/[.!?]$/.test(trimmed);
+}
+
 export function parsePastedInstructions(text: string): InstructionInput[] {
   const lines = toCleanLines(text).filter(
     (line) => !/^(instructions?|directions?|method|preparation|steps?)$/i.test(line)
   );
+  // Only short, unnumbered heading-like lines divide steps; ordinary directions remain text.
+  if (lines.some(isInstructionGroupHeading)) {
+    const result: InstructionInput[] = [];
+    let group: string | null = null;
+    let section: string[] = [];
+    const flush = () => {
+      if (section.length) result.push(...parsePastedInstructions(section.join("\n")).map((step) => ({ ...step, group_label: group })));
+      section = [];
+    };
+    for (const line of lines) {
+      if (isInstructionGroupHeading(line)) { flush(); group = cleanGroupLabel(line); }
+      else section.push(line);
+    }
+    flush();
+    return result.slice(0, 80);
+  }
   const markerCount = lines.filter((line) => hasInstructionMarker(line) || isStandaloneInstructionMarker(line)).length;
   const steps: string[] = [];
 
@@ -456,7 +478,9 @@ export function parsePastedInstructions(text: string): InstructionInput[] {
   } else if (lines.length > 1) {
     steps.push(...lines.map(stripInstructionMarker));
   } else {
-    steps.push(...splitParagraphSteps(lines[0] ?? ""));
+    const single = stripInstructionMarker(lines[0] ?? "");
+    const paragraphs = splitParagraphSteps(single);
+    steps.push(...(paragraphs.length ? paragraphs : single ? [single] : []));
   }
 
   return steps

@@ -1,5 +1,6 @@
 "use client";
 
+import { instructionNumbers } from "@/lib/instructionNumbering";
 import { mediaUrl } from "@/lib/media";
 import { Fragment, useEffect, useMemo, useState, useRef, type RefObject } from "react";
 import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
@@ -140,6 +141,7 @@ function importedRecipeToInput(recipe: NormalizedImportedRecipe, photoUrl?: stri
     instructions: recipe.instructions.length
       ? recipe.instructions.map((instruction) => ({
           body: truncateImportValue(instruction.body, 2000) ?? "Review imported instructions.",
+          group_label: truncateImportValue(instruction.group_label ?? undefined, 100) ?? null,
         }))
       : [{ body: "Review imported instructions." }],
   };
@@ -319,7 +321,7 @@ export function RecipeForm({
       quantity: ingredient.quantity ?? "", unit: ingredient.unit ?? "", item: ingredient.item,
       note: ingredient.note ?? "", group_label: ingredient.group_label ?? null,
     })),
-    instructions: recipe.instructions.map((instruction) => ({ body: instruction.body })),
+    instructions: recipe.instructions.map((instruction) => ({ body: instruction.body, group_label: instruction.group_label })),
   } : null, [recipe]);
   const [unitSource, setUnitSource] = useState<Pick<CreateRecipeInput, "ingredients" | "instructions"> | null>(initialUnitSource);
   const [projectionMetric, setProjectionMetric] = useState(metricUnits);
@@ -428,7 +430,7 @@ export function RecipeForm({
       steps.splice(to, 0, step);
       return { ...source, instructions: steps };
     });
-    setStepAnnouncement(`Step ${from + 1} moved to position ${to + 1} of ${instructions.length}.`);
+    setStepAnnouncement(`Step moved to position ${to + 1} of ${instructions.length} in the recipe.`);
   }
 
   function deleteInstruction(index: number) {
@@ -446,6 +448,16 @@ export function RecipeForm({
   const selectedCategory = useWatch({ control, name: "category" });
   const watchedTitle = useWatch({ control, name: "title" });
   const watchedIngredients = useWatch({ control, name: "ingredients" });
+  const watchedInstructions = useWatch({ control, name: "instructions" });
+  const stepNumbers = instructionNumbers(watchedInstructions ?? []);
+
+  function setInstructionHeadingRun(start: number, label: string | null) {
+    const steps = getValues("instructions");
+    const previous = steps[start]?.group_label ?? null;
+    for (let i = start; i < steps.length && (steps[i].group_label ?? null) === previous; i++) {
+      setValue(`instructions.${i}.group_label`, label, { shouldDirty: true });
+    }
+  }
   const ingredientNamesForPhotoSearch = useMemo(
     () => (watchedIngredients ?? []).map((ingredient) => ingredient.item).filter(Boolean),
     [watchedIngredients]
@@ -1618,18 +1630,27 @@ export function RecipeForm({
             <p className="sr-only" aria-live="polite" aria-atomic="true">{stepAnnouncement}</p>
             <div className="space-y-3">
               {instructions.map((field, index) => (
-                <div key={field.id} className="flex items-start gap-1">
+                <Fragment key={field.id}>
+                {watchedInstructions?.[index]?.group_label != null && (index === 0 || watchedInstructions[index - 1]?.group_label !== watchedInstructions[index]?.group_label) ? (
+                  <div className="flex items-center gap-2 pt-3">
+                    <input className="input-cookbook h-9 flex-1 text-sm font-bold text-green-deep" value={watchedInstructions[index]?.group_label ?? ""} onChange={(event) => setInstructionHeadingRun(index, event.target.value)} placeholder="Instruction heading, e.g. For the glaze" aria-label={`Instruction heading starting at step ${stepNumbers[index] ?? index + 1}`} />
+                    <button type="button" onClick={() => setInstructionHeadingRun(index, null)} aria-label="Remove instruction heading" className="text-ink-soft hover:text-danger"><X size={15} /></button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setInstructionHeadingRun(index, "")} className="ml-11 text-xs font-semibold text-green-deep hover:underline">Add heading before step {stepNumbers[index] ?? index + 1}</button>
+                )}
+                <div className="flex items-start gap-1">
                   <div className="flex w-11 shrink-0 flex-col items-center">
                     <span className="mt-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-green-deep text-xs font-bold text-ink-inverse">
-                      {index + 1}
+                      {stepNumbers[index] ?? index + 1}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <textarea
                       className="input-cookbook w-full text-sm min-h-22 resize-none pointer-coarse:min-h-33"
-                      placeholder={`Step ${index + 1}`}
+                      placeholder={`Step ${stepNumbers[index] ?? index + 1}`}
                       required
-                      aria-label={`Step ${index + 1}, required`}
+                      aria-label={`Step ${stepNumbers[index] ?? index + 1}${watchedInstructions?.[index]?.group_label ? ` in ${watchedInstructions[index].group_label}` : ""}, required`}
                       rows={2}
                       {...register(`instructions.${index}.body`)}
                     />
@@ -1640,24 +1661,25 @@ export function RecipeForm({
                     )}
                   </div>
                   {instructions.length > 1 && (
-                    <div className="flex shrink-0 flex-col items-center" role="group" aria-label={`Actions for step ${index + 1}`}>
-                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === 0} onClick={() => updateInstructionOrder(index, index - 1)} aria-label={`Move step ${index + 1} up`}>
+                    <div className="flex shrink-0 flex-col items-center" role="group" aria-label={`Actions for step ${stepNumbers[index] ?? index + 1}${watchedInstructions?.[index]?.group_label ? ` in ${watchedInstructions[index].group_label}` : ""}`}>
+                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === 0} onClick={() => updateInstructionOrder(index, index - 1)} aria-label={`Move step ${stepNumbers[index] ?? index + 1} up`}>
                           <ArrowUp size={14} strokeWidth={1.75} aria-hidden="true" />
                         </Button>
-                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === instructions.length - 1} onClick={() => updateInstructionOrder(index, index + 1)} aria-label={`Move step ${index + 1} down`}>
+                        <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-green-deep active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" disabled={index === instructions.length - 1} onClick={() => updateInstructionOrder(index, index + 1)} aria-label={`Move step ${stepNumbers[index] ?? index + 1} down`}>
                           <ArrowDown size={14} strokeWidth={1.75} aria-hidden="true" />
                         </Button>
-                      <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-danger active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" onClick={() => deleteInstruction(index)} aria-label={`Remove step ${index + 1}`}>
+                      <Button type="button" variant="ghost" size="sm" className="!min-h-7 min-w-7 !px-0 text-ink-soft hover:bg-transparent hover:text-danger active:translate-y-0 pointer-coarse:!min-h-11 pointer-coarse:min-w-11" onClick={() => deleteInstruction(index)} aria-label={`Remove step ${stepNumbers[index] ?? index + 1}`}>
                         <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
                       </Button>
                     </div>
                   )}
                 </div>
+                </Fragment>
               ))}
             </div>
             <button
               type="button"
-              onClick={() => addInstruction({ body: "" })}
+              onClick={() => addInstruction({ body: "", group_label: getValues("instructions").at(-1)?.group_label ?? null })}
               className="mt-2 flex items-center gap-1.5 text-sm text-green-deep font-semibold hover:underline"
             >
               <Plus size={14} /> Add step
@@ -1841,7 +1863,7 @@ export function RecipeForm({
                     <ul className="space-y-1">
                       {getValues("instructions").slice(0, 3).map((instruction, index) => (
                         <li key={`${instruction.body}-${index}`} className="line-clamp-1">
-                          {index + 1}. {instruction.body}
+                          {instructionNumbers(getValues("instructions"))[index]}. {instruction.body}
                         </li>
                       ))}
                     </ul>
@@ -2338,7 +2360,7 @@ export function RecipeForm({
                             <ol className="space-y-1 text-xs text-ink-soft">
                               {projectRecipeUnits(recipe, metricUnits).instructions.slice(0, 5).map((instruction, index) => (
                                 <li key={`${instruction.body}-${index}`} className="line-clamp-2">
-                                  {index + 1}. {instruction.body}
+                                  {instructionNumbers(recipe.instructions)[index]}. {instruction.body}
                                 </li>
                               ))}
                             </ol>

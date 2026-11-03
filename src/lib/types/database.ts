@@ -99,6 +99,7 @@ export interface RecipeInstruction {
   recipe_id: string;
   position: number;
   body: string;
+  group_label: string | null;
   created_at: string;
 }
 
