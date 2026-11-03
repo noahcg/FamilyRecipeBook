@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.7] - 2026-11-03
+
+### Updates
+
+- Added crawler instructions pointing to the public sitemap and excluding private and operational routes, with indexing disabled for Vercel previews.
+
 ## [1.1.6] - 2026-10-30
 
 ### Updates
