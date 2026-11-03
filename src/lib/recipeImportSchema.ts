@@ -26,6 +26,7 @@ export const importedRecipeSchema = z.object({
   instructions: z.array(
     z.object({
       body: z.string().min(1).max(2000),
+      group_label: z.string().max(100).nullable().default(null),
     })
   ).min(1).max(80),
   confidence: z.enum(["high", "medium", "low"]),
@@ -90,9 +91,10 @@ export const importedRecipeJsonSchema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["body"],
+        required: ["body", "group_label"],
         properties: {
           body: { type: "string", minLength: 1, maxLength: 2000 },
+          group_label: { type: ["string", "null"], maxLength: 100 },
         },
       },
     },
@@ -125,7 +127,7 @@ export function normalizeImportedRecipe(recipe: ImportedRecipe): ImportedRecipe 
       .filter((ingredient) => ingredient.item)
       .slice(0, 80),
     instructions: recipe.instructions
-      .map((instruction) => ({ body: instruction.body.trim() }))
+      .map((instruction) => ({ body: instruction.body.trim(), group_label: instruction.group_label?.trim() || null }))
       .filter((instruction) => instruction.body)
       .slice(0, 80),
     warnings: recipe.warnings.map((warning) => warning.trim()).filter(Boolean).slice(0, 6),

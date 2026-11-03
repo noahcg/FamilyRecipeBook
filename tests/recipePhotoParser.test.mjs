@@ -5,12 +5,15 @@ import test from "node:test";
 import ts from "typescript";
 
 const require = createRequire(import.meta.url);
+const textSource = await readFile(new URL("../src/lib/recipeTextImport.ts", import.meta.url), "utf8");
+const textExports = {};
+Function("exports", "require", ts.transpileModule(textSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(textExports, require);
 const source = await readFile(new URL("../src/lib/imageImport.ts", import.meta.url), "utf8");
 const compiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 const exports = {};
-Function("exports", "require", compiled)(exports, require);
+Function("exports", "require", compiled)(exports, (name) => name === "@/lib/recipeTextImport" ? textExports : require(name));
 const { parseRecipeText } = exports;
 
 test("wrapped ingredients stay attached without crossing component headings or seasoning items", () => {

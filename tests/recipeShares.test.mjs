@@ -88,7 +88,7 @@ test("shared saves propagate atomic writer failure and never report a partial sa
     const sourceClient = { from(table) {
       const builder = { select() { return this; }, eq() { return this; },
         single: async () => ({ data: table === "recipe_public_shares" ? {recipe_id: recipeId} : source, error: null }),
-        order: async () => ({data: table === "recipe_ingredients" ? [{item:"Flour"}] : [{body:"Mix"}],error:null}),
+        order: async () => ({data: table === "recipe_ingredients" ? [{item:"Flour"}] : [{body:"Mix",group_label:"Dough"}],error:null}),
       }; return builder;
     } };
     const memberClient = { from() { return {select(){return this;},eq(){return this;},order:async()=>({data:[{book_id:bookId,role:"keeper"}],error:null})}; } };
@@ -108,7 +108,7 @@ test("shared saves propagate atomic writer failure and never report a partial sa
     assert.equal(result.success,success);
     if(!success)assert.equal(result.error,"Database write failed");
     assert.equal(writes.length,1);
-    assert.deepEqual(writes[0].input.instructions,[{body:"Mix"}]);
+    assert.deepEqual(writes[0].input.instructions,[{body:"Mix",group_label:"Dough"}]);
     assert.equal(writes[0].input.ingredients[0].item,"Flour");
   }
 });

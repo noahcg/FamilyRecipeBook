@@ -78,7 +78,7 @@ export async function getPublicSharedRecipe(shareId: string): Promise<PublicShar
   const [recipeResult, ingredientsResult, instructionsResult] = await Promise.all([
     service.from("recipes").select("title, description, photo_url, source_name, story, prep_minutes, cook_minutes, servings, category:book_categories!recipes_category_id_fkey(id, name)").eq("id", share.recipe_id).eq("moderation_hidden", false).single(),
     service.from("recipe_ingredients").select("id, position, quantity, unit, item, note, group_label, created_at").eq("recipe_id", share.recipe_id).order("position"),
-    service.from("recipe_instructions").select("id, position, body, created_at").eq("recipe_id", share.recipe_id).order("position"),
+    service.from("recipe_instructions").select("id, position, body, group_label, created_at").eq("recipe_id", share.recipe_id).order("position"),
   ]);
   const recipe = recipeResult.data;
   const ingredients = ingredientsResult.data;
@@ -122,7 +122,7 @@ export async function saveSharedRecipe(shareId: string): Promise<ActionResult<{ 
       quantity: item.quantity ?? undefined, unit: item.unit ?? undefined,
       item: item.item, note: item.note ?? undefined, group_label: item.group_label,
     })),
-    instructions: recipe.instructions.map((item) => ({ body: item.body })),
+    instructions: recipe.instructions.map((item) => ({ body: item.body, group_label: item.group_label })),
   });
   if (!result.success) return result;
   revalidatePath(`/app/books/${destination.book_id}`);

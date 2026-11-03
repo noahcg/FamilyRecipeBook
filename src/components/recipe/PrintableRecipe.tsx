@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { instructionNumbers } from "@/lib/instructionNumbering";
 import { scaleIngredientQuantity } from "@/lib/ingredientScaling";
 import { displayIngredientAmount, displayRecipeTemperatures } from "@/lib/metricUnits";
 import { useAccount } from "@/lib/context/AccountContext";
@@ -15,6 +16,7 @@ function formatMinutes(label: string, minutes: number | null) {
 }
 
 export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipeProps) {
+  const stepNumbers = instructionNumbers(recipe.instructions);
   const { metricUnits } = useAccount();
   // Only a real, human-written story prints in the handwriting style; a plain
   // description prints as normal text below it.
@@ -97,10 +99,13 @@ export function PrintableRecipe({ recipe, servingScale = 1 }: PrintableRecipePro
             <h2>Steps</h2>
             <ol className="recipe-print-steps">
               {recipe.instructions.map((instruction, index) => (
-                <li key={instruction.id}>
-                  <span className="recipe-print-step-number">{index + 1}</span>
+                <Fragment key={instruction.id}>
+                {instruction.group_label && (index === 0 || recipe.instructions[index - 1].group_label !== instruction.group_label) && <li className="recipe-print-ingredient-group">{instruction.group_label}</li>}
+                <li>
+                  <span className="recipe-print-step-number">{stepNumbers[index]}</span>
                   <span>{displayRecipeTemperatures(instruction.body, metricUnits)}</span>
                 </li>
+                </Fragment>
               ))}
             </ol>
           </section>
