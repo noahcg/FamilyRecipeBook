@@ -43,6 +43,7 @@ interface RecipeRow {
 interface RecipeListItem extends RecipeRow {
   bookCount: number;
   bookTitles: string[];
+  books: { id: string; title: string }[];
   groupIds: string[];
 }
 
@@ -71,6 +72,7 @@ function dedupeAcrossCookbooks(rows: RecipeRow[]): RecipeListItem[] {
       loveCount: Math.max(...group.map((r) => r.loveCount)),
       bookCount: new Set(group.map((r) => r.book_id)).size,
       bookTitles: Array.from(new Set(group.map((r) => r.bookTitle))),
+      books: Array.from(new Map(group.map((r) => [r.book_id, { id: r.book_id, title: r.bookTitle }])).values()),
       groupIds: group.map((r) => r.id),
     };
   });
@@ -133,7 +135,7 @@ function recipeMeta(recipe: RecipeListItem) {
 }
 
 function recipeHaystack(recipe: RecipeListItem) {
-  return [recipe.title, recipe.source_name, recipeCreatorName(recipe), recipe.category, recipe.bookTitle, recipe.description]
+  return [recipe.title, recipe.source_name, recipeCreatorName(recipe), recipe.category, ...recipe.bookTitles, recipe.description]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -283,13 +285,18 @@ export function AllRecipesPage() {
       }));
   }, [filtered]);
 
-  const recentList = useMemo(
-    () =>
-      [...filtered].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    [filtered]
-  );
+  const visibleCookbooks = useMemo(() => {
+    const books = new Map<string, { id: string; title: string; count: number }>();
+    for (const recipe of filtered) {
+      for (const book of recipe.books) {
+        const existing = books.get(book.id);
+        if (existing) existing.count += 1;
+        else books.set(book.id, { ...book, count: 1 });
+      }
+    }
+    return Array.from(books.values()).sort((a, b) => a.title.localeCompare(b.title));
+  }, [filtered]);
 
-  const newestRecipe = recentList[0] ?? null;
   const showContents = !loading && filtered.length > 0;
   const addRecipeHref = addRecipeBookId
     ? `/app/books/${addRecipeBookId}/recipes/new`
@@ -383,34 +390,30 @@ export function AllRecipesPage() {
       mobileSideDrawer={
         showContents
           ? {
-              label: "Index",
-              ariaLabel: "Open recipe contents",
-              eyebrow: "Recipe Index",
-              title: "Chapters",
+              label: "Cookbooks",
+              ariaLabel: "Open cookbooks",
+              eyebrow: "Across your books",
+              title: "Cookbooks",
               icon: <BookOpen size={17} strokeWidth={1.8} />,
               isOpen: isContentsOpen,
               onOpen: () => setIsContentsOpen(true),
               onClose: () => setIsContentsOpen(false),
               children: (
                 <nav className="min-h-0 flex-1 overflow-y-auto pr-1">
-                  {chapters.map((chapter) => (
-                    <a
-                      key={chapter.category}
-                      href={`#${chapterId(chapter.category)}`}
+                  {visibleCookbooks.map((book) => (
+                    <Link
+                      key={book.id}
+                      href={`/app/books/${book.id}/recipes`}
                       onClick={() => setIsContentsOpen(false)}
-                      className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line-soft py-3 last:border-b-0"
+                      className="group flex min-h-11 items-center justify-between gap-3 border-b border-line-soft py-3 last:border-b-0"
                     >
-                      <span className="text-xs font-bold text-accent-cinnamon">{chapter.number}</span>
-                      <span
-                        className="truncate text-base font-semibold text-ink transition-colors group-hover:text-green-deep"
-                        style={{ fontFamily: "var(--font-playfair)" }}
-                      >
-                        {chapter.category}
+                      <span className="min-w-0 truncate text-base font-semibold text-ink transition-colors group-hover:text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
+                        {book.title}
                       </span>
-                      <span className="rounded-sm bg-paper-warm px-2 py-0.5 text-xs font-bold text-ink-soft">
-                        {chapter.recipes.length}
+                      <span className="shrink-0 rounded-sm bg-paper-warm px-2 py-0.5 text-xs font-bold text-ink-soft" aria-label={`${book.count} ${book.count === 1 ? "recipe" : "recipes"} shown`}>
+                        {book.count}
                       </span>
-                    </a>
+                    </Link>
                   ))}
                 </nav>
               ),
@@ -532,74 +535,33 @@ export function AllRecipesPage() {
             </main>
 
             <aside className="hidden lg:sticky lg:top-8 lg:block lg:self-start">
-              <div className="overflow-hidden rounded-xl border border-line bg-card shadow-[var(--shadow-paper)]">
-                <div className="border-b border-line-soft bg-paper-warm px-5 py-4">
+              <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain rounded-xl border border-line bg-card shadow-[var(--shadow-paper)]">
+                <div className="sticky top-0 z-10 border-b border-line-soft bg-paper-warm px-5 py-4">
                   <p className="text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">Across your books</p>
                   <h2
                     className="mt-1 text-2xl font-bold leading-tight text-green-deep"
                     style={{ fontFamily: "var(--font-playfair)" }}
                   >
-                    Chapter Index
+                    Cookbooks
                   </h2>
                 </div>
                 <nav className="px-5 py-3">
-                  {chapters.map((chapter) => (
-                    <a
-                      key={chapter.category}
-                      href={`#${chapterId(chapter.category)}`}
-                      className="group grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line-soft py-3 last:border-b-0"
+                  {visibleCookbooks.map((book) => (
+                    <Link
+                      key={book.id}
+                      href={`/app/books/${book.id}/recipes`}
+                      className="group flex min-h-11 items-center justify-between gap-3 border-b border-line-soft py-3 last:border-b-0"
                     >
-                      <span className="text-xs font-bold text-accent-cinnamon">{chapter.number}</span>
-                      <span
-                        className="truncate text-base font-semibold text-ink transition-colors group-hover:text-green-deep"
-                        style={{ fontFamily: "var(--font-playfair)" }}
-                      >
-                        {chapter.category}
+                      <span className="min-w-0 truncate text-base font-semibold text-ink transition-colors group-hover:text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
+                        {book.title}
                       </span>
-                      <span className="rounded-sm bg-paper-warm px-2 py-0.5 text-xs font-bold text-ink-soft">
-                        {chapter.recipes.length}
+                      <span className="shrink-0 rounded-sm bg-paper-warm px-2 py-0.5 text-xs font-bold text-ink-soft" aria-label={`${book.count} ${book.count === 1 ? "recipe" : "recipes"} shown`}>
+                        {book.count}
                       </span>
-                    </a>
+                    </Link>
                   ))}
                 </nav>
 
-                {newestRecipe && (
-                  <Link
-                    href={`/app/books/${newestRecipe.book_id}/recipes/${newestRecipe.id}`}
-                    onClick={(event) => handleRecipeOpen(event, newestRecipe)}
-                    className="group block border-t border-line-soft px-5 py-5 hover:bg-green-pale/50"
-                  >
-                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Newest recipe</p>
-                    <div className="grid grid-cols-[72px_minmax(0,1fr)] gap-3">
-                      <div className="aspect-square overflow-hidden rounded-md bg-green-pale">
-                        {newestRecipe.photo_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={newestRecipe.photo_url} alt={newestRecipe.title} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <BookOpen size={28} strokeWidth={1.2} className="text-green-sage" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <h3
-                          className="truncate text-lg font-bold leading-[1.15] text-green-deep"
-                          style={{ fontFamily: "var(--font-playfair)" }}
-                        >
-                          {newestRecipe.title}
-                        </h3>
-                        <div className="mt-1.5">
-                          <CookbookIndicator
-                            bookCount={newestRecipe.bookCount}
-                            bookTitle={newestRecipe.bookTitle}
-                            bookTitles={newestRecipe.bookTitles}
-                            visible
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                )}
               </div>
             </aside>
           </div>

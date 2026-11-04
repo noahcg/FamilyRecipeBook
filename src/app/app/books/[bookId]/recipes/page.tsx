@@ -1,6 +1,5 @@
 "use client";
 
-import { mediaUrl } from "@/lib/media";
 import { use, useEffect, useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -246,7 +245,6 @@ export default function RecipesPage({ params }: Props) {
     return groupRecipesByChapter(filtered, UNCATEGORIZED);
   }, [filtered]);
 
-  const newestRecipe = recipes[0] ?? null;
   const showContents = !loading && filtered.length > 0;
   const activeFilterDetails = activeFilter ? PRACTICAL_FILTERS[activeFilter] : null;
   const recipeSummary = recipeAllowance?.is_free
@@ -593,8 +591,8 @@ export default function RecipesPage({ params }: Props) {
             </div>
 
             <aside className="hidden lg:sticky lg:top-8 lg:block lg:self-start">
-              <div className="overflow-hidden rounded-xl border border-line bg-card shadow-[var(--shadow-paper)]">
-                <div className="border-b border-line-soft bg-paper-warm px-5 py-4">
+              <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain rounded-xl border border-line bg-card shadow-[var(--shadow-paper)]">
+                <div className="sticky top-0 z-10 border-b border-line-soft bg-paper-warm px-5 py-4">
                   <p className="text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
                     In this book
                   </p>
@@ -628,44 +626,6 @@ export default function RecipesPage({ params }: Props) {
                   ))}
                 </nav>
 
-                {newestRecipe && (
-                  <Link
-                    href={`/app/books/${bookId}/recipes/${newestRecipe.id}`}
-                    onClick={(event) => handleRecipeOpen(event, newestRecipe.id)}
-                    className="group block border-t border-line-soft px-5 py-5 hover:bg-green-pale/50"
-                  >
-                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">
-                      Newest recipe
-                    </p>
-                    <div className="grid grid-cols-[72px_minmax(0,1fr)] gap-3">
-                      <div className="aspect-square overflow-hidden rounded-md bg-green-pale">
-                        {newestRecipe.photo_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={mediaUrl(newestRecipe.photo_url)}
-                            alt={newestRecipe.title}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center">
-                            <BookOpen size={28} strokeWidth={1.2} className="text-green-sage" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <h3
-                          className="truncate text-lg font-bold leading-[1.15] text-green-deep"
-                          style={{ fontFamily: "var(--font-playfair)" }}
-                        >
-                          {newestRecipe.title}
-                        </h3>
-                        <p className="mt-1 line-clamp-2 text-sm leading-snug text-ink-muted">
-                          {recipeMeta(newestRecipe) || `Added ${formatAddedDate(newestRecipe.created_at)}`}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                )}
               </div>
             </aside>
           </div>

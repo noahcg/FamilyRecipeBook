@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.17] - 2026-11-04
+
+### Updates
+
+- Made long cookbook and chapter indexes scroll within the viewport while their headings stay visible, and removed the newest recipe cards from those panels.
+
+## [1.1.16] - 2026-11-04
+
+### Updates
+
+- Replaced the All Recipes chapter index with links to the cookbooks represented in the current recipe list.
+
+## [1.1.15] - 2026-11-04
+
+### Updates
+
+- Kept the entry method tabs and cookbook selection in the same place across recipe entry methods, with a mobile-friendly tab layout.
+
 ## [1.1.14] - 2026-11-03
 
 ### Updates
