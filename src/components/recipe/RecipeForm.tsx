@@ -1063,34 +1063,8 @@ export function RecipeForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="pb-10">
-      {/* Manual mode shows this inside the right column; paste/import keep it up top. */}
-      {showCookbookPicker && showPasteEntry && entryMode !== "manual" && (
-        <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
-          <Select
-            id="recipe-book"
-            label="Cookbook"
-            hint="Choose where this recipe should live."
-            value={resolvedSelectedBookId}
-            onChange={(event) => setSelectedBookId(event.target.value)}
-            className="h-12 text-sm"
-          >
-            {assignmentOptions.map((book) => (
-              <option key={book.id} value={book.id}>
-                {book.title}
-              </option>
-            ))}
-          </Select>
-        </div>
-      )}
-      {!showCookbookPicker && showPasteEntry && entryMode !== "manual" && activeBook && (
-        <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
-          <p className="mt-1 text-sm font-extrabold text-green-deep">{activeBook.title}</p>
-        </div>
-      )}
-
       {showPasteEntry && (
-        <div className="mb-6 inline-flex rounded-full border border-line bg-paper-soft p-1 shadow-xs">
+        <div className="mb-6 flex w-full rounded-full border border-line bg-paper-soft p-1 shadow-xs sm:inline-flex sm:w-auto">
           {[
             ["manual", "Manual entry"],
             ["paste", "Copy/paste"],
@@ -1111,7 +1085,7 @@ export function RecipeForm({
                   if (mode !== "manual") setPhotoImportReviewNotice(null);
                 }}
                 className={clsx(
-                  "rounded-full px-4 py-2 text-sm font-extrabold transition-colors",
+                  "min-h-11 min-w-0 flex-1 whitespace-nowrap rounded-full px-2 py-2 text-xs font-extrabold transition-colors sm:flex-none sm:px-4 sm:text-sm",
                   selected
                     ? "bg-green-deep text-ink-inverse shadow-xs"
                     : "text-green-deep hover:bg-green-pale"
@@ -1122,6 +1096,31 @@ export function RecipeForm({
               </button>
             );
           })}
+        </div>
+      )}
+
+      {showCookbookPicker && showPasteEntry && (
+        <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
+          <Select
+            id="recipe-book"
+            label="Save to cookbook"
+            hint="Choose where this recipe should live."
+            value={resolvedSelectedBookId}
+            onChange={(event) => setSelectedBookId(event.target.value)}
+            className="h-12 text-sm"
+          >
+            {assignmentOptions.map((book) => (
+              <option key={book.id} value={book.id}>
+                {book.title}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+      {!showCookbookPicker && showPasteEntry && activeBook && (
+        <div className="mb-6 rounded-xl border border-line-soft bg-card p-4 shadow-xs">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
+          <p className="mt-1 text-sm font-extrabold text-green-deep">{activeBook.title}</p>
         </div>
       )}
 
@@ -1143,7 +1142,7 @@ export function RecipeForm({
         <div className="space-y-6 lg:order-2">
 
         {/* ── Save to cookbook ── */}
-        {showCookbookPicker && (
+        {!showPasteEntry && showCookbookPicker && (
           <section className={sectionCardClassName}>
             <Select
               id="recipe-book"
@@ -1160,7 +1159,7 @@ export function RecipeForm({
             </Select>
           </section>
         )}
-        {!showCookbookPicker && activeBook && (
+        {!showPasteEntry && !showCookbookPicker && activeBook && (
           <section className={sectionCardClassName}>
             <p className="text-xs font-bold uppercase tracking-[0.08em] text-ink-soft">Saving to</p>
             <p className="mt-1 text-sm font-extrabold text-green-deep">{activeBook.title}</p>
