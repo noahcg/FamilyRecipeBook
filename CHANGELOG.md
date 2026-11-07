@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.15] - 2026-11-07
+
+### Fixes
+
+- Fixed uploaded invitation sharing images appearing blank in social previews, including images already saved.
+- Improved cookbook title contrast on invitation sharing images.
+
 ## [1.1.14] - 2026-11-03
 
 ### Updates

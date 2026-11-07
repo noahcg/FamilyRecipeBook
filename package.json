@@ -1,6 +1,6 @@
 {
   "name": "app",
-  "version": "1.1.14",
+  "version": "1.1.15",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -39,6 +39,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.74.0",
     "resend": "^6.12.3",
+    "sharp": "^0.35.5",
     "standardwebhooks": "^1.0.0",
     "stripe": "^18.5.0",
     "tesseract.js": "^7.0.0",
