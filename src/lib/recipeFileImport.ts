@@ -221,8 +221,16 @@ function parseHtml(text: string, fileName: string) {
   }];
 }
 
-function parseText(text: string, fileName: string) {
-  const parsed = parsePastedRecipe(text);
+function parseText(text: string, fileName: string, markdown = false) {
+  const plainText = markdown ? text
+    .replace(/^\uFEFF?---\s*\r?\n[\s\S]*?\r?\n---\s*(?:\r?\n|$)/, "")
+    .replace(/^[ \t]{0,3}#{1,6}[ \t]+(.+?)[ \t]*#*[ \t]*$/gm, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/(\*\*|__|~~)(.*?)\1/g, "$2")
+    .replace(/(?<!\w)[*_]([^*_\n]+)[*_](?!\w)/g, "$1")
+    .replace(/`([^`\n]+)`/g, "$1") : text;
+  const parsed = parsePastedRecipe(plainText);
   if (!parsed.ingredients.length && !parsed.instructions.length) return [];
   return [{
     id: recipeId(fileName, 0),
@@ -234,7 +242,7 @@ function parseText(text: string, fileName: string) {
     ingredients: parsed.ingredients,
     instructions: parsed.instructions,
     nutrition: {},
-    import_source: "Text",
+    import_source: markdown ? "Markdown" : "Text",
     import_metadata: { fileName },
     warnings: parsed.warnings,
   }];
@@ -343,6 +351,7 @@ async function parseSingleFile(file: File): Promise<NormalizedImportedRecipe[]> 
   if (/\.pdf$/i.test(fileName) || file.type === "application/pdf") return parsePdf(file);
   const text = await file.text();
   if (fileName.endsWith(".csv")) return parseCsv(text, fileName);
+  if (/\.(md|markdown)$/i.test(fileName) || file.type === "text/markdown") return parseText(text, fileName, true);
   if (fileName.endsWith(".txt")) return parseText(text, fileName);
   if (HTML_EXTENSIONS.test(fileName) || file.type === "text/html") return parseHtml(text, fileName);
   if (fileName.endsWith(".json") || fileName.endsWith(".paprikarecipes") || file.type.includes("json")) return parseJson(text, fileName);
@@ -368,7 +377,7 @@ async function parseZip(file: File): Promise<RecipeImportResult> {
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || IMAGE_EXTENSIONS.test(entry.name)) continue;
     const lower = entry.name.toLowerCase();
-    if (!/\.(html?|json|txt|csv)$/i.test(lower)) {
+    if (!/\.(html?|json|txt|csv|md|markdown)$/i.test(lower)) {
       skippedFiles.push({ fileName: entry.name, reason: "Unsupported file inside ZIP." });
       continue;
     }
@@ -379,7 +388,7 @@ async function parseZip(file: File): Promise<RecipeImportResult> {
       if (lower.endsWith(".csv")) parsed = parseCsv(text, entry.name);
       else if (lower.endsWith(".json")) parsed = parseJson(text, entry.name);
       else if (HTML_EXTENSIONS.test(lower)) parsed = parseHtml(text, entry.name);
-      else parsed = parseText(text, entry.name);
+      else parsed = parseText(text, entry.name, /\.(md|markdown)$/i.test(lower));
     } catch (error) {
       skippedFiles.push({ fileName: entry.name, reason: error instanceof Error ? error.message : "Could not parse file." });
       continue;
