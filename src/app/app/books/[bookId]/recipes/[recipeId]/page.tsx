@@ -6,6 +6,7 @@ import { getReactionData, getRecipeRatingSummary } from "@/lib/actions/reactions
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getHomeRecipe } from "@/lib/actions/homeRecipe";
+import { getAdjacentRecipes } from "@/lib/chapterContents";
 
 interface Props {
   params: Promise<{ bookId: string; recipeId: string }>;
@@ -22,7 +23,7 @@ export default async function RecipeDetailPage({ params }: Props) {
 
   if (!recipe || recipe.book_id !== bookId) notFound();
 
-  const [{ userReactions }, ratingSummary, memberRes, contributionRes, homeRecipe] = await Promise.all([
+  const [{ userReactions }, ratingSummary, memberRes, contributionRes, homeRecipe, contentsRes] = await Promise.all([
     getReactionData(recipeId, user.id),
     getRecipeRatingSummary(recipeId, user.id),
     supabase
@@ -33,7 +34,21 @@ export default async function RecipeDetailPage({ params }: Props) {
       .single(),
     supabase.rpc("can_contribute_to_book", { book_uuid: bookId, user_uuid: user.id }),
     getHomeRecipe(),
+    supabase.from("recipes")
+      .select("id,title,category:book_categories!recipes_category_id_fkey(name,position)")
+      .eq("book_id", bookId)
+      .order("created_at", { ascending: false }),
   ]);
+
+  const contents = ((contentsRes.data ?? []) as unknown as {
+    id: string; title: string; category: { name: string; position: number } | null;
+  }[]).map((item) => ({
+    id: item.id,
+    title: item.title,
+    category: item.category?.name ?? null,
+    categoryPosition: item.category?.position ?? null,
+  }));
+  const adjacent = getAdjacentRecipes(contents, recipeId, "Family Notes");
 
   const storedRole = memberRes.data?.role ?? null;
   const userRole = storedRole === "contributor" && contributionRes.data !== true ? "family" : storedRole;
@@ -41,6 +56,7 @@ export default async function RecipeDetailPage({ params }: Props) {
   return (
     <AppShell bookId={bookId}>
       <RecipeDetail
+        key={recipe.id}
         recipe={recipe}
         bookId={bookId}
         userRole={userRole as import("@/lib/types").BookRole | null}
@@ -48,6 +64,8 @@ export default async function RecipeDetailPage({ params }: Props) {
         userReactions={userReactions}
         ratingSummary={ratingSummary}
         homeRecipePinned={homeRecipe?.id === recipe.id}
+        previousRecipe={adjacent.previous}
+        nextRecipe={adjacent.next}
       />
     </AppShell>
   );

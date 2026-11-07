@@ -148,12 +148,14 @@ export default function RecipesPage({ params }: Props) {
   const [recipes, setRecipes] = useState<RecipeListItem[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [memberCount, setMemberCount] = useState(0);
+  const [bookDescription, setBookDescription] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<BookRole | null>(null);
   const [canEffectivelyContribute, setCanEffectivelyContribute] = useState(false);
   const [canInvite, setCanInvite] = useState(false);
   const [recipeAllowance, setRecipeAllowance] = useState<RecipeAllowanceRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
+  const openContents = searchParams.get("contents") === "1";
 
   useEffect(() => {
     let active = true;
@@ -172,11 +174,12 @@ export default function RecipesPage({ params }: Props) {
 
       const userRequest = supabase.auth.getUser();
 
-      const [recipesRes, userRes, accessSummary, allowanceRes] = await Promise.all([
+      const [recipesRes, userRes, accessSummary, allowanceRes, bookRes] = await Promise.all([
         recipesRequest,
         userRequest,
         getBookAccessSummary(bookId),
         supabase.rpc("get_book_recipe_allowance", { target_book_id: bookId }).maybeSingle(),
+        supabase.from("recipe_books").select("description").eq("id", bookId).maybeSingle(),
       ]);
       let favoriteRows: FavoriteRow[] = [];
 
@@ -205,6 +208,7 @@ export default function RecipesPage({ params }: Props) {
       setRecipes(nextRecipes);
       setFavoriteIds(new Set(favoriteRows.map((row) => row.recipe_id)));
       setMemberCount(accessSummary?.memberCount ?? 0);
+      setBookDescription(bookRes.data?.description?.trim() || null);
       setRecipeAllowance((allowanceRes.data as RecipeAllowanceRow | null) ?? null);
       setUserRole(accessSummary?.role ?? null);
       setCanEffectivelyContribute(accessSummary?.canAddRecipes ?? false);
@@ -215,6 +219,7 @@ export default function RecipesPage({ params }: Props) {
     loadRecipes().catch(() => {
       if (active) {
         setMemberCount(0);
+        setBookDescription(null);
         setUserRole(null);
         setCanEffectivelyContribute(false);
         setCanInvite(false);
@@ -254,6 +259,12 @@ export default function RecipesPage({ params }: Props) {
   const canManageBookMembers = canView(userRole);
   const canOpenBookSettings = canView(userRole);
   const toolbarActionCount = [canAddRecipes, canInvite, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
+
+  useEffect(() => {
+    if (loading || !openContents || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const frame = window.requestAnimationFrame(() => setIsContentsOpen(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, openContents]);
 
   useEffect(() => {
     if (loading) return;
@@ -386,6 +397,11 @@ export default function RecipesPage({ params }: Props) {
             >
               <BookName />
             </h1>
+            {bookDescription && (
+              <p className="mt-3 max-w-2xl whitespace-pre-line break-words text-base leading-relaxed text-ink-muted">
+                {bookDescription}
+              </p>
+            )}
             <div className="mt-2 flex max-w-2xl flex-wrap items-center gap-x-2 text-sm leading-relaxed text-ink-muted">
               <span>{activeFilterDetails ? activeFilterDetails.description : recipeSummary}</span>
               {!loading && canView(userRole) && (

@@ -37,7 +37,7 @@ This directory is the canonical UI library for Home Cooked. The visual catalog l
 | Cookbook icon | `CookbookIcon` | Choose from `cookbookIconOptions`; the larger `cookbookIconCatalog` also renders legacy values. |
 | Compact people display | `MemberAvatarStack` | Use for members, overflow, and an optional share action. |
 | Recipe memory | `RecipeStoryNote` | Use for a personal recipe story or memory, not general page copy. |
-| Product mark | `BrandLockup` | Use the default or `compact` size; do not recreate the logo as text. |
+| Product mark | `BrandLockup` | Use the default or `compact` size; both use the PNG artwork. Do not recreate the logo as text. |
 | Compact tab navigation | `BottomNav` | Use its five mutually exclusive active states as a single navigation object. |
 
 ## Accessibility is part of the primitive

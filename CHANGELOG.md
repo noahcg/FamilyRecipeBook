@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.19] - 2026-11-07
+
+### Updates
+
+- Added previous and next recipe navigation and a shortcut to the cookbook contents on recipe pages.
+
+## [1.1.18] - 2026-11-05
+
+### Updates
+
+- Let cookbook keepers add, edit, or clear a description in cookbook settings, and display it beneath the cookbook title.
+- Updated the navigation and public-facing logos to use the PNG artwork.
+
 ## [1.1.17] - 2026-11-04
 
 ### Updates
