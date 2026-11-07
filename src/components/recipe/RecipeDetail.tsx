@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  List,
   Check,
   Clock,
   Copy,
@@ -63,6 +64,8 @@ interface RecipeDetailProps {
   userReactions: UserReactions;
   ratingSummary: RecipeRatingSummary;
   homeRecipePinned: boolean;
+  previousRecipe: { id: string; title: string } | null;
+  nextRecipe: { id: string; title: string } | null;
 }
 
 function StarRatingControl({
@@ -134,6 +137,8 @@ function firstNonEmpty(...values: Array<string | null | undefined>) {
   return values.find((value) => value?.trim())?.trim();
 }
 
+const recipeNavControl = "relative isolate inline-flex h-11 min-w-11 items-center justify-center gap-1 px-3 text-xs font-bold text-green-deep transition before:absolute before:inset-1 before:-z-10 before:rounded-full before:border before:border-line before:bg-card before:shadow-xs hover:before:bg-green-pale focus-visible:outline-none focus-visible:[box-shadow:var(--focus-ring)]";
+
 export function RecipeDetail({
   recipe,
   bookId,
@@ -142,6 +147,8 @@ export function RecipeDetail({
   userReactions,
   ratingSummary,
   homeRecipePinned,
+  previousRecipe,
+  nextRecipe,
 }: RecipeDetailProps) {
   const { plan } = useAccount();
   const canUseGrocery = plan === "plus";
@@ -402,13 +409,24 @@ export function RecipeDetail({
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-black/10 lg:rounded-tr-xl" />
         <div className="absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pb-8 pt-4 sm:pb-14 sm:pt-5 lg:rounded-tr-xl">
           <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4 px-4 sm:px-5 lg:px-8">
-            <Link
-              href={recipesPath}
-              className="inline-flex h-10 min-w-0 items-center gap-2 rounded-full border border-white/35 bg-white-soft/88 px-3 text-sm font-extrabold text-green-deep shadow-[0_8px_24px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:bg-white-soft"
-            >
-              <ArrowLeft size={17} strokeWidth={2} />
-              <span className="sm:hidden">Recipes</span><span className="hidden sm:inline">Cookbook recipes</span>
-            </Link>
+            <nav aria-label="Cookbook recipe navigation" className="flex min-w-0 items-center">
+              {previousRecipe ? (
+                <Link href={`${recipesPath}/${previousRecipe.id}`} aria-label={`Previous recipe: ${previousRecipe.title}`} title={`Previous: ${previousRecipe.title}`} className={recipeNavControl}>
+                  <ArrowLeft size={15} className="shrink-0" aria-hidden="true" />
+                  <span className="hidden max-w-28 truncate sm:block lg:max-w-36">{previousRecipe.title}</span>
+                </Link>
+              ) : null}
+              <Link href={`${recipesPath}?contents=1`} aria-label="Table of contents" title="Table of contents" className={`${recipeNavControl} shrink-0`}>
+                <List size={16} aria-hidden="true" />
+                <span className="hidden sm:inline">Contents</span>
+              </Link>
+              {nextRecipe ? (
+                <Link href={`${recipesPath}/${nextRecipe.id}`} aria-label={`Next recipe: ${nextRecipe.title}`} title={`Next: ${nextRecipe.title}`} className={recipeNavControl}>
+                  <span className="hidden max-w-28 truncate sm:block lg:max-w-36">{nextRecipe.title}</span>
+                  <ArrowRight size={15} className="shrink-0" aria-hidden="true" />
+                </Link>
+              ) : null}
+            </nav>
 
             <div className="relative flex shrink-0 items-center gap-2">
               <button

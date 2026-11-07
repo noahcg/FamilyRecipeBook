@@ -6,6 +6,7 @@ import { CookbookBackLink } from "@/components/book/CookbookBackLink";
 import { BookCategoriesManager } from "@/components/book/BookCategoriesManager";
 import { BookDangerZone } from "@/components/book/BookDangerZone";
 import { RenameBookForm } from "@/components/book/RenameBookForm";
+import { BookDescriptionForm } from "@/components/book/BookDescriptionForm";
 import { BookPreferencesForm } from "@/components/book/BookPreferencesForm";
 import { SharingSettingsForm } from "@/components/book/SharingSettingsForm";
 import { ShareCardForm } from "@/components/book/ShareCardForm";
@@ -41,6 +42,7 @@ interface GlobalSettingsPageContentProps {
 interface BookSettingsPageContentProps {
   bookId: string;
   bookTitle: string;
+  bookDescription: string | null;
   bookCoverStyle: string;
   sharingEnabled: boolean;
   contributorsCanInvite: boolean;
@@ -376,6 +378,7 @@ export function GlobalSettingsPageContent({
 export function BookSettingsPageContent({
   bookId,
   bookTitle,
+  bookDescription,
   bookCoverStyle,
   sharingEnabled,
   contributorsCanInvite,
@@ -440,6 +443,7 @@ export function BookSettingsPageContent({
               <div className="recipe-card p-5">
                 <div className="space-y-6">
                   <RenameBookForm bookId={bookId} currentTitle={bookTitle} />
+                  <BookDescriptionForm bookId={bookId} currentDescription={bookDescription} />
                   {shareCardReady ? <ShareCardForm bookId={bookId} bookTitle={bookTitle} userId={shareCardUserId} initialRecipeId={shareCardRecipeId} initialCustomPath={shareCardCustomPath} recipes={shareCardRecipes} needsReview={shareCardNeedsReview} /> : <p className="text-sm text-ink-muted">Sharing images need the latest database migrations (046 and 047).</p>}
                   {sharingPreferencesReady ? (
                     <SharingSettingsForm

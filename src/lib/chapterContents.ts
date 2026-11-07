@@ -28,3 +28,12 @@ export function groupRecipesByChapter<T extends ChapterRecipe>(recipes: T[], fal
       recipes: chapter.recipes.sort((a, b) => a.title.localeCompare(b.title)),
     }));
 }
+
+export function getAdjacentRecipes<T extends ChapterRecipe & { id: string }>(recipes: T[], recipeId: string, fallback: string) {
+  const ordered = groupRecipesByChapter(recipes, fallback).flatMap((chapter) => chapter.recipes);
+  const index = ordered.findIndex((recipe) => recipe.id === recipeId);
+  return {
+    previous: index > 0 ? ordered[index - 1] : null,
+    next: index >= 0 ? ordered[index + 1] ?? null : null,
+  };
+}
