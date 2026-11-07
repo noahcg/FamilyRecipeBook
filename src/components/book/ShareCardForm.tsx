@@ -6,6 +6,7 @@ import { saveShareCard } from "@/lib/actions/shareCard";
 import { mediaUrl, storageMediaReference } from "@/lib/media";
 import { uploadRecipeImage } from "@/lib/upload";
 import { createClient } from "@/lib/supabase/client";
+import { SHARE_CARD_OVERLAY } from "@/lib/shareCardStyle";
 
 type RecipeOption = { id: string; title: string; photo_url: string };
 
@@ -69,7 +70,7 @@ export function ShareCardForm({ bookId, bookTitle, userId, initialRecipeId, init
     <div className="relative aspect-[1200/630] max-w-lg overflow-hidden rounded-lg bg-green-deep" aria-label="Approximate sharing card preview">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={preview ?? "/opengraph-image"} alt="" className="h-full w-full object-cover" />
-      {preview && <div className="absolute inset-0 flex flex-col justify-center bg-gradient-to-r from-green-deep/95 to-transparent p-5 text-white sm:p-8"><span className="text-xs font-bold tracking-widest">HOME COOKED</span><span className="mt-2 max-w-[70%] text-xl font-bold leading-tight sm:text-3xl">{bookTitle}</span><span className="mt-2 text-xs sm:text-sm">You’re invited to the table.</span></div>}
+      {preview && <><div className="absolute inset-0" style={{ backgroundImage: SHARE_CARD_OVERLAY }} /><div className="absolute inset-y-0 left-0 flex w-[64%] flex-col justify-center p-4 text-white sm:p-7"><span className="text-[10px] font-bold tracking-widest sm:text-xs">HOME COOKED</span><span className={`mt-2 break-words font-bold leading-tight ${bookTitle.length > 65 ? "text-sm sm:text-lg" : bookTitle.length > 40 ? "text-base sm:text-xl" : "text-xl sm:text-3xl"}`}>{bookTitle}</span><span className="mt-2 text-xs sm:text-sm">You’re invited to the table.</span></div></>}
     </div>
     <p className="text-xs text-ink-muted">Preview is approximate. Apps may crop or cache the card differently.</p>
     <Button type="button" size="sm" variant="secondary" disabled={(selected === saved && !reviewNeeded && !(selected === "custom" && file)) || saving || (selected === "custom" ? !file && !customPath : !!selected && !recipe)} loading={saving} onClick={save}>Save sharing image</Button>
