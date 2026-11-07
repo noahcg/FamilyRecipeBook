@@ -1,11 +1,42 @@
 # Changelog
 
-## [1.1.15] - 2026-11-07
+## [1.1.20] - 2026-11-07
 
 ### Fixes
 
 - Fixed uploaded invitation sharing images appearing blank in social previews, including images already saved.
 - Improved cookbook title contrast on invitation sharing images.
+
+## [1.1.19] - 2026-11-07
+
+### Updates
+
+- Added previous and next recipe navigation and a shortcut to the cookbook contents on recipe pages.
+
+## [1.1.18] - 2026-11-05
+
+### Updates
+
+- Let cookbook keepers add, edit, or clear a description in cookbook settings, and display it beneath the cookbook title.
+- Updated the navigation and public-facing logos to use the PNG artwork.
+
+## [1.1.17] - 2026-11-04
+
+### Updates
+
+- Made long cookbook and chapter indexes scroll within the viewport while their headings stay visible, and removed the newest recipe cards from those panels.
+
+## [1.1.16] - 2026-11-04
+
+### Updates
+
+- Replaced the All Recipes chapter index with links to the cookbooks represented in the current recipe list.
+
+## [1.1.15] - 2026-11-04
+
+### Updates
+
+- Kept the entry method tabs and cookbook selection in the same place across recipe entry methods, with a mobile-friendly tab layout.
 
 ## [1.1.14] - 2026-11-03
 
