@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.24] - 2026-11-07
+
+### Updates
+
+- Added Markdown recipe file imports, including Markdown files inside ZIP archives.
+- Kept parsed recipe previews visible while reviewing file imports and brought them into view on mobile.
+
 ## [1.1.23] - 2026-11-07
 
 ### Fixes

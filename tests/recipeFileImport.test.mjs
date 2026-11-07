@@ -20,6 +20,29 @@ const textImport = await load("../src/lib/recipeTextImport.ts");
 const { createRecipeSchema } = await load("../src/lib/validators/recipe.ts");
 const recipeText = "Simple soup\nIngredients\n1 cup water\n1 tsp salt\nInstructions\n1. Combine water and salt.\n2. Simmer for 10 minutes.";
 
+test("Markdown recipes import from files and ZIP entries", async () => {
+  const markdown = "---\ntags: dinner\n---\n# Simple **soup**\n\n## Ingredients\n- 1 cup water\n- 1 tsp *salt*\n\n## Instructions\n1. Combine water and salt.\n2. [Simmer](https://example.com) for 10 minutes.";
+  const { importRecipeFiles } = await load("../src/lib/recipeFileImport.ts", {
+    "@/lib/imageImport": imageImport,
+    "@/lib/recipeTextImport": textImport,
+    jszip: { loadAsync: async () => ({ files: { "recipes/soup.MARKDOWN": { name: "recipes/soup.MARKDOWN", dir: false, async: async () => markdown } } }) },
+  });
+  const result = await importRecipeFiles([
+    new File([markdown], "soup.MD"),
+    new File([markdown], "soup.markdown", { type: "text/markdown" }),
+    new File(["zip"], "recipes.zip", { type: "application/zip" }),
+  ]);
+  assert.deepEqual(result.skippedFiles, []);
+  assert.equal(result.recipes.length, 3);
+  for (const recipe of result.recipes) {
+    assert.equal(recipe.title, "Simple soup");
+    assert.equal(recipe.import_source, "Markdown");
+    assert.deepEqual(recipe.ingredients.map(({ item }) => item), ["water", "salt"]);
+    assert.deepEqual(recipe.instructions.map(({ body }) => body), ["Combine water and salt.", "Simmer for 10 minutes."]);
+    assert.equal(createRecipeSchema.safeParse(recipe).success, true);
+  }
+});
+
 for (const servings of [undefined, 4]) {
   test(`PDF without/with yield (${servings}) produces a saveable recipe`, async () => {
     let destroyed = false;

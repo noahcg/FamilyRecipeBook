@@ -304,6 +304,8 @@ export function RecipeForm({
   const [pasteSummary, setPasteSummary] = useState<string | null>(null);
   const [pasteDetails, setPasteDetails] = useState<PasteDetails>({});
   const fileImportRef = useRef<HTMLInputElement>(null);
+  const fileImportResultsRef = useRef<HTMLElement>(null);
+  const showFileImportResultsRef = useRef(false);
   const [fileImportRecipes, setFileImportRecipes] = useState<NormalizedImportedRecipe[]>([]);
   const [selectedImportIds, setSelectedImportIds] = useState<Set<string>>(new Set());
   const [expandedImportId, setExpandedImportId] = useState<string | null>(null);
@@ -312,6 +314,14 @@ export function RecipeForm({
   const [fileImportError, setFileImportError] = useState<string | null>(null);
   const [isFileParsing, setIsFileParsing] = useState(false);
   const [isSavingImport, setIsSavingImport] = useState(false);
+  useEffect(() => {
+    if (!showFileImportResultsRef.current) return;
+    showFileImportResultsRef.current = false;
+    if (fileImportRecipes.length && window.matchMedia("(max-width: 1023px)").matches) {
+      fileImportResultsRef.current?.focus({ preventScroll: true });
+      fileImportResultsRef.current?.scrollIntoView({ block: "start" });
+    }
+  }, [fileImportRecipes]);
   const [activeIngredientKeypad, setActiveIngredientKeypad] = useState<IngredientKeypadTarget | null>(null);
   const [draggingIngredientIndex, setDraggingIngredientIndex] = useState<number | null>(null);
   const [dragOverIngredientIndex, setDragOverIngredientIndex] = useState<number | null>(null);
@@ -894,6 +904,7 @@ export function RecipeForm({
 
     try {
       const result = await importRecipeFiles(files);
+      showFileImportResultsRef.current = result.recipes.length > 0;
       setFileImportRecipes(result.recipes);
       setSelectedImportIds(new Set(result.recipes.map((recipe) => recipe.id)));
       setSkippedImportFiles(result.skippedFiles);
@@ -2173,7 +2184,7 @@ export function RecipeForm({
                 <div>
                   <p className="text-sm font-bold text-ink">Import recipe files</p>
                   <p className="mt-1 text-sm leading-5 text-ink-soft">
-                    Choose Paprika, Plan to Eat, HTML, JSON, TXT, CSV, ZIP, or PDF recipe files.
+                    Choose Paprika, Plan to Eat, HTML, JSON, Markdown, TXT, CSV, ZIP, or PDF recipe files.
                     PDFs are read privately in your browser, with local OCR for scanned pages, and
                     must be 8 MB or smaller. Review everything before saving.
                   </p>
@@ -2202,7 +2213,7 @@ export function RecipeForm({
                 ref={fileImportRef}
                 type="file"
                 multiple
-                accept=".paprikarecipes,.html,.htm,.json,.jsonld,.zip,.csv,.txt,.pdf,text/html,application/json,application/zip,text/csv,text/plain,application/pdf"
+                accept=".paprikarecipes,.html,.htm,.json,.jsonld,.zip,.csv,.txt,.md,.markdown,.pdf,text/html,application/json,application/zip,text/csv,text/plain,text/markdown,application/pdf"
                 onChange={(event) => void parseRecipeFiles(Array.from(event.target.files ?? []))}
                 className="sr-only"
               />
@@ -2256,7 +2267,12 @@ export function RecipeForm({
             </section>
           </div>
 
-          <section className="min-w-0 space-y-3">
+          <section
+            ref={fileImportResultsRef}
+            aria-label="Parsed recipe previews"
+            tabIndex={fileImportRecipes.length ? 0 : -1}
+            className={clsx("min-w-0 scroll-mt-4 space-y-3", fileImportRecipes.length > 0 && "lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-y-auto")}
+          >
             {fileImportRecipes.length === 0 ? (
               <div className="rounded-xl border border-line bg-card p-8 text-center shadow-xs">
                 <p className="text-sm font-bold text-ink">No recipes parsed yet</p>
