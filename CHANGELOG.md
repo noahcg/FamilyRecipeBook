@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.21] - 2026-11-07
+
+### Fixes
+
+- Updated the mobile app home and cookbook home logos to match the desktop artwork.
+
 ## [1.1.20] - 2026-11-07
 
 ### Fixes

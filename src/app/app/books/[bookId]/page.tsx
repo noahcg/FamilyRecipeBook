@@ -276,10 +276,10 @@ export default async function BookHomePage({ params }: Props) {
                   aria-label="Home Cooked home"
                 >
                   <Image
-                    src="/images/homecooked.svg"
+                    src="/images/homecooked.png"
                     alt=""
-                    width={180}
-                    height={96}
+                    width={1536}
+                    height={750}
                     className="h-auto w-full"
                   />
                 </Link>
