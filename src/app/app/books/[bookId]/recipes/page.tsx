@@ -155,7 +155,6 @@ export default function RecipesPage({ params }: Props) {
   const [recipeAllowance, setRecipeAllowance] = useState<RecipeAllowanceRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [isContentsOpen, setIsContentsOpen] = useState(false);
-  const openContents = searchParams.get("contents") === "1";
 
   useEffect(() => {
     let active = true;
@@ -259,12 +258,6 @@ export default function RecipesPage({ params }: Props) {
   const canManageBookMembers = canView(userRole);
   const canOpenBookSettings = canView(userRole);
   const toolbarActionCount = [canAddRecipes, canInvite, canManageBookMembers, canOpenBookSettings].filter(Boolean).length;
-
-  useEffect(() => {
-    if (loading || !openContents || !window.matchMedia("(max-width: 1023px)").matches) return;
-    const frame = window.requestAnimationFrame(() => setIsContentsOpen(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, [loading, openContents]);
 
   useEffect(() => {
     if (loading) return;
@@ -371,16 +364,6 @@ export default function RecipesPage({ params }: Props) {
                     ))}
                   </nav>
 
-                  <div className="mt-5 grid grid-cols-2 gap-3 border-t border-line-soft pt-4">
-                    <div className="rounded-sm bg-paper-warm px-3 py-3">
-                      <p className="text-xs font-semibold text-ink-soft">Recipes</p>
-                      <p className="mt-1 text-2xl font-bold text-green-deep">{recipes.length}</p>
-                    </div>
-                    <div className="rounded-sm bg-paper-warm px-3 py-3">
-                      <p className="text-xs font-semibold text-ink-soft">Showing</p>
-                      <p className="mt-1 text-2xl font-bold text-green-deep">{filtered.length}</p>
-                    </div>
-                  </div>
                 </>
               ),
             }

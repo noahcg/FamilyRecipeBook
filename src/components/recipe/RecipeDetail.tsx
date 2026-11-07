@@ -416,7 +416,7 @@ export function RecipeDetail({
                   <span className="hidden max-w-28 truncate sm:block lg:max-w-36">{previousRecipe.title}</span>
                 </Link>
               ) : null}
-              <Link href={`${recipesPath}?contents=1`} aria-label="Table of contents" title="Table of contents" className={`${recipeNavControl} shrink-0`}>
+              <Link href={recipesPath} aria-label="Table of contents" title="Table of contents" className={`${recipeNavControl} shrink-0`}>
                 <List size={16} aria-hidden="true" />
                 <span className="hidden sm:inline">Contents</span>
               </Link>

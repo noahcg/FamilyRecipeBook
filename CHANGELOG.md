@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.23] - 2026-11-07
+
+### Fixes
+
+- Kept the mobile chapter menu closed when opening the table of contents from a recipe.
+- Removed the recipe and showing counts from the bottom of the mobile chapter menu.
+
 ## [1.1.22] - 2026-11-07
 
 ### Updates
