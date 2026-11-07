@@ -1,5 +1,13 @@
-const CACHE_NAME = "home-cooked-static-v4";
-const PRECACHE_URLS = ["/manifest.webmanifest", "/offline.html", "/logo.png"];
+const CACHE_NAME = "home-cooked-static-v5";
+const PRECACHE_URLS = [
+  "/manifest.webmanifest",
+  "/offline.html",
+  "/logo.png",
+  "/apple-touch-icon.png",
+  "/pwa-icon-192.png",
+  "/pwa-icon-512.png",
+  "/pwa-icon-maskable-512.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.22] - 2026-11-07
+
+### Updates
+
+- Updated home-screen icons to use the current Home Cooked artwork, including dedicated Apple and maskable icons.
+
 ## [1.1.21] - 2026-11-07
 
 ### Fixes
