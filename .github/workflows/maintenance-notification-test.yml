@@ -1,0 +1,16 @@
+name: Maintenance notification test
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/maintenance-notification-test.yml
+
+permissions: {}
+
+jobs:
+  intentional-failure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Fail intentionally to test notification delivery
+        run: exit 1
