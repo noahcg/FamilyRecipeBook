@@ -37,6 +37,7 @@ test("mobile public navigation stays above scrolled page content", async ({ page
 
 test("sign-in validates email without sending a request", async ({ page }) => {
   await page.goto("/sign-in");
+  await page.getByRole("button", { name: "Reject analytics" }).click();
   const requests: string[] = [];
   page.on("request", (request) => { if (request.method() === "POST") requests.push(request.url()); });
   await page.getByRole("button", { name: "Email me a code" }).click();
