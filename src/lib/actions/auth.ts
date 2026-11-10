@@ -13,6 +13,7 @@ import {
 import { emailEntrySchema, otpCodeSchema } from "@/lib/validators/auth";
 import { recordFirstSignIn } from "@/lib/analytics/recordFirstSignIn";
 import { requireProfileName } from "@/lib/profileCompletion";
+import { supportEmail } from "@/lib/support";
 
 /**
  * Never return `error.message` verbatim from the send step. GoTrue's wording
@@ -46,7 +47,7 @@ function describeSendError(error: AuthError): { error: string; rateLimited: bool
     default:
       if (error.status === 429) return rateLimitedCopy;
       return {
-        error: "We couldn't send your code just now. Try again in a moment.",
+        error: `We couldn't send a code. Check your email address, try another one, or contact ${supportEmail} for help.`,
         rateLimited: false,
       };
   }

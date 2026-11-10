@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.26] - 2026-11-10
+
+### Updates
+
+- Prepared an opt-in signup hook for blocking known disposable email domains, with a staging and review procedure.
+- Added limits to email addresses and recipe ingredient and instruction counts.
+- Improved sign-in error guidance when a code cannot be sent.
+
 ## [1.1.25] - 2026-11-09
 
 ### Fixes
