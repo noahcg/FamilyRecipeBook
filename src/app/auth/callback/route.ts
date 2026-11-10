@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSafeRedirectPath } from "@/lib/safeRedirect";
 import { recordFirstSignIn } from "@/lib/analytics/recordFirstSignIn";
+import { requireProfileName } from "@/lib/profileCompletion";
 
 function signInErrorUrl(request: NextRequest, error: "oauth" | "oauth_cancelled") {
   const requestUrl = new URL(request.url);
@@ -40,12 +41,14 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(signInErrorUrl(request, "oauth"));
   }
 
   await recordFirstSignIn(supabase);
+
+  if (data.user) await requireProfileName(data.user.id, nextPath);
 
   return NextResponse.redirect(new URL(nextPath, request.url));
 }

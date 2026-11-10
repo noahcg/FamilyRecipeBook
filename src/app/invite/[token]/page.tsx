@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { acceptInvitation, lookupInvitation } from "@/lib/actions/members";
 import { InviteUnavailable, SignedOutCta, WrongAccount } from "./states";
+import { requireProfileName } from "@/lib/profileCompletion";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -23,6 +24,7 @@ export default async function InvitePage({ params }: Props) {
   const isAccepted = !!invitation.accepted_at;
 
   if (user && emailMatches && !isExpired) {
+    await requireProfileName(user.id, nextPath);
     if (!isAccepted) {
       const result = await acceptInvitation(token);
       if (!result.success) {

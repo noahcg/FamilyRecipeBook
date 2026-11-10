@@ -6,6 +6,7 @@ import { AccountProvider } from "@/lib/context/AccountContext";
 import { RouteHistoryTracker } from "@/components/layout/RouteHistoryTracker";
 import { getEffectiveEntitlements } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
+import { requireProfileName } from "@/lib/profileCompletion";
 
 export default async function AppLayout({
   children,
@@ -14,6 +15,7 @@ export default async function AppLayout({
 }) {
   // Ensure authenticated
   const user = await requireUser();
+  await requireProfileName(user.id, "/app");
   // Confine users without a book to onboarding — they can't reach app pages
   // or nav until they've joined or created their first cookbook.
   const bookId = await getFirstBookId();
