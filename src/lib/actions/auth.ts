@@ -12,6 +12,7 @@ import {
 } from "@/lib/otp";
 import { emailEntrySchema, otpCodeSchema } from "@/lib/validators/auth";
 import { recordFirstSignIn } from "@/lib/analytics/recordFirstSignIn";
+import { requireProfileName } from "@/lib/profileCompletion";
 
 /**
  * Never return `error.message` verbatim from the send step. GoTrue's wording
@@ -138,14 +139,16 @@ export async function verifyEmailOtp(
     };
   }
 
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     email: parsedEmail.data.email,
     token: parsedToken.data.code,
     type: "email",
   });
   if (error) return { success: false, ...describeVerifyError(error) };
   await recordFirstSignIn(supabase);
-  redirect(getSafeRedirectPath(redirectTo, "/app"));
+  const nextPath = getSafeRedirectPath(redirectTo, "/app");
+  if (data.user) await requireProfileName(data.user.id, nextPath);
+  redirect(nextPath);
 }
 
 export async function signOut(formData?: FormData): Promise<void> {

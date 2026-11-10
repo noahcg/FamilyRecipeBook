@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.25] - 2026-11-09
+
+### Fixes
+
+- Ask new members without a profile name to add one before continuing into Home Cooked or accepting an invitation.
+
 ## [1.1.24] - 2026-11-07
 
 ### Updates

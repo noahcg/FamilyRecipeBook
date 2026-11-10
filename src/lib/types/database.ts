@@ -6,6 +6,7 @@ export type ReactionType = "love" | "made_it" | "favorite";
 export interface Profile {
   id: string;
   full_name: string | null;
+  requires_profile_name: boolean;
   avatar_url: string | null;
   known_for: string | null;
   created_at: string;

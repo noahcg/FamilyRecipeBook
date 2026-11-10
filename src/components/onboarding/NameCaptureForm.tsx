@@ -8,7 +8,7 @@ import { Button, Input } from "@/components/ui";
 import { profileNameSchema, type ProfileNameInput } from "@/lib/validators/profile";
 import { setProfileName } from "@/lib/actions/profile";
 
-export function NameCaptureForm({ submitLabel = "Save name" }: { submitLabel?: string }) {
+export function NameCaptureForm({ submitLabel = "Save name", nextPath }: { submitLabel?: string; nextPath?: string }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -28,6 +28,7 @@ export function NameCaptureForm({ submitLabel = "Save name" }: { submitLabel?: s
       setServerError(result.error);
       return;
     }
+    if (nextPath) router.replace(nextPath);
     router.refresh();
   }
 

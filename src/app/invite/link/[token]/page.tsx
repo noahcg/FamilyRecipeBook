@@ -11,6 +11,7 @@ import { lookupShareableInvitation } from "@/lib/actions/shareableInvitations";
 import { getUser } from "@/lib/auth";
 import { getInvitationShareCard } from "@/lib/shareCard";
 import { InviteUnavailable } from "../../[token]/states";
+import { requireProfileName } from "@/lib/profileCompletion";
 
 const getInvitation = cache(lookupShareableInvitation);
 
@@ -41,6 +42,8 @@ export default async function ShareableInvitePage({ params }: { params: Promise<
   if (!invitation) {
     return <InviteUnavailable nextPath={nextPath} message="This invitation link has expired or is no longer available. Ask the cookbook keeper for a new link." />;
   }
+
+  if (user) await requireProfileName(user.id, nextPath);
 
   const roleLabel = invitation.role === "contributor" ? "contributor" : "family member";
   return (

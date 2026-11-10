@@ -26,11 +26,14 @@ export async function setProfileName(fullName: string): Promise<ActionResult> {
 
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { data: updatedProfile, error } = await supabase
     .from("profiles")
     .update({ full_name: name })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
   if (error) return { success: false, error: error.message };
+  if (!updatedProfile) return { success: false, error: "We couldn't save your name. Please try again." };
 
   // Auth emails greet people by `user_metadata.full_name`, so keep it in step.
   // A `data`-only update sends no confirmation email.
