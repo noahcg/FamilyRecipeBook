@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const inviteMemberSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  email: z.string().max(254, "Email address is too long").email("Enter a valid email address"),
   role: z.enum(["contributor", "family"], {
     error: "Select a role",
   }),

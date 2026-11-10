@@ -55,10 +55,10 @@ export const createRecipeSchema = z.object({
   import_source: z.string().max(100).optional(),
   import_metadata: z.record(z.string(), z.unknown()).optional(),
   nutrition: z.record(z.string(), z.unknown()).optional(),
-  ingredients: z.array(ingredientSchema).min(1, "Add at least one ingredient"),
+  ingredients: z.array(ingredientSchema).min(1, "Add at least one ingredient").max(200, "A recipe can have at most 200 ingredients"),
   instructions: z
     .array(instructionSchema)
-    .min(1, "Add at least one step"),
+    .min(1, "Add at least one step").max(200, "A recipe can have at most 200 steps"),
 });
 
 export const updateRecipeSchema = createRecipeSchema.partial();

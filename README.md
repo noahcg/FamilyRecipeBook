@@ -55,6 +55,14 @@ The pantry-based recipe idea feature uses Cloudflare Workers AI by default. Serv
 
 All email goes out through Resend from the app server. Member invitations are sent directly; Supabase Auth email is routed through the **Send Email hook** (Authentication → Hooks → Send Email, pointed at `/api/auth/send-email`), which renders our own templates and bypasses the Supabase SMTP and Email Template settings entirely — changes made there have no effect.
 
+### Signup abuse protection
+
+Migration `049_disposable_signup_domains.sql` prepares a Supabase **Before User Created** Postgres hook, `public.check_signup_email_domain`. Applying the migration alone does not enable it: it must also be selected in Authentication → Hooks. The hook is enabled on the production project. Test changes before activation, including new and existing email-code users, Google signup and sign-in, direct Auth API requests, and invitations. Do not change the production hook without explicit approval. This hook is separate from the existing Send Email hook; leave that hook configured.
+
+The seed is a small, manually maintained starting list, not a comprehensive or automatically updated feed. Review domains and false positives regularly. The private `signup_email_domain_rules` table supports exact-domain allow overrides (`blocked = false`), which take precedence over a matching parent rule. It deliberately does not block email forwarding or privacy aliases in general. Existing accounts can still sign in because the hook runs only before creating a user. The app currently shows a generic failure for rejected email-code requests to avoid revealing whether an account exists; users can contact support@tryhomecooked.com. OAuth error handling should be checked in staging as well. Before considering a larger third-party list, review its license, accuracy, update process, and impact on legitimate users.
+
+Review Supabase Auth rate limits before changing them. OTP requests currently originate from server actions, so verify how Supabase attributes request IPs; do not trust arbitrary forwarded headers. Protect direct Auth API access as well as the app entry point. Do not enable CAPTCHA. Admin push alerts cover some server errors but are not a substitute for dedicated error monitoring; configure a monitoring service with sensitive data scrubbing and test alerts before launch.
+
 ### Auth configuration
 
 Sign-in is passwordless: one screen takes an email address, Supabase emails a 6-digit code, and `verifyOtp` starts the session. Google OAuth is offered alongside it. Set the following in the Supabase dashboard:

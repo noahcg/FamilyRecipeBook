@@ -2,7 +2,7 @@ import { z } from "zod";
 import { OTP_MAX_LENGTH, OTP_MIN_LENGTH } from "@/lib/otp";
 
 export const emailEntrySchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address"),
+  email: z.string().trim().toLowerCase().max(254, "Email address is too long").email("Enter a valid email address"),
 });
 
 export const otpCodeSchema = z.object({
