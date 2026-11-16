@@ -55,7 +55,7 @@ export const UI_LIBRARY = [
     name: "Dialog",
     importName: "Dialog",
     source: "src/components/ui/Dialog.tsx",
-    useWhen: "An interrupting confirmation or focused task needs attention.",
+    useWhen: "An interrupting confirmation or focused task needs attention, with backdrop and Escape dismissal.",
   },
   {
     name: "Drawer",

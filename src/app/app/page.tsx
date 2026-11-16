@@ -1,6 +1,7 @@
 import { mediaUrl } from "@/lib/media";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   CalendarDays,
   ChevronRight,
@@ -21,6 +22,7 @@ import { getHomeRecipe } from "@/lib/actions/homeRecipe";
 import { HomeRecipeButton } from "@/components/recipe/HomeRecipeButton";
 import { getHouseholdId, getMealPlanWeek } from "@/lib/actions/households";
 import { getEffectiveEntitlements } from "@/lib/entitlements";
+import { getOfficialCollectionLibrary } from "@/lib/officialCollections";
 
 const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -144,6 +146,7 @@ export default async function AppHomePage() {
   ]);
 
   const recipeBookId = billing.plan === "free" ? freeRecipeBookId : firstBookId;
+  if (!firstBookId && (await getOfficialCollectionLibrary()).length > 0) redirect("/app/bookshelf");
   const recipeBrowseHref = billing.plan === "plus"
     ? "/app/recipes"
     : recipeBookId ? `/app/books/${recipeBookId}/recipes` : "/onboarding/create-book";

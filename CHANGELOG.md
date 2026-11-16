@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.1] - 2026-11-16
+
+### Updates
+
+- Let cookbook keepers show or hide the Home Cooked label on photo-based social cards.
+
+## [1.2.0] - 2026-11-13
+
+### Features
+
+- Use the cookbook’s chosen sharing image for collection links and give custom social cards a rounded serif title.
+
+- Place collection removal in the cookbook action bar with a confirmation.
+- Use the same chapter listing, search, and desktop and mobile chapter index for collections and personal cookbooks.
+- Match collection contents and recipes to the cookbook reading layout, simplify shelf labels, and show when a collection is already on the shelf.
+
+- Publish an admin-owned cookbook as a free, read-only Home Cooked collection with a shareable preview and an Admin manager with cover thumbnails, publication status, search, and filters.
+- Let Free and Plus accounts add collections to their bookshelves without using personal cookbook or family-sharing allowances, including accounts without a personal cookbook.
+- Keep collection readers separate from family members, with private recipe photos, owner-only source maintenance, and access revoked when a collection is removed or unpublished.
+- Keep the original collection entry layout with a smaller cover beside a subtle chapter summary and friendly explanations of the free book, while keeping recipe details behind sign-in.
+- Refresh the Admin dashboard with searchable, filterable, paginated account tiers, ordered newest first.
+- Keep keyboard focus inside dialogs on mobile and restore dismissal by clicking the backdrop.
+
 ## [1.1.26] - 2026-11-10
 
 ### Updates

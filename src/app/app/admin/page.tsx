@@ -1,11 +1,14 @@
 import Link from "next/link";
-import { BookOpen, Crown, Database, ScrollText, Search, UserRoundCheck, Users } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BookOpen, Crown, Database, ScrollText, Search, UserRoundCheck, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { tierForBillingRecord } from "@/lib/entitlements";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PushSubscriptionToggle } from "@/components/admin/PushSubscriptionToggle";
 import { AdminShareProfiles } from "./AdminShareProfiles";
 import { AdminEntitlements, type AdminEntitlementRow } from "@/components/admin/AdminEntitlements";
+import { AdminCollectionsSection } from "@/components/collections/AdminCollectionsSection";
+import { BookCoverArt, Button, Card, Input } from "@/components/ui";
+import { resolveCoverColor } from "@/lib/bookCovers";
 
 // PostgREST returns a to-one embed (e.g. a book's owner) as a single object, so
 // reading it with [0] always misses. Normalize either shape.
@@ -32,6 +35,7 @@ interface AdminBookRow {
   id: string;
   title: string;
   description: string | null;
+  cover_style: string;
   owner_id: string;
   created_at: string | null;
   owner: { full_name: string | null }[] | null;
@@ -52,23 +56,19 @@ function StatCard({
   icon,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   icon: React.ReactNode;
 }) {
   return (
     <div className="rounded-md border border-line-soft bg-white-soft/70 p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink-soft">
-            {label}
-          </p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink-soft">{label}</p>
           <p className="mt-1 text-2xl font-black leading-none text-ink">
-            {value.toLocaleString()}
+            {value === null ? <span aria-label={`${label} unavailable`}>—</span> : value.toLocaleString()}
           </p>
         </div>
-        <span className="flex size-10 items-center justify-center rounded-sm bg-green-pale text-green-deep">
-          {icon}
-        </span>
+        <span className="flex size-10 items-center justify-center rounded-sm bg-green-pale text-green-deep">{icon}</span>
       </div>
     </div>
   );
@@ -85,20 +85,21 @@ export default async function AdminPage({
   const admin = createServiceClient();
 
   const [
-    { count: profileCount },
-    { count: bookCount },
-    { count: recipeCount },
+    { count: profileCount, error: profileCountError },
+    { count: bookCount, error: bookCountError },
+    { count: recipeCount, error: recipeCountError },
     { count: completedSignupCount, error: completedSignupError },
     { data: firstSignupRows, error: firstSignupError },
     { data: signupTrackingConfig },
-    { data: books },
-    { data: profiles },
+    { data: books, error: bookSearchError },
+    { data: profiles, error: profilesError },
     { data: allCookbooks },
     { data: allMemberships },
     { data: pendingInviteRows },
     { data: authUsers },
     { data: billingRows, error: billingError },
-    { data: auditRows },
+    { data: auditRows, error: auditError },
+    { data: collectionSourceBooks, error: collectionSourceError },
   ] = await Promise.all([
     admin.from("profiles").select("id", { count: "exact", head: true }),
     admin.from("recipe_books").select("id", { count: "exact", head: true }),
@@ -109,13 +110,13 @@ export default async function AdminPage({
     query
       ? admin
           .from("recipe_books")
-          .select("id,title,description,owner_id,created_at,owner:profiles!owner_id(full_name),members:book_members(id),recipes(id)")
+          .select("id,title,description,cover_style,owner_id,created_at,owner:profiles!owner_id(full_name),members:book_members(id),recipes(id)")
           .ilike("title", `%${query}%`)
           .order("created_at", { ascending: false })
           .limit(12)
       : admin
           .from("recipe_books")
-          .select("id,title,description,owner_id,created_at,owner:profiles!owner_id(full_name),members:book_members(id),recipes(id)")
+          .select("id,title,description,cover_style,owner_id,created_at,owner:profiles!owner_id(full_name),members:book_members(id),recipes(id)")
           .order("created_at", { ascending: false })
           .limit(8),
     // All profiles (search-filtered by name when a query is present).
@@ -153,10 +154,23 @@ export default async function AdminPage({
       .select("id, action, summary, created_at, actor:profiles!actor_id(full_name)")
       .order("created_at", { ascending: false })
       .limit(25),
+    // Collection publishing belongs to the source owner. Keep this list
+    // independent of the dashboard search and the recent-cookbook limit.
+    admin.from("recipe_books").select("id,title,cover_style,official_collections(published,publisher_id)").eq("owner_id", adminUser.id).order("title", { ascending: true }),
   ]);
 
   const bookRows = (books ?? []) as AdminBookRow[];
   const profileRows = (profiles ?? []) as AdminProfileRow[];
+  const collectionBooks = (collectionSourceBooks ?? []).map((book) => {
+    const collection = one(book.official_collections);
+    return {
+      id: book.id,
+      title: book.title,
+      coverStyle: book.cover_style,
+      configured: Boolean(collection),
+      published: collection?.published === true && collection.publisher_id === adminUser.id,
+    };
+  });
 
   const emailById = new Map<string, string>();
   for (const authUser of authUsers?.users ?? []) {
@@ -175,7 +189,7 @@ export default async function AdminPage({
     const billing = billingByUser.get(profile.id);
     const tier = tierForBillingRecord(billing ?? null);
     return { id: profile.id, name: profile.full_name ?? "Unnamed profile", email: emailById.get(profile.id) ?? null, tier, launchSignupNumber: firstSignupIds.get(profile.id) ?? null };
-  }).sort((a, b) => (a.launchSignupNumber ?? Number.MAX_SAFE_INTEGER) - (b.launchSignupNumber ?? Number.MAX_SAFE_INTEGER));
+  });
   const shareCookbooks = (allCookbooks ?? [])
     .map((row) => {
       const book = Array.isArray(row.recipe_books)
@@ -202,53 +216,52 @@ export default async function AdminPage({
   return (
     <div className="app-paper-bg paper-texture min-h-screen px-5 py-8">
       <main className="mx-auto max-w-[1180px]">
-        <div className="mb-7 flex flex-col gap-5 border-b border-line-soft pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-6 flex flex-col gap-5 border-b border-line-soft pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <Link href="/app" className="text-sm font-bold text-green-deep hover:underline">
-              Back to app
+            <Link href="/app" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-green-deep hover:underline">
+              <ArrowLeft size={15} aria-hidden="true" /> Back to app
             </Link>
-            <p className="mt-4 text-xs font-extrabold uppercase tracking-[0.08em] text-accent-cinnamon">
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.08em] text-accent-cinnamon">
               Admin
             </p>
-            <h1 className="mt-1 text-3xl font-black leading-tight text-ink">
+            <h1 className="mt-1 text-3xl font-bold leading-tight text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
               Support Console
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted">
               Find users and cookbooks for support, and invite people to cookbooks you keep.
             </p>
-            <Link href="/app/admin/moderation" className="mt-3 inline-block text-sm font-bold text-green-deep hover:underline">
+            <Link href="/app/admin/moderation" className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-green-deep hover:underline">
               Open privacy-preserving moderation queue
+              <ArrowUpRight size={14} aria-hidden="true" />
             </Link>
           </div>
 
-          <form
-            action="/app/admin"
-            className="flex h-12 w-full max-w-md items-center gap-2 rounded-full border border-line-soft bg-card/90 px-4 shadow-xs"
-          >
-            <span className="flex shrink-0 items-center justify-center text-ink-soft">
-              <Search size={16} />
-            </span>
-            <input
-              name="q"
-              defaultValue={query}
-              placeholder="Search cookbook or profile name"
-              className="min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-ink-soft focus:outline-none"
-            />
+          <form action="/app/admin" className="flex w-full max-w-md items-end gap-2">
+            <div className="min-w-0 flex-1"><Input label="Search cookbooks and profiles" name="q" defaultValue={query} placeholder="Search by name" rightElement={<Search size={17} aria-hidden="true" className="text-ink-soft" />} /></div>
+            <Button type="submit" variant="secondary">Search</Button>
           </form>
         </div>
 
-        <section className="grid gap-4 md:grid-cols-4">
-          <StatCard label="Profiles" value={profileCount ?? 0} icon={<Users size={21} />} />
-          <StatCard label="Cookbooks" value={bookCount ?? 0} icon={<BookOpen size={21} />} />
-          <StatCard label="Recipes" value={recipeCount ?? 0} icon={<Database size={21} />} />
-          {!completedSignupError && <StatCard label="Completed signups" value={completedSignupCount ?? 0} icon={<UserRoundCheck size={21} />} />}
+        <section aria-labelledby="admin-overview-heading">
+          <div>
+            <div className="pb-3">
+              <h2 id="admin-overview-heading" className="text-2xl font-bold leading-tight text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Overview</h2>
+              <p className="mt-1 text-sm text-ink-muted">Your Home Cooked community at a glance.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <StatCard label="Profiles" value={profileCountError ? null : profileCount ?? 0} icon={<Users size={16} />} />
+              <StatCard label="Cookbooks" value={bookCountError ? null : bookCount ?? 0} icon={<BookOpen size={16} />} />
+              <StatCard label="Recipes" value={recipeCountError ? null : recipeCount ?? 0} icon={<Database size={16} />} />
+              <StatCard label="Completed signups" value={completedSignupError ? null : completedSignupCount ?? 0} icon={<UserRoundCheck size={16} />} />
+            </div>
+            <p className="py-3 text-xs leading-relaxed text-ink-muted">
+              {completedSignupError
+                ? "Signup tracking is unavailable. Reload the page or check the signup tracking setup."
+                : `Completed signups since ${signupTrackingConfig?.started_at ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(signupTrackingConfig.started_at)) : "tracking began"}. Compare with public visitors in Vercel Web Analytics for the same period and production environment.`}
+              {(profileCountError || bookCountError || recipeCountError) && " Some counts could not be loaded. Reload the page to try again."}
+            </p>
+          </div>
         </section>
-
-        <p className="mt-2 text-xs text-ink-muted">
-          {completedSignupError
-            ? "Signup tracking is unavailable until its database migration is applied."
-            : `Completed signups since ${signupTrackingConfig?.started_at ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(signupTrackingConfig.started_at)) : "tracking began"}. Compare with public visitors in Vercel Web Analytics for the same period and production environment.`}
-        </p>
 
         <section className="mt-5 recipe-card p-5" aria-labelledby="launch-plus-heading">
           <div className="flex items-center gap-2">
@@ -271,43 +284,48 @@ export default async function AdminPage({
           )}
         </section>
 
+        <div className="mt-6"><AdminCollectionsSection books={collectionBooks} error={Boolean(collectionSourceError)} /></div>
+
         <section className="mt-4">
           <PushSubscriptionToggle />
         </section>
 
-        <AdminEntitlements rows={entitlementRows} />
+        {profilesError || billingError || firstSignupError ? (
+          <section className="mt-6" aria-labelledby="account-tiers-error-heading">
+            <Card>
+              <h2 id="account-tiers-error-heading" className="text-2xl font-bold leading-tight text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Account tiers</h2>
+              <p role="alert" className="mt-2 text-sm text-danger">Account tiers could not be loaded. Refresh the page to try again.</p>
+            </Card>
+          </section>
+        ) : <AdminEntitlements rows={entitlementRows} />}
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-          <div className="recipe-card flex max-h-[34rem] flex-col overflow-hidden">
-            <div className="shrink-0 border-b border-line-soft px-5 py-4">
-              <h2 className="text-base font-black text-ink">
+          <Card padded={false} className="flex max-h-[34rem] flex-col overflow-hidden">
+            <div className="shrink-0 border-b border-line-soft px-4 py-4 sm:px-6">
+              <h2 className="text-2xl font-bold leading-tight text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>
                 {query ? "Matching cookbooks" : "Recent cookbooks"}
               </h2>
+              <p className="mt-1 text-sm text-ink-muted">Open a cookbook to help its members.</p>
             </div>
-            <div className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
-              {bookRows.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-ink-muted">No cookbooks found.</p>
+            <div role="region" aria-label={query ? "Matching cookbooks" : "Recent cookbooks"} tabIndex={0} className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
+              {bookSearchError ? (
+                <p role="alert" className="px-4 py-6 text-sm text-danger sm:px-6">Cookbooks could not be loaded. Refresh the page to try again.</p>
+              ) : bookRows.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-ink-muted sm:px-6">No cookbooks found.</p>
               ) : (
                 bookRows.map((book) => (
-                  <Link
-                    key={book.id}
-                    href={`/app/admin/books/${book.id}`}
-                    className="block px-5 py-4 transition-colors hover:bg-green-pale/70"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-ink">{book.title}</p>
-                        <p className="mt-1 text-xs text-ink-muted">
-                          Owner: {one(book.owner)?.full_name ?? "Unknown"} · {book.members?.length ?? 0} members · {book.recipes?.length ?? 0} recipes
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-xs font-bold text-green-deep">View</span>
-                    </div>
+                  <Link key={book.id} href={`/app/admin/books/${book.id}`} className="flex min-w-0 items-center gap-3 px-4 py-3 transition-colors hover:bg-green-pale/70 sm:px-6">
+                    <BookCoverArt title={book.title} seed={book.id} color={resolveCoverColor(book.cover_style, book.id)} className="w-10 shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-green-deep">{book.title}</span>
+                      <span className="mt-1 block text-xs leading-relaxed text-ink-muted">Owner: {one(book.owner)?.full_name ?? "Unknown"} · {book.members?.length ?? 0} members · {book.recipes?.length ?? 0} recipes</span>
+                    </span>
+                    <ArrowUpRight size={17} aria-hidden="true" className="shrink-0 text-green-deep" />
                   </Link>
                 ))
               )}
             </div>
-          </div>
+          </Card>
 
           <AdminShareProfiles
             profiles={shareProfiles}
@@ -317,37 +335,32 @@ export default async function AdminPage({
           />
         </section>
 
-        <section className="mt-8">
-          <div className="recipe-card flex max-h-[34rem] flex-col overflow-hidden">
-            <div className="shrink-0 border-b border-line-soft px-5 py-4">
-              <h2 className="text-base font-black text-ink">Admin activity</h2>
-              <p className="mt-1 text-xs text-ink-muted">
-                Audit log of privileged actions taken from this panel.
-              </p>
+        <section className="mt-6" aria-labelledby="admin-activity-heading">
+          <Card padded={false} className="flex max-h-[34rem] flex-col overflow-hidden">
+            <div className="shrink-0 border-b border-line-soft px-4 py-4 sm:px-6">
+              <h2 id="admin-activity-heading" className="text-2xl font-bold leading-tight text-green-deep" style={{ fontFamily: "var(--font-playfair)" }}>Admin activity</h2>
+              <p className="mt-1 text-sm text-ink-muted">Recent privileged actions taken from this panel.</p>
             </div>
-            <div className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
-              {auditEntries.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-ink-muted">
-                  No admin actions recorded yet.
-                </p>
+            <div role="region" aria-label="Admin activity" tabIndex={0} className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-6">
+              {auditError ? (
+                <p role="alert" className="py-6 text-sm text-danger">Admin activity could not be loaded. Refresh the page to try again.</p>
+              ) : auditEntries.length === 0 ? (
+                <p className="py-6 text-sm text-ink-muted">No admin actions recorded yet.</p>
               ) : (
-                auditEntries.map((entry) => (
-                  <div key={entry.id} className="flex items-start gap-3 px-5 py-3.5">
-                    <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm bg-green-pale text-green-deep">
-                      <ScrollText size={16} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-ink">{entry.summary}</p>
-                      <p className="mt-0.5 text-xs text-ink-muted">
-                        {entry.actor?.[0]?.full_name ?? "Admin"} ·{" "}
-                        {formatDateTime(entry.created_at)}
-                      </p>
+                <div className="grid gap-x-6 sm:grid-cols-2">
+                  {auditEntries.map((entry) => (
+                    <div key={entry.id} className="flex min-w-0 items-start gap-3 border-b border-line-soft py-3.5">
+                      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-green-pale text-green-deep"><ScrollText size={16} aria-hidden="true" /></span>
+                      <div className="min-w-0">
+                        <p className="break-words text-sm font-bold text-ink">{entry.summary}</p>
+                        <p className="mt-0.5 text-xs text-ink-muted">{one(entry.actor)?.full_name ?? "Admin"} · {formatDateTime(entry.created_at)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
-          </div>
+          </Card>
         </section>
       </main>
     </div>

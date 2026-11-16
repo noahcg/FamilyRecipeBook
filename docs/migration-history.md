@@ -1,5 +1,47 @@
 # Migration history reconciliation
 
+## Production collection chapter preview migration (2026-11-13)
+
+`051_official_collection_chapters.sql` was applied to the existing `FamilyRecipe`
+production project (`wcoubzejnqnknvgdyjui`) through the Supabase Management API
+as `20261113185839_homecooked_051_official_collection_chapters`. Source SHA-256:
+`c1662042cffb0d2fefc4a30f339d49258f3cf920191927f06e074dffdc410796`.
+
+Only this reviewed file was applied. It adds the public chapter-name/count RPC
+for published collections without changing cookbook or recipe records. Preflight
+verified migration `050`, absence of the new function, and completed managed
+physical backup `2253368305` (`2026-11-13T09:03:47.795Z`). No full user-data export
+was made. Post-application checks confirmed anonymous/authenticated chapter
+preview privileges, continued anonymous recipe-content denial, and unchanged
+pre-existing function definitions, public/Storage policies, and triggers.
+
+Keep the original `051` file for new projects; do not replay it on this production
+project. Older history mismatches remain unresolved, so repository-wide
+`supabase db push` is still prohibited against production.
+
+## Production official collections migration (2026-11-13)
+
+`050_official_collections.sql` was applied to the existing `FamilyRecipe`
+production project (`wcoubzejnqnknvgdyjui`) through the Supabase Management API
+as `20261113182858_homecooked_050_official_collections`. Source SHA-256:
+`ad02388148fb8b3ce23db14ac79325f18419fb4e0178a12854a31bcce7ff7efe`.
+
+Only this reviewed file was applied. Preflight verified its schema dependencies
+and exported the existing migration history and schema definitions to private
+local evidence files. The recovery point is Supabase's completed managed physical
+backup `2253368305`, created at `2026-11-13T09:03:47.795Z`. No full local user-data
+export was made. Verification confirmed both collection tables have RLS enabled,
+all five source guards exist, and publication/content function privileges match
+the intended access model. All pre-existing public functions, public/Storage
+policies, and public triggers remained intact. Both new tables were empty after
+application: the migration did not designate or publish any cookbook.
+
+The application deployment and explicit publication of a cookbook remain separate
+steps. Keep the original `050` file for new projects; do not replay it on this
+production project. No older migration-history entries were repaired or replayed;
+the history mismatches documented below still prohibit a normal repository-wide
+`supabase db push` against production.
+
 ## Production recipe note management migration (2026-10-08)
 
 `039_recipe_note_management.sql` was applied to the existing production project

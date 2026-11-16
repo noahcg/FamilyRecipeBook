@@ -40,25 +40,31 @@ export function useModalFocus({ containerRef, open }: UseModalFocusOptions) {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Tab") return;
-      const focusable = getVisibleFocusable(container);
+      const candidates = getVisibleFocusable(container).filter((el) => el.tabIndex >= 0);
+      // A radio group has one tab stop: the checked radio, or its first option.
+      const focusable = candidates.filter((el) => {
+        if (!(el instanceof HTMLInputElement) || el.type !== "radio" || !el.name) return true;
+        const group = candidates.filter((candidate): candidate is HTMLInputElement =>
+          candidate instanceof HTMLInputElement && candidate.type === "radio" && candidate.name === el.name && candidate.form === el.form
+        );
+        return el === (group.find((candidate) => candidate.checked) ?? group[0]);
+      });
       if (focusable.length === 0) {
         // Nothing to tab between — keep focus on the container.
         event.preventDefault();
+        container.setAttribute("tabindex", "-1");
+        container.focus();
         return;
       }
-      const firstEl = focusable[0];
-      const lastEl = focusable[focusable.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey) {
-        if (active === firstEl || !container.contains(active)) {
-          event.preventDefault();
-          lastEl.focus();
-        }
-      } else if (active === lastEl) {
-        event.preventDefault();
-        firstEl.focus();
-      }
+      // WebKit can skip buttons during native tab navigation, escaping the
+      // modal before a boundary-only trap sees the last control. Move focus
+      // explicitly so every supported browser stays within the dialog.
+      const index = focusable.indexOf(document.activeElement as HTMLElement);
+      const next = event.shiftKey
+        ? (index <= 0 ? focusable.length - 1 : index - 1)
+        : (index < 0 || index === focusable.length - 1 ? 0 : index + 1);
+      event.preventDefault();
+      focusable[next].focus();
     };
 
     container.addEventListener("keydown", onKeyDown);

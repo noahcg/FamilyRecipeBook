@@ -33,6 +33,8 @@ function shouldCache(request) {
   if (request.method !== "GET") return false;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return false;
+  // Collection photos recheck publication and subscription on every request.
+  if (url.pathname.startsWith("/api/collections/")) return false;
   return ["script", "style", "font", "image", "manifest"].includes(request.destination);
 }
 

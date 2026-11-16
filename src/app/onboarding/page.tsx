@@ -32,7 +32,8 @@ const TIPS = [
   },
 ];
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ collectionRemoved?: string }> }) {
+  const search = await searchParams;
   const [user, invitations, profile] = await Promise.all([
     requireUser(),
     getPendingInvitationsForCurrentUser(),
@@ -47,6 +48,7 @@ export default async function OnboardingPage() {
   return (
     <AppShell lockNav>
       <div className="px-4 py-8 sm:px-5 lg:px-8">
+        {search.collectionRemoved === "1" && <p role="status" className="mb-5 rounded-sm bg-green-pale p-4 text-sm font-bold text-green-deep">Collection removed from your bookshelf. You can add it again using its original link.</p>}
         <div className="mb-7 border-b border-line-soft pb-6">
           <h1
             className="text-3xl font-bold leading-tight text-green-deep"

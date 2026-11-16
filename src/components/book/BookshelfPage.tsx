@@ -7,9 +7,11 @@ import { BookCoverArt, Button, CookbookIcon, EmptyState, Input } from "@/compone
 import { useAccount } from "@/lib/context/AccountContext";
 import type { CookbookNavItem } from "@/lib/actions/books";
 import { resolveCoverColor } from "@/lib/bookCovers";
+import type { OfficialCollectionLibraryItem } from "@/lib/officialCollections";
 
 interface BookshelfPageProps {
   books: CookbookNavItem[];
+  collections?: OfficialCollectionLibraryItem[];
 }
 
 function createHref(plan: "free" | "plus", books: CookbookNavItem[]) {
@@ -18,7 +20,7 @@ function createHref(plan: "free" | "plus", books: CookbookNavItem[]) {
     : "/pricing";
 }
 
-export function BookshelfPage({ books }: BookshelfPageProps) {
+export function BookshelfPage({ books, collections = [] }: BookshelfPageProps) {
   const { plan } = useAccount();
   const [query, setQuery] = useState("");
   const [columns, setColumns] = useState(1);
@@ -34,11 +36,15 @@ export function BookshelfPage({ books }: BookshelfPageProps) {
   }, []);
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
+  const shelfBooks = useMemo(() => [
+    ...books.map((book) => ({ ...book, official: false, published: true, href: `/app/books/${book.id}/recipes` })),
+    ...collections.map((collection) => ({ id: collection.id, title: collection.title, icon: "book-open", cover_style: collection.cover_style, recipeCount: Number(collection.recipe_count), isOwned: false, official: true, published: collection.published, href: `/app/collections/${collection.id}` })),
+  ], [books, collections]);
   const visibleBooks = useMemo(
-    () => books.filter((book) => book.title.toLocaleLowerCase().includes(normalizedQuery)),
-    [books, normalizedQuery]
+    () => shelfBooks.filter((book) => book.title.toLocaleLowerCase().includes(normalizedQuery)),
+    [shelfBooks, normalizedQuery]
   );
-  const totalRecipes = books.reduce((total, book) => total + book.recipeCount, 0);
+  const totalRecipes = shelfBooks.reduce((total, book) => total + book.recipeCount, 0);
   const newCookbookHref = createHref(plan, books);
   const newCookbookLabel = "New Cookbook";
   const shelfRows = useMemo(
@@ -61,7 +67,7 @@ export function BookshelfPage({ books }: BookshelfPageProps) {
               My Bookshelf
             </h1>
             <p className="mt-3 text-sm font-semibold text-ink-muted sm:text-base">
-              {books.length} {books.length === 1 ? "cookbook" : "cookbooks"} • {totalRecipes} {totalRecipes === 1 ? "recipe" : "recipes"}
+              {shelfBooks.length} {shelfBooks.length === 1 ? "cookbook" : "cookbooks"} • {totalRecipes} {totalRecipes === 1 ? "recipe" : "recipes"}
             </p>
           </div>
 
@@ -84,7 +90,7 @@ export function BookshelfPage({ books }: BookshelfPageProps) {
       </header>
 
       <section className="pt-9 sm:pt-11" aria-label="Cookbooks">
-        {books.length === 0 ? (
+        {shelfBooks.length === 0 ? (
           <EmptyState
             icon={<Library size={28} strokeWidth={1.5} className="text-green-sage" aria-hidden="true" />}
             title="Your bookshelf is waiting for its first cookbook."
@@ -106,15 +112,15 @@ export function BookshelfPage({ books }: BookshelfPageProps) {
         ) : (
           <div className="space-y-9 sm:space-y-11">
             {shelfRows.map((row) => (
-              <div key={row.map((book) => book.id).join("-")}>
+              <div key={row.map((book) => book.id).join("-")} className={row.some((book) => book.official) ? "pb-12" : undefined}>
                 <div className="grid grid-cols-1 items-end gap-x-5 min-[420px]:grid-cols-2 md:grid-cols-3 2xl:grid-cols-4">
                   {row.map((book) => (
                     <Link
                       key={book.id}
-                      href={`/app/books/${book.id}/recipes`}
-                      aria-label={`Open ${book.title}, ${book.recipeCount} ${book.recipeCount === 1 ? "recipe" : "recipes"}`}
+                      href={book.href}
+                      aria-label={`Open ${book.title}, ${book.recipeCount} ${book.recipeCount === 1 ? "recipe" : "recipes"}${book.official ? `, Home Cooked collection${book.published ? "" : ", currently unavailable"}` : ""}`}
                       title={book.title}
-                      className="group mx-auto block w-full max-w-[200px] rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-deep"
+                      className="group relative mx-auto block w-full max-w-[200px] rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-deep"
                     >
                       <span className="relative block transition-transform duration-200 group-hover:-translate-y-1">
                         <BookCoverArt
@@ -128,6 +134,7 @@ export function BookshelfPage({ books }: BookshelfPageProps) {
                           {book.recipeCount} {book.recipeCount === 1 ? "recipe" : "recipes"}
                         </span>
                       </span>
+                      {book.official && <span className="absolute inset-x-0 top-full block pt-5 text-center text-xs font-bold text-green-deep">Home Cooked collection<br /><span className="font-normal text-ink-muted">{book.published ? "Free extra" : "Currently unavailable"}</span></span>}
                     </Link>
                   ))}
                 </div>

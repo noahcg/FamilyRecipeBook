@@ -8,8 +8,8 @@ import { validMediaPath } from "@/lib/media";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
 
-export async function saveShareCard(bookId: string, recipeId: string | null, customPath: string | null = null): Promise<ActionResult> {
-  if (!z.uuid().safeParse(bookId).success || (recipeId !== null && !z.uuid().safeParse(recipeId).success) || (recipeId && customPath) || (customPath !== null && !validMediaPath(customPath))) {
+export async function saveShareCard(bookId: string, recipeId: string | null, customPath: string | null = null, showEyebrow: boolean = true): Promise<ActionResult> {
+  if (!z.boolean().safeParse(showEyebrow).success || !z.uuid().safeParse(bookId).success || (recipeId !== null && !z.uuid().safeParse(recipeId).success) || (recipeId && customPath) || (customPath !== null && !validMediaPath(customPath))) {
     return { success: false, error: "Choose a valid recipe." };
   }
   const user = await getUser();
@@ -25,7 +25,7 @@ export async function saveShareCard(bookId: string, recipeId: string | null, cus
     }
   }
   const { data: previous } = await supabase.from("recipe_books").select("share_card_custom_path").eq("id", bookId).maybeSingle();
-  const { error } = await supabase.from("recipe_books").update({ share_card_recipe_id: recipeId, share_card_custom_path: customPath }).eq("id", bookId);
+  const { error } = await supabase.from("recipe_books").update({ share_card_recipe_id: recipeId, share_card_custom_path: customPath, share_card_show_eyebrow: showEyebrow }).eq("id", bookId);
   if (error) return { success: false, error: "Could not save the sharing image. Check that the latest database migration is installed and try again." };
   if (previous?.share_card_custom_path && previous.share_card_custom_path !== customPath && previous.share_card_custom_path.startsWith(`${user.id}/`)) {
     await supabase.storage.from("recipe-images").remove([previous.share_card_custom_path]);

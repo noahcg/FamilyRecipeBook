@@ -46,6 +46,7 @@ test("invitation card fades the dark overlay across a bright full-size photo", a
     if (name === "@/lib/supabase/service") return { createServiceClient: () => ({ storage: { from: () => ({ download: async () => ({ data: new Blob([photo], { type: "image/png" }) }) }) } }) };
     if (name === "@/lib/shareCardImage") return { shareCardImageDataUrl };
     if (name === "@/lib/shareCardStyle") return styleExports;
+    if (name === "@/lib/shareCardTitle") return { shareCardTitle: async () => ({ src: `data:image/png;base64,${photo.toString("base64")}`, height: 50 }) };
     return require(name);
   }, routeExports);
   const response = await routeExports.GET(new Request("https://example.test/invite/link/token/card"), { params: Promise.resolve({ token: "token" }) });
@@ -57,4 +58,40 @@ test("invitation card fades the dark overlay across a bright full-size photo", a
   assert.ok(left.every((channel) => channel < 75), `Expected dark title background: ${left}`);
   assert.ok(middle[0] > left[0] + 50 && middle[0] < 200, `Expected a gradual fade: ${middle}`);
   assert.ok(right.every((channel) => channel > 245), `Expected the photo visible on the right: ${right}`);
+});
+
+
+test("rounded serif title renders with the bundled Fraunces font", async () => {
+  const titleSource = await readFile(new URL("../src/lib/shareCardTitle.ts", import.meta.url), "utf8");
+  const titleCode = ts.transpileModule(titleSource, { compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true } }).outputText;
+  const titleExports = {};
+  Function("require", "exports", titleCode)(createRequire(import.meta.url), titleExports);
+  const result = await titleExports.shareCardTitle("Home Cooked Holiday Cookbook");
+  assert.ok(result.height > 64);
+  const png = Buffer.from(result.src.split(",")[1], "base64");
+  const { data } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.ok(data.some((value, index) => index % 4 === 3 && value > 0), "title must render visible glyphs");
+});
+
+test("invitation and collection cards render the eyebrow only when enabled", async () => {
+  for (const base of ["invite/link/[token]", "collections/[slug]"]) {
+    const source = await readFile(new URL(`../src/app/${base}/card/route.tsx`, import.meta.url), "utf8");
+    const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
+    for (const showEyebrow of [true, false]) {
+      const route = {};
+      const card = { title: "Cookbook", photo: { kind: "storage", path: "test" }, credit: null, showEyebrow };
+      class CaptureImage { constructor(element) { this.element = element; } }
+      Function("require", "exports", code)((name) => {
+        if (name === "next/og") return { ImageResponse: CaptureImage };
+        if (name === "@/lib/shareCard") return { getInvitationShareCard: async () => card, getCollectionShareCard: async () => card };
+        if (name === "@/lib/supabase/service") return { createServiceClient: () => ({ storage: { from: () => ({ download: async () => ({ data: new Blob(["photo"], { type: "image/png" }) }) }) } }) };
+        if (name === "@/lib/shareCardImage") return { shareCardImageDataUrl: async () => "data:image/png;base64,cA==" };
+        if (name === "@/lib/shareCardTitle") return { shareCardTitle: async () => ({ src: "data:image/png;base64,cA==", height: 50 }) };
+        if (name === "@/lib/shareCardStyle") return { SHARE_CARD_OVERLAY: "none" };
+        return createRequire(import.meta.url)(name);
+      }, route);
+      const result = await route.GET(new Request("https://example.test/card"), { params: Promise.resolve({ token: "token", slug: "collection" }) });
+      assert.equal(JSON.stringify(result.element).includes("HOME COOKED"), showEyebrow, `${base}: ${showEyebrow}`);
+    }
+  }
 });

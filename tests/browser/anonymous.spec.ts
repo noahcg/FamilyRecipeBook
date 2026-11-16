@@ -47,7 +47,7 @@ test("sign-in validates email without sending a request", async ({ page }) => {
 });
 
 test("private pages redirect anonymous visitors to sign-in", async ({ page }) => {
-  for (const path of ["/app", "/app/recipes", "/app/settings", "/app/admin"]) {
+  for (const path of ["/app", "/app/recipes", "/app/settings", "/app/admin", "/app/collections/00000000-0000-4000-8000-000000000001"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/sign-in(?:\?|$)/);
     await expect(page.getByLabel("Email address")).toBeVisible();
@@ -72,6 +72,7 @@ test("private media denies anonymous access without cacheable responses", async 
     "/api/media/recipe-images/photo.jpg?share=invalid",
     "/api/media/book-covers/cover.jpg?share=00000000-0000-4000-8000-000000000001",
     "/api/media/unsupported/photo.jpg",
+    "/api/collections/00000000-0000-4000-8000-000000000001/images/00000000-0000-4000-8000-000000000002",
   ]) {
     const response = await request.get(path);
     expect(response.status(), path).toBe(404);
@@ -86,6 +87,7 @@ test("shared image optimizer rejects private media and remote storage URLs", asy
     "/api/media/recipe-images/photo.jpg",
     "/api/media/recipe-images/photo.jpg?share=00000000-0000-4000-8000-000000000001",
     "/api/media/recipe-originals/recipe/original.pdf",
+    "/api/collections/00000000-0000-4000-8000-000000000001/images/00000000-0000-4000-8000-000000000002",
     "https://smoke-fixture.supabase.co/storage/v1/object/public/recipe-images/photo.jpg",
   ]) {
     const response = await request.get(`/_next/image?${new URLSearchParams({ url, w: "640", q: "75" })}`);

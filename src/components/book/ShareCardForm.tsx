@@ -10,10 +10,12 @@ import { SHARE_CARD_OVERLAY } from "@/lib/shareCardStyle";
 
 type RecipeOption = { id: string; title: string; photo_url: string };
 
-export function ShareCardForm({ bookId, bookTitle, userId, initialRecipeId, initialCustomPath, recipes, needsReview }: { bookId: string; bookTitle: string; userId: string; initialRecipeId: string | null; initialCustomPath: string | null; recipes: RecipeOption[]; needsReview: boolean }) {
+export function ShareCardForm({ bookId, bookTitle, userId, initialRecipeId, initialCustomPath, initialShowEyebrow, recipes, needsReview }: { bookId: string; bookTitle: string; userId: string; initialRecipeId: string | null; initialCustomPath: string | null; initialShowEyebrow: boolean; recipes: RecipeOption[]; needsReview: boolean }) {
   const initialSelection = initialCustomPath ? "custom" : initialRecipeId ?? "";
   const [selected, setSelected] = useState(initialSelection);
   const [saved, setSaved] = useState(initialSelection);
+  const [showEyebrow, setShowEyebrow] = useState(initialShowEyebrow);
+  const [savedShowEyebrow, setSavedShowEyebrow] = useState(initialShowEyebrow);
   const [customPath, setCustomPath] = useState(initialCustomPath);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -36,18 +38,19 @@ export function ShareCardForm({ bookId, bookTitle, userId, initialRecipeId, init
         uploadedPath = storageMediaReference(uploaded.url)?.path ?? null;
         if (!uploadedPath) { setMessage("Could not prepare the image. Please try again."); return; }
       }
-      const result = await saveShareCard(bookId, selected === "custom" ? null : selected || null, selected === "custom" ? uploadedPath ?? customPath : null);
+      const result = await saveShareCard(bookId, selected === "custom" ? null : selected || null, selected === "custom" ? uploadedPath ?? customPath : null, showEyebrow);
       if (!result.success) {
         if (uploadedPath) await createClient().storage.from("recipe-images").remove([uploadedPath]);
         setMessage(result.error);
         return;
       }
       setSaved(selected);
+      setSavedShowEyebrow(showEyebrow);
       setCustomPath(selected === "custom" ? uploadedPath ?? customPath : null);
       setFile(null);
       setFilePreview(null);
       setReviewNeeded(false);
-      setMessage("Sharing image saved.");
+      setMessage("Sharing card saved.");
     } catch {
       setMessage("Could not save the sharing image. Please try again.");
     } finally {
@@ -56,24 +59,28 @@ export function ShareCardForm({ bookId, bookTitle, userId, initialRecipeId, init
   }
 
   return <div className="space-y-3 border-t border-line-soft pt-5">
-    <h3 className="text-base font-bold text-green-deep">Invitation sharing image</h3>
-    <p className="text-sm leading-relaxed text-ink-muted">Choose the image shown when an invitation link is shared. The cookbook remains private, but anyone with the link and the services showing its preview can see the selected photo and cookbook name. Those services may keep a cached copy.</p>
+    <h3 className="text-base font-bold text-green-deep">Social sharing card</h3>
+    <p className="text-sm leading-relaxed text-ink-muted">Choose the image shown when an invitation or published collection link is shared. The cookbook remains private, but anyone with the link and the services showing its preview can see the selected photo and cookbook name. Those services may keep a cached copy.</p>
     <Select label="Sharing image" value={selected} disabled={saving} onChange={(event) => { setSelected(event.target.value); setMessage(""); }}>
       <option value="">Default Home Cooked card</option>
       <option value="custom">Upload a custom photo</option>
       {initialRecipeId && !recipes.some((item) => item.id === initialRecipeId) && <option value={initialRecipeId} disabled>Previously selected photo is unavailable</option>}
       {recipes.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
     </Select>
-    {selected === "custom" && <Input label={customPath ? "Replace custom photo" : "Choose a custom photo"} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={saving} hint="JPEG, PNG, WebP, or HEIC up to 8 MB. Save to use this photo in invitation previews." onChange={(event) => { const nextFile = event.target.files?.[0] ?? null; setFile(nextFile); setFilePreview(nextFile ? URL.createObjectURL(nextFile) : null); setMessage(""); }} />}
+    {selected === "custom" && <Input label={customPath ? "Replace custom photo" : "Choose a custom photo"} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={saving} hint="JPEG, PNG, WebP, or HEIC up to 8 MB. Save to use this photo in link previews." onChange={(event) => { const nextFile = event.target.files?.[0] ?? null; setFile(nextFile); setFilePreview(nextFile ? URL.createObjectURL(nextFile) : null); setMessage(""); }} />}
+    <label className="flex items-start gap-3 text-sm text-ink">
+      <input type="checkbox" className="mt-1" checked={showEyebrow} disabled={saving} onChange={(event) => { setShowEyebrow(event.target.checked); setMessage(""); }} />
+      <span><span className="font-bold">Show “Home Cooked” above the title</span><span className="mt-1 block text-ink-muted">Applies to cards using a selected photo. The default Home Cooked card stays the same.</span></span>
+    </label>
     {recipes.length === 0 && <p className="text-sm text-ink-muted">Recipe photos will appear here when this cookbook has an uploaded or Pexels photo.</p>}
     {reviewNeeded && <p className="text-sm text-ink-muted">The selected photo changed or is unavailable. The default card is being used until you save a choice.</p>}
     <div className="relative aspect-[1200/630] max-w-lg overflow-hidden rounded-lg bg-green-deep" aria-label="Approximate sharing card preview">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={preview ?? "/opengraph-image"} alt="" className="h-full w-full object-cover" />
-      {preview && <><div className="absolute inset-0" style={{ backgroundImage: SHARE_CARD_OVERLAY }} /><div className="absolute inset-y-0 left-0 flex w-[64%] flex-col justify-center p-4 text-white sm:p-7"><span className="text-[10px] font-bold tracking-widest sm:text-xs">HOME COOKED</span><span className={`mt-2 break-words font-bold leading-tight ${bookTitle.length > 65 ? "text-sm sm:text-lg" : bookTitle.length > 40 ? "text-base sm:text-xl" : "text-xl sm:text-3xl"}`}>{bookTitle}</span><span className="mt-2 text-xs sm:text-sm">You’re invited to the table.</span></div></>}
+      {preview && <><div className="absolute inset-0" style={{ backgroundImage: SHARE_CARD_OVERLAY }} /><div className="absolute inset-y-0 left-0 flex w-[64%] flex-col justify-center p-4 text-white sm:p-7">{showEyebrow && <span className="text-[10px] font-bold tracking-widest sm:text-xs">HOME COOKED</span>}<span className={`mt-2 break-words font-black leading-tight [font-family:var(--font-fraunces)] ${bookTitle.length > 65 ? "text-sm sm:text-lg" : bookTitle.length > 40 ? "text-base sm:text-xl" : "text-xl sm:text-3xl"}`}>{bookTitle}</span><span className="mt-2 text-xs sm:text-sm">You’re invited to the table.</span></div></>}
     </div>
     <p className="text-xs text-ink-muted">Preview is approximate. Apps may crop or cache the card differently.</p>
-    <Button type="button" size="sm" variant="secondary" disabled={(selected === saved && !reviewNeeded && !(selected === "custom" && file)) || saving || (selected === "custom" ? !file && !customPath : !!selected && !recipe)} loading={saving} onClick={save}>Save sharing image</Button>
+    <Button type="button" size="sm" variant="secondary" disabled={(selected === saved && showEyebrow === savedShowEyebrow && !reviewNeeded && !(selected === "custom" && file)) || saving || (selected === "custom" ? !file && !customPath : !!selected && !recipe)} loading={saving} onClick={save}>Save sharing card</Button>
     {message && <p role="status" className="text-sm font-semibold text-green-deep">{message}</p>}
   </div>;
 }

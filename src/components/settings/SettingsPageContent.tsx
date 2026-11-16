@@ -55,6 +55,7 @@ interface BookSettingsPageContentProps {
   categories: BookCategory[];
   shareCardRecipeId: string | null;
   shareCardCustomPath: string | null;
+  shareCardShowEyebrow: boolean;
   shareCardUserId: string;
   shareCardRecipes: { id: string; title: string; photo_url: string }[];
   shareCardReady: boolean;
@@ -391,6 +392,7 @@ export function BookSettingsPageContent({
   categories,
   shareCardRecipeId,
   shareCardCustomPath,
+  shareCardShowEyebrow,
   shareCardUserId,
   shareCardRecipes,
   shareCardReady,
@@ -444,7 +446,7 @@ export function BookSettingsPageContent({
                 <div className="space-y-6">
                   <RenameBookForm bookId={bookId} currentTitle={bookTitle} />
                   <BookDescriptionForm bookId={bookId} currentDescription={bookDescription} />
-                  {shareCardReady ? <ShareCardForm bookId={bookId} bookTitle={bookTitle} userId={shareCardUserId} initialRecipeId={shareCardRecipeId} initialCustomPath={shareCardCustomPath} recipes={shareCardRecipes} needsReview={shareCardNeedsReview} /> : <p className="text-sm text-ink-muted">Sharing images need the latest database migrations (046 and 047).</p>}
+                  {shareCardReady ? <ShareCardForm bookId={bookId} bookTitle={bookTitle} userId={shareCardUserId} initialRecipeId={shareCardRecipeId} initialCustomPath={shareCardCustomPath} initialShowEyebrow={shareCardShowEyebrow} recipes={shareCardRecipes} needsReview={shareCardNeedsReview} /> : <p className="text-sm text-ink-muted">Sharing images need the latest database migrations.</p>}
                   {sharingPreferencesReady ? (
                     <SharingSettingsForm
                       bookId={bookId}
