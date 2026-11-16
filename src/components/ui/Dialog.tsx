@@ -52,7 +52,7 @@ export function Dialog({
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-ink/45 backdrop-blur-md" />
+      <div className="pointer-events-none absolute inset-0 bg-ink/45 backdrop-blur-md" />
 
       <div
         ref={panelRef}

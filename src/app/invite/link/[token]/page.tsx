@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
     ? `Join ${invitation.cookbookTitle} on Home Cooked.`
     : "Open your invitation to join a cookbook on Home Cooked.";
   const card = invitation ? await getInvitationShareCard(token) : null;
-  const cardVersion = card ? createHash("sha256").update(JSON.stringify(["4", card.title, card.photo, card.credit])).digest("hex").slice(0, 16) : null;
+  const cardVersion = card ? createHash("sha256").update(JSON.stringify(["5", card.title, card.photo, card.credit, card.showEyebrow])).digest("hex").slice(0, 16) : null;
   const image = { url: card ? `/invite/link/${token}/card?v=${cardVersion}` : "/opengraph-image", width: 1200, height: 630, alt: card ? `${card.title} cookbook invitation` : "Home Cooked family recipe book preview" };
 
   return {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Bell, BellOff } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Badge, Button, Card } from "@/components/ui";
 import { getAdminPushPublicKey, subscribeAdminToPush, unsubscribeAdminFromPush, testAdminPush } from "@/lib/actions/admin-push";
 import { pushKeyMatches, urlBase64ToUint8Array } from "@/lib/push/subscription";
 
@@ -129,12 +129,17 @@ export function PushSubscriptionToggle() {
   const subscribed = status === "subscribed";
   const disabled = isPending || ["checking", "unsupported", "unconfigured", "denied"].includes(status);
   return (
-    <div className="rounded-md border border-line-soft bg-white-soft/70 p-4">
-      <div className="space-y-3">
-        <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-ink-soft">Admin alerts</p>
-          <p className="mt-1 text-sm font-bold text-ink">{subscribed ? "Push connected on this device" : "Push notifications"}</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-muted">
+    <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-green-pale text-green-deep">
+          <Bell size={19} aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-xl font-bold leading-tight text-green-deep">Admin alerts</h2>
+            {subscribed && <Badge variant="sage">Connected</Badge>}
+          </div>
+          <p className="mt-1 text-sm leading-relaxed text-ink-muted">
             {status === "checking" && "Checking this device and its connection."}
             {status === "unsupported" && "On iPhone, open Home Cooked from your Home Screen to enable notifications."}
             {status === "unconfigured" && "Notification delivery is not configured on the server."}
@@ -143,10 +148,11 @@ export function PushSubscriptionToggle() {
             {status === "repair" && "Reconnect this device to restore notification delivery."}
             {status === "subscribed" && "New signups and server errors will notify this device."}
           </p>
-          {message && <p role="status" className="mt-2 text-xs font-semibold text-ink">{message}</p>}
+          {message && <p role="status" className="mt-2 text-sm font-semibold text-ink">{message}</p>}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" disabled={disabled} onClick={() => {
+      </div>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button variant="secondary" size="sm" className="min-h-11" disabled={disabled} onClick={() => {
             if (status === "error") { setStatus("checking"); setMessage(null); setRetry((value) => value + 1); }
             else if (subscribed) disablePush();
             else enablePush(status === "repair");
@@ -155,11 +161,10 @@ export function PushSubscriptionToggle() {
             {isPending ? "Working…" : subscribed ? "Disable" : status === "repair" ? "Reconnect" : status === "error" ? "Try again" : "Enable"}
           </Button>
           {subscribed && <>
-            <Button size="sm" disabled={isPending} onClick={sendTest}>Send test</Button>
-            <Button size="sm" variant="ghost" disabled={isPending} onClick={() => enablePush(true)}>Reconnect</Button>
+            <Button size="sm" className="min-h-11" disabled={isPending} onClick={sendTest}>Send test</Button>
+            <Button size="sm" variant="ghost" className="min-h-11" disabled={isPending} onClick={() => enablePush(true)}>Reconnect</Button>
           </>}
         </div>
-      </div>
-    </div>
+    </Card>
   );
 }

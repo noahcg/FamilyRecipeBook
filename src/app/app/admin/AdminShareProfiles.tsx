@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, Clock, Loader2, Search, Send, UserPlus, X } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { Check, Clock, Search, Send, UserPlus, Users } from "lucide-react";
+import { Badge, Button, Card, Dialog, EmptyState, Input } from "@/components/ui";
 import { inviteUserToBook } from "@/lib/actions/admin";
 
 export interface AdminProfileOption {
@@ -51,29 +52,32 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships, pendingIn
   }
 
   return (
-    <div className="recipe-card flex max-h-[34rem] flex-col overflow-hidden">
-      <div className="shrink-0 border-b border-line-soft px-5 py-4">
-        <h2 className="text-base font-black text-ink">Profiles</h2>
-        <p className="mt-1 text-xs text-ink-muted">
+    <Card padded={false} className="flex max-h-[34rem] flex-col overflow-hidden">
+      <div className="shrink-0 border-b border-line-soft px-4 pb-4 pt-5 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-2xl font-bold leading-tight text-green-deep">Profiles</h2>
+          <Badge variant="sage">{profiles.length} shown</Badge>
+        </div>
+        <p className="mt-1.5 text-sm text-ink-muted">
           Invite people to a cookbook you keep. They choose to accept before it joins their shelf.
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
+      <div role="region" aria-label="Profiles" tabIndex={0} className="min-h-0 flex-1 divide-y divide-line-soft overflow-y-auto">
         {profiles.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-ink-muted">No profiles found.</p>
+          <EmptyState icon={<Users size={24} aria-hidden="true" className="text-green-sage" />} title="No profiles found" description="Try another search to find a profile." className="!py-8" />
         ) : (
           profiles.map((profile) => (
             <div
               key={profile.id}
-              className="flex items-center justify-between gap-3 px-5 py-3.5"
+              className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6"
             >
               <div className="min-w-0">
                 <Link
                   href={`/app/admin/users/${profile.id}`}
-                  className="block min-w-0 hover:underline"
+                  className="block min-w-0 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-deep hover:underline"
                 >
-                  <p className="truncate text-sm font-black text-ink">
+                  <p className="truncate text-sm font-bold text-green-deep">
                     {profile.name || "Unnamed profile"}
                   </p>
                   <p className="mt-0.5 truncate text-xs text-ink-muted">
@@ -87,14 +91,16 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships, pendingIn
                   </p>
                 ) : null}
               </div>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setActiveProfile(profile)}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-green-deep/30 bg-green-pale px-3 py-1.5 text-xs font-extrabold text-green-deep transition-colors hover:bg-green-deep hover:text-white"
+                className="min-h-11 shrink-0"
               >
                 <UserPlus size={14} />
                 Invite
-              </button>
+              </Button>
             </div>
           ))
         )}
@@ -115,7 +121,7 @@ export function AdminShareProfiles({ profiles, cookbooks, memberships, pendingIn
           }}
         />
       ) : null}
-    </div>
+    </Card>
   );
 }
 
@@ -134,14 +140,6 @@ function InviteDialog({ profile, cookbooks, statusFor, onClose, onInvited }: Inv
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return cookbooks;
@@ -154,59 +152,34 @@ function InviteDialog({ profile, cookbooks, statusFor, onClose, onInvited }: Inv
   function handleInvite() {
     if (!selectedBook || !role) return;
     setError(null);
-    startTransition(() => {
-      inviteUserToBook({ bookId: selectedBook.id, userId: profile.id, role }).then((res) => {
+    startTransition(async () => {
+      try {
+        const res = await inviteUserToBook({ bookId: selectedBook.id, userId: profile.id, role });
         if (res.success) {
           onInvited(selectedBook.id, selectedBook.title);
           onClose();
         } else {
           setError(res.error ?? "Could not send invite.");
         }
-      });
+      } catch {
+        setError("Could not send invite. Check your connection and try again.");
+      }
     });
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-0 sm:items-center sm:p-4"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        className="flex max-h-[85vh] w-full flex-col rounded-t-2xl bg-card shadow-xl sm:max-w-md sm:rounded-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3 border-b border-line-soft px-5 py-4">
-          <div className="min-w-0">
-            <h3 className="text-base font-black text-ink">
-              Invite {profile.name || "this person"}
-            </h3>
-            <p className="mt-0.5 truncate text-xs text-ink-muted">
-              {profile.email ?? profile.id}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-full p-1 text-ink-soft transition-colors hover:bg-green-pale hover:text-green-deep"
-            aria-label="Close"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <p className="text-xs font-bold text-ink-soft">Cookbook</p>
-          <div className="mt-1.5 flex h-10 items-center gap-2 rounded-md border border-line-soft bg-white-soft/70 px-3">
-            <Search size={15} className="shrink-0 text-ink-soft" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search cookbooks"
-              className="min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-ink-soft focus:outline-none"
-            />
-          </div>
+    <Dialog open onClose={() => { if (!isPending) onClose(); }} title={`Invite ${profile.name || "this person"}`} className="max-h-[85dvh] overflow-y-auto">
+      <p className="mb-4 break-all text-sm text-ink-muted">{profile.email ?? profile.id}</p>
+      <div>
+          <Input
+            label="Cookbook"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search cookbooks"
+            rightElement={<Search size={17} aria-hidden="true" className="text-ink-soft" />}
+            className="min-h-11"
+          />
 
           <div className="mt-2 max-h-56 overflow-y-auto rounded-md border border-line-soft">
             {filtered.length === 0 ? (
@@ -222,8 +195,9 @@ function InviteDialog({ profile, cookbooks, statusFor, onClose, onInvited }: Inv
                       <button
                         type="button"
                         disabled={unavailable}
+                        aria-pressed={selected}
                         onClick={() => setSelectedBookId(book.id)}
-                        className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
+                        className={`flex w-full items-center justify-between gap-2 min-h-11 px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-green-deep disabled:cursor-not-allowed ${
                           selected
                             ? "bg-green-pale font-black text-green-deep"
                             : "text-ink hover:bg-green-pale/60"
@@ -249,50 +223,41 @@ function InviteDialog({ profile, cookbooks, statusFor, onClose, onInvited }: Inv
             )}
           </div>
 
-          <p className="mt-4 text-xs font-bold text-ink-soft">Role</p>
-          <div className="mt-1.5 grid grid-cols-2 gap-2">
+          <fieldset className="mt-4">
+          <legend className="text-xs font-bold text-ink-soft">Role</legend>
+          <div className="mt-1.5 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
             {ROLES.map((r) => {
               const selected = role === r.value;
               return (
-                <button
+                <label
                   key={r.value}
-                  type="button"
-                  onClick={() => setRole(r.value)}
-                  className={`rounded-md border px-3 py-2 text-left transition-colors ${
+                  className={`flex min-h-11 cursor-pointer items-start gap-2 rounded-md border px-3 py-2 text-left transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-green-deep ${
                     selected
                       ? "border-green-deep bg-green-pale"
                       : "border-line-soft bg-card hover:border-green-deep/40"
                   }`}
                 >
-                  <span className="block text-sm font-black text-ink">{r.label}</span>
-                  <span className="block text-xs text-ink-muted">{r.hint}</span>
-                </button>
+                  <input type="radio" name="invite-role" value={r.value} checked={selected} onChange={() => setRole(r.value)} className="mt-1 accent-green-deep" />
+                  <span><span className="block text-sm font-black text-ink">{r.label}</span>
+                  <span className="block text-xs text-ink-muted">{r.hint}</span></span>
+                </label>
               );
             })}
           </div>
+          </fieldset>
 
-          {error ? <p className="mt-3 text-sm font-bold text-red-600">{error}</p> : null}
+          {error ? <p role="alert" className="mt-3 text-sm font-bold text-danger">{error}</p> : null}
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-line-soft px-5 py-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full px-4 py-2 text-sm font-bold text-ink-soft transition-colors hover:bg-green-pale hover:text-green-deep"
-          >
+        <div className="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-line-soft pt-4">
+          <Button type="button" variant="ghost" size="sm" className="min-h-11" onClick={onClose} disabled={isPending}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleInvite}
-            disabled={!canInvite || isPending}
-            className="inline-flex items-center gap-1.5 rounded-full bg-green-deep px-4 py-2 text-sm font-extrabold text-white transition-colors hover:bg-green-deep/90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isPending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-            Send invite
-          </button>
+          </Button>
+          <Button type="button" size="sm" className="min-h-11" onClick={handleInvite} disabled={!canInvite || isPending} loading={isPending}>
+            {!isPending && <Send size={15} aria-hidden="true" />}
+            {isPending ? "Sending…" : "Send invite"}
+          </Button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

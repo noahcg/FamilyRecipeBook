@@ -31,7 +31,7 @@ This directory is the canonical UI library for Home Cooked. The visual catalog l
 | Compact status or role | `Badge` | Keep labels short; badges do not replace instructions or validation. |
 | Recipe response | `ReactionPill` / `ReactionBar` | Use the love, made-it, and favorite vocabulary; do not introduce an ad hoc reaction treatment. |
 | Blank content area | `EmptyState` | State what is missing, why it matters, and one useful next step. |
-| Interrupting task or confirmation | `Dialog` | Confirm consequential/destructive actions here. Keep a safe escape route. |
+| Interrupting task or confirmation | `Dialog` | Confirm consequential/destructive actions here. Keep a safe escape route; the backdrop and Escape request dismissal. |
 | Secondary side task | `Drawer` | Prefer a drawer when context should remain visible and the task is not a blocking decision. |
 | Cookbook cover | `BookCoverArt` | Use the controlled cover palette from `lib/bookCovers`; never draw a one-off cover treatment. |
 | Cookbook icon | `CookbookIcon` | Choose from `cookbookIconOptions`; the larger `cookbookIconCatalog` also renders legacy values. |

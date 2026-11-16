@@ -7,6 +7,7 @@ import { RouteHistoryTracker } from "@/components/layout/RouteHistoryTracker";
 import { getEffectiveEntitlements } from "@/lib/entitlements";
 import { createClient } from "@/lib/supabase/server";
 import { requireProfileName } from "@/lib/profileCompletion";
+import { getOfficialCollectionLibrary } from "@/lib/officialCollections";
 
 export default async function AppLayout({
   children,
@@ -16,10 +17,10 @@ export default async function AppLayout({
   // Ensure authenticated
   const user = await requireUser();
   await requireProfileName(user.id, "/app");
-  // Confine users without a book to onboarding — they can't reach app pages
-  // or nav until they've joined or created their first cookbook.
+  // A free official collection is enough to use the app. Its readers do not
+  // need to create a personal cookbook or acquire family membership first.
   const bookId = await getFirstBookId();
-  if (!bookId) {
+  if (!bookId && (await getOfficialCollectionLibrary()).length === 0) {
     redirect("/onboarding");
   }
   // Admin status is account-level, so it must be available on the global pages

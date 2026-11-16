@@ -367,7 +367,7 @@ export function UiCatalog() {
                 </div>
               </div>
             </Example>
-            <Example title="Dialog and Drawer · every chrome permutation" note="Choose Dialog for a decision; choose Drawer for a side task.">
+            <Example title="Dialog and Drawer · every chrome permutation" note="Choose Dialog for a decision; choose Drawer for a side task. Dialogs can be dismissed with Escape or the backdrop.">
               <div className="flex flex-wrap gap-3">
                 <Button variant="secondary" size="sm" onClick={() => setDialogMode("decision")}>
                   Dialog with title

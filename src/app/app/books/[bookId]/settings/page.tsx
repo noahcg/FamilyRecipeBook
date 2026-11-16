@@ -51,7 +51,7 @@ export default async function BookSettingsPage({ params }: Props) {
   const canManageCategories = canContribute(role);
   const categories = canManageCategories ? await listCategories(bookId) : [];
   const [cardRes, recipesRes] = role === "keeper" ? await Promise.all([
-    supabase.from("recipe_books").select("share_card_recipe_id,share_card_photo_url,share_card_custom_path").eq("id", bookId).single(),
+    supabase.from("recipe_books").select("share_card_recipe_id,share_card_photo_url,share_card_custom_path,share_card_show_eyebrow").eq("id", bookId).single(),
     supabase.from("recipes").select("id,title,photo_url").eq("book_id", bookId).not("photo_url", "is", null).eq("moderation_hidden", false).order("title"),
   ]) : [{ data: null, error: null }, { data: [], error: null }];
   const shareCardRecipes = (recipesRes.data ?? []).filter((recipe) => recipe.photo_url && shareCardPhoto(recipe.photo_url)) as { id: string; title: string; photo_url: string }[];
@@ -73,6 +73,7 @@ export default async function BookSettingsPage({ params }: Props) {
       categories={categories}
       shareCardRecipeId={cardRes.data?.share_card_recipe_id ?? null}
       shareCardCustomPath={cardRes.data?.share_card_custom_path ?? null}
+      shareCardShowEyebrow={cardRes.data?.share_card_show_eyebrow ?? true}
       shareCardUserId={user.id}
       shareCardRecipes={shareCardRecipes}
       shareCardNeedsReview={!!cardRes.data?.share_card_recipe_id && !shareCardRecipes.some((recipe) => recipe.id === cardRes.data?.share_card_recipe_id && recipe.photo_url === cardRes.data?.share_card_photo_url)}

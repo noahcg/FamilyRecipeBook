@@ -6,13 +6,13 @@ import { z } from "zod";
 
 const source = await readFile(new URL("../src/lib/shareCard.ts", import.meta.url), "utf8");
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
-function harness({ invitation = true, selected = true, hidden = false, changed = false, wrongBucket = false, customPath = null } = {}) {
+function harness({ invitation = true, selected = true, hidden = false, changed = false, wrongBucket = false, customPath = null, showEyebrow = true } = {}) {
   const calls = [];
   const exports = {};
   const client = { from(table) {
     calls.push(table);
     return { select() { return this; }, eq() { return this; }, async maybeSingle() {
-      return { data: table === "recipe_books" ? { share_card_recipe_id: selected ? "recipe" : null, share_card_photo_url: "original", share_card_custom_path: customPath } : { photo_url: changed ? "replacement" : "original", moderation_hidden: hidden } };
+      return { data: table === "recipe_books" ? { share_card_recipe_id: selected ? "recipe" : null, share_card_photo_url: "original", share_card_custom_path: customPath, share_card_show_eyebrow: showEyebrow } : { photo_url: changed ? "replacement" : "original", moderation_hidden: hidden } };
     } };
   } };
   Function("require", "exports", compiled)((name) => {
@@ -26,7 +26,7 @@ function harness({ invitation = true, selected = true, hidden = false, changed =
 }
 
 test("only an active invitation with the keeper-selected, unchanged visible recipe photo produces a card", async () => {
-  assert.deepEqual(await harness().get(), { title: "Test book", photo: { kind: "storage", path: "photo.jpg" }, credit: null });
+  assert.deepEqual(await harness().get(), { title: "Test book", photo: { kind: "storage", path: "photo.jpg" }, showEyebrow: true, credit: null });
   for (const option of [{ invitation: false }, { selected: false }, { hidden: true }, { changed: true }, { wrongBucket: true }]) {
     assert.equal(await harness(option).get(), null);
   }
@@ -37,8 +37,10 @@ test("only an active invitation with the keeper-selected, unchanged visible reci
 
 test("a custom upload is served only for an active invitation and does not read recipes", async () => {
   const custom = harness({ selected: false, customPath: "owner/family.webp" });
-  assert.deepEqual(await custom.get(), { title: "Test book", photo: { kind: "storage", path: "owner/family.webp" }, credit: null });
+  assert.deepEqual(await custom.get(), { title: "Test book", photo: { kind: "storage", path: "owner/family.webp" }, credit: null, showEyebrow: true });
   assert.deepEqual(custom.calls, ["recipe_books"]);
+  assert.equal((await harness({ selected: false, customPath: "owner/family.webp", showEyebrow: false }).get()).showEyebrow, false);
+  assert.equal((await harness({ showEyebrow: false }).get()).showEyebrow, false);
   assert.equal(await harness({ invitation: false, selected: false, customPath: "owner/family.webp" }).get(), null);
 });
 
@@ -85,13 +87,53 @@ test("only the keeper can save their own custom upload; switching to default cle
   }
   const keeper = actionHarness("keeper");
   assert.equal((await keeper.actions.saveShareCard(bookId, null, `${userId}/family.webp`)).success, true);
-  assert.deepEqual(keeper.writes[0], { share_card_recipe_id: null, share_card_custom_path: `${userId}/family.webp` });
+  assert.deepEqual(keeper.writes[0], { share_card_recipe_id: null, share_card_custom_path: `${userId}/family.webp`, share_card_show_eyebrow: true });
   assert.equal((await keeper.actions.saveShareCard(bookId, null, null)).success, true);
   assert.equal(keeper.writes[1].share_card_custom_path, null);
+  assert.equal((await keeper.actions.saveShareCard(bookId, null, null, false)).success, true);
+  assert.equal(keeper.writes[2].share_card_show_eyebrow, false);
+  assert.equal((await keeper.actions.saveShareCard(bookId, null, null, "false")).success, false);
   for (const role of ["family", "contributor", null]) {
     const h = actionHarness(role);
     assert.equal((await h.actions.saveShareCard(bookId, null, `${userId}/family.webp`)).success, false);
     assert.equal(h.writes.length, 0);
   }
   assert.equal((await keeper.actions.saveShareCard(bookId, null, `${otherId}/family.webp`)).success, false);
+});
+
+test("collection cards require a published collection whose publisher owns the source book", async () => {
+  for (const scenario of ["published", "draft", "owner-changed", "missing"]) {
+    const calls = [];
+    const client = { from(table) {
+      calls.push(table);
+      return { select() { return this; }, eq() { return this; }, async maybeSingle() {
+        if (table === "official_collections") return { data: scenario === "missing" || scenario === "draft" ? null : { book_id: "book", title: "Public cookbook", publisher_id: "owner", published: true } };
+        if (table === "recipe_books" && calls.filter((value) => value === "recipe_books").length === 1) return { data: { owner_id: scenario === "owner-changed" ? "other" : "owner" } };
+        return { data: { share_card_recipe_id: null, share_card_custom_path: "owner/card.webp" } };
+      } };
+    } };
+    const cardExports = {};
+    Function("require", "exports", compiled)((name) => {
+      if (name === "server-only") return {};
+      if (name === "@/lib/actions/shareableInvitations") return {};
+      if (name === "@/lib/shareCardPhoto") return {};
+      if (name === "@/lib/supabase/service") return { createServiceClient: () => client };
+      throw new Error(name);
+    }, cardExports);
+    const result = await cardExports.getCollectionShareCard("public-cookbook");
+    if (scenario === "published") assert.deepEqual(result, { title: "Public cookbook", photo: { kind: "storage", path: "owner/card.webp" }, credit: null, showEyebrow: true });
+    else assert.equal(result, null);
+  }
+});
+
+
+test("both social-card routes honor the saved label and version their metadata", async () => {
+  for (const base of ["collections/[slug]", "invite/link/[token]"]) {
+    const route = await readFile(new URL(`../src/app/${base}/card/route.tsx`, import.meta.url), "utf8");
+    const page = await readFile(new URL(`../src/app/${base}/page.tsx`, import.meta.url), "utf8");
+    assert.match(route, /card\.showEyebrow\s*&&/);
+    assert.match(page, /card\.showEyebrow/);
+  }
+  const migration = await readFile(new URL("../supabase/migrations/052_share_card_eyebrow.sql", import.meta.url), "utf8");
+  assert.match(migration, /share_card_show_eyebrow boolean not null default true/i);
 });

@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, BookOpen, Clock, Mail, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
+import { AdminCollectionPanel } from "@/components/collections/AdminCollectionPanel";
+import { getAppBaseUrl } from "@/lib/email/sendEmail";
+import { BOOK_COVER_COLORS, resolveCoverColor } from "@/lib/bookCovers";
 
 interface Props {
   params: Promise<{ bookId: string }>;
@@ -13,6 +16,7 @@ interface AdminBookDetail {
   title: string;
   description: string | null;
   owner_id: string;
+  cover_style: string;
   created_at: string | null;
   updated_at: string | null;
   owner: { full_name: string | null }[] | null;
@@ -86,7 +90,7 @@ function SupportStat({
 }
 
 export default async function AdminBookDetailPage({ params }: Props) {
-  await requireAdmin();
+  const adminUser = await requireAdmin();
   const { bookId } = await params;
   const admin = createServiceClient();
 
@@ -94,7 +98,7 @@ export default async function AdminBookDetailPage({ params }: Props) {
     await Promise.all([
       admin
         .from("recipe_books")
-        .select("id,title,description,owner_id,created_at,updated_at,owner:profiles!owner_id(full_name),members:book_members(id,role,created_at,user_id,profile:profiles(full_name,avatar_url))")
+        .select("id,title,description,cover_style,owner_id,created_at,updated_at,owner:profiles!owner_id(full_name),members:book_members(id,role,created_at,user_id,profile:profiles(full_name,avatar_url))")
         .eq("id", bookId)
         .single(),
       admin
@@ -117,6 +121,11 @@ export default async function AdminBookDetailPage({ params }: Props) {
   const recipeRows = (recipes ?? []) as unknown as AdminRecipeRow[];
   const inviteRows = (invites ?? []) as AdminInviteRow[];
   const members = bookDetail.members ?? [];
+  const collectionRes = bookDetail.owner_id === adminUser.id
+    ? await admin.from("official_collections").select("slug,title,description,cover_style,published").eq("book_id", bookId).maybeSingle()
+    : null;
+  const collection = collectionRes?.data;
+  const sourceColor = resolveCoverColor(bookDetail.cover_style, bookId);
 
   return (
     <div className="app-paper-bg paper-texture min-h-screen px-5 py-8">
@@ -146,6 +155,16 @@ export default async function AdminBookDetailPage({ params }: Props) {
           <SupportStat label="Recipes" value={recipeRows.length} icon={<BookOpen size={20} />} />
           <SupportStat label="Created" value={formatDate(bookDetail.created_at)} icon={<Clock size={20} />} />
         </section>
+
+        {bookDetail.owner_id === adminUser.id && (collectionRes?.error ? <p className="mt-6 text-sm text-ink-muted">Collection publishing is unavailable. Apply the official collections migration before using these controls.</p> : <AdminCollectionPanel baseUrl={getAppBaseUrl()} initial={{
+          bookId,
+          slug: collection?.slug ?? "",
+          title: collection?.title ?? bookDetail.title,
+          description: collection?.description ?? bookDetail.description ?? "",
+          coverStyle: collection?.cover_style ?? (BOOK_COVER_COLORS.some((color) => color.hex === sourceColor) ? sourceColor : BOOK_COVER_COLORS[0].hex),
+          published: collection?.published ?? false,
+        }} />)}
+        {bookDetail.owner_id !== adminUser.id && <p className="mt-6 text-sm text-ink-muted">Home Cooked collections can only be published from cookbooks you own. This cookbook belongs to another account.</p>}
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="recipe-card overflow-hidden">

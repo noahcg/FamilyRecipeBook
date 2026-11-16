@@ -42,7 +42,7 @@ const noteHandwriting = localFont({
 const fraunces = localFont({
   src: "../assets/fonts/fraunces.woff2",
   variable: "--font-fraunces",
-  weight: "600 800",
+  weight: "600 900",
   display: "swap",
 });
 
